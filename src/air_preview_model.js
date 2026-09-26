@@ -135,6 +135,90 @@ function deleteFrameElement(text, options) {
   return lines.filter((_, index) => !remove.has(index)).join(eol);
 }
 
+function sourceLines(text) {
+  const source = String(text || ''), records = []; let start = 0, match;
+  const eols = /\r\n|\r|\n/g;
+  while ((match = eols.exec(source))) {
+    records.push({ start, end: match.index + match[0].length, content: source.slice(start, match.index), eol: match[0] });
+    start = match.index + match[0].length;
+  }
+  if (start < source.length || !records.length) records.push({ start, end: source.length, content: source.slice(start), eol: '' });
+  return records;
+}
+
+function actionSourceRanges(text) {
+  const source = String(text || ''), lines = sourceLines(source), headers = [];
+  const header = /^([ \t]*\[[ \t]*begin[ \t]+action[ \t]+)(-?\d+)([ \t]*\][ \t]*(?:;.*)?)$/i;
+  lines.forEach((line, lineIndex) => {
+    const match = header.exec(line.content);
+    if (!match) return;
+    headers.push({ number: Number(match[2]), lineIndex, start: line.start, headerEnd: line.end, numberStart: line.start + match[1].length, numberEnd: line.start + match[1].length + match[2].length });
+  });
+  return headers.map((item, index) => {
+    const nextLine = index + 1 < headers.length ? headers[index + 1].lineIndex : lines.length, nextStart = index + 1 < headers.length ? headers[index + 1].start : source.length;
+    let ownedEnd = index + 1 < headers.length ? item.headerEnd : source.length;
+    for (let lineIndex = item.lineIndex + 1; lineIndex < nextLine; lineIndex += 1) {
+      const clean = lines[lineIndex].content.trim();
+      if (clean && !clean.startsWith(';')) ownedEnd = Math.max(ownedEnd, lines[lineIndex].end);
+    }
+    return { ...item, end: ownedEnd, nextStart, text: source.slice(item.start, ownedEnd) };
+  });
+}
+
+function uniqueActionRange(text, actionNumber) {
+  const number = integerField(actionNumber, 'Action number'), matches = actionSourceRanges(text).filter((item) => item.number === number);
+  if (!matches.length) throw new Error(`Action ${number} could not be located.`);
+  if (matches.length > 1) throw new Error(`Action ${number} is defined more than once. Resolve the duplicate IDs in Source before using visual action editing.`);
+  return matches[0];
+}
+
+function actionEol(text) {
+  return (/\r\n|\r|\n/.exec(String(text || '')) || ['\n'])[0];
+}
+
+function createActionPatch(text, options) {
+  const source = String(text || ''), action = integerField(options.action, 'Action number');
+  if (actionSourceRanges(source).some((item) => item.number === action)) throw new Error(`Action ${action} already exists.`);
+  const group = integerField(options.group, 'Sprite group'), index = integerField(options.index, 'Sprite index');
+  const x = integerField(options.x ?? 0, 'X offset'), y = integerField(options.y ?? 0, 'Y offset'), time = integerField(options.time ?? 1, 'Frame time');
+  if (time < -1) throw new Error('Frame time must be -1 (hold) or zero or greater.');
+  const eol = actionEol(source), prefix = !source ? '' : /(?:\r\n|\r|\n)$/.test(source) ? eol : eol + eol;
+  return { start: source.length, end: source.length, text: `${prefix}[Begin Action ${action}]${eol}${group}, ${index}, ${x}, ${y}, ${time}`, action };
+}
+
+function duplicateActionPatch(text, sourceAction, destinationAction) {
+  const source = String(text || ''), from = uniqueActionRange(source, sourceAction), destination = integerField(destinationAction, 'Destination action number');
+  if (actionSourceRanges(source).some((item) => item.number === destination)) throw new Error(`Action ${destination} already exists.`);
+  const relativeStart = from.numberStart - from.start, relativeEnd = from.numberEnd - from.start;
+  const copy = from.text.slice(0, relativeStart) + destination + from.text.slice(relativeEnd), eol = actionEol(source);
+  const prefix = /(?:\r\n|\r|\n)$/.test(from.text) ? eol : eol + eol;
+  return { start: from.end, end: from.end, text: prefix + copy, action: destination, sourceAction: from.number };
+}
+
+function deleteActionPatches(text, actionNumbers) {
+  const wanted = [...new Set((actionNumbers || []).map(Number).filter(Number.isInteger))];
+  if (!wanted.length) throw new Error('Select at least one AIR animation to delete.');
+  const ranges = actionSourceRanges(text), patches = [];
+  for (const number of wanted) {
+    const matches = ranges.filter((item) => item.number === number);
+    if (!matches.length) throw new Error(`Action ${number} could not be located.`);
+    if (matches.length > 1) throw new Error(`Action ${number} is defined more than once. Resolve duplicate IDs in Source before deleting it visually.`);
+    patches.push({ start: matches[0].start, end: matches[0].end, text: '', action: number });
+  }
+  return patches.sort((a, b) => b.start - a.start);
+}
+
+function applyActionPatches(text, patches) {
+  let output = String(text || '');
+  for (const patch of [...(patches || [])].sort((a, b) => b.start - a.start)) output = output.slice(0, patch.start) + String(patch.text || '') + output.slice(patch.end);
+  return output;
+}
+
+function requireActionMutationBaseline(baseline, current) {
+  if (!baseline || !current || Number(current.version) !== Number(baseline.version) || String(current.text) !== String(baseline.text)) throw new Error('The AIR source changed while the action edit was being reviewed. Nothing was written; review the current source and try again.');
+  return true;
+}
+
 function blockExtent(lines, lineNumber, kind) {
   const headerIndex = lineNumber - 1, header = CLSN_HEADER.exec((lines[headerIndex] || '').replace(/;.*/, '').trim());
   if (!header || `clsn${header[1]}` !== kind) throw new Error(`The ${kind} source block could not be located.`);
@@ -176,18 +260,8 @@ function updateCollisionBlocks(text, options) {
 }
 
 function deleteActions(text, actionNumbers) {
-  const wanted = new Set((actionNumbers || []).map(Number).filter(Number.isFinite));
-  if (!wanted.size) throw new Error('Select at least one AIR animation to delete.');
-  const source = String(text || ''), header = /^\s*\[\s*begin\s+action\s+(-?\d+)\s*\]\s*$/gim, matches = [...source.matchAll(header)];
-  const found = new Set(), ranges = [];
-  for (let index = 0; index < matches.length; index += 1) {
-    const number = Number(matches[index][1]); if (!wanted.has(number)) continue;
-    found.add(number); ranges.push([matches[index].index, index + 1 < matches.length ? matches[index + 1].index : source.length]);
-  }
-  if (!found.size) throw new Error('None of the selected AIR animations were found.');
-  let output = source;
-  for (const [start, end] of ranges.sort((a, b) => b[0] - a[0])) output = output.slice(0, start) + output.slice(end);
-  return { text: output.replace(/(?:\r?\n){3,}/g, '\n\n'), deleted: [...found].sort((a, b) => a - b), missing: [...wanted].filter(number => !found.has(number)).sort((a, b) => a - b) };
+  const wanted = [...new Set((actionNumbers || []).map(Number).filter(Number.isInteger))], patches = deleteActionPatches(text, wanted);
+  return { text: applyActionPatches(text, patches), deleted: wanted.sort((a, b) => a - b), missing: [] };
 }
 
 function actionAtLine(text, lineZeroBased) {
@@ -215,4 +289,4 @@ function selectionAtLine(text, lineZeroBased) {
   return null;
 }
 
-module.exports = { parseAir, updateCollisionBlock, updateCollisionBlocks, updateFrameElement, insertFrameElement, deleteFrameElement, deleteActions, actionAtLine, selectionAtLine };
+module.exports = { parseAir, updateCollisionBlock, updateCollisionBlocks, updateFrameElement, insertFrameElement, deleteFrameElement, actionSourceRanges, createActionPatch, duplicateActionPatch, deleteActionPatches, applyActionPatches, requireActionMutationBaseline, deleteActions, actionAtLine, selectionAtLine };

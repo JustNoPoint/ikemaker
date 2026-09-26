@@ -46,7 +46,7 @@ const allowedStyleNonce = /style-src 'nonce-([^']+)'/.exec(html)[1];
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
 assert.strictEqual(scripts.length, 1);
 assert.doesNotThrow(() => new vm.Script(scripts[0][1]));
-for (const id of ['actionSort', 'showActionThumbs', 'markVisibleActions', 'clearActionMarks', 'actionSelectionStatus', 'proofBackground', 'proofColor', 'exportPreview', 'canvas', 'strip', 'collisionPanel', 'pushPanel', 'runtimePanel', 'sourcePanel', 'sourceConfidence', 'sourceFindings', 'rulesPanel', 'layerPanel', 'palette', 'goCode', 'frameGroup', 'frameIndexValue', 'frameX', 'frameY', 'frameTime', 'frameFlags', 'frameBlend', 'frameScaleX', 'frameScaleY', 'frameAngle', 'applyFrame', 'addFrame', 'duplicateFrame', 'deleteFrame', 'editKind', 'editScope', 'addBox', 'applyBoxEdit', 'revertBoxEdit', 'showPush', 'editBaselinePush', 'editFramePush', 'bridgeKind', 'copyBridge']) assert(html.includes(`id="${id}"`), `missing ${id}`);
+for (const id of ['actionSort', 'showActionThumbs', 'newAction', 'duplicateAction', 'deleteSelectedActions', 'markVisibleActions', 'clearActionMarks', 'actionSelectionStatus', 'proofBackground', 'proofColor', 'exportPreview', 'canvas', 'strip', 'collisionPanel', 'pushPanel', 'runtimePanel', 'sourcePanel', 'sourceConfidence', 'sourceFindings', 'rulesPanel', 'layerPanel', 'palette', 'goCode', 'frameGroup', 'frameIndexValue', 'frameX', 'frameY', 'frameTime', 'frameFlags', 'frameBlend', 'frameScaleX', 'frameScaleY', 'frameAngle', 'applyFrame', 'addFrame', 'duplicateFrame', 'deleteFrame', 'editKind', 'editScope', 'addBox', 'applyBoxEdit', 'revertBoxEdit', 'showPush', 'editBaselinePush', 'editFramePush', 'bridgeKind', 'copyBridge']) assert(html.includes(`id="${id}"`), `missing ${id}`);
 assert(html.includes("selectedActions:new Set") || html.includes('selectedActions:[...selectedActions]'));
 assert(html.includes("type:'exportPreview'"));
 assert(!html.includes('id="deleteActions"'));
@@ -56,6 +56,56 @@ assert(html.includes("event.target.closest('.frame')"), 'Delete on a timeline fr
 assert(html.includes("event.ctrlKey||event.metaKey"));
 assert(html.includes('event.shiftKey&&actionAnchor!==null'));
 assert(html.includes("type:'actionThumbnails'"));
+const client = scripts[0][1], mutationStart = client.indexOf('function beginActionMutation(message)'), mutationEnd = client.indexOf("document.getElementById('markVisibleActions')", mutationStart);
+assert(mutationStart >= 0 && mutationEnd > mutationStart, 'action lifecycle dispatch block must be present in the generated client');
+const lifecycleElements = new Map(), lifecycleMessages = [], lifecycleContext = {
+  actionMutationBusy: false, actionMutationSerial: 0, action: { number: 0 }, playing: true,
+  navigationAllowed: () => true, updateActionSelection() {}, requestActionDeletion() { this.deleted = true; },
+  document: { getElementById(id) { if (!lifecycleElements.has(id)) lifecycleElements.set(id, {}); return lifecycleElements.get(id); } },
+  vscode: { postMessage(message) { lifecycleMessages.push(message); } }
+};
+vm.createContext(lifecycleContext); vm.runInContext(client.slice(mutationStart, mutationEnd), lifecycleContext);
+lifecycleElements.get('newAction').onclick();
+assert.strictEqual(lifecycleMessages.at(-1).type, 'createAction', 'New Action dispatches the create lifecycle request');
+const afterCreate = lifecycleMessages.length; lifecycleElements.get('newAction').onclick();
+assert.strictEqual(lifecycleMessages.length, afterCreate, 'a pending action lifecycle request serializes later button presses');
+vm.runInContext('actionMutationBusy=false', lifecycleContext); lifecycleElements.get('duplicateAction').onclick();
+assert.deepStrictEqual({ type: lifecycleMessages.at(-1).type, sourceAction: lifecycleMessages.at(-1).sourceAction }, { type: 'duplicateAction', sourceAction: 0 }, 'Duplicate targets the exact active action, including Action 0');
+assert(client.includes("if(m.actionRequestId!==undefined&&Number(m.actionRequestId)===actionMutationSerial){actionMutationBusy=false;updateActionSelection()}"), 'host failure releases lifecycle busy state without altering selection');
+function clientFunctionSource(source, name) {
+  const start = source.indexOf(`function ${name}(`), open = source.indexOf('{', start);
+  assert(start >= 0 && open > start, `missing generated client function ${name}`);
+  let depth = 0;
+  for (let at = open; at < source.length; at += 1) {
+    if (source[at] === '{') depth += 1;
+    if (source[at] === '}' && --depth === 0) return source.slice(start, at + 1);
+  }
+  throw new Error(`unterminated generated client function ${name}`);
+}
+const finishSource = clientFunctionSource(client, 'finishActionMutation');
+function finishFixture({ actions, currentAction, response }) {
+  const elements = new Map([['search', { value: 'filtered' }], ['newAction', { focusCount: 0, focus() { this.focusCount += 1; } }]]), selected = [], focused = [], calls = { clear: 0, renderActions: 0, renderStrip: 0, updates: 0 };
+  const context = {
+    actionMutationSerial: 7, actionMutationBusy: true, model: { actions }, action: currentAction, frameIndex: 3, selectedActions: new Set([10, 30]), actionAnchor: 30,
+    document: { getElementById(id) { if (!elements.has(id)) elements.set(id, {}); return elements.get(id); } },
+    selectAction(number) { selected.push(number); context.action = actions.find((item) => item.number === number) || null; },
+    focusActionButton(number) { focused.push(number); }, requestAnimationFrame(callback) { callback(); },
+    clearActionState() { calls.clear += 1; }, renderActions() { calls.renderActions += 1; }, renderStrip() { calls.renderStrip += 1; }, updateActionSelection() { calls.updates += 1; }
+  };
+  vm.createContext(context); vm.runInContext(finishSource, context); context.finishActionMutation(response);
+  return { context, elements, selected, focused, calls };
+}
+const actionZero = finishFixture({ actions: [{ number: 0 }], currentAction: null, response: { actionRequestId: 7, action: 0, deleted: [] } });
+assert.deepStrictEqual(actionZero.selected, [0], 'a lifecycle response must select Action 0 rather than treating it as empty');
+assert.deepStrictEqual(actionZero.focused, [0], 'created or duplicated Action 0 must be revealed and focused');
+const survivor = finishFixture({ actions: [{ number: 20 }], currentAction: { number: 10 }, response: { actionRequestId: 7, action: 20, deleted: [10, 30] } });
+assert.deepStrictEqual(survivor.selected, [20], 'multi-delete must select the host-chosen surviving action');
+assert.deepStrictEqual(survivor.focused, [20], 'the surviving action button must be revealed and focused');
+assert.strictEqual(survivor.elements.get('search').value, '', 'the surviving action must not remain hidden by the old filter');
+const empty = finishFixture({ actions: [], currentAction: null, response: { actionRequestId: 7, action: null, deleted: [10, 30] } });
+assert.strictEqual(empty.calls.clear, 1, 'removing the last action must explicitly clear the canvas and property state');
+assert.strictEqual(empty.elements.get('newAction').focusCount, 1, 'an empty AIR must focus New Action as the recovery path');
+assert.strictEqual(empty.context.actionMutationBusy, false, 'a completed lifecycle request must release its busy state');
 assert(html.includes('<button id="play">Play</button>'));
 assert(html.includes('playing=false'));
 assert(html.includes('id="clsn1" type="checkbox" checked'));
