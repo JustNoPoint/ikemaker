@@ -23,5 +23,13 @@ const PRESETS = [
 
 function presetText(preset) { return preset.kind === 'native' ? preset.blocks.map(commandBlock).join('\n\n') : preset.snippet; }
 function findPreset(id) { return PRESETS.find((preset) => preset.id === id); }
+function upsertCustomPreset(existing, preset) {
+  const clean = (existing || []).filter((item) => item && item.id && item.label && typeof item.text === 'string');
+  const label = String(preset.label || '').trim();
+  if (!label) throw new Error('A custom command preset needs a name.');
+  const id = String(preset.id || '').trim();
+  return [...clean.filter((item) => item.id !== id && item.label.toLowerCase() !== label.toLowerCase()), { id, label, text: String(preset.text || '') }];
+}
+function removeCustomPreset(existing, id) { return (existing || []).filter((item) => item && item.id !== id); }
 
-module.exports = { PRESETS, presetText, findPreset };
+module.exports = { PRESETS, presetText, findPreset, upsertCustomPreset, removeCustomPreset };

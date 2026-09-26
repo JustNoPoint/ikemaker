@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const Module = require('module');
+const vm = require('vm');
 const original = Module._load;
 Module._load = function(request, parent, isMain) {
   if (request === 'vscode') return {};
@@ -18,15 +19,62 @@ const data = {
     { name: 'x', command: 'x', time: 1, stepTime: 1, diagnostics: [] },
     { name: 'fireball', command: 'D, DF, F, x', time: 15, stepTime: 10, diagnostics: [] }
   ],
-  movelistText: '', knownTimings: []
+  movelistText: '', knownTimings: [], presets: [], insertableInputs: []
 };
 const output = workspace.enhanceCommandHtml(workspace.html(data));
 assert(output.includes('Gameplay motions and sequences'));
 assert(output.includes('Basic / raw inputs'));
 assert(output.includes('hiddenCommands'));
 assert(output.includes('commandSearch'));
+assert(output.includes('+ Add Input Step'));
+assert(output.includes('Insert Before'));
+assert(output.includes('Move Left'));
+assert(output.includes('L/R are absolute screen directions'));
+assert(output.includes('Choose and preview'));
+assert(output.includes('Apply preset definition set'));
+assert(output.includes("type:'applyPresetDraft'"));
+assert(output.includes("saveCurrentPreset.id='saveCurrentPreset'"));
+assert(output.includes("type:'saveCustomPreset',id:'',text:block(values())"));
+assert(output.includes('commandDrafts'));
+assert(output.includes('presetDrafts'));
+assert(output.includes('movelistDraft'));
+assert(output.includes("event.data.type==='customPresetsUpdated'"));
+assert(output.includes("event.target!==event.currentTarget&&event.target.closest('input,textarea,select,button')"));
+assert(output.includes('restoreCommandSelection()'));
+assert(output.includes("commandDrafts.new=restoredUi.activeCommandDraft"));
+assert(!output.includes('per-step timer'));
 const script = output.match(/<script>([\s\S]*)<\/script>/)[1];
 assert.doesNotThrow(() => new Function(script));
+
+const keyHandlerSource=script.match(/addEventListener\('keydown',(event=>\{[^\n]+?\}),true\)/)[1];
+const keyHandler=vm.runInNewContext('('+keyHandlerSource+')');let stopped=false,prevented=false;
+keyHandler({target:{closest:selector=>selector.includes('input')?{}:null},currentTarget:{},stopPropagation:()=>{stopped=true;},preventDefault:()=>{prevented=true;},key:' '});
+assert(stopped,'step-token keyboard input must not bubble into the card shortcut');assert(!prevented,'typing a space in a token input must keep its default editing behavior');
+
+const focusHandlerSource=script.match(/addEventListener\('focusin',(event=>\{[^\n]+?\})\);/)[1];
+const focusContext={selectedStep:0,document:{querySelectorAll:()=>[{classList:{toggle(){}}},{classList:{toggle(){}}},{classList:{toggle(){}}}]},byId:id=>focusContext.controls[id]||(focusContext.controls[id]={disabled:false}),controls:{},steps:()=>['D','DF','F'],storeCommandDraft(){},persistUi(){}};
+const focusHandler=vm.runInNewContext('('+focusHandlerSource+')',focusContext);focusHandler({target:{closest:selector=>selector==='.stepToken'?{dataset:{index:'2'}}:null}});
+assert.strictEqual(focusContext.selectedStep,2);assert.strictEqual(focusContext.controls.moveStepLeft.disabled,false);assert.strictEqual(focusContext.controls.moveStepRight.disabled,true);
+
+const restoreLine=script.split(/\r?\n/).find(line=>line.includes('function restoreCommandSelection()'));
+const newDraft={values:{name:'new_move',command:'D, DF, F, x'},selectedStep:3},newContext={restoredUi:{activeCommandKey:'new',activeCommandDraft:newDraft},commandDrafts:{},data:{commands:[{name:'x'}]},selected:0,selectedStep:0,orphanDraft:false,commandDraftKey:()=>''};
+vm.runInNewContext(restoreLine+';restoreCommandSelection()',newContext);assert.strictEqual(newContext.selected,1,'new-command slot survives webview recreation');assert.deepStrictEqual(newContext.commandDrafts.new,newDraft);
+const orphanDraft={values:{name:'old_move',command:'B, F, x'},selectedStep:1},orphanContext={restoredUi:{activeCommandKey:'existing:removed:0',activeCommandDraft:orphanDraft},commandDrafts:{},data:{commands:[{name:'replacement'}]},selected:0,selectedStep:0,orphanDraft:false,commandDraftKey:index=>'existing:replacement:'+index};
+vm.runInNewContext(restoreLine+';restoreCommandSelection()',orphanContext);assert.strictEqual(orphanContext.selected,1);assert.strictEqual(orphanContext.orphanDraft,true);assert.deepStrictEqual(orphanContext.commandDrafts.new,orphanDraft,'changed-source draft is recovered instead of attached to the wrong command');
+
+// Execute the generated webview startup and pool refresh together. A pool-only
+// update must not replay startup restoration or change the form's Apply target.
+function fakeElement(id,elements){const classes=new Set(id==='presetPanel'||id==='movelistWorkspace'?['hidden']:[]),listeners={};return{id,value:'',innerHTML:'',textContent:'',disabled:false,dataset:{},style:{setProperty(){}},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x),contains:x=>classes.has(x),toggle(x,force){const on=force===undefined?!classes.has(x):force;on?classes.add(x):classes.delete(x);return on;}},addEventListener(type,fn){(listeners[type]||(listeners[type]=[])).push(fn)},focus(){},scrollIntoView(){},setAttribute(){},querySelector(){return null},after(child){elements[child.id]=child}}}
+const elements={},windowListeners={},sentMessages=[],savedStates=[];
+const webviewDocument={getElementById(id){return elements[id]||(elements[id]=fakeElement(id,elements))},createElement(){return fakeElement('',elements)},querySelectorAll(){return[]},querySelector(){return null},addEventListener(){}};
+const addWindowListener=(type,fn)=>{(windowListeners[type]||(windowListeners[type]=[])).push(fn)};
+const webviewContext={document:webviewDocument,window:{addEventListener:addWindowListener,dispatchEvent(){}},addEventListener:addWindowListener,MessageEvent:class{constructor(type,options){this.type=type;this.data=options?.data}},acquireVsCodeApi:()=>({getState:()=>({}),setState:state=>savedStates.push(state),postMessage:message=>sentMessages.push(message)}),setTimeout:fn=>{fn();return 1},clearTimeout(){},requestAnimationFrame:fn=>fn(),console};webviewContext.globalThis=webviewContext;
+vm.createContext(webviewContext);vm.runInContext(script,webviewContext);
+vm.runInContext('selectCommand(1)',webviewContext);assert.strictEqual(elements.name.value,'fireball');
+for(const listener of windowListeners.message||[])listener({data:{type:'customPresetsUpdated',presets:[{id:'custom:test',label:'Saved',kind:'native',category:'Custom',explanation:'Saved',custom:true,previewText:'[Command]'}]}});
+assert.strictEqual(vm.runInContext('selected',webviewContext),1,'pool refresh preserves the current command selection');assert.strictEqual(elements.name.value,'fireball','pool refresh preserves the displayed command draft');
+elements.applyCommand.onclick();const applied=sentMessages.findLast(message=>message.type==='saveCommand');assert.strictEqual(applied.index,1);assert.strictEqual(applied.values.name,'fireball','Apply still targets the command displayed after pool refresh');
+vm.runInContext('selectCommand(data.commands.length)',webviewContext);elements.name.value='pending_custom';elements.name.oninput();for(const listener of windowListeners.message||[])listener({data:{type:'customPresetsUpdated',presets:[]}});assert.strictEqual(vm.runInContext('selected',webviewContext),2,'pool refresh preserves the pending new-command slot');assert.strictEqual(elements.name.value,'pending_custom','pool refresh preserves the pending new-command draft');
 assert(output.includes('Commands · Learning'));
 assert(output.includes('<details open><summary><b>What am I editing?</b>'));
 assert(output.includes('details class="task-recipes" open'));
@@ -54,7 +102,7 @@ assert.deepStrictEqual(workspace.sourceTarget(sourceData,{type:'openSource',tab:
 assert.deepStrictEqual(workspace.sourceTarget(sourceData,{type:'openDef',tab:'movelist'}),{filename:'owner.def',line:0});
 assert.equal(workspace.sourceTarget({...sourceData,files:{commandFile:'input.cmd'}},{type:'openSource',tab:'movelist'}).filename,undefined,'missing movelist must not open unrelated command source');
 assert.equal(workspace.sourceTarget(sourceData,{type:'openSource',tab:'command',index:99}).line,0,'new command has no existing section');
-const vm=require('vm'),sent=[];
+const sent=[];
 const sourceHandler=script.match(/byId\('openSource'\)\.onclick=([^;]+);/)[1];
 const client={ikemenNavigationSelection:()=>({tab:'movelist',file:'moves.dat'}),activeTab:'movelist',selected:1,vscode:{postMessage:m=>sent.push(m)}};
 vm.runInNewContext('('+sourceHandler+')()',client);

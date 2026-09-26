@@ -44,4 +44,14 @@ assert.deepStrictEqual(movelists.map((item) => item.slot), [0, 2]);
 assert.strictEqual(model.movelistPreview('<#ff0000>:Special:</> _QDF^P')[0].glyphs.join(','), 'QDF,P');
 assert(model.changeMovelistSnippet(2).includes('value = 2'));
 
+assert.deepStrictEqual(model.INSERTABLE_INPUTS.slice(0, 4).map((item) => item.value), ['L', 'R', 'B', 'F']);
+assert.strictEqual(model.INSERTABLE_INPUTS.find((item) => item.value === 'L').basis, 'absolute');
+assert.strictEqual(model.INSERTABLE_INPUTS.find((item) => item.value === 'B').basis, 'relative');
+const authored = '/D, ~45$L, R+x, >F|DF';
+assert.strictEqual(model.editCommandSteps(authored, 'insertAfter', 1, 'B'), '/D, ~45$L, B, R+x, >F|DF');
+assert.strictEqual(model.editCommandSteps(authored, 'duplicate', 2), '/D, ~45$L, R+x, R+x, >F|DF');
+assert.strictEqual(model.editCommandSteps(authored, 'moveLeft', 2), '/D, R+x, ~45$L, >F|DF');
+assert.strictEqual(model.editCommandSteps(authored, 'remove', 1), '/D, R+x, >F|DF');
+assert.strictEqual(model.editCommandSteps('', 'insertAfter', 0, 'L'), 'L');
+
 console.log('Command and movelist model tests passed');

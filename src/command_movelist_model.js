@@ -60,6 +60,30 @@ function splitSteps(command) {
   return result.filter((step) => step.length);
 }
 
+const INSERTABLE_INPUTS = Object.freeze([
+  { value: 'L', label: 'Left — absolute screen direction', basis: 'absolute' },
+  { value: 'R', label: 'Right — absolute screen direction', basis: 'absolute' },
+  { value: 'B', label: 'Back — relative to facing', basis: 'relative' },
+  { value: 'F', label: 'Forward — relative to facing', basis: 'relative' },
+  { value: 'D', label: 'Down', basis: 'neutral' },
+  { value: 'U', label: 'Up', basis: 'neutral' },
+  { value: 'N', label: 'Neutral', basis: 'neutral' },
+  { value: '/D', label: 'Hold Down — native hold syntax', basis: 'neutral' }
+]);
+
+function editCommandSteps(command, operation, index, value = '?') {
+  const steps = splitSteps(command);
+  const at = Number.isInteger(index) ? Math.max(0, Math.min(index, Math.max(steps.length - 1, 0))) : Math.max(steps.length - 1, 0);
+  const token = String(value == null ? '?' : value).trim() || '?';
+  if (operation === 'insertBefore') steps.splice(steps.length ? at : 0, 0, token);
+  else if (operation === 'insertAfter') steps.splice(steps.length ? at + 1 : 0, 0, token);
+  else if (operation === 'duplicate' && steps.length) steps.splice(at + 1, 0, steps[at]);
+  else if (operation === 'remove' && steps.length) steps.splice(at, 1);
+  else if (operation === 'moveLeft' && at > 0) [steps[at - 1], steps[at]] = [steps[at], steps[at - 1]];
+  else if (operation === 'moveRight' && at < steps.length - 1) [steps[at], steps[at + 1]] = [steps[at + 1], steps[at]];
+  return steps.join(', ');
+}
+
 function stepModel(raw, index) {
   const value = String(raw || '').trim();
   const operators = [...value].filter((character) => character === '+' || character === '|');
@@ -179,5 +203,6 @@ function changeMovelistSnippet(slot) { return `[State Change Movelist]\ntype = C
 
 module.exports = {
   uncomment, parseCommands, splitSteps, stepModel, diagnosticsFor, commandBlock, replaceCommandBlock,
-  parseMovelistAssignments, movelistPreview, changeMovelistSnippet, isMotion, finalButtons
+  parseMovelistAssignments, movelistPreview, changeMovelistSnippet, isMotion, finalButtons,
+  INSERTABLE_INPUTS, editCommandSteps
 };
