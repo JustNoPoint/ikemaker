@@ -1,9 +1,13 @@
 'use strict';
 
 const assert = require('assert');
+const fs = require('fs');
 const Module = require('module');
+const os = require('os');
+const path = require('path');
 
-let receiver = null, warningMode = 'race';
+let receiver = null, warningMode = 'race', warningResponse = 'Delete Animations', warningCalls = 0, warningHook = null;
+const warningRecords = [];
 const originalText = '; file heading\r\n[Begin Action 10] ; first\r\n10, 0, 0, 0, 1\r\n; note before next section\r\n[Begin Action 20]\r\n20, 0, 0, 0, 1\r\n[Begin Action 30]\r\n30, 0, 0, 0, 1\r\n; final action note\r\n';
 const document = {
   uri: { fsPath: 'C:\\fixture\\Anim.air' }, version: 1, text: originalText,
@@ -31,12 +35,15 @@ const vscode = {
     }
   },
   window: {
-    async showWarningMessage() {
+    async showWarningMessage(...args) {
+      warningCalls += 1;
+      warningRecords.push(args);
       if (warningMode === 'race') {
         document.text += '; concurrent source edit\r\n';
         document.version += 1;
       }
-      return 'Delete Animations';
+      if (warningHook) await warningHook();
+      return warningResponse;
     }
   }
 };
@@ -79,5 +86,69 @@ assert(receiver, 'AIR lifecycle host receiver must attach');
   assert(!document.text.includes('[Begin Action 10]') && !document.text.includes('[Begin Action 30]'), 'only selected actions must be removed');
   assert.strictEqual(messages[0].type, 'model', 'the client must receive the post-edit model first');
   assert.deepStrictEqual({ type: messages[1].type, request: messages[1].actionRequestId, action: messages[1].action }, { type: 'actionMutationApplied', request: 42, action: 20 }, 'the completion message must identify the surviving action and exact request');
+
+  const moveSource = '[Begin Action 0]\r\n0, 0, 0, 0, 2\nLoopStart\r\nInterpolate Offset\n0, 1, 0, 0, -1';
+  warningResponse = 'Move Frame';
+  warningMode = 'race';
+  document.text = moveSource;
+  document.version = 1;
+  messages.length = 0;
+  applied.length = 0;
+  await receiver({ type: 'moveFrame', action: 0, frameIndex: 1, direction: 'earlier', wasMarked: true, actionRequestId: 43 });
+  assert.strictEqual(applied.length, 0, 'a source race during Move Frame confirmation must create zero WorkspaceEdits');
+  assert(messages.some((message) => message.type === 'error' && message.actionRequestId === 43), 'a stale Move Frame response must release the matching request');
+
+  warningMode = 'success';
+  document.text = moveSource;
+  document.version = 1;
+  messages.length = 0;
+  applied.length = 0;
+  await receiver({ type: 'moveFrame', action: 0, frameIndex: 1, direction: 'earlier', wasMarked: true, actionRequestId: 44 });
+  assert.strictEqual(applied.length, 1, 'a confirmed frame move must use one grouped WorkspaceEdit');
+  assert.strictEqual(applied[0].replacements.length, 1, 'an adjacent frame move must replace only its one narrow combined range');
+  assert(applied[0].replacements[0].range.start.offset > 0 && applied[0].replacements[0].range.end.offset < moveSource.length + 1, 'the frame move must not replace the AIR header or whole document');
+  assert.deepStrictEqual(require('../src/air_preview_model').parseAir(document.text)[0].frames.map((frame) => frame.index), [1, 0], 'the real host handler must publish the reordered frame sequence');
+  assert.deepStrictEqual({ first: messages[0].type, second: messages[1].type, request: messages[1].actionRequestId, to: messages[1].to, marked: messages[1].wasMarked }, { first: 'model', second: 'frameMoveApplied', request: 44, to: 0, marked: true }, 'the host must publish the model before the exact frame-move acknowledgment');
+  const successfulDetail = warningRecords.at(-1)[1].detail;
+  assert.match(successfulDetail, /first -1 hold moves from element 2 to 1.*reachable elements change from 2 to 1/s, 'confirmation must explain changed hold reachability without rewriting timing');
+  assert.match(successfulDetail, /moving element: offset/, 'confirmation must identify interpolation carried by the moving element');
+
+  warningResponse = 'Cancel';
+  document.text = moveSource;
+  document.version = 1;
+  messages.length = 0;
+  applied.length = 0;
+  await receiver({ type: 'moveFrame', action: 0, frameIndex: 0, direction: 'later', actionRequestId: 45 });
+  assert.match(warningRecords.at(-1)[1].detail, /adjacent element: offset/, 'confirmation must identify interpolation on the neighboring element too');
+  assert.strictEqual(applied.length, 0, 'canceling after reviewing neighbor interpolation writes nothing');
+
+  const fixtureRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemaker-frame-plan-'));
+  const fixtureAir = path.join(fixtureRoot, 'Anim.air'), { planLocation } = require('../src/pushbox_authoring'), pushPlan = planLocation(fixtureAir);
+  session.airPath = fixtureAir;
+  document.uri = { fsPath: fixtureAir };
+  fs.mkdirSync(path.dirname(pushPlan), { recursive: true });
+  fs.writeFileSync(pushPlan, JSON.stringify({ version: 1, sourceAir: fixtureAir, overrides: [{ action: 0, element: 1, rect: [-10, -20, 10, 0] }] }));
+  const warningsBeforeBlock = warningCalls;
+  document.text = moveSource;
+  document.version = 1;
+  messages.length = 0;
+  applied.length = 0;
+  warningResponse = 'Move Frame';
+  await receiver({ type: 'moveFrame', action: 0, frameIndex: 1, direction: 'earlier', actionRequestId: 46 });
+  assert.strictEqual(applied.length, 0, 'saved element-indexed metadata must block frame reorder before any edit');
+  assert.strictEqual(warningCalls, warningsBeforeBlock, 'a metadata-blocked move must not ask for misleading final confirmation');
+  assert(messages.some((message) => message.type === 'error' && /saved push-box plan/.test(message.message)), 'the blocked move must identify its element-indexed dependency');
+
+  fs.rmSync(pushPlan, { force: true });
+  warningHook = async () => fs.writeFileSync(pushPlan, JSON.stringify({ version: 1, sourceAir: fixtureAir, overrides: [{ action: 0, element: 2, rect: [-9, -19, 9, 0] }] }));
+  document.text = moveSource;
+  document.version = 1;
+  messages.length = 0;
+  applied.length = 0;
+  await receiver({ type: 'moveFrame', action: 0, frameIndex: 1, direction: 'earlier', actionRequestId: 47 });
+  assert.strictEqual(applied.length, 0, 'metadata added during final confirmation must block the move before any edit');
+  assert(messages.some((message) => message.type === 'error' && /metadata changed.*saved push-box plan on element 2/i.test(message.message)), 'the post-confirmation metadata race must report the affected plan');
+  warningHook = null;
+  fs.rmSync(fixtureRoot, { recursive: true, force: true });
   console.log('AIR action lifecycle host tests passed');
 })().catch((error) => { console.error(error); process.exitCode = 1; });

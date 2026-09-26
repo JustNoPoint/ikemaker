@@ -46,7 +46,7 @@ const allowedStyleNonce = /style-src 'nonce-([^']+)'/.exec(html)[1];
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
 assert.strictEqual(scripts.length, 1);
 assert.doesNotThrow(() => new vm.Script(scripts[0][1]));
-for (const id of ['actionSort', 'showActionThumbs', 'newAction', 'duplicateAction', 'deleteSelectedActions', 'markVisibleActions', 'clearActionMarks', 'actionSelectionStatus', 'proofBackground', 'proofColor', 'exportPreview', 'canvas', 'strip', 'collisionPanel', 'pushPanel', 'runtimePanel', 'sourcePanel', 'sourceConfidence', 'sourceFindings', 'rulesPanel', 'layerPanel', 'palette', 'goCode', 'frameGroup', 'frameIndexValue', 'frameX', 'frameY', 'frameTime', 'frameFlags', 'frameBlend', 'frameScaleX', 'frameScaleY', 'frameAngle', 'applyFrame', 'addFrame', 'duplicateFrame', 'deleteFrame', 'editKind', 'editScope', 'addBox', 'applyBoxEdit', 'revertBoxEdit', 'showPush', 'editBaselinePush', 'editFramePush', 'bridgeKind', 'copyBridge']) assert(html.includes(`id="${id}"`), `missing ${id}`);
+for (const id of ['actionSort', 'showActionThumbs', 'newAction', 'duplicateAction', 'deleteSelectedActions', 'markVisibleActions', 'clearActionMarks', 'actionSelectionStatus', 'proofBackground', 'proofColor', 'exportPreview', 'canvas', 'strip', 'collisionPanel', 'pushPanel', 'runtimePanel', 'sourcePanel', 'sourceConfidence', 'sourceFindings', 'rulesPanel', 'layerPanel', 'palette', 'goCode', 'frameGroup', 'frameIndexValue', 'frameX', 'frameY', 'frameTime', 'frameFlags', 'frameBlend', 'frameScaleX', 'frameScaleY', 'frameAngle', 'applyFrame', 'addFrame', 'duplicateFrame', 'moveFrameEarlier', 'moveFrameLater', 'deleteFrame', 'editKind', 'editScope', 'addBox', 'applyBoxEdit', 'revertBoxEdit', 'showPush', 'editBaselinePush', 'editFramePush', 'bridgeKind', 'copyBridge']) assert(html.includes(`id="${id}"`), `missing ${id}`);
 assert(html.includes("selectedActions:new Set") || html.includes('selectedActions:[...selectedActions]'));
 assert(html.includes("type:'exportPreview'"));
 assert(!html.includes('id="deleteActions"'));
@@ -106,6 +106,40 @@ const empty = finishFixture({ actions: [], currentAction: null, response: { acti
 assert.strictEqual(empty.calls.clear, 1, 'removing the last action must explicitly clear the canvas and property state');
 assert.strictEqual(empty.elements.get('newAction').focusCount, 1, 'an empty AIR must focus New Action as the recovery path');
 assert.strictEqual(empty.context.actionMutationBusy, false, 'a completed lifecycle request must release its busy state');
+const frameMoveStart = client.indexOf('function beginFrameMove(direction)'), frameMoveEnd = client.indexOf('function validFrameForm', frameMoveStart), frameMoveElements = new Map(), frameMoveMessages = [];
+assert(frameMoveStart >= 0 && frameMoveEnd > frameMoveStart, 'generated client must bind visible frame movement controls');
+const frameMoveDispatchContext = {
+  action: { number: 0 }, frameIndex: 1, selectedFrames: new Set([1]), frameMoveReason: () => '',
+  document: { getElementById(id) { if (!frameMoveElements.has(id)) frameMoveElements.set(id, {}); return frameMoveElements.get(id); } },
+  beginActionMutation(message) { frameMoveMessages.push(message); return true; }
+};
+vm.createContext(frameMoveDispatchContext); vm.runInContext(client.slice(frameMoveStart, frameMoveEnd), frameMoveDispatchContext);
+frameMoveElements.get('timelineMoveEarlier').onclick();
+assert.deepStrictEqual(JSON.parse(JSON.stringify(frameMoveMessages[0])), { type: 'moveFrame', action: 0, frameIndex: 1, direction: 'earlier', wasMarked: true }, 'timeline Move Earlier dispatches the exact Action 0 element and mark state');
+const finishFrameSource = clientFunctionSource(client, 'finishFrameMove'), focusedFrames = [], frameElements = new Map([['frameEditStatus', {}], ['timelineStatus', {}]]), frameContext = {
+  actionMutationSerial: 9, actionMutationBusy: true, model: { actions: [{ number: 0, frames: [{}, {}] }] }, action: { number: 0, frames: [{}, {}] }, frameIndex: 1, selectedFrames: new Set([1]),
+  document: { getElementById(id) { if (!frameElements.has(id)) frameElements.set(id, {}); return frameElements.get(id); } },
+  selectAction() { throw new Error('Action 0 is already active and must not be reselected'); }, renderStrip() {}, requestFrame() {}, schedule() {}, updateActionSelection() {},
+  requestAnimationFrame(callback) { callback(); }, focusFrameButton(index) { focusedFrames.push(index); }
+};
+vm.createContext(frameContext); vm.runInContext(finishFrameSource, frameContext); frameContext.finishFrameMove({ actionRequestId: 9, action: 0, from: 1, to: 0, wasMarked: true });
+assert.strictEqual(frameContext.frameIndex, 0, 'frame-move acknowledgment follows the same moved element to its new index');
+assert.deepStrictEqual([...frameContext.selectedFrames], [0], 'a marked moved element remains marked at its new index');
+assert.deepStrictEqual(focusedFrames, [0], 'the moved timeline card is revealed and focused after the model update');
+assert.strictEqual(frameContext.actionMutationBusy, false, 'frame-move completion releases shared AIR mutation busy state');
+const reasonContext = {
+  action: { number: 0, frames: [{}, {}, {}] }, frameIndex: 1, selectedFrames: new Set([0, 1]), model: { pushOverrides: [], runtimeEntries: [] },
+  frameFormsDirty: () => false, runtimeDrafts: { busy: () => false, dirty: () => false }, runtimePrefix: () => 'air|', editRequests: { busy: () => false }, edit: null
+};
+vm.createContext(reasonContext); vm.runInContext(clientFunctionSource(client, 'frameMetadataReason') + clientFunctionSource(client, 'frameMoveReason'), reasonContext);
+assert.match(reasonContext.frameMoveReason('earlier'), /Select only one element/, 'multiple marked timeline elements make a single-frame move unavailable');
+reasonContext.selectedFrames = new Set(); reasonContext.frameIndex = 0;
+assert.match(reasonContext.frameMoveReason('earlier'), /already the first/, 'Move Earlier is disabled at the action boundary');
+reasonContext.frameIndex = 1; reasonContext.model.pushOverrides = [{ action: 0, element: 2 }];
+assert.match(reasonContext.frameMoveReason('earlier'), /Saved push-box metadata/, 'saved element-indexed metadata blocks a visual reorder');
+reasonContext.model.pushOverrides = []; reasonContext.frameFormsDirty = () => true;
+assert.match(reasonContext.frameMoveReason('later'), /current frame-field edit/, 'ordinary unsaved or pending numeric fields block frame reorder');
+assert(client.includes("if(frameFormsDirty()){document.getElementById('frameEditStatus')"), 'all ordinary frame navigation shares the numeric-field draft guard');
 assert(html.includes('<button id="play">Play</button>'));
 assert(html.includes('playing=false'));
 assert(html.includes('id="clsn1" type="checkbox" checked'));
@@ -139,7 +173,7 @@ const airViewerSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'air_v
 assert(airViewerSource.includes("openConnected(session.airPath,'sff'"), 'AIR must use selection-aware shared viewer navigation');
 assert(airViewerSource.includes('viewColumn = session.panel.viewColumn'), 'AIR source opened from its viewer must become a tab in that viewer group');
 assert(airViewerSource.includes("message.type === 'updateFrame'"));
-for (const id of ['timelineEditor', 'timelineGroup', 'timelineIndex', 'timelineX', 'timelineY', 'timelineTime', 'timelineFlags', 'timelineBlend', 'timelineScaleX', 'timelineScaleY', 'timelineAngle', 'timelineApply', 'timelineAdd', 'timelineDuplicate', 'timelineDelete', 'timelineOpenSource']) assert(html.includes(`id="${id}"`), `missing always-visible AIR timeline editor control ${id}`);
+for (const id of ['timelineEditor', 'timelineGroup', 'timelineIndex', 'timelineX', 'timelineY', 'timelineTime', 'timelineFlags', 'timelineBlend', 'timelineScaleX', 'timelineScaleY', 'timelineAngle', 'timelineApply', 'timelineAdd', 'timelineDuplicate', 'timelineMoveEarlier', 'timelineMoveLater', 'timelineDelete', 'timelineOpenSource']) assert(html.includes(`id="${id}"`), `missing always-visible AIR timeline editor control ${id}`);
 assert(html.includes("previousIssue.id='previousAirIssue'"));
 assert(html.includes("nextIssue.id='nextAirIssue'"));
 assert(html.includes('queueFrameAutoApply'));

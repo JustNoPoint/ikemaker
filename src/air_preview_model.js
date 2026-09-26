@@ -135,6 +135,108 @@ function deleteFrameElement(text, options) {
   return lines.filter((_, index) => !remove.has(index)).join(eol);
 }
 
+function rawFrameValues(content) {
+  const clean = String(content || '').replace(/;.*/, '').trim(), parts = clean.split(',').map((part) => part.trim());
+  if (parts.length < 5 || parts.slice(0, 5).some((value) => !/^-?\d+$/.test(value))) return null;
+  return { group: Number(parts[0]), index: Number(parts[1]) };
+}
+
+function rawCollisionBlock(lines, lineIndex) {
+  const clean = String(lines[lineIndex]?.content || '').replace(/;.*/, '').trim(), header = CLSN_HEADER.exec(clean);
+  if (!header) return null;
+  const kind = `clsn${header[1]}`, isDefault = Boolean(header[2]), count = Number(header[3]);
+  for (let offset = 1; offset <= count; offset += 1) {
+    const record = lines[lineIndex + offset], box = record && CLSN_BOX.exec(record.content.replace(/;.*/, '').trim());
+    if (!box || `clsn${box[1]}` !== kind) throw new Error(`Malformed ${isDefault ? `${kind}Default` : kind} block near AIR line ${lineIndex + 1}; reorder it in Source.`);
+  }
+  return { kind, isDefault, count, endLineIndex: lineIndex + count };
+}
+
+function frameElementRanges(text, actionNumber) {
+  const source = String(text || ''), range = uniqueActionRange(source, actionNumber), local = range.text, lines = sourceLines(local), blocks = [];
+  let pendingStart = null, pendingLoop = 0, pendingInterpolation = [], boundaryBefore = [];
+  for (let lineIndex = 1; lineIndex < lines.length; lineIndex += 1) {
+    const line = lines[lineIndex], clean = line.content.replace(/;.*/, '').trim();
+    if (!clean) continue;
+    const collision = rawCollisionBlock(lines, lineIndex);
+    if (collision) {
+      if (collision.isDefault) {
+        boundaryBefore.push(`${collision.kind}Default changes before element ${blocks.length + 1}`);
+        pendingStart = null;
+      } else if (pendingStart === null) pendingStart = line.start;
+      lineIndex = collision.endLineIndex;
+      continue;
+    }
+    if (/^loopstart$/i.test(clean)) {
+      if (pendingStart === null) pendingStart = line.start;
+      pendingLoop += 1;
+      continue;
+    }
+    const interpolation = /^interpolate\s+(offset|scale|angle|blend)$/i.exec(clean);
+    if (interpolation) {
+      if (pendingStart === null) pendingStart = line.start;
+      pendingInterpolation.push(interpolation[1].toLowerCase());
+      continue;
+    }
+    const frame = rawFrameValues(line.content);
+    if (frame) {
+      const localStart = pendingStart === null ? line.start : pendingStart, start = range.start + localStart, end = range.start + line.end;
+      blocks.push({ frameIndex: blocks.length, start, end, text: source.slice(start, end), group: frame.group, index: frame.index, loopStart: pendingLoop, interpolation: [...pendingInterpolation], boundaryBefore: [...boundaryBefore] });
+      pendingStart = null; pendingLoop = 0; pendingInterpolation = []; boundaryBefore = [];
+      continue;
+    }
+    boundaryBefore.push(`unsupported directive on AIR line ${range.lineIndex + lineIndex + 1}: ${clean}`);
+    pendingStart = null; pendingLoop = 0; pendingInterpolation = [];
+  }
+  const parsed = parseAir(source).filter((item) => item.number === Number(actionNumber));
+  if (parsed.length !== 1 || parsed[0].frames.length !== blocks.length) throw new Error(`Action ${actionNumber} has ambiguous frame ownership; reorder it in Source.`);
+  return { action: parsed[0], range, blocks };
+}
+
+function frameSemantic(frame) {
+  return {
+    group: frame.group, index: frame.index, x: frame.x, y: frame.y, rawTime: frame.rawTime, flags: frame.flags, blend: frame.blend,
+    scaleX: frame.scaleX, scaleY: frame.scaleY, angle: frame.angle, fieldCount: frame.fieldCount, interpolate: frame.interpolate,
+    clsn1: frame.clsn1, clsn2: frame.clsn2, clsn1Source: frame.clsn1Source, clsn2Source: frame.clsn2Source,
+    clsn1Default: frame.clsn1Default, clsn2Default: frame.clsn2Default
+  };
+}
+
+function moveFrameElementPatch(text, options) {
+  const source = String(text || ''), actionNumber = integerField(options.action, 'Action number'), from = integerField(options.frameIndex, 'Frame index');
+  const direction = String(options.direction || '').toLowerCase(), delta = direction === 'earlier' ? -1 : direction === 'later' ? 1 : 0;
+  if (!delta) throw new Error('Frame direction must be earlier or later.');
+  const ownership = frameElementRanges(source, actionNumber), to = from + delta;
+  if (!ownership.blocks[from]) throw new Error(`Action ${actionNumber}, element ${from + 1} could not be located.`);
+  if (!ownership.blocks[to]) throw new Error(`Element ${from + 1} is already the ${delta < 0 ? 'first' : 'last'} element in Action ${actionNumber}.`);
+  const earlier = ownership.blocks[Math.min(from, to)], later = ownership.blocks[Math.max(from, to)];
+  const boundaries = [...later.boundaryBefore, ...earlier.boundaryBefore.filter((item) => /^unsupported directive/i.test(item))];
+  if (boundaries.length) throw new Error(`This move crosses ${boundaries.join('; ')}. Use AIR Source so persistent or ambiguous directives are reviewed explicitly.`);
+  const loopMarkers = ownership.blocks.reduce((sum, block) => sum + block.loopStart, 0);
+  if (loopMarkers > 1) throw new Error(`Action ${actionNumber} has more than one LoopStart marker; reorder it in Source.`);
+  const splitEnding = (value) => { const match = /(\r\n|\r|\n)$/.exec(value); return match ? { body: value.slice(0, -match[0].length), eol: match[0] } : { body: value, eol: '' }; };
+  const earlierParts = splitEnding(earlier.text), laterParts = splitEnding(later.text), anchoredTrivia = source.slice(earlier.end, later.start);
+  const patch = { start: earlier.start, end: later.end, text: laterParts.body + earlierParts.eol + anchoredTrivia + earlierParts.body + laterParts.eol }, updated = applyActionPatches(source, [patch]);
+  const next = frameElementRanges(updated, actionNumber), expected = ownership.action.frames.map(frameSemantic);
+  [expected[from], expected[to]] = [expected[to], expected[from]];
+  const actual = next.action.frames.map(frameSemantic);
+  if (JSON.stringify(actual) !== JSON.stringify(expected)) throw new Error('The reordered AIR would change frame or collision semantics; nothing was written. Use Source for this action.');
+  if (loopMarkers) {
+    const marked = ownership.blocks.findIndex((block) => block.loopStart);
+    const expectedLoop = marked === from ? to : marked === to ? from : marked;
+    if (next.action.loopStart !== expectedLoop) throw new Error('LoopStart ownership could not be preserved safely; reorder this action in Source.');
+  }
+  const moving = ownership.blocks[from], neighbor = ownership.blocks[to];
+  const firstHold = (frames) => frames.findIndex((frame) => frame.rawTime === -1), holdBefore = firstHold(ownership.action.frames), holdAfter = firstHold(next.action.frames);
+  return {
+    ...patch, action: actionNumber, from, to,
+    movingSprite: [moving.group, moving.index], neighborSprite: [neighbor.group, neighbor.index],
+    loopStartBefore: loopMarkers ? ownership.action.loopStart : null, loopStartAfter: loopMarkers ? next.action.loopStart : null,
+    movingInterpolation: moving.interpolation, neighborInterpolation: neighbor.interpolation,
+    holdBefore, holdAfter, reachableBefore: holdBefore < 0 ? ownership.action.frames.length : holdBefore + 1, reachableAfter: holdAfter < 0 ? next.action.frames.length : holdAfter + 1
+  };
+}
+
 function sourceLines(text) {
   const source = String(text || ''), records = []; let start = 0, match;
   const eols = /\r\n|\r|\n/g;
@@ -289,4 +391,4 @@ function selectionAtLine(text, lineZeroBased) {
   return null;
 }
 
-module.exports = { parseAir, updateCollisionBlock, updateCollisionBlocks, updateFrameElement, insertFrameElement, deleteFrameElement, actionSourceRanges, createActionPatch, duplicateActionPatch, deleteActionPatches, applyActionPatches, requireActionMutationBaseline, deleteActions, actionAtLine, selectionAtLine };
+module.exports = { parseAir, updateCollisionBlock, updateCollisionBlocks, updateFrameElement, insertFrameElement, deleteFrameElement, frameElementRanges, moveFrameElementPatch, actionSourceRanges, createActionPatch, duplicateActionPatch, deleteActionPatches, applyActionPatches, requireActionMutationBaseline, deleteActions, actionAtLine, selectionAtLine };
