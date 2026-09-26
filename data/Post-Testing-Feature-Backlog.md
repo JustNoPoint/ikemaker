@@ -863,3 +863,73 @@ Proposed scope for later refinement:
 - Include deduplication, paging, last-sync visibility and usable offline/cached results; distinguish stale data from a successful fresh check. Reports alone do not authorize changes to local project files or remote issue status.
 
 Before activation: decide whether the website presents an existing issue tracker such as GitHub Issues or needs its own storage; prefer reuse if it meets the reporting/privacy needs. Hosting, public/private access, moderation, upload limits and authentication remain undecided. Do not commit to a custom backend or deployment now. This item does not change the Thursday usage reserve or current SF6 implementation priorities.
+
+## Phase 1 — Unified Move Lab and fewer redundant screens
+
+Status: explicitly added to Phase 1 by JNP on 2026-09-26. This item overrides
+this file's older blanket deferral wording for this scope. Plan and implement
+in bounded reviewed slices; retain the 35% usage reserve and local-only work.
+
+Consolidate Universal Move Lab and JNP Move Constants into one user-facing
+Move Lab. Use the richer integrated editing experience as the foundation;
+retain the universal character/source discovery and overview as optional
+sections rather than competing top-level move editors.
+
+- Constants and maps are value sources. HitDefs, projectiles, helpers and
+  functions are execution components. A move may combine them; do not force
+  exclusive modes, JNP naming, conversion, or a preferred coding method.
+- Preserve animation/collision/timing/reaction previews, connected editable
+  code, source-linked values, diagnostics and specialist navigation. Identify
+  shared-value impact before Apply. Unknown/custom structures retain Source
+  access and are never silently rewritten.
+- Show relevant components in collapsible sections or internal tabs. Retain
+  user visibility preferences and accessible keyboard navigation. An optional
+  Overview / Related Tools area should not duplicate the main editing flow.
+- Keep legacy commands/deep links working through compatible routing and
+  preserve character/move selection, drafts, history and source locations.
+  Consolidation must not discard features or silently redirect an edit target.
+
+Apply the same principle across Phase 1: reduce unnecessary destinations,
+repeated launchers and overlapping editors. Before adding a screen, determine
+whether the task belongs in an existing workspace as a section, inspector,
+internal tab or contextual action. Review existing overlaps in small groups;
+record each screen's unique purpose and what it shares before merging it.
+Keep specialist screens when they serve a distinct focused workflow. Preserve
+optional separate windows/tabs for users who prefer them; simplify the default
+experience rather than prohibiting advanced workflows. Respect Player,
+Simple and Workspace modes without exposing irrelevant authoring controls.
+
+First deliverable: a bounded Move Lab consolidation design and capability
+comparison with a staged migration plan. Follow with focused checks for
+legacy entry points, direct-code and constants/maps-based characters,
+compound moves, draft retention, explicit Apply/Undo, navigation and hidden
+panel preferences. Do not undertake an unbounded all-screen rewrite.
+No installation, packaging, push or upload is authorized by this backlog item.
+
+### Cross-screen integration and reuse — JNP clarification
+
+This Phase 1 work is broader than removing redundant screens. Review how a
+capability, selection, or result from one screen can improve another screen's
+workflow. Keep distinct tools where useful while making their capabilities
+available in the context where an author needs them.
+
+Examples to evaluate in bounded slices:
+- Move Lab can reuse AIR frame/collision editing, palette-aware sprite preview,
+  sound audition, and relevant diagnostics without requiring repeated setup.
+- Maps, constants, functions and other Project Data pickers can supply source-
+  linked values and usage information inside the editing screens that use them.
+- Selecting a move, animation element, sprite, sound or code reference carries
+  the exact character/project and source selection into connected tools; a
+  return route restores the prior selection, view and unfinished draft.
+- Changes explicitly applied in one tool refresh dependent previews and
+  diagnostics elsewhere, while preserving other unsaved drafts and surfacing
+  conflicts. Shared context must never imply shared write permission.
+- Reuse proven controls/renderers/validation rather than maintaining different
+  versions of the same capability across screens. Prefer lightweight embedded
+  tools or contextual access; keep an optional full specialist workspace.
+
+The design inventory must identify each screen's useful capabilities, where
+other screens would benefit from them, existing connections, and gaps. Rank
+small improvements by reduced context switching and repeated work in JNP's
+actual authoring flow. Avoid filling every screen with every control; show
+relevant capabilities on demand and preserve visibility preferences.
