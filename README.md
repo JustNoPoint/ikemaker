@@ -17,7 +17,9 @@ Upgrading IKEMaker does not remove or disable a Lua extension already installed,
 
 ## Source history
 
-The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Versions 0.78.1 and 0.78.2 are separate normal source commits; future release tags should identify their actual source commits.
+The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Versions 0.78.1 through 0.78.3 are separate normal source commits; future release tags should identify their actual source commits.
+
+Version 0.78.3 adds the first personal example shelf inside Pinned Sources. A user can pin the current ZSS, CNS, or Lua block with a personal label, keep it in extension workspace state, and reopen, rename, remove, or explicitly relink it without writing to character or game folders. Entries remain isolated by character/project owner, identify explicitly linked shared sources, show compact excerpts, relocate only on one exact content match, and visibly report changed, missing, ambiguous, or no-longer-linked sources instead of silently opening an old line.
 
 Version 0.78.2 corrects the JNP Move Constants P2 preview transform by storing its axis in authored/world coordinates instead of absolute screen pixels. Zoom and resize now share the P1 camera origin, preserve P2's authored coordinates, and scale the visible P1–P2 relationship consistently; prior saved screen positions migrate without an initial jump. Shared classic HitDef values now use decimal-safe quick inputs and reviewed checkmark Apply actions while retaining Source navigation, stale-source rejection, shared-impact confirmation, normal Undo, and unsaved-document review.
 

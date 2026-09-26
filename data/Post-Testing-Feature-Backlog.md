@@ -195,7 +195,8 @@ fundamentals. The optional beginner Flow Mode above remains a separate use case.
 
 ### Suggested order and scope
 
-1. **Personal example shelf and find-similar code.** Pin existing blocks with
+1. **Personal example shelf and find-similar code.** The bounded personal shelf
+   is implemented in the 0.78.3 source; broader find-similar remains deferred. Pin existing blocks with
    JustNoPoint's own labels and source links. From the current move/block, find relevant
    implementations in the active project and explicitly linked shared code.
    Show enough surrounding conditions and dependencies to judge suitability.
@@ -325,7 +326,7 @@ Priority order; finish/test each useful slice before taking the next:
 1. Resolve active regressions affecting current work, especially any currently reported prefix behavior. Confirm the user's intended baseline with existing SF6 context; do not infer that a previously reviewed release supersedes later fixes.
 2. Reproduce and fix the recorded JNP Move Constants P2 zoom/coordinate defect, if still present. Limit initial scope to that viewer and directly shared transform code. Define the intended zoom pivot correctly: authored/world coordinates must not change; zoom naturally changes screen-space distances from the pivot. Do not try to keep every independent screen-space point stationary under scaling, as the older backlog wording implies. Verify P1/P2/CLSN/hitspark alignment using the same camera transform, zoom round-trips and restoration without writes. Expand to other viewers only if shared code/evidence warrants it, not an all-viewer audit.
 3. Shared classic HitDef quick editing in the existing Move Constants view, if still missing. Reuse existing reviewed Apply, shared-source label, impact disclosure, conflict and Undo behavior; preserve decimal/negative drafts. No automatic project files/backups. Earlier references to backup/history in this backlog do not authorize restoring auto-backups or overriding current user consent policy.
-4. If useful capacity remains, implement the smallest personal example shelf: pin an existing block with a label/source link, scoped to current project plus deliberately linked shared sources; reopen/show current code and mark changed/missing references. Keep it in an existing coding surface with a visible entry point (not right-click-only), optional/collapsible, stored in disclosed extension workspace state. First slice is recognition/reference browsing only; defer automatic adaptation, semantic/AI search, dependency substitution and a new general browser framework.
+4. Completed in the 0.78.3 source: the smallest personal example shelf pins an existing block with a label/source link, scoped to the current character/project plus deliberately linked shared sources; it reopens current code and marks moved, changed, missing, ambiguous, or no-longer-linked references. It is visible and collapsible inside Pinned Sources and stored in disclosed extension workspace state. Automatic adaptation, semantic/AI search, dependency substitution and a new general browser framework remain deferred.
 
 Requirements: bounded tests for changed behavior, a short manual test list for JNP, no desktop takeover, no edits to live character/game content without explicit user approval. Use fixtures for authoring tests. Preserve Player/Simple/Workspace mode organization, and avoid adding default-open panes. Keep reference scope isolated across games/authors. Record completed/current/deferred status clearly, with exact commit and focused results.
 

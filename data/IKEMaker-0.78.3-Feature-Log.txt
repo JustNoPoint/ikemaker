@@ -1,0 +1,35 @@
+IKEMaker 0.78.3 source feature log
+=================================
+
+Personal example shelf
+----------------------
+- Adds a visible, collapsible My Examples shelf to the existing Pinned Sources
+  coding surface.
+- Pins the current ZSS, CNS, or Lua block with an optional personal label and a
+  compact contextual excerpt.
+- Stores bookmarks and labels only in extension workspace state. Pin, rename,
+  remove, open, and relink actions do not copy or edit source code.
+- Isolates examples by character/project owner and visibly identifies sources
+  assigned from outside the character folder as shared.
+- Permits only the active character's assigned files and explicitly linked
+  shared sources; a source removed from that contract is reported as unlinked.
+- Verifies the original range and content fingerprint before opening. A uniquely
+  moved exact block is relocated; changed, missing, ambiguous, and unlinked
+  entries remain visible for review or explicit relinking.
+- Pinning the same exact block updates the existing bookmark instead of creating
+  a duplicate.
+
+Scope and safety
+----------------
+- This is recognition and read-only source navigation. It does not add AI search,
+  automatic adaptation, dependency substitution, or code generation.
+- No character, game, sidecar, backup, or history files are created.
+- GIF conversion and all evidence-acquisition research remain deferred Phase 2.
+- Automated coverage includes block identity, persistence, project isolation,
+  explicitly linked shared scope, duplicate pins, rename/remove/relink behavior,
+  and moved/changed/missing/ambiguous source states.
+
+Release state
+-------------
+Source-only. No VSIX/package has been built or installed, and nothing has been
+pushed, tagged, or published.
