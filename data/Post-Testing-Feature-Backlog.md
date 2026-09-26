@@ -85,453 +85,6 @@ Save/Undo under normal editor control. It does not create automatic backups or a
 move-local constant. A successful apply refreshes all affected summaries.
 Cancellation does not write the source; invalid or stale values are rejected.
 
-## Reference and Knowledge Intake workspace
-
-Status: specified and deferred. Priority: foundational companion to Source Game
-Lab and multi-game character planning. Full behavior is recorded in
-`Reference-Knowledge-Intake-Workspace-Spec.md`.
-
-Accept URLs, pasted research, local documents/media, community discussions,
-manual decisions, and emulator evidence. Preserve offline source snapshots and
-atomic claims with revision, scope, provenance, confidence, conflicts, and
-review status. Imported material is evidence, never instruction or an automatic
-project rule. Provide two-way links to characters, mechanics, assets, source
-profiles, code, tests, workflows, and tickets. Use Morrigan and Demitri as the
-first proving fixture while keeping Vampire Savior facts, DSvsSF choices, and
-DS4 choices distinct.
-
-## Legacy source-game acquisition lab
-
-Status: researched and deferred. Priority: high-value foundation after the
-production test. Full research and proposed architecture are recorded in
-`Legacy-Capcom-SNK-Data-Acquisition-Research.md`.
-
-The first profiles should target Capcom CPS-1/2/3 and SNK Neo Geo. Prefer
-version-identified MAME/FBNeo memory and Lua trace exports for timing, position,
-velocity, state, collision, palette, and sound-command data. Preserve raw
-captures separately from decoded meanings and derived IKEMEN values. Existing
-community hitbox decoders should export structured rectangles directly; the
-fixed-camera image importer below remains a fallback and visual verification
-path.
-
-For CPS-1/2, prioritize a shared normalized capture record plus read-only CPS
-Register, OBJ List, and SCROLL/Stage inspectors. Preserve raw CPS-A/CPS-B
-registers, object/tile descriptors, palette-page state, rowscroll tables, layer
-order, and per-pen priority masks. Prove one frozen-frame reconstruction before
-animation sweeps or batch ripping. CPS-B layouts remain board/revision profiled;
-do not assume a single register map across games or that CPS-1 and CPS-2 are
-identical.
-
-IKEMaker should also act as an external-emulator session front end and a
-reviewed sprite-ripping interface. It may launch configured MAME, FBNeo,
-Flycast, Flycast Dojo, and PCSX2 profiles,
-control capture/trace actions, and consume adapter output without embedding or
-bundling the emulator. Sprite isolation must be object-aware or use matched
-suppression/differential captures: global hardware layer toggles cannot separate
-P1 from P2, projectiles, shadows, or other objects sharing the sprite plane.
-Game-provided debug cheats that cycle animation frames should appear as an
-optional profile capability named Animation Frame Sweep.
-
-The first conversion implementation must prioritize a normalized per-tick
-intermediate format, calibrated/versioned source profiles using stable guest
-addresses where possible, and source-versus-IKEMEN animation/trajectory/box
-comparison. State-graph discovery, move recipes, palette-independent frame
-matching, multi-pass object isolation, audio-command tracing, and transactional
-code generation follow after that foundation is proven. Full rules are recorded
-in `Legacy-Capcom-SNK-Data-Acquisition-Research.md`.
-
-Add a character-owned companion reconstruction pass after the normalized trace
-and comparison foundation. It records owned objects in root-relative and world
-coordinates, discovers binding/following/orbit/easing and animation-response
-patterns, and proposes reviewed AIR/SFF layers, Explods, or persistent helpers.
-BB Hood's butterflies and dog are the required fixture because they exercise
-two different companion behaviors tied to the same character.
-
-Palette capture must preserve source index provenance: local tile pen, palette
-bank, hardware palette index, remapped/indirect pen, raw palette word, decoded
-color, transparency, and owning object. IKEMaker should export indexed images
-from that ordered data without PNG palette optimization, and show a reviewed
-source-to-IKEMEN index map before SFF staging.
-
-Darkstalkers stage acquisition should use palette-separated Stage Source
-Packages. Rip indexed tiles, layout, object layers, and scrolling metadata once;
-store palette variants and dynamic palette-write timelines separately. Permit a
-palette from another game/revision to reuse the package only after graphics and
-layout hashes/signatures match. Structural differences remain unresolved rather
-than being mistaken for palette-only changes.
-
-Add a reviewed screenshot palette-transfer fallback for console ports such as
-Sega Saturn. Align one or more clean native screenshots with the known indexed
-stage render, infer an RGB assignment for each established source index, show
-confidence/conflicts, and save a named visual palette variant. Label it
-visually recovered: screenshots cannot prove the port's actual hidden palette
-index numbers or ordering. Do not build a Saturn-specific emulator adapter or
-memory/CRAM profile for this edge case.
-
-Before implementing the lab, add the two-field project classification defined
-in `IKEMaker-Information-Architecture.md`: distribution intent and content
-basis. IKEMaker's normal tools remain classification-neutral; the JNP source
-acquisition lab is confined to hobby/non-commercial fan-project profiles and
-must reject transfers into any project classified as commercial/original.
-
-## Reference-image and video collision capture
-
-Status: research after production testing. Priority: promising, non-blocking.
-
-### Goal
-
-Allow an author to import screenshots, extracted frames, or video containing a
-game/emulator collision-box display, calibrate that reference to an IKEMEN AIR
-frame, and create reviewed Clsn data in the existing AIR workspace.
-
-### Feasibility levels
-
-1. **Colored collision-box screenshots — high feasibility.** If the source
-   visibly draws stable red, blue, yellow, green, purple, or other configured
-   rectangle colors, IKEMaker can inspect the pixels, find rectangle edges,
-   classify them from a user-selected legend, and propose Clsn coordinates.
-   Conventional image processing should be preferred over generative AI.
-2. **Extracted video frames with a visible collision-box overlay — feasible
-   only from a fixed capture.** The source must not use a moving, zooming, or
-   otherwise dynamic camera. IKEMaker can accept the extracted frame images,
-   use a user-assigned axis and fixed scale, track colored rectangles, and let
-   the user associate frames with AIR elements. Accepting a PNG frame sequence
-   is the intended implementation; automatic dynamic-camera compensation is
-   outside scope.
-3. **Ordinary gameplay with invisible collision boxes — not authoritative.** A
-   model could only estimate boxes from silhouettes, poses, sparks, and contact
-   results. Such output may be offered as a low-confidence drawing aid, never as
-   an automatic or verified conversion.
-
-### Required calibration
-
-- Source resolution and any fixed crop, letterbox, stretch, or emulator scale.
-- A character origin/axis. If the source does not contain one, IKEMaker must
-  allow the user to place or numerically assign it before conversion.
-- P1/P2 ownership and facing.
-- Source color legend mapped to Clsn1, Clsn2, defaults, push, width, depth, or a
-  project-specific box type.
-- Association between each source image/video interval and an AIR action and
-  element.
-- Optional tolerance for antialiasing, compression noise, translucent fills,
-  dotted borders, and several nested boxes of the same color.
-
-### Proposed reviewed workflow
-
-1. Import a screenshot, image sequence, or local video.
-2. Choose or sample the source game's box colors.
-3. Place or confirm the character axis, then calibrate the fixed scale, crop,
-   local coordinates, and facing.
-4. Detect rectangles and show confidence for every proposed box.
-5. Overlay proposals on the current SFF/AIR sprite.
-6. Let the user move, resize, reclassify, add, or reject each proposal using the
-   existing direct box editor.
-7. Step through frames and optionally track persistent boxes forward.
-8. Preview the AIR patch and every affected element.
-9. Apply through the normal backup, stale-file, history, and undo safeguards.
-
-### Quality-of-life candidates
-
-- Side-by-side source image, extracted overlay, and IKEMaker AIR preview.
-- A color sampler plus saved source-game presets.
-- One-click X mirroring when the captured character faces left.
-- An axis-placement crosshair with drag controls, numeric X/Y entry, snapping,
-  copy-to-following-frames, and a persistent fixed-capture calibration.
-- Difference view that highlights boxes changed from the previous frame.
-- Track one selected rectangle across adjacent frames, but stop and request
-  review when confidence drops or boxes split/merge.
-- Batch assignment to repeated AIR elements only after a visual change-impact
-  preview.
-- Preserve the reference path, calibration, source frame/time, confidence, and
-  reviewer decision as optional evidence metadata outside the AIR file.
-- Keep all source media local; no network or AI upload is necessary for colored
-  debug-box capture.
-
-## Animated GIF data collection bridge
-
-The existing GIF timing converter is reusable Source Game Lab infrastructure,
-not merely a one-way AIR convenience. Preserve its current authoring shortcut,
-but let it open or create a Lab capture containing the original GIF delays and
-the complete mapping to the 60-Hz working timeline.
-
-JustNoPoint's required expansion is to collect and convert P1 animation timing, P2
-reaction timing, hit/contact timing, hitspark placement/timing, and separate FX
-placement/timing. Supported results must feed target-ready AIR timing/actions,
-move/hit settings, and correctly owned effect/helper code proposals. Logs and
-annotations alone do not satisfy this requirement.
-
-Proposed UI uses synchronized P1, P2, hitspark, and per-FX tracks with
-onset/end/duration, contact markers and per-frame placement. Each placement
-retains an explicit P1/P2/world/screen anchor, facing, scale, camera, crop and
-aspect calibration. Manual correction and whole-move review/application are
-required. A GIF and its delays do not prove source logic ticks, recover omitted
-frames, or by themselves establish true hitpause, hitstun, guardstun, or
-recovery; those fields remain unresolved unless corroborated.
-
-### Frame-linked event meaning (approved expansion, 2026-09-24)
-
-Artist-provided GIFs may depict P2 striking a wall or floor after the original
-attack. Preserve JustNoPoint's supplied explanations as annotations attached to the
-original frame or frame range, and carry those associations through the 60-Hz
-conversion. Event meaning must not be inferred solely from a visible spark.
-
-Each event records its participants, event type, source frames, associated
-effects, placement anchor and the user's original note. Distinguish attack
-contact from wall impact, floor impact, landing, knockdown, wall/ground bounce
-and secondary effects such as dust or debris. Link later impacts to the move
-sequence without treating them as additional attack hits.
-
-These distinctions must inform generated timing, placement and gameplay
-proposals: an attack pause and a later wall-impact pause are separate events;
-a wall spark belongs at its annotated impact anchor, not automatically at P1's
-attack contact point. Preserve explicit user corrections; mark ambiguous or
-contradictory events for review rather than guessing engine behavior. Notes
-describe intended meaning but do not establish otherwise unmeasured durations.
-
-Acceptance example: a GIF shows P1 hitting P2, P2 hitting a wall, then landing
-with dust. All three events and their effects remain separately identified
-after resampling, with their notes available from the generated proposals.
-
-### Participant choreography and movement control (approved expansion, 2026-09-24)
-
-Provide a shared choreography timeline for P1, P2 and each participating helper
-or FX object. Record axis placements and applicable velocities for every
-participant, not only the attacker. JustNoPoint can annotate throw-like or cinematic
-intent and the exact points where binding gives way to velocity-driven motion.
-A throw label does not imply that every phase is bound: movement control is
-explicit per participant and per frame range.
-
-Required track data and behavior:
-
-- Axis position, facing and coordinate reference (world, screen or relative to
-  another participant), with scale and source-frame/target-tick associations.
-- Movement-control intervals: velocity-driven, bound, scripted positioning or
-  stationary. Preserve observed paths separately from the chosen control model;
-  displacement during a binding must not automatically become gameplay velocity.
-- Binding target, relative offsets, start/end boundaries and facing/mirroring
-  rules. Record which participant controls the relationship.
-- Release boundary, initial X/Y velocity, acceleration/gravity and explicit
-  preserve/replace momentum behavior. Specify transition ordering so binding
-  and free movement do not accidentally apply together at release.
-- Optional contact anchors such as hand, foot or shoulder, distinct from the
-  character axis, to describe grabs and other alignment constraints.
-- Separate camera position/zoom information so camera motion is not mistaken
-  for participant movement; support facing changes and side switches.
-- Linked grab, damage, release, wall-impact, bounce and landing events, with
-  effects attached to the correct participant/event and coordinate anchor.
-- Miss/interruption/exit behavior that releases bindings and restores any
-  sequence-owned camera/effect state appropriately.
-
-Keep user annotations and corrections attached to the original frame ranges
-through resampling. Distinguish measured values from authored choices and
-unresolved estimates. A cinematic sequence may position or bind both players
-for most of its duration; do not force its path into a velocity model. Do not
-invent camera calibration or source timing from ambiguous GIF evidence.
-
-Reviewed choreography must feed usable target binding, positioning, release
-and movement code alongside AIR timing and effect/event proposals. Reuse the
-existing whole-move preview/apply/compare workflow, preserving prior authored
-values and the link back to source evidence.
-
-Acceptance example: grab connects -> P2 binds to P1 -> both participants follow
-scripted choreography -> P2 releases with a specified velocity -> wall impact
--> fall/landing. Verify independent axes, binding offsets, release timing,
-mirrored facing, separate camera motion, correctly associated effects and
-cleanup on interruption. No unintended velocity is generated for bound phases.
-
-## Fixed-capture velocity calculator
-
-Status: part of the deferred collision-reference importer. It uses the same
-fixed-camera source, axis calibration, frame association, and review boundary.
-
-### Goal
-
-Measure the character axis across known source-game ticks and convert that
-motion into reviewed IKEMEN velocity values. Collision rectangles and sprite
-edges are not motion anchors. The character axis is the authoritative sample
-point.
-
-### Required inputs
-
-- A fixed-camera, fixed-zoom image sequence with known chronological order.
-- The character axis on every sampled frame. IKEMaker may carry forward,
-  interpolate, or visually track an assigned axis, but the user must be able to
-  correct every sample.
-- Source capture rate and, separately, the number of actual source-game logic
-  ticks represented by each interval. Video frames must not be assumed to equal
-  game ticks.
-- Source game-speed/turbo/frame-skip profile where applicable.
-- Fixed X and Y conversion scales from source pixels to target IKEMEN local
-  coordinates.
-- Source facing and the intended IKEMEN facing convention.
-- The AIR action, StateDef, or movement phase that will consume the result.
-
-### Calculations and outputs
-
-- Per-interval X/Y displacement in target local-coordinate units.
-- Average X/Y velocity per IKEMEN tick.
-- Initial velocity candidates for `velSet` or StateDef `velset`.
-- Per-tick acceleration candidates for `velAdd`.
-- Multiplicative decay candidates for `velMul` when the samples fit that model.
-- Total displacement, elapsed source ticks, elapsed target ticks, peak speed,
-  direction changes, and residual error.
-- Horizontal facing normalization and vertical-axis sign conversion so upward
-  screen motion becomes the correct IKEMEN Y direction.
-- Copyable CNS and ZSS examples, clearly labeled as proposals rather than
-  authored truth.
-
-For an interval covering `N` verified source ticks, IKEMaker first converts the
-axis displacement from pixels to target local-coordinate units. When source and
-target tick rates differ, it converts through elapsed time rather than treating
-captured video frames as ticks. The UI should display the complete calculation,
-not only the rounded final velocity.
-
-### Reviewed workflow
-
-1. Assign or confirm the axis on the first frame.
-2. Step through the sequence and confirm/adjust the axis samples.
-3. Enter the source timing/game-speed profile and target local-coordinate scale.
-4. Mark movement segments such as launch, travel, deceleration, apex, fall,
-   bounce, landing, or teleport/discontinuity.
-5. Plot measured positions and velocities per tick.
-6. Fit constant velocity, velocity-plus-acceleration, or multiplicative decay
-   only for the selected segment.
-7. Simulate the proposed IKEMEN trajectory over the source frames and display a
-   ghost axis/path for comparison.
-8. Let the user adjust rounding and controller choice, then copy code or stage a
-   reviewed patch through the normal impact/backup/history safeguards.
-
-### Safety and accuracy rules
-
-- Reject dynamic camera movement or zoom. Do not attempt camera compensation.
-- Do not infer velocity from animation offsets, sprite borders, hit sparks, or
-  collision-box edges when an axis path is unavailable.
-- Detect duplicate video frames, missing frames, abrupt discontinuities, and
-  teleports; require the user to classify or split those intervals.
-- Never silently assume that video FPS equals the source game's logic rate.
-- Keep separate X and Y scales available for sources that were stretched or
-  require aspect correction.
-- Show unrounded measurements, rounded engine values, and resulting trajectory
-  error together.
-- Do not automatically write movement code. Velocity conversion remains a
-  proposal until the author reviews it in IKEMEN.
-
-### Cheat Engine and direct-memory velocity input
-
-The calculator should also accept velocity values obtained directly from Cheat
-Engine or another memory inspector. This is an alternate measurement source,
-not a separate authoring system. It feeds the same trajectory preview and
-reviewed CNS/ZSS output.
-
-Supported input descriptions should include:
-
-- Decimal or hexadecimal source value.
-- Signed integer, unsigned integer, IEEE float, or fixed-point encoding.
-- Fixed-point fractional-bit count or explicit divisor, such as value / 256 or
-  value / 65536.
-- Whether the value is velocity per source logic tick, velocity per rendered
-  frame, velocity per second, or an unknown internal unit.
-- Source logic/update rate and game-speed/turbo/frame-skip profile.
-- Source-world-unit to target-IKEMEN-local-coordinate X/Y scale.
-- Sign convention, facing convention, and vertical-axis direction.
-- Optional separate X and Y values and separate conversion rules.
-
-When the source encoding or unit scale is unknown, IKEMaker should provide a
-calibration mode. The user supplies one or more memory values together with the
-observed axis displacement and verified elapsed source ticks. IKEMaker solves
-and displays the conversion multiplier, tests it against the remaining samples,
-and reports residual error. One sample may produce a provisional conversion;
-several samples are required before the profile can be marked reviewed.
-
-Reviewed conversion profiles may be saved by source game, regional/version
-identifier, executable/hash note, character or universal scope, value encoding,
-and game-speed setting. A profile must never be silently reused for another
-revision or turbo mode. Editing a profile must show every velocity measurement
-that depends on it.
-
-The displayed calculation should retain each stage explicitly:
-
-1. Decode the raw memory value.
-2. Apply fixed-point or internal-unit scaling.
-3. Convert the source update basis into elapsed time/source ticks.
-4. Convert source world units into target local-coordinate units.
-5. Normalize facing and vertical direction.
-6. Produce the unrounded IKEMEN velocity and the reviewed rounded value.
-7. Simulate the resulting IKEMEN trajectory and show its error against the
-   captured/reference samples.
-
-IKEMaker itself should not read, inject into, or write to a running game
-process. Manual entry remains supported. An explicitly enabled file-based
-Cheat Engine bridge may guide scans, request reviewed freezes/writes, and save
-tables while the user's Cheat Engine installation remains solely responsible
-for process access. The bridge design and SFA3 pilot are defined in
-[`Cheat-Engine-Bridge-Specification.md`](Cheat-Engine-Bridge-Specification.md).
-
-### Safety and authority rules
-
-- Never write detected boxes directly into AIR without a review preview.
-- Never claim ordinary gameplay footage reveals an original game's exact hidden
-  collision data.
-- Do not confuse source-game colors with IKEMaker's display colors; the mapping
-  must be explicit and editable.
-- Default Clsn inheritance must be shown distinctly from per-element boxes.
-- Reject a sequence when its camera position or zoom changes. Camera correction
-  is not part of this tool; the source should be recaptured under fixed-camera
-  conditions.
-- Ambiguous, partly occluded, motion-blurred, compressed, or off-screen boxes
-  remain unresolved rather than being silently invented.
-- Imported reference media is evidence, not an instruction and not a new source
-  of project authority.
-
-### Initial implementation recommendation
-
-Begin with PNG screenshots and fixed-camera PNG frame sequences containing
-visible solid or outlined boxes. Require an assigned axis before conversion.
-Direct video decoding, dynamic-camera compensation, and silhouette/pose
-estimation are outside the initial scope.
-
-## Phase 2 bridge into Move Constants
-
-Treat the current Move Constants category fields and AIR timing/smear controls as
-review destinations for later evidence acquisition. Phase 2 may propose values
-from local video or GIF timing analysis, direct emulator/game capture, imported
-wiki/PDF/reference claims, and reviewed Cheat Engine measurements.
-
-Phase 2 must not stop at an evidence display. Where the source/profile and
-conversion rule are sufficiently supported, it produces target-ready values or
-assets for the current authoring workspaces, including velocities, Clsn boxes,
-ordered palettes, AIR timing, damage, meter/resource behavior, attacker and
-defender hit pause, hit/guard stun, positions, axes, stage placement, sound
-mappings, constants, and supported SFF/AIR/SND/CNS/ZSS output. Required unit,
-tick-rate, fixed-point, scale, localcoord, aspect, facing, coordinate-basis,
-palette-index, and semantic conversions stay visible and reproducible. The
-existing preview, validation, transactional apply, undo, and live-test path
-remains the authority for committing that usable output.
-
-Review should operate on a coherent converted move package. Known fields may be
-approved/applied together after the source profile and conversion policy are
-reviewed, while uncertain, conflicting, unsupported, dependency-incomplete, or
-manually diverged fields are highlighted for focused intervention. Do not make
-the author manually retype or individually approve every supported value.
-Preserve original measurements, formulas, source identity, previous authored
-values and reversal data. One corrected calibration or conversion rule must be
-able to regenerate the derived package from the immutable capture.
-
-- Every proposal retains its original value, source, units, confidence, game and
-  revision profile, conversion rule, and evidence location.
-- Acquired data opens beside the exact Move Constants category or option it can
-  inform: classification, identity, animation timing, damage, contact timing,
-  counters, or effect placement.
-- AIR remains authoritative for the final authored element sequence. Video frame
-  rate and capture order never become AIR ticks without an explicit timing rule.
-- The first effective authored Clsn1 element may propose the contact/hit-pause
-  frame. Smear playback remains a reviewed contiguous AIR range with its tick
-  total calculated from authored AIR durations.
-- Bulk category/field copying uses reviewed values only. Imported evidence never
-  propagates automatically to other states merely because they share a family.
-- Applying a proposal is transactional and keeps both the source measurement and
-  the prior IKEMEN value available for comparison or reversal.
-
 ## Attack workspace and future guided Flow Mode (approved September 24, 2026)
 
 ### Current implementation: JNP Move Constants / Move Lab
@@ -764,7 +317,7 @@ focused tests, not one large rewrite or an unbounded new testing queue.
 
 ## Activated priority batch for JNP's return Thursday (2026-09-26)
 
-User authorization: JNP explicitly asked this task and SF6 to work on the most useful IKEMaker backlog items for his workflow while he is busy until Thursday, October 1. This activates the bounded items below despite earlier deferral notes. It does not authorize exhausting the usage allowance: preserve approximately 30% Thursday, with SF6 monitoring at batch boundaries, reducing optional work at 40% and checkpointing near 35% remaining. No new release/publication or local installation is implied.
+User authorization: JNP explicitly asked this task and SF6 to work on the most useful IKEMaker backlog items for his workflow while he is busy until Thursday, October 1. This activates the bounded items below despite earlier deferral notes. It does not authorize exhausting the usage allowance: preserve approximately 30% Thursday, with SF6 monitoring at batch boundaries, reducing optional work at 40% remaining and stopping at the nearest safe checkpoint once account usage reaches 35% remaining or less. No new release/publication or local installation is implied.
 
 SF6 remains primary implementer. This task supplies design and consolidated high-value review. First reconcile the current branch and recent user requests so none of the work already completed is repeated and no current prefix/source-baseline regression is carried forward.
 
@@ -777,6 +330,472 @@ Priority order; finish/test each useful slice before taking the next:
 Requirements: bounded tests for changed behavior, a short manual test list for JNP, no desktop takeover, no edits to live character/game content without explicit user approval. Use fixtures for authoring tests. Preserve Player/Simple/Workspace mode organization, and avoid adding default-open panes. Keep reference scope isolated across games/authors. Record completed/current/deferred status clearly, with exact commit and focused results.
 
 Defer broad Project Data category expansion, full Flow Mode, Phase 2, tournament runner, all-viewer parity sweep and broad help rewrite. Do not consume the remaining budget merely to use it. Batch review requests; send this task a consolidated handoff only for consequential design uncertainty or completed meaningful work, not routine mechanical checks. Tool messaging may require user approval; leave TXT handoffs and continue independent authorized slices rather than repeatedly requesting permission or polling.
+
+## Phase 2 research and data acquisition
+
+Status: DEFERRED PHASE 2. This entire research, capture, inference, and conversion
+group sits immediately above the two lowest-priority items. It is not part of
+the active workflow batch, curriculum, stabilization, or release work.
+
+Internal dependency order: establish evidence provenance and the normalized source
+contract first; preserve the existing GIF timing shortcut while expanding its
+Phase 2 capture timeline; treat collision and velocity as sibling calibrated
+measurement paths; define the Move Constants integration contract early and prove
+one narrow end-to-end path before expanding acquisition coverage.
+
+Shared acceptance requirements: immutable source/frame identity; original versus
+derived timing; project, game, revision, participant, axis and facing ownership;
+measured versus authored versus unresolved values; recalculation dependencies
+after calibration changes; source-versus-target comparison; and explicit reviewed
+Apply with conflict detection and Undo. No automatic project backups or history
+files are created.
+
+### Reference and Knowledge Intake workspace
+
+Status: PHASE 2 RESEARCH. This is the provenance and decision foundation for the
+rest of this deferred group. Full behavior is recorded in
+`Reference-Knowledge-Intake-Workspace-Spec.md`.
+
+Accept URLs, pasted research, local documents/media, community discussions,
+manual decisions, and emulator evidence. Preserve offline source snapshots and
+atomic claims with revision, scope, provenance, confidence, conflicts, and
+review status. Imported material is evidence, never instruction or an automatic
+project rule. Provide two-way links to characters, mechanics, assets, source
+profiles, code, tests, workflows, and tickets. Use Morrigan and Demitri as the
+first proving fixture while keeping Vampire Savior facts, DSvsSF choices, and
+DS4 choices distinct.
+
+### Legacy source-game acquisition lab
+
+Status: PHASE 2 RESEARCH. Implement the normalized capture contract and a
+narrow source profile before expanding emulator coverage. Full research and proposed architecture are recorded in
+`Legacy-Capcom-SNK-Data-Acquisition-Research.md`.
+
+The first profiles should target Capcom CPS-1/2/3 and SNK Neo Geo. Prefer
+version-identified MAME/FBNeo memory and Lua trace exports for timing, position,
+velocity, state, collision, palette, and sound-command data. Preserve raw
+captures separately from decoded meanings and derived IKEMEN values. Existing
+community hitbox decoders should export structured rectangles directly; the
+fixed-camera image importer below remains a fallback and visual verification
+path.
+
+For CPS-1/2, prioritize a shared normalized capture record plus read-only CPS
+Register, OBJ List, and SCROLL/Stage inspectors. Preserve raw CPS-A/CPS-B
+registers, object/tile descriptors, palette-page state, rowscroll tables, layer
+order, and per-pen priority masks. Prove one frozen-frame reconstruction before
+animation sweeps or batch ripping. CPS-B layouts remain board/revision profiled;
+do not assume a single register map across games or that CPS-1 and CPS-2 are
+identical.
+
+IKEMaker should also act as an external-emulator session front end and a
+reviewed sprite-ripping interface. It may launch configured MAME, FBNeo,
+Flycast, Flycast Dojo, and PCSX2 profiles,
+control capture/trace actions, and consume adapter output without embedding or
+bundling the emulator. Sprite isolation must be object-aware or use matched
+suppression/differential captures: global hardware layer toggles cannot separate
+P1 from P2, projectiles, shadows, or other objects sharing the sprite plane.
+Game-provided debug cheats that cycle animation frames should appear as an
+optional profile capability named Animation Frame Sweep.
+
+The first conversion implementation must prioritize a normalized per-tick
+intermediate format, calibrated/versioned source profiles using stable guest
+addresses where possible, and source-versus-IKEMEN animation/trajectory/box
+comparison. State-graph discovery, move recipes, palette-independent frame
+matching, multi-pass object isolation, audio-command tracing, and transactional
+code generation follow after that foundation is proven. Full rules are recorded
+in `Legacy-Capcom-SNK-Data-Acquisition-Research.md`.
+
+Add a character-owned companion reconstruction pass after the normalized trace
+and comparison foundation. It records owned objects in root-relative and world
+coordinates, discovers binding/following/orbit/easing and animation-response
+patterns, and proposes reviewed AIR/SFF layers, Explods, or persistent helpers.
+BB Hood's butterflies and dog are the required fixture because they exercise
+two different companion behaviors tied to the same character.
+
+Palette capture must preserve source index provenance: local tile pen, palette
+bank, hardware palette index, remapped/indirect pen, raw palette word, decoded
+color, transparency, and owning object. IKEMaker should export indexed images
+from that ordered data without PNG palette optimization, and show a reviewed
+source-to-IKEMEN index map before SFF staging.
+
+Darkstalkers stage acquisition should use palette-separated Stage Source
+Packages. Rip indexed tiles, layout, object layers, and scrolling metadata once;
+store palette variants and dynamic palette-write timelines separately. Permit a
+palette from another game/revision to reuse the package only after graphics and
+layout hashes/signatures match. Structural differences remain unresolved rather
+than being mistaken for palette-only changes.
+
+Add a reviewed screenshot palette-transfer fallback for console ports such as
+Sega Saturn. Align one or more clean native screenshots with the known indexed
+stage render, infer an RGB assignment for each established source index, show
+confidence/conflicts, and save a named visual palette variant. Label it
+visually recovered: screenshots cannot prove the port's actual hidden palette
+index numbers or ordering. Do not build a Saturn-specific emulator adapter or
+memory/CRAM profile for this edge case.
+
+Before implementing the lab, add the two-field project classification defined
+in `IKEMaker-Information-Architecture.md`: distribution intent and content
+basis. IKEMaker's normal tools remain classification-neutral; the JNP source
+acquisition lab is confined to hobby/non-commercial fan-project profiles and
+must reject transfers into any project classified as commercial/original.
+
+### Animated GIF data collection bridge
+
+The existing GIF timing converter is reusable Source Game Lab infrastructure,
+not merely a one-way AIR convenience. Preserve its current authoring shortcut,
+but let it open or create a Lab capture containing the original GIF delays and
+the complete mapping to the 60-Hz working timeline.
+
+JustNoPoint's required expansion is to collect and convert P1 animation timing, P2
+reaction timing, hit/contact timing, hitspark placement/timing, and separate FX
+placement/timing. Supported results must feed target-ready AIR timing/actions,
+move/hit settings, and correctly owned effect/helper code proposals. Logs and
+annotations alone do not satisfy this requirement.
+
+Proposed UI uses synchronized P1, P2, hitspark, and per-FX tracks with
+onset/end/duration, contact markers and per-frame placement. Each placement
+retains an explicit P1/P2/world/screen anchor, facing, scale, camera, crop and
+aspect calibration. Manual correction and whole-move review/application are
+required. A GIF and its delays do not prove source logic ticks, recover omitted
+frames, or by themselves establish true hitpause, hitstun, guardstun, or
+recovery; those fields remain unresolved unless corroborated.
+
+#### Frame-linked event meaning (approved expansion, 2026-09-24)
+
+Artist-provided GIFs may depict P2 striking a wall or floor after the original
+attack. Preserve JustNoPoint's supplied explanations as annotations attached to the
+original frame or frame range, and carry those associations through the 60-Hz
+conversion. Event meaning must not be inferred solely from a visible spark.
+
+Each event records its participants, event type, source frames, associated
+effects, placement anchor and the user's original note. Distinguish attack
+contact from wall impact, floor impact, landing, knockdown, wall/ground bounce
+and secondary effects such as dust or debris. Link later impacts to the move
+sequence without treating them as additional attack hits.
+
+These distinctions must inform generated timing, placement and gameplay
+proposals: an attack pause and a later wall-impact pause are separate events;
+a wall spark belongs at its annotated impact anchor, not automatically at P1's
+attack contact point. Preserve explicit user corrections; mark ambiguous or
+contradictory events for review rather than guessing engine behavior. Notes
+describe intended meaning but do not establish otherwise unmeasured durations.
+
+Acceptance example: a GIF shows P1 hitting P2, P2 hitting a wall, then landing
+with dust. All three events and their effects remain separately identified
+after resampling, with their notes available from the generated proposals.
+
+#### Participant choreography and movement control (approved expansion, 2026-09-24)
+
+Provide a shared choreography timeline for P1, P2 and each participating helper
+or FX object. Record axis placements and applicable velocities for every
+participant, not only the attacker. JustNoPoint can annotate throw-like or cinematic
+intent and the exact points where binding gives way to velocity-driven motion.
+A throw label does not imply that every phase is bound: movement control is
+explicit per participant and per frame range.
+
+Required track data and behavior:
+
+- Axis position, facing and coordinate reference (world, screen or relative to
+  another participant), with scale and source-frame/target-tick associations.
+- Movement-control intervals: velocity-driven, bound, scripted positioning or
+  stationary. Preserve observed paths separately from the chosen control model;
+  displacement during a binding must not automatically become gameplay velocity.
+- Binding target, relative offsets, start/end boundaries and facing/mirroring
+  rules. Record which participant controls the relationship.
+- Release boundary, initial X/Y velocity, acceleration/gravity and explicit
+  preserve/replace momentum behavior. Specify transition ordering so binding
+  and free movement do not accidentally apply together at release.
+- Optional contact anchors such as hand, foot or shoulder, distinct from the
+  character axis, to describe grabs and other alignment constraints.
+- Separate camera position/zoom information so camera motion is not mistaken
+  for participant movement; support facing changes and side switches.
+- Linked grab, damage, release, wall-impact, bounce and landing events, with
+  effects attached to the correct participant/event and coordinate anchor.
+- Miss/interruption/exit behavior that releases bindings and restores any
+  sequence-owned camera/effect state appropriately.
+
+Keep user annotations and corrections attached to the original frame ranges
+through resampling. Distinguish measured values from authored choices and
+unresolved estimates. A cinematic sequence may position or bind both players
+for most of its duration; do not force its path into a velocity model. Do not
+invent camera calibration or source timing from ambiguous GIF evidence.
+
+Reviewed choreography must feed usable target binding, positioning, release
+and movement code alongside AIR timing and effect/event proposals. Reuse the
+existing whole-move preview/apply/compare workflow, preserving prior authored
+values and the link back to source evidence.
+
+Acceptance example: grab connects -> P2 binds to P1 -> both participants follow
+scripted choreography -> P2 releases with a specified velocity -> wall impact
+-> fall/landing. Verify independent axes, binding offsets, release timing,
+mirrored facing, separate camera motion, correctly associated effects and
+cleanup on interruption. No unintended velocity is generated for bound phases.
+
+### Reference-image and video collision capture
+
+Status: PHASE 2 RESEARCH. This is a sibling measurement path to the velocity calculator.
+
+#### Goal
+
+Allow an author to import screenshots, extracted frames, or video containing a
+game/emulator collision-box display, calibrate that reference to an IKEMEN AIR
+frame, and create reviewed Clsn data in the existing AIR workspace.
+
+#### Feasibility levels
+
+1. **Colored collision-box screenshots — high feasibility.** If the source
+   visibly draws stable red, blue, yellow, green, purple, or other configured
+   rectangle colors, IKEMaker can inspect the pixels, find rectangle edges,
+   classify them from a user-selected legend, and propose Clsn coordinates.
+   Conventional image processing should be preferred over generative AI.
+2. **Extracted video frames with a visible collision-box overlay — feasible
+   only from a fixed capture.** The source must not use a moving, zooming, or
+   otherwise dynamic camera. IKEMaker can accept the extracted frame images,
+   use a user-assigned axis and fixed scale, track colored rectangles, and let
+   the user associate frames with AIR elements. Accepting a PNG frame sequence
+   is the intended implementation; automatic dynamic-camera compensation is
+   outside scope.
+3. **Ordinary gameplay with invisible collision boxes — not authoritative.** A
+   model could only estimate boxes from silhouettes, poses, sparks, and contact
+   results. Such output may be offered as a low-confidence drawing aid, never as
+   an automatic or verified conversion.
+
+#### Required calibration
+
+- Source resolution and any fixed crop, letterbox, stretch, or emulator scale.
+- A character origin/axis. If the source does not contain one, IKEMaker must
+  allow the user to place or numerically assign it before conversion.
+- P1/P2 ownership and facing.
+- Source color legend mapped to Clsn1, Clsn2, defaults, push, width, depth, or a
+  project-specific box type.
+- Association between each source image/video interval and an AIR action and
+  element.
+- Optional tolerance for antialiasing, compression noise, translucent fills,
+  dotted borders, and several nested boxes of the same color.
+
+#### Proposed reviewed workflow
+
+1. Import a screenshot, image sequence, or local video.
+2. Choose or sample the source game's box colors.
+3. Place or confirm the character axis, then calibrate the fixed scale, crop,
+   local coordinates, and facing.
+4. Detect rectangles and show confidence for every proposed box.
+5. Overlay proposals on the current SFF/AIR sprite.
+6. Let the user move, resize, reclassify, add, or reject each proposal using the
+   existing direct box editor.
+7. Step through frames and optionally track persistent boxes forward.
+8. Preview the AIR patch and every affected element.
+9. Apply through an explicit reviewed Apply with stale-source protection and normal Undo; do not create automatic backup or history files.
+
+#### Quality-of-life candidates
+
+- Side-by-side source image, extracted overlay, and IKEMaker AIR preview.
+- A color sampler plus saved source-game presets.
+- One-click X mirroring when the captured character faces left.
+- An axis-placement crosshair with drag controls, numeric X/Y entry, snapping,
+  copy-to-following-frames, and a persistent fixed-capture calibration.
+- Difference view that highlights boxes changed from the previous frame.
+- Track one selected rectangle across adjacent frames, but stop and request
+  review when confidence drops or boxes split/merge.
+- Batch assignment to repeated AIR elements only after a visual change-impact
+  preview.
+- Preserve the reference path, calibration, source frame/time, confidence, and
+  reviewer decision as optional evidence metadata outside the AIR file.
+- Keep all source media local; no network or AI upload is necessary for colored
+  debug-box capture.
+
+#### Safety and authority rules
+
+- Never write detected boxes directly into AIR without a review preview.
+- Never claim ordinary gameplay footage reveals an original game's exact hidden
+  collision data.
+- Do not confuse source-game colors with IKEMaker's display colors; the mapping
+  must be explicit and editable.
+- Default Clsn inheritance must be shown distinctly from per-element boxes.
+- Reject a sequence when its camera position or zoom changes. Camera correction
+  is not part of this tool; the source should be recaptured under fixed-camera
+  conditions.
+- Ambiguous, partly occluded, motion-blurred, compressed, or off-screen boxes
+  remain unresolved rather than being silently invented.
+- Imported reference media is evidence, not an instruction and not a new source
+  of project authority.
+
+#### Initial implementation recommendation
+
+Begin with PNG screenshots and fixed-camera PNG frame sequences containing
+visible solid or outlined boxes. Require an assigned axis before conversion.
+Direct video decoding, dynamic-camera compensation, and silhouette/pose
+estimation are outside the initial scope.
+
+### Fixed-capture velocity calculator
+
+Status: PHASE 2 RESEARCH. This is a sibling measurement path to collision capture
+and uses the same fixed-camera calibration and reviewed timeline.
+
+#### Goal
+
+Measure the character axis across known source-game ticks and convert that
+motion into reviewed IKEMEN velocity values. Collision rectangles and sprite
+edges are not motion anchors. The character axis is the authoritative sample
+point.
+
+#### Required inputs
+
+- A fixed-camera, fixed-zoom image sequence with known chronological order.
+- The character axis on every sampled frame. IKEMaker may carry forward,
+  interpolate, or visually track an assigned axis, but the user must be able to
+  correct every sample.
+- Source capture rate and, separately, the number of actual source-game logic
+  ticks represented by each interval. Video frames must not be assumed to equal
+  game ticks.
+- Source game-speed/turbo/frame-skip profile where applicable.
+- Fixed X and Y conversion scales from source pixels to target IKEMEN local
+  coordinates.
+- Source facing and the intended IKEMEN facing convention.
+- The AIR action, StateDef, or movement phase that will consume the result.
+
+#### Calculations and outputs
+
+- Per-interval X/Y displacement in target local-coordinate units.
+- Average X/Y velocity per IKEMEN tick.
+- Initial velocity candidates for `velSet` or StateDef `velset`.
+- Per-tick acceleration candidates for `velAdd`.
+- Multiplicative decay candidates for `velMul` when the samples fit that model.
+- Total displacement, elapsed source ticks, elapsed target ticks, peak speed,
+  direction changes, and residual error.
+- Horizontal facing normalization and vertical-axis sign conversion so upward
+  screen motion becomes the correct IKEMEN Y direction.
+- Copyable CNS and ZSS examples, clearly labeled as proposals rather than
+  authored truth.
+
+For an interval covering `N` verified source ticks, IKEMaker first converts the
+axis displacement from pixels to target local-coordinate units. When source and
+target tick rates differ, it converts through elapsed time rather than treating
+captured video frames as ticks. The UI should display the complete calculation,
+not only the rounded final velocity.
+
+#### Reviewed workflow
+
+1. Assign or confirm the axis on the first frame.
+2. Step through the sequence and confirm/adjust the axis samples.
+3. Enter the source timing/game-speed profile and target local-coordinate scale.
+4. Mark movement segments such as launch, travel, deceleration, apex, fall,
+   bounce, landing, or teleport/discontinuity.
+5. Plot measured positions and velocities per tick.
+6. Fit constant velocity, velocity-plus-acceleration, or multiplicative decay
+   only for the selected segment.
+7. Simulate the proposed IKEMEN trajectory over the source frames and display a
+   ghost axis/path for comparison.
+8. Let the user adjust rounding and controller choice, then copy code or stage a
+   reviewed patch through explicit impact review, stale-source protection, and normal Undo without automatic backup or history files.
+
+#### Safety and accuracy rules
+
+- Reject dynamic camera movement or zoom. Do not attempt camera compensation.
+- Do not infer velocity from animation offsets, sprite borders, hit sparks, or
+  collision-box edges when an axis path is unavailable.
+- Detect duplicate video frames, missing frames, abrupt discontinuities, and
+  teleports; require the user to classify or split those intervals.
+- Never silently assume that video FPS equals the source game's logic rate.
+- Keep separate X and Y scales available for sources that were stretched or
+  require aspect correction.
+- Show unrounded measurements, rounded engine values, and resulting trajectory
+  error together.
+- Do not automatically write movement code. Velocity conversion remains a
+  proposal until the author reviews it in IKEMEN.
+
+#### Cheat Engine and direct-memory velocity input
+
+The calculator should also accept velocity values obtained directly from Cheat
+Engine or another memory inspector. This is an alternate measurement source,
+not a separate authoring system. It feeds the same trajectory preview and
+reviewed CNS/ZSS output.
+
+Supported input descriptions should include:
+
+- Decimal or hexadecimal source value.
+- Signed integer, unsigned integer, IEEE float, or fixed-point encoding.
+- Fixed-point fractional-bit count or explicit divisor, such as value / 256 or
+  value / 65536.
+- Whether the value is velocity per source logic tick, velocity per rendered
+  frame, velocity per second, or an unknown internal unit.
+- Source logic/update rate and game-speed/turbo/frame-skip profile.
+- Source-world-unit to target-IKEMEN-local-coordinate X/Y scale.
+- Sign convention, facing convention, and vertical-axis direction.
+- Optional separate X and Y values and separate conversion rules.
+
+When the source encoding or unit scale is unknown, IKEMaker should provide a
+calibration mode. The user supplies one or more memory values together with the
+observed axis displacement and verified elapsed source ticks. IKEMaker solves
+and displays the conversion multiplier, tests it against the remaining samples,
+and reports residual error. One sample may produce a provisional conversion;
+several samples are required before the profile can be marked reviewed.
+
+Reviewed conversion profiles may be saved by source game, regional/version
+identifier, executable/hash note, character or universal scope, value encoding,
+and game-speed setting. A profile must never be silently reused for another
+revision or turbo mode. Editing a profile must show every velocity measurement
+that depends on it.
+
+The displayed calculation should retain each stage explicitly:
+
+1. Decode the raw memory value.
+2. Apply fixed-point or internal-unit scaling.
+3. Convert the source update basis into elapsed time/source ticks.
+4. Convert source world units into target local-coordinate units.
+5. Normalize facing and vertical direction.
+6. Produce the unrounded IKEMEN velocity and the reviewed rounded value.
+7. Simulate the resulting IKEMEN trajectory and show its error against the
+   captured/reference samples.
+
+IKEMaker itself should not read, inject into, or write to a running game
+process. Manual entry remains supported. An explicitly enabled file-based
+Cheat Engine bridge may guide scans, request reviewed freezes/writes, and save
+tables while the user's Cheat Engine installation remains solely responsible
+for process access. The bridge design and SFA3 pilot are defined in
+[`Cheat-Engine-Bridge-Specification.md`](Cheat-Engine-Bridge-Specification.md).
+
+### Phase 2 bridge into Move Constants
+
+Treat the current Move Constants category fields and AIR timing/smear controls as
+review destinations for later evidence acquisition. Phase 2 may propose values
+from local video or GIF timing analysis, direct emulator/game capture, imported
+wiki/PDF/reference claims, and reviewed Cheat Engine measurements.
+
+Phase 2 must not stop at an evidence display. Where the source/profile and
+conversion rule are sufficiently supported, it produces target-ready values or
+assets for the current authoring workspaces, including velocities, Clsn boxes,
+ordered palettes, AIR timing, damage, meter/resource behavior, attacker and
+defender hit pause, hit/guard stun, positions, axes, stage placement, sound
+mappings, constants, and supported SFF/AIR/SND/CNS/ZSS output. Required unit,
+tick-rate, fixed-point, scale, localcoord, aspect, facing, coordinate-basis,
+palette-index, and semantic conversions stay visible and reproducible. The
+existing preview, validation, transactional apply, undo, and live-test path
+remains the authority for committing that usable output.
+
+Review should operate on a coherent converted move package. Known fields may be
+approved/applied together after the source profile and conversion policy are
+reviewed, while uncertain, conflicting, unsupported, dependency-incomplete, or
+manually diverged fields are highlighted for focused intervention. Do not make
+the author manually retype or individually approve every supported value.
+Preserve original measurements, formulas, source identity, previous authored
+values and reversal data. One corrected calibration or conversion rule must be
+able to regenerate the derived package from the immutable capture.
+
+- Every proposal retains its original value, source, units, confidence, game and
+  revision profile, conversion rule, and evidence location.
+- Acquired data opens beside the exact Move Constants category or option it can
+  inform: classification, identity, animation timing, damage, contact timing,
+  counters, or effect placement.
+- AIR remains authoritative for the final authored element sequence. Video frame
+  rate and capture order never become AIR ticks without an explicit timing rule.
+- The first effective authored Clsn1 element may propose the contact/hit-pause
+  frame. Smear playback remains a reviewed contiguous AIR range with its tick
+  total calculated from authored AIR durations.
+- Bulk category/field copying uses reviewed values only. Imported evidence never
+  propagates automatically to other states merely because they share a family.
+- Applying a proposal is transactional and keeps both the source measurement and
+  the prior IKEMEN value available for comparison or reversal.
 
 ## Player Mode tournament runner (idea recorded September 26, 2026)
 
