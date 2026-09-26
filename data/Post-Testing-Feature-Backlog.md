@@ -338,10 +338,10 @@ group sits immediately above the two lowest-priority items. It is not part of
 the active workflow batch, curriculum, stabilization, or release work.
 
 Internal dependency order: establish evidence provenance and the normalized source
-contract first; preserve the existing GIF timing shortcut while expanding its
-Phase 2 capture timeline; treat collision and velocity as sibling calibrated
-measurement paths; define the Move Constants integration contract early and prove
-one narrow end-to-end path before expanding acquisition coverage.
+contract first; treat GIF conversion and its expanded capture timeline as Phase 2;
+then treat collision and velocity as sibling calibrated measurement paths. Define
+the Move Constants integration contract early and prove one narrow end-to-end path
+before expanding acquisition coverage.
 
 Shared acceptance requirements: immutable source/frame identity; original versus
 derived timing; project, game, revision, participant, axis and facing ownership;
@@ -441,10 +441,14 @@ must reject transfers into any project classified as commercial/original.
 
 ### Animated GIF data collection bridge
 
+Status: PHASE 2 RESEARCH. GIF conversion, including further development of the
+existing timing converter, belongs to this deferred group. Existing installed
+behavior may remain available, but it is not an active Phase 1 development item.
+
 The existing GIF timing converter is reusable Source Game Lab infrastructure,
-not merely a one-way AIR convenience. Preserve its current authoring shortcut,
-but let it open or create a Lab capture containing the original GIF delays and
-the complete mapping to the 60-Hz working timeline.
+not merely a one-way AIR convenience. The Phase 2 design may let it open or
+create a Lab capture containing the original GIF delays and the complete mapping
+to the 60-Hz working timeline.
 
 JustNoPoint's required expansion is to collect and convert P1 animation timing, P2
 reaction timing, hit/contact timing, hitspark placement/timing, and separate FX
