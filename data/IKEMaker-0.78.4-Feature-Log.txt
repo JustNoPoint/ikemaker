@@ -1,0 +1,23 @@
+IKEMaker 0.78.4 source update
+Date: 2026-09-26
+
+ACT palette order interoperability
+- Adobe ACT bytes are treated as index order unless the user explicitly selects the Reversed Photoshop method.
+- ACT does not contain dependable producer metadata; IKEMaker does not claim to detect Photoshop, Fighter Factory, or another source automatically.
+- SFF Viewer import, compare, replace, and export ask which table convention to use and display that choice.
+- A different order can be used once without changing the remembered window preference, or explicitly saved with Use and remember.
+- Safe Palette Placement begins ACT files with the remembered choice, retains generic one-operation RGB-table reversal for indexed PNG, previews the affected sprite before Apply, and only shows preference remembering for ACT.
+- The palette editor visibly labels its existing safe staging route Add Palette(s) from Project Library and Add One Palette. Adding several is described honestly as repeating the reviewed one-palette step and then using Review Staged; batch selection is not implemented or claimed.
+- Matching import and export conventions round-trip all 256 RGB entries exactly.
+- Reversal keeps SFF transparency attached to its destination index; 772-byte Adobe transparency metadata remains supported by the underlying ACT decoder.
+
+Safety
+- Choosing or remembering an order does not rewrite ACT, SFF, character, or project files.
+- SFF replacement still requires its existing reviewed confirmation.
+- ACT export still requires an explicit destination.
+- No automatic backup or project metadata file is created by the preference.
+
+Verification
+- Distinct first/last colors, direct and reversed byte order, 768/772-byte variants, destination transparency, invalid length, and reversed import/export round trip have focused fixtures.
+- Roster palette preview/conversion and the underlying SFF ACT reader tests remain passing.
+- Interactive comparison with JustNoPoint's Photoshop and Fighter Factory files remains a manual installed-build check.

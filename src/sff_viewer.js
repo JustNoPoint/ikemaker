@@ -10,6 +10,7 @@ const { parseCsv, stringifyCsv } = require('./sff');
 const { systemName, spriteSystemName } = require('./sff_names');
 const { createMasterSnapshot, compareMasterSnapshot, masterLocation, writeMasterSnapshot, readMasterSnapshot } = require('./palette_master');
 const { paletteRole, comparePaletteColors, reversePaletteRgb, paletteAco, paletteGpl, palettePackReadme, paletteSwatchPng, bufferWithPaletteReplacement, bufferWithPaletteAssignments, paletteScopedSprites, auditPaletteSetup } = require('./palette_editor');
+const { INDEX_ORDER, REVERSED_ORDER, normalizeOrder, readAct, writeAct, orderLabel } = require('./act_palette_order');
 const { paletteLibraryFiles, safeLibraryPalette, pngPaletteRgba } = require('./palette_library');
 const { characterPaletteContext, libraryRoot: userPaletteRoot, listUserPalettes, userPaletteWrites, safeUserPalette } = require('./user_palette_library');
 const { parseDef, sections, setSectionEntry } = require('./def_model');
@@ -22,6 +23,26 @@ const { previewPreferences, savePreviewPreference, clearGroupPreviewPreference }
 const { hash, transactionalWrite, transactionalWriteSet, optionsFromConfig, policyFromConfig } = require('./mutation_safety');
 const { mode } = require('./experience');
 const { chooseFileOrFolder } = require('./open_target_picker');
+
+async function chooseActOrder(resource, title, api = vscode) {
+  const config = api.workspace.getConfiguration('ikemenZss', resource), remembered = normalizeOrder(config.get('actPaletteOrder', INDEX_ORDER)), other = remembered === INDEX_ORDER ? REVERSED_ORDER : INDEX_ORDER;
+  const selected = await api.window.showQuickPick([
+    { label: orderLabel(remembered), description: 'Remembered setting', value: remembered },
+    { label: orderLabel(other), description: 'Override for this operation', value: other }
+  ], { title, placeHolder: 'ACT files do not identify which program wrote their table order.' });
+  if (!selected) return null;
+  if (selected.value === remembered) return selected.value;
+  const retention = await api.window.showQuickPick([
+    { label: 'Use once', description: 'Keep the current remembered setting', remember: false },
+    { label: 'Use and remember', description: 'Save as the global default for later ACT operations', remember: true }
+  ], { title: `${orderLabel(selected.value)} — preference` });
+  if (!retention) return null;
+  if (retention.remember) {
+    await config.update('actPaletteOrder', selected.value, api.ConfigurationTarget.Global);
+    if (normalizeOrder(config.get('actPaletteOrder', INDEX_ORDER)) !== selected.value) api.window.showInformationMessage('The ACT order was used once, but a more specific VS Code setting overrides the global preference. No workspace or project setting was changed.');
+  }
+  return selected.value;
+}
 const { characterLabel, reusableViewColumn, registerCharacterPanel } = require('./character_view_policy');
 const { workspaceExperience } = require('./experience_model');
 const { workflowFor, workflowHtml, advancedActionBarHtml, taskRecipesHtml, workflowClientScript } = require('./guided_workflows');
@@ -240,7 +261,11 @@ body{height:100vh;display:flex;flex-direction:column}header{height:auto;min-heig
   function requestSpriteDeletion(){if(!selectedIndices.size&&selected)selectedIndices.add(selected.index);if(!selectedIndices.size){error.textContent='Select one or more sprites first.';return}vscode.postMessage({type:'sffAction',action:'deleteSprite',selectedIndex:selected&&selected.index,selectedIndices:[...selectedIndices],group:selected&&selected.group})}document.addEventListener('keydown',event=>{if(event.key==='Delete'&&!event.target.matches('input,textarea')){event.preventDefault();requestSpriteDeletion()}});window.addEventListener('message',event=>{if(event.data.type==='requestDelete')requestSpriteDeletion()});new ResizeObserver(sizeCanvas).observe(stage);for(const toggle of document.querySelectorAll('.pane-toggle'))toggle.onclick=()=>{const name=toggle.dataset.pane;visibility[name]=!visibility[name];applyLayout()};for(const control of document.querySelectorAll('.size-tool[data-resize]'))control.onclick=()=>{const name=control.dataset.resize;const delta=Number(control.dataset.delta);widths[name]=Math.max(170,Math.min(420,widths[name]+delta));applyLayout()};document.getElementById('resetLayout').onclick=()=>{Object.assign(widths,widthDefaults);for(const name of Object.keys(visibility))visibility[name]=true;applyLayout()};for(const action of document.querySelectorAll('.sff-action,.action[data-command]'))action.onclick=()=>{if(action.dataset.action)vscode.postMessage({type:'sffAction',action:action.dataset.action,selectedIndex:selected&&selected.index,selectedIndices:[...selectedIndices],group:selected&&selected.group});else if(action.dataset.command)vscode.postMessage({type:'command',command:action.dataset.command})};
   document.getElementById('groupSearch').oninput=renderGroups;document.getElementById('spriteSearch').oninput=renderSprites;document.getElementById('reviewFilter').onchange=renderSprites;document.getElementById('markVisibleGroups').onclick=()=>toggleItems(visibleGroupSprites(),true);document.getElementById('clearMarks').onclick=()=>toggleItems(model.sprites,false);document.getElementById('markVisibleSprites').onclick=()=>{const q=document.getElementById('spriteSearch').value.trim().toLowerCase(),filter=document.getElementById('reviewFilter').value;toggleItems(spriteList().filter(s=>{const identity=s.group+','+s.number,custom=reviewFor(s).customName||'',system=displayedSystemName(s),profileSearch=profileEnabled()?(s.name+' '+s.family+' '+s.aliases.join(' ')+' '+s.category):'';return (!q||(identity+' '+profileSearch+' '+custom).toLowerCase().includes(q))&&reviewMatches(s,filter)}),true)};document.getElementById('showThumbnails').checked=Boolean(saved.showThumbnails);document.getElementById('thumbnailSize').value=Number(saved.thumbnailSize)||64;document.getElementById('showThumbnails').onchange=()=>{saveViewState();renderSprites()};document.getElementById('thumbnailSize').oninput=()=>{saveViewState();renderSprites()};document.getElementById('animationSelect').onchange=renderAnimationStrip;document.getElementById('saveReview').onclick=saveReview;document.getElementById('clearReview').onclick=()=>{for(const flag of ['Favorite','Approved','Axis','Classification','Layer','Archive'])document.getElementById('review'+flag).checked=false;document.getElementById('reviewNote').value='';saveReview()};document.getElementById('nextUnresolved').onclick=()=>{if(!model.sprites.length)return;const start=selected?selected.index:-1;for(let offset=1;offset<=model.sprites.length;offset++){const target=model.sprites[(start+offset)%model.sprites.length];if(reviewMatches(target,'unresolved')){selectSprite(target);return}}document.getElementById('reviewStatus').textContent='No unresolved review flags.'};document.getElementById('proofBackground').value=saved.proofBackground||'checker';document.getElementById('proofColor').value=saved.proofColor||'#7040a0';applyProofBackground(false);updateOnionReadout();applyLayout();redraw();renderGroups();previewStatus();if(model.sprites.length){const restored=model.sprites.find(s=>s.index===Number(saved.selectedIndex));const first=restored||byGroup.get(byGroup.has(Number(saved.group))?Number(saved.group):[...byGroup.keys()].sort((a,b)=>a-b)[0])[0];selectSprite(first,restored&&saved.filename===model.fullPath?saved.zoomScale:undefined)}window.addEventListener('message',event=>{if(event.data.type==='navigateReference'){const ref=event.data.reference;const item=model.sprites.find(s=>s.group===ref.group&&s.number===ref.number);if(item)selectSprite(item)}});vscode.postMessage({type:'viewerNavigationReady'});</script></body></html>`;
   const experience = reviewData.experience || workspaceExperience('sff', 'learning');
-  return page.replace('class="action sff-action" data-action="axisOffset"', 'class="action sff-action" id="axisOffset" data-action="axisOffset"').replace(
+  return page
+    .replace('<b>Project Palette Library</b>', '<b>Add Palette(s) from Project Library</b>')
+    .replace('Stage as New Palette…', 'Add One Palette…')
+    .replace('Folders may contain any number of child variants.', '<b>Add one:</b> choose a palette above, then use Add One Palette. <b>Add several:</b> repeat that reviewed step for each palette, then use Review Staged before the rebuild. Batch selection is not implemented. Folders may contain any number of child variants.')
+    .replace('class="action sff-action" data-action="axisOffset"', 'class="action sff-action" id="axisOffset" data-action="axisOffset"').replace(
     '<button class="action" data-command="sff.generateBuildFiles">Rebuild through SprMaker2…</button>',
     '<button class="action sff-action" data-action="cropArchive" title="Crop transparent borders for the current sprite, current group, or every sprite through the authoritative SprMaker2 workflow">Crop SFF…</button><button class="action" data-command="sff.generateBuildFiles">Rebuild through SprMaker2…</button>'
   ).replace('<details open><summary><b>Advanced sprite operations</b></summary>', '<details open><summary><b>Advanced sprite operations</b></summary><button class="action" data-command="ikemen.artistIntake.open">Artist intake / temporary SFF…</button><button class="action" data-command="sff.openAssembly">Assemble or replace between two SFFs…</button>').replace(
@@ -564,16 +589,17 @@ async function populateSffPanel(panel, filename) {
     if (message.type === 'loadReferencePalettes') { try {
       const picked = await vscode.window.showOpenDialog({ title: 'Load Reference Palettes or Indexed Images', canSelectMany: true, filters: { 'ACT palettes or indexed PNG images': ['act', 'png'] } });
       if (!picked || !picked.length) return;
+      const actOrder = picked.some(uri => /\.act$/i.test(uri.fsPath)) ? await chooseActOrder(resource, 'Reference ACT table order') : INDEX_ORDER; if (!actOrder) return;
       let focusedId = null, loaded = 0, duplicates = 0; const failures = [];
       for (const uri of picked) {
         const sourceKey = path.resolve(uri.fsPath).toLowerCase();
         if (referencePaths.has(sourceKey)) { focusedId = referencePaths.get(sourceKey); duplicates += 1; continue; }
         if (referencePalettes.size >= 256) { failures.push(`${path.basename(uri.fsPath)}: the 256-reference session limit was reached`); continue; }
         try {
-          const data = fs.readFileSync(uri.fsPath), isPng = /\.png$/i.test(uri.fsPath), colors = isPng ? pngPaletteRgba(data) : actRgba(data), id = `reference-${++referenceSequence}`;
+          const data = fs.readFileSync(uri.fsPath), isPng = /\.png$/i.test(uri.fsPath), colors = isPng ? pngPaletteRgba(data) : readAct(data, actOrder), id = `reference-${++referenceSequence}`;
           let name = path.basename(uri.fsPath);
           if ([...referencePalettes.values()].some((item) => item.name === name)) name = `${name} — ${path.basename(path.dirname(uri.fsPath))}`;
-          referencePalettes.set(id, { id, name, kind: isPng ? 'indexed PNG' : 'ACT', colors, source: uri.fsPath, sourceKey }); referencePaths.set(sourceKey, id); focusedId = id; loaded += 1;
+          referencePalettes.set(id, { id, name: isPng ? name : `${name} · ${orderLabel(actOrder)}`, kind: isPng ? 'indexed PNG' : 'ACT', colors, source: uri.fsPath, sourceKey }); referencePaths.set(sourceKey, id); focusedId = id; loaded += 1;
         } catch (error) { failures.push(`${path.basename(uri.fsPath)}: ${error.message}`); }
       }
       sendReferencePalettes(focusedId);
@@ -612,6 +638,7 @@ async function populateSffPanel(panel, filename) {
       const flipTable = Boolean(message.flipTable), mappings = String(message.macro || '').trim() ? parseIndexMacro(message.macro) : [], requested = new Set(Array.isArray(message.ids) ? message.ids : []), items = [...referencePalettes.values()].filter((item) => requested.has(item.id));
       if (!flipTable && !mappings.length) throw new Error('Enable Flip Table Order or enter at least one index mapping.');
       if (!items.length) throw new Error('Select at least one loaded reference palette.');
+      const outputOrder = await chooseActOrder(resource, 'Converted ACT export table order'); if (!outputOrder) return;
       const destination = await vscode.window.showOpenDialog({ title: `Choose Folder for ${items.length} Adapted ACT Palette(s)`, canSelectFiles: false, canSelectFolders: true, canSelectMany: false }); if (!destination || !destination[0]) return;
       const answer = await vscode.window.showWarningMessage(`Create ${items.length} converted ACT palette file(s)?`, { modal: true, detail: `${flipTable ? 'The 256-color table order will be flipped. ' : ''}${mappings.length} index mapping(s) will be applied to each selected palette. New files receive a _converted suffix; existing files and loaded references are never overwritten.` }, 'Export Converted Copies'); if (answer !== 'Export Converted Copies') return;
       const folder = destination[0].fsPath, outputs = [];
@@ -619,7 +646,7 @@ async function populateSffPanel(panel, filename) {
         const stem = path.parse(item.source).name.replace(/[<>:"/\\|?*\x00-\x1F]/g, '_') || 'palette'; let target = path.join(folder, `${stem}_converted.act`), suffix = 2;
         while (fs.existsSync(target)) target = path.join(folder, `${stem}_converted_${suffix++}.act`);
         const base = flipTable ? reversePaletteRgb(item.colors) : item.colors, colors = mappings.length ? applyIndexMacro(base, mappings) : base;
-        fs.writeFileSync(target, paletteAct(colors)); outputs.push(target);
+        fs.writeFileSync(target, writeAct(colors, outputOrder)); outputs.push(target);
       }
       panel.webview.postMessage({ type: 'referenceBatchExported', count: outputs.length, folder });
       vscode.window.showInformationMessage(`Exported ${outputs.length} adapted ACT palette(s). Originals were not changed.`);
@@ -816,7 +843,7 @@ async function populateSffPanel(panel, filename) {
       if (answer !== 'Remove from Plan') return; removeStagedPalette(filename, picked.entry.group, picked.entry.number); sendPaletteLibrary();
     } catch (error) { vscode.window.showErrorMessage(`Could not review staged palettes: ${error.message}`); } return; }
     if (message.type === 'previewLibraryPalette' || message.type === 'compareLibraryPalette') { try {
-      const root = vscode.workspace.getConfiguration('ikemenZss', resource).get('paletteLibraryPath', ''), filename = safeLibraryPalette(root, message.file), data = fs.readFileSync(filename), colors = /\.png$/i.test(filename) ? pngPaletteRgba(data) : actRgba(data), name = path.relative(root, filename).replace(/\\/g, '/');
+      const root = vscode.workspace.getConfiguration('ikemenZss', resource).get('paletteLibraryPath', ''), filename = safeLibraryPalette(root, message.file), data = fs.readFileSync(filename), isPng=/\.png$/i.test(filename), order=isPng?INDEX_ORDER:await chooseActOrder(resource,'Palette-library ACT table order');if(!order)return;const colors = isPng ? pngPaletteRgba(data) : readAct(data,order), name = path.relative(root, filename).replace(/\\/g, '/')+(isPng?'':' · '+orderLabel(order));
       if (message.type === 'previewLibraryPalette') panel.webview.postMessage({ type: 'actImported', name, colors });
       else {
         const paletteIndex = Number(message.paletteIndex), palette = archive.palettes[paletteIndex]; if (!palette) throw new Error('Select an embedded palette first.');
@@ -854,16 +881,18 @@ async function populateSffPanel(panel, filename) {
     if (message.type === 'importAct') { try {
       const picked = await vscode.window.showOpenDialog({ title: 'Import ACT Palette for Preview', canSelectMany: false, filters: { 'Adobe color table': ['act'] } });
       if (!picked || !picked[0]) return;
-      const colors = actRgba(fs.readFileSync(picked[0].fsPath));
-      panel.webview.postMessage({ type: 'actImported', name: path.basename(picked[0].fsPath), colors });
+      const order = await chooseActOrder(resource, 'ACT import table order'); if (!order) return;
+      const colors = readAct(fs.readFileSync(picked[0].fsPath), order);
+      panel.webview.postMessage({ type: 'actImported', name: `${path.basename(picked[0].fsPath)} · ${orderLabel(order)}`, colors, order, orderLabel: orderLabel(order) });
     } catch (error) { vscode.window.showErrorMessage(`Could not import ACT palette: ${error.message}`); } return; }
     if (message.type === 'compareAct') { try {
       const paletteIndex = Number(message.paletteIndex), palette = archive.palettes[paletteIndex];
       if (!palette) throw new Error('Select an embedded palette first.');
       const picked = await vscode.window.showOpenDialog({ title: `Compare ACT with palette ${palette.group},${palette.number}`, canSelectMany: false, filters: { 'Adobe color table': ['act'] } });
       if (!picked || !picked[0]) return;
-      const colors = actRgba(fs.readFileSync(picked[0].fsPath)), comparison = comparePaletteColors(paletteRgba(archive, paletteIndex), colors);
-      panel.webview.postMessage({ type: 'actCompared', name: path.basename(picked[0].fsPath), colors, paletteIndex, paletteId: `${palette.group},${palette.number}`, changedCount: comparison.changedCount, changedIndices: comparison.changedIndices });
+      const order = await chooseActOrder(resource, 'ACT comparison table order'); if (!order) return;
+      const colors = readAct(fs.readFileSync(picked[0].fsPath), order), comparison = comparePaletteColors(paletteRgba(archive, paletteIndex), colors);
+      panel.webview.postMessage({ type: 'actCompared', name: `${path.basename(picked[0].fsPath)} · ${orderLabel(order)}`, colors, order, orderLabel: orderLabel(order), paletteIndex, paletteId: `${palette.group},${palette.number}`, changedCount: comparison.changedCount, changedIndices: comparison.changedIndices });
     } catch (error) { vscode.window.showErrorMessage(`Could not compare ACT palette: ${error.message}`); } return; }
     if (message.type === 'savePaletteEdits') { try {
       const paletteIndex = Number(message.paletteIndex), palette = archive.palettes[paletteIndex];
@@ -905,9 +934,10 @@ async function populateSffPanel(panel, filename) {
       if (profile === 'jnp' && palette.group === 1 && palette.number === 0) throw new Error('JNP palette 1,0 is the protected full-CS master and cannot be replaced. Add or replace a player palette instead.');
       const picked = await vscode.window.showOpenDialog({ title: `Replace palette ${palette.group},${palette.number} from ACT`, canSelectMany: false, filters: { 'Adobe color table': ['act'] } });
       if (!picked || !picked[0]) return;
-      const colors = actRgba(fs.readFileSync(picked[0].fsPath)), result = bufferWithPaletteReplacement(archive, paletteIndex, colors);
+      const order = await chooseActOrder(resource, 'ACT replacement table order'); if (!order) return;
+      const colors = readAct(fs.readFileSync(picked[0].fsPath), order), result = bufferWithPaletteReplacement(archive, paletteIndex, colors);
       if (result.plan.exact) { panel.webview.postMessage({ type: 'actCompared', name: path.basename(picked[0].fsPath), colors, paletteIndex, paletteId: `${palette.group},${palette.number}`, changedCount: 0, changedIndices: [] }); return vscode.window.showInformationMessage(`Palette ${palette.group},${palette.number} already matches ${path.basename(picked[0].fsPath)}.`); }
-      const detail = backupsEnabled() ? 'A timestamped SFF backup will be created first. Sprite pixels, palette IDs, links, and alpha values will not change.' : 'SFF backups are disabled. Sprite pixels, palette IDs, links, and alpha values will not change.';
+      const detail = `Active ACT order: ${orderLabel(order)}. ` + (backupsEnabled() ? 'A timestamped SFF backup will be created first. Sprite pixels, palette IDs, links, and alpha values will not change.' : 'SFF backups are disabled. Sprite pixels, palette IDs, links, and alpha values will not change.');
       const answer = await vscode.window.showWarningMessage(`Replace ${result.plan.changedCount} RGB index value(s) in palette ${palette.group},${palette.number} from ${path.basename(picked[0].fsPath)}?`, { modal: true, detail }, 'Replace Palette');
       if (answer !== 'Replace Palette') return;
       const write = transactionalWrite(fs, filename, result.buffer, sffMutationOptions(filename, 'sff-palette-replace', { expectedHash: hash(archive.buffer) })); archive.buffer = result.buffer;
@@ -919,10 +949,11 @@ async function populateSffPanel(panel, filename) {
       const paletteIndex = Number(message.paletteIndex), colors = supplied || paletteRgba(archive, paletteIndex);
       if (!colors) throw new Error('No palette is selected.');
       const palette = archive.palettes[paletteIndex], suffix = palette ? `${palette.group}_${palette.number}` : 'preview';
-      const target = await vscode.window.showSaveDialog({ title: 'Export ACT Palette', defaultUri: vscode.Uri.file(path.join(path.dirname(filename), `${path.basename(filename, path.extname(filename))}_palette_${suffix}.act`)), filters: { 'Adobe color table': ['act'] } });
+      const order = await chooseActOrder(resource, 'ACT export table order'); if (!order) return;
+      const target = await vscode.window.showSaveDialog({ title: `Export ACT Palette — ${orderLabel(order)}`, defaultUri: vscode.Uri.file(path.join(path.dirname(filename), `${path.basename(filename, path.extname(filename))}_palette_${suffix}.act`)), filters: { 'Adobe color table': ['act'] } });
       if (!target) return;
-      fs.writeFileSync(target.fsPath, paletteAct(colors));
-      vscode.window.showInformationMessage(`Exported ACT palette: ${path.basename(target.fsPath)}`);
+      fs.writeFileSync(target.fsPath, writeAct(colors, order));
+      vscode.window.showInformationMessage(`Exported ACT palette using ${orderLabel(order)}: ${path.basename(target.fsPath)}`);
     } catch (error) { vscode.window.showErrorMessage(`Could not export ACT palette: ${error.message}`); } return; }
     if (message.type === 'exportAco' || message.type === 'exportSwatchPng') { try {
       const supplied = Array.isArray(message.colors) && message.colors.length === 256 ? message.colors : null, paletteIndex = Number(message.paletteIndex), colors = supplied || paletteRgba(archive, paletteIndex);
@@ -1017,4 +1048,4 @@ function registerSffViewer(context) {
   );
 }
 
-module.exports = { registerSffViewer, openSffViewer, nearbyAirReferences, viewerHtml };
+module.exports = { registerSffViewer, openSffViewer, nearbyAirReferences, viewerHtml, chooseActOrder };

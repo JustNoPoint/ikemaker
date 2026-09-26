@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.78.3",
+  "version": "0.78.4",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -2325,6 +2325,20 @@
           "maximum": 255,
           "scope": "resource",
           "description": "RGB-distance guard around the protected palette background. Visible sprite colors inside this range receive unique provisional replacements so they cannot be confused with transparency."
+        },
+        "ikemenZss.actPaletteOrder": {
+          "type": "string",
+          "enum": [
+            "index",
+            "reversed"
+          ],
+          "enumDescriptions": [
+            "ACT file order: first stored RGB color is index 0.",
+            "Reversed Photoshop method: reverse the 256 RGB entries when moving between ACT and SFF index order."
+          ],
+          "default": "index",
+          "scope": "window",
+          "description": "Remembered ACT import/export table convention. ACT files contain no reliable producer identity, so each preview can override this choice."
         },
         "ikemenZss.openIkemenToolsOnStartup": {
           "type": "boolean",

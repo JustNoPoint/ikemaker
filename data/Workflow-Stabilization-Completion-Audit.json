@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "auditedAt": "2026-09-25",
-  "extensionVersion": "0.78.3",
+  "extensionVersion": "0.78.4",
   "requirements": [
     {
       "id": 1,
@@ -125,7 +125,7 @@
   ],
   "automatedVerification": {
     "testFilesPassing": 304,
-    "package": "ikemen-zss-tools-0.78.3.vsix",
+    "package": "ikemen-zss-tools-0.78.4.vsix",
     "packageInstalled": false,
     "forbiddenRcWordingInExtension": 0,
     "ryuDefReferences": 21,

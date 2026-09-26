@@ -60,5 +60,10 @@ assert(advanced.includes("preset:presetInput.value"));
 assert(advanced.includes('Reference Palette Tray'));
 assert(advanced.includes('id="loadReferencePalettes"'));
 assert(advanced.includes("type:'exportReferenceBatch'"));
+assert(advanced.includes('Add Palette(s) from Project Library'));
+assert(advanced.includes('Add One Palette…'));
+assert(advanced.includes('Add several:'));
+assert(advanced.includes('Batch selection is not implemented.'));
+assert(advanced.includes("type:'stageLibraryPalette'"),'the obvious Add One entry must retain the existing safe stage flow');
 
 console.log('SFF workspace experience tests passed');
