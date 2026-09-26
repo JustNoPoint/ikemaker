@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "characterId": "TINY",
+  "characterDef": "Tiny.def",
+  "archives": [
+    {"id":"fx","role":"characterFx","prefix":"TINYFX","snd":"Tiny.snd","fxDef":"Tiny_FX.def","buildManifest":"Tiny-snd-manifest.txt"}
+  ],
+  "events": [
+    {"group":0,"index":0,"name":"Light Swing","role":"fx"},
+    {"group":1,"index":0,"name":"Light Hit","role":"fx"}
+  ]
+}

@@ -1,0 +1,166 @@
+<mamecheat version="1">
+
+  <cheat desc="Infinite Time">
+    <script state="on">
+      <action>maincpu.pb@FF9409=99</action>
+    </script>
+    <script state="run">
+      <action condition="(maincpu.pb@FF9409 GT 1) AND (maincpu.pb@FF9409 LT 99)">maincpu.pb@FF9409=99</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Finish this Round Now!">
+    <script state="on">
+      <action>maincpu.pb@FF9409=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Background">
+    <parameter>
+      <item value="0x00">Demitri</item>
+      <item value="0x01">Jon Talbain</item>
+      <item value="0x02">Victor</item>
+      <item value="0x03">Lord Raptor</item>
+      <item value="0x04">Morrigan</item>
+      <item value="0x05">Anakaris</item>
+      <item value="0x06">Felicia</item>
+      <item value="0x07">Bishamon</item>
+      <item value="0x08">Rikuo</item>
+      <item value="0x09">Sasquatch</item>
+      <item value="0x0A">Huitzil</item>
+      <item value="0x0B">Pyron</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pw@FF9388=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="P1 Infinite Energy">
+    <script state="run">
+      <action>maincpu.pb@FF83CB=90</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Drain All Energy Now!">
+    <script state="on">
+      <action>maincpu.pb@FF83CB=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Infinite Special">
+    <script state="run">
+      <action>maincpu.pb@FF855F=8E</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select Character"> <comment>Free player selection - Use on level VS screen</comment>
+    <parameter>
+      <item value="0x01">Dimitri</item>
+      <item value="0x02">Gallon</item>
+      <item value="0x03">Victor</item>
+      <item value="0x04">Zabelzaroch</item>
+      <item value="0x05">Morrigan</item>
+      <item value="0x06">Anakaris</item>
+      <item value="0x07">Felicia</item>
+      <item value="0x08">Bishamon</item>
+      <item value="0x09">Aulbath</item>
+      <item value="0x0A">Sasquatch</item>
+      <item value="0x0B">Phobos</item>
+      <item value="0x0C">Pyron</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8729=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="P2 Infinite Energy">
+    <script state="run">
+      <action>maincpu.pb@FF87CB=90</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Drain All Energy Now!">
+    <script state="on">
+      <action>maincpu.pb@FF87CB=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Infinite Special">
+    <script state="run">
+      <action>maincpu.pb@FF895F=51</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select Character"> <comment>Free player selection - Use on level VS screen</comment>
+    <parameter>
+      <item value="0x01">Dimitri</item>
+      <item value="0x02">Gallon</item>
+      <item value="0x03">Victor</item>
+      <item value="0x04">Zabelzaroch</item>
+      <item value="0x05">Morrigan</item>
+      <item value="0x06">Anakaris</item>
+      <item value="0x07">Felicia</item>
+      <item value="0x08">Bishamon</item>
+      <item value="0x09">Aulbath</item>
+      <item value="0x0A">Sasquatch</item>
+      <item value="0x0B">Phobos</item>
+      <item value="0x0C">Pyron</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8B29=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="No Background Music">
+    <script state="run">
+      <action>audiocpu.pw@F018=0000</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Region"> <comment>This cheat sets the machine region - the effectiveness may vary! You have to enable this ASAP - ON or before the ROM check screen! Or enable + RESET</comment>
+    <parameter>
+      <item value="0x00">Japan</item>
+      <item value="0x02">USA</item>
+      <item value="0x04">Asia</item>
+      <item value="0x06">Hispanic</item>
+      <item value="0x08">Euro</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8205=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Title">
+    <parameter>
+      <item value="0x00">Vampire (Japanese Text)</item>
+      <item value="0x01">Darkstalkers (English Text)</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8214=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Sound Test">
+    <parameter min="0" max="674" step="1"/>
+    <script state="change">
+      <action>audiocpu.pw@F007=0000</action>
+      <action>audiocpu.pq@F100=0000FF00000000FF</action>
+      <action>audiocpu.pq@F108=00FFFF0000000000</action>
+      <action>audiocpu.pq@F110=1000FF0000000000</action>
+      <action>audiocpu.pq@F118=00FFFF0000000000</action>
+      <action condition="(param LT 100)">audiocpu.pb@F111=param</action>
+      <action>temp0=param/100</action>
+      <action condition="(param GE 100)">audiocpu.pb@F110=temp0</action>
+      <action condition="(param GE 100)">audiocpu.pb@F111=param-(temp0*100)</action>
+      <action>audiocpu.pb@F007=20</action>
+    </script>
+  </cheat>
+
+</mamecheat>
+<!-- Cheat file downloaded from https://www.mamecheat.co.uk, see cheat.txt for list of contributors. -->

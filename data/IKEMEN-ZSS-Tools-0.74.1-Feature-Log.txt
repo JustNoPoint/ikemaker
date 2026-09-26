@@ -1,0 +1,9 @@
+IKEMaker 0.74.1
+
+Palette sample drag-and-drop
+
+- Adds a visible drop target for one or more PNG sprite samples.
+- Automatically inventories dropped artwork and makes it available to Simple Palette Construction.
+- Supports the same automatic palette selection, conversion draft, review, regenerate, revert, and export flow as browsed PNG files.
+- Validates PNG contents and enforces a 64 MB webview-drop safety limit; larger sets remain available through Open PNG artwork.
+- Keeps all dropped source data read-only and never overwrites the artist's files.

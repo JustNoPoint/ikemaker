@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('assert'), fs = require('fs'), os = require('os'), path = require('path');
+const store = require('../src/helper_recipe_store');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemaker-helper-recipes-'));
+const filename = store.recipeFilename(root, 'Super / Beam?');
+assert.strictEqual(path.basename(filename), 'super-beam.json');
+fs.mkdirSync(path.dirname(filename), { recursive: true });
+fs.writeFileSync(filename, `${JSON.stringify(store.recipeDocument('Super Beam', { id: 3000, stateNo: 3000 }))}\n`);
+assert.deepStrictEqual(store.list(fs, root).map((item) => item.name), ['Super Beam']);
+assert.strictEqual(store.list(fs, root)[0].plan.id, 3000);
+fs.writeFileSync(path.join(path.dirname(filename), 'invalid.json'), '{');
+assert.strictEqual(store.list(fs, root).length, 1);
+fs.rmSync(root, { recursive: true, force: true });
+console.log('Helper recipe store tests passed');

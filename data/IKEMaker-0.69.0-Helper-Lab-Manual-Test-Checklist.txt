@@ -1,0 +1,24 @@
+IKEMaker 0.69.0 — Helper Lab manual checks
+
+[ ] Open Character Authoring > Helper Lab for a character with connected AIR/SFF.
+[ ] Choose Fireball. Confirm the canvas begins stopped and shows the assigned sprite,
+    Clsn boxes, origin, and velocity path when its AIR action exists.
+[ ] Use previous/next, Play/Stop, mouse-wheel zoom, drag pan, and Reset view.
+[ ] Change animation, velocity, damage, hit count, lifetime, spawn position, ID, and
+    StateDef. Confirm preview/readiness/code refresh without saving a source file.
+[ ] Choose every built-in scaffold. Confirm it produces helper creation plus a cleanup
+    StateDef but does not invent a HitDef.
+[ ] Save and reload a project recipe. Confirm it appears under
+    .ikemen-tools/helper-recipes and loading it inserts no code.
+[ ] Open Helper Tree. Filter by name/ID/state/file and use Issues only.
+[ ] Select a static helper, load it into the editor, change one value, and choose
+    Update existing controller. Cancel once, then test on a disposable file. Confirm
+    only the creation controller changes and the owned StateDef remains identical.
+[ ] Confirm a computed-ID helper cannot be loaded into the numeric editor.
+[ ] Open Map & Data Flow. Filter reads/writes, open a result line, and generate self,
+    parent, root, helper, PlayerID, and team examples.
+[ ] Open Move Lab, HitDef Editor, Position & Camera, Explod Composer, Controller
+    Browser, and the full connection tree from Helper Lab.
+[ ] Resize the viewer narrow and wide. Confirm the right rail moves below the main
+    workspace without obscuring controls.
+[ ] Confirm Game, Infinite VS, and Training launch controls are present.

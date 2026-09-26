@@ -1,0 +1,86 @@
+IKEMEN ZSS TOOLS - MOBILE FEATURE EXPECTATIONS
+================================================
+
+This sheet describes the intended mobile-compatible extension. Mobile functions
+must appear only when the active VS Code host can actually support them.
+
+VERIFIED BROWSER BUILD TODAY
+----------------------------
+* ZSS/CNS/AIR/DEF/CMD/Lua grammar and snippet support.
+* Independent Learning/Advanced settings for every authoring domain.
+* Searchable bundled IKEMEN 1.0 controller catalog.
+* Reviewed ZSS controller insertion with required and selected optional values.
+* Portable ZSS controller/trigger, CNS controller, and Lua API completion plus
+  bundled hover descriptions.
+* Read-only ZSS/CNS/Lua structure report.
+* Smaller read-only ZSS review, explicitly labeled as less complete than the
+  desktop analyzer.
+* Offline guides and platform capability reports.
+
+NOT YET IMPLEMENTED IN THE BROWSER BUILD
+----------------------------------------
+* SFF, AIR, or SND parsing and visual editing.
+* Complete project registry, workbench, or desktop audit suite.
+* Stage/screenpack visual canvases.
+* Native builders, external applications, or IKEMEN launch.
+
+ANDROID - TARGET FEATURES BEYOND THE VERIFIED BROWSER BUILD
+---------------------------
+* ZSS/CNS/AIR/DEF/CMD/configuration syntax coloring.
+* State/function navigation, controller reference, snippets, and project data.
+* Text audits, naming help, requirements, and character workbenches.
+* AIR animation plus Clsn1/Clsn2 viewing and editing.
+* SFF sprite, axis, palette, layer, naming, and requirement inspection.
+* SND browsing, naming, validation, waveforms, and supported browser playback.
+* Sound profiles, CommonFX DEF generation, voice-pack audits, reference scans,
+  and readable build manifests.
+* Export where the selected Android VS Code host grants file access.
+* Clear explanations when a desktop-only feature is unavailable.
+
+ANDROID - MAY REQUIRE LOCAL CODE-SERVER/NODE HOSTING
+---------------------------------------------------
+* Direct access to a complete project stored on the device.
+* Opening exported files in another Android application.
+* Android ARM64 command-line tools, if compatible tools are developed.
+* A future Android intent/companion bridge for launching the IKEMEN APK.
+
+ANDROID - MISSING UNTIL SEPARATELY IMPLEMENTED
+----------------------------------------------
+* Windows sprmake2.exe and sndmaker.exe.
+* Browser-side native SFF/SND rebuilding.
+* Windows batch files.
+* The current desktop process-based IKEMEN launcher.
+* Photoshop and Audacity desktop integration.
+* Unrestricted desktop filesystem access.
+
+Possible future Android work includes portable JavaScript SFF/SND writers,
+proper Android ARM64 builders, and a tested APK launch bridge.
+
+IPHONE/IPAD - TARGET FEATURES BEYOND THE VERIFIED BROWSER BUILD
+-------------------------------
+* ZSS/CNS/AIR/DEF/CMD/configuration syntax coloring.
+* Code navigation, controller reference, snippets, and audits.
+* AIR animation/collision viewing and editing through an available workspace.
+* SFF sprite, palette, axis, layer, naming, and requirement inspection.
+* SND inspection, naming, validation, waveforms, and supported browser playback.
+* Sound profiles, CommonFX files, voice audits, scans, and build manifests.
+* Reports and generated files saved through a remote workspace or browser.
+
+IPHONE/IPAD - MISSING OR UNAVAILABLE
+------------------------------------
+* IKEMEN itself, training launch, and play testing.
+* SprMaker2, SndMaker, FFmpeg, Photoshop, Audacity, and batch execution.
+* Arbitrary iOS filesystem access.
+* Reliable external-application integration beyond browser sharing/downloads.
+* Local command-line or Android-style intent bridges.
+
+DESKTOP
+-------
+Windows keeps the complete workflow. Linux and macOS keep portable editor
+features, while native build/launch features require tools made for that OS.
+Mobile compatibility must not reduce or silently alter desktop behavior.
+
+RULE
+----
+Advertise only verified capabilities. Hide or clearly disable unavailable
+operations. Do not bundle Windows executables as a mobile workaround.

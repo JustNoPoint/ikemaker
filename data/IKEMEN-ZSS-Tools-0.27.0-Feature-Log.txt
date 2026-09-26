@@ -1,0 +1,19 @@
+IKEMEN ZSS Tools 0.27.0
+=======================
+
+Learning and Advanced foundation
+--------------------------------
+- Added independent Learning or Advanced settings for ZSS, Lua, CNS, assets,
+  and stage/screenpack authoring.
+- Added a CNS Veteran / Learning ZSS and Lua preset matching mixed experience.
+- Added desktop and browser-safe experience configuration commands.
+- Displayed the active experience in the Visual Code Structure workspace.
+- Kept explanations available in Advanced presentation.
+
+IKEMEN 1.0 terminology and controller trust
+-------------------------------------------
+- Removed obsolete release-channel metadata from all 155 bundled controllers.
+- Replaced current extension wording with the single IKEMEN 1.0 baseline.
+- Renamed the update source identity to the latest IKEMEN 1.0 release.
+- Corrected used-option detection for dotted parameters such as
+  ground.velocity, guard.pausetime, and fall.recover.

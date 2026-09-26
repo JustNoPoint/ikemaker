@@ -1,0 +1,38 @@
+IKEMAKER 0.75.7 — MANUAL VERIFICATION STILL REQUIRED
+=====================================================
+
+Use a disposable full game copy for every write, delete, rebuild, crop, or release.
+
+1. WINDOWS AND VS CODE VISUAL BEHAVIOR
+[ ] Double-click an associated SFF: one visual SFF tab opens and no raw/text tab remains.
+[ ] Double-click an associated SND: one visual SND tab opens and no raw/text tab remains.
+[ ] Double-click AIR: editable AIR text plus one synchronized visual tab opens.
+[ ] Check Help & Learning at normal, narrow, ultrawide, and alternate display scaling.
+[ ] Tab through Help and representative workspaces; focus remains visible and untrapped.
+[ ] Replace built-in help diagrams with curated screenshots only after beta layouts settle.
+
+2. LIVE IKEMEN
+[ ] Ctrl+Alt+F5, F6, and F7 launch the correct active game, character, stage, and mode.
+[ ] Repeat with Ryu/SF6 and Goku/HDBZ; no project or profile crosses between them.
+[ ] Verify Stage Rig, test-session overlay, throw/helper output, and screenpack previews.
+[ ] Test online/netplay with two real peers for every synchronized pre-match Lua path.
+
+3. AUDIO, EXTERNAL EDITORS, AND BUILDERS
+[ ] Listen to SND playback/waveforms and verify channels, looping, and exported WAVs.
+[ ] Round-trip Photoshop, Aseprite, and the selected audio editor.
+[ ] Rebuild disposable SFF and SND sources with bundled SprMaker2 and SndMaker.
+[ ] Crop one sprite, one group, and a full disposable SFF; verify backup and recovery.
+
+4. DESTRUCTIVE AND RELEASE FLOWS
+[ ] Create/save/undo/recover one SFF, AIR, SND, palette, stage, screenpack, and select.def edit.
+[ ] Exercise Shift/Ctrl selection, context-menu/Delete removal, stale-file protection, and reopen.
+[ ] Complete a disposable project and patch release; verify defaults, version, checksums,
+    cropped public SFFs, removed user palettes, and an unchanged development copy.
+
+5. OTHER HOSTS
+[ ] Install the standard package on a second clean Windows profile.
+[ ] Install through the online bootstrap on a Windows machine without VS Code.
+[ ] Confirm Android/browser and iPhone/iPad capability explanations on real devices.
+
+Report any failure with active profile, context, file, exact action, expected result,
+actual result, and a screenshot when the problem is visual.

@@ -1,0 +1,375 @@
+<html><head><meta charset="utf-8"/><title>ZSS</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/ZSS">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="about-zss">About ZSS</h1>
+<p>ZSS (Zantei State Script) is a state description format new to IKEMEN GO that can be used instead of CNS. The basic structure is the same as CNS, but the grammar is significantly different.</p>
+<p>Almost all CNS descriptions can be replaced with ZSS, with new features such as local variables and functions. ZSS could be useful for people that:</p>
+<ul>
+<li>Feels that the CNS format is redundant.</li>
+<li>Wants to compress or reuse code.</li>
+<li>Doesn't like to describe complicated processes many times.</li>
+<li>Has programming experience.</li>
+</ul>
+<p>common1.cns.zss can be used as a sample. Comparing it to the original common1.cns may help you understand how to use it properly.</p>
+<p>If you're using Notepad++, consider installing <a href="https://github.com/ikemen-engine/zss_npp">ZSS syntax highlighter</a>.</p>
+<p>Here is a brief manual for those who understand MUGEN CNS.</p>
+<h1 id="loading-zss">Loading ZSS</h1>
+<p>Specify the ZSS file like any other file in the character DEF's [Files] section. Additionally, characters can mix CNS and ZSS code, as long as they are in separate files.</p>
+<p>The file extension describing ZSS is fixed with .zss.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">st1 = kfm.zss
+</code></pre>
+<p>It's also possible to load a ZSS file if the referenced file is missing, but the same file name with additional .zss extension is present.</p>
+<p><strong>Example: File name</strong></p>
+<pre><code class="language-ini">common1.cns.zss
+</code></pre>
+<p><strong>Example: Description in DEF file. (under [Files])</strong></p>
+<pre><code class="language-ini">stcommon = common1.cns
+</code></pre>
+<h1 id="how-to-write-zss">How to write ZSS</h1>
+<h2 id="statedefs">StateDefs</h2>
+<p>ZSS is composed of a collection of Statedefs much like CNS. All it's options (parameters) are written inside square/box brackets.</p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[Statedef 0]
+type = S
+physics = S
+sprpriority = 0
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-ini">[StateDef 0; type: S; physics: S; sprPriority: 0;]
+</code></pre>
+<p>To specify a value, write <code>:</code> instead of <code>=</code>.
+Separating parameters is done using <code>;</code>. All of these in the Statedef bracket always end using this.</p>
+<p>Above example can be also written like this (whitespace doesn't matter):</p>
+<pre><code class="language-c#">[StateDef 0;
+  type: S;
+  physics: S;
+  sprPriority: 0;]
+</code></pre>
+<p>Write state code under Statedefs.</p>
+<h2 id="state-controllers">State controllers</h2>
+<p><strong>Format:</strong>
+<code>State controller name {parameter name: value}</code></p>
+<p>State controllers in ZSS are written in a similar format to CNS, but triggers are not part of SCTRL definition.</p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+trigger1 = 1
+x = 10
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-c#">posAdd{x: 10}
+</code></pre>
+<p>When writing multiple parameters, use <code>;</code> to separate them, just like in Statedefs.</p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+trigger1 = 1
+x = 10
+y = -10
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-c#">posAdd{x: 10; y: -10}
+</code></pre>
+<p><strong>Example: With whitespace</strong></p>
+<pre><code class="language-c#">posAdd{
+    x: 10;
+    y: -10;
+}
+</code></pre>
+<p>On state controllers without parameters, leave the brace brackets inside empty.</p>
+<p><strong>Example:</strong></p>
+<pre><code>turn{}
+</code></pre>
+<h2 id="if-statement">If statement</h2>
+<p>In the examples so far, nothing is written in the surrounding area, so that the Statedef is executed every frame (like writing "1" as the trigger of any SCTRL in CNS).</p>
+<p>ZSS uses <code>if</code> statements instead of CNS triggers.<br/>
+Usage is roughly the same to the "if" sentences in a typical programming language.</p>
+<p><strong>Format:</strong>
+<code>"if" conditional statement {code to be executed}</code></p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+trigger1 = time = 0
+x = 10
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-go">if time = 0 {
+    posAdd{x: 10}
+}
+</code></pre>
+<p><code>if</code> uses the same conditional statement as CNS triggers.
+If code is added after the conditional statement, and is enclosed in <code>{}</code>. The code within it is executed only while the <code>if</code> condition is satisfied.</p>
+<p>When you want to put more than one condition, you can write it like this:</p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+triggerall = time = 0
+trigger1 = stateType = S
+trigger2 = stateType = C
+trigger3 = stateType = L
+x = 10
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-go">if time = 0 {
+    if stateType = S || stateType = C || stateType = L {
+        posAdd{x: 10}
+    }
+}
+</code></pre>
+<p>You can write ifs inside another ifs to write more complex conditions.
+An <code>if</code> statement tests it's condition and executes it's <code>{</code>-part or it's <code>else</code>-part accordingly. The else-part is optional.<br/>
+When you write nested ifs, you can also combine both <code>if</code> and <code>else</code> in the same line (the so called <code>else if</code> statement in programming languages).</p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+triggerall = time = 0
+trigger1 = stateType = S
+y = -50
+
+[State Sample]
+type = VelAdd
+triggerall = time = 0
+trigger1 = stateType = A
+y = 0.1
+
+[State Sample]
+type = PosSet
+triggerall = time = 0
+trigger1 = stateType != S
+trigger1 = stateType != A
+y = -20
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-go">if time = 0 {
+    if stateType = S {
+        posAdd{y: -50}
+    } else if stateType = A {
+        velAdd{y: 0.1}
+    } else {
+        posSet{y: -20}
+    }
+}
+</code></pre>
+<h2 id="switch-statement">Switch statement</h2>
+<p>As an alternative to if/else, <code>switch</code> statement can be used to produce tidier, more understandable code. Cases are defined inside the statement, where multiple cases can trigger the same code block (separating them by using <code>;</code>), and a default block can be defined in case all the other cases fail to trigger.</p>
+<p><strong>Example: If statement</strong></p>
+<pre><code class="language-go">if stateNo = 0 {
+     playSnd{value: 2,1}
+} else if stateNo = 10 || stateNo = 20 {
+     playSnd{value: 2,2}
+} else {
+     playSnd{value: 2,0}
+}
+</code></pre>
+<p><strong>Example: Switch statement</strong></p>
+<pre><code class="language-go">switch stateNo {
+    case 0:
+        playSnd{value: 2,1}
+    case 10; 20:
+        playSnd{value: 2,2}
+    default:
+        playSnd{value: 2,0}
+}
+</code></pre>
+<h2 id="ignorehitpause-and-persistent">IgnoreHitPause and Persistent</h2>
+<p>Use <code>ignoreHitPause</code> for ignoring hit pauses.<br/>
+Use <code>persistent</code> for specifying the interval between execution frames.<br/>
+Code that should be affected by IgnoreHitPause and Persistent needs to be enclosed in {} (also affects nested blocks).<br/>
+They can be used individually, or as part of <code>if</code> statement (typed before <code>if</code>).
+Unlike IgnoreHitPause from CNS, it's not a separate SCTRL parameter (except Explod, which allows setting this parameter arbitrarily).</p>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+trigger1 = 1
+x = 10
+ignorehitpause = 1
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-go">ignoreHitPause {
+    posAdd{x: 10}
+}
+</code></pre>
+<p><strong>Example: CNS</strong></p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+trigger1 = 1
+x = 10
+persistent = 5
+</code></pre>
+<p><strong>Example: ZSS</strong></p>
+<pre><code class="language-go">persistent(5) {
+    posAdd{x: 10}
+}
+</code></pre>
+<p>Both IgnoreHitPause and Persistent can be specified at the same time. If you specify more than one, bring the <code>if</code> statement at the end.</p>
+<p>Example: CNS</p>
+<pre><code class="language-ini">[State Sample]
+type = PosAdd
+trigger1 = Time = 0
+x = 10
+ignorehitpause = 1
+persistent = 5
+</code></pre>
+<p>Example: ZSS</p>
+<pre><code class="language-go">ignoreHitPause persistent(5) if time = 0 {
+    posAdd{x: 10}
+}
+</code></pre>
+<h2 id="about-variables">About Variables</h2>
+<p>In ZSS, simple variable operations such as VarSet/MapSet are obsolete.<br/>
+Instead, manipulate variables using <code>:=</code>.
+It looks like an assignment expression that can be written with CNS trigger.</p>
+<p>Example: CNS</p>
+<pre><code class="language-ini">[State Sample]
+type = VarSet
+trigger1 = 1
+Var(59) = 1
+</code></pre>
+<p>Example: ZSS</p>
+<pre><code class="language-go">var(59) := 1;
+</code></pre>
+<p>Example: CNS</p>
+<pre><code class="language-ini">[State Sample]
+type = MapAdd
+trigger1 = 1
+Map(collection) = 1
+</code></pre>
+<p>Example: ZSS</p>
+<pre><code class="language-go">map(collection) := map(collection) + 1;
+</code></pre>
+<p>Add <code>;</code> at the end of each assignment expression.</p>
+<p>If you want to assign a variable to another character, specify the redirect to that character/helper as usual.</p>
+<p>Example: CNS</p>
+<pre><code class="language-ini">[State Sample]
+type = ParentVarSet
+trigger1 = 1
+Var(59) = 1
+</code></pre>
+<p>Example: ZSS</p>
+<pre><code class="language-go">parent,var(59) := 1;
+</code></pre>
+<h2 id="comments">Comments</h2>
+<p>In ZSS, use <code>#</code> to comment lines of code instead of <code>;</code>.</p>
+<h2 id="local-variables">Local Variables</h2>
+<p>A variable that can only be used within a defined state and doesn't affect other states.
+Up to 256 can be set. Used primarily for passing disposable variables in the state or for passing functions numerically.</p>
+<h3 id="local-variable-declaration">Local Variable declaration</h3>
+<p><strong>Format:</strong><br/>
+<code>let &lt; variable name &gt; = value;</code><br/>
+Put a <code>;</code> at the end.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-js">let randomValue100 = Random%100;
+</code></pre>
+<p>If you want to change this value later, write it in exactly the same way.<br/>
+Remember that all the descriptions for putting values into local variables are in this format.</p>
+<h3 id="referencing-local-variables">Referencing local variables</h3>
+<p>Use: <code>$ Variable name</code><br/>
+To refer to the variable declared in the above example.</p>
+<pre><code class="language-go">$randomValue100
+</code></pre>
+<h2 id="loop-statements">Loop statements</h2>
+<h3 id="for">For</h3>
+<p><code>For</code> iterates code inside a strict range. Statement header accepts three expressions, where <code>exp1</code> and <code>exp2</code> are the range of the loop, in integers, and <code>exp3</code> is an optional incremental expression that can be positive or negative (a negative increment value will perform looping from a greater number to a lower one).</p>
+<p><strong>Example 1:</strong></p>
+<pre><code class="language-go">for 0; 10 {
+    map(collection) := map(collection) + 1;
+}
+</code></pre>
+<p>Additionally, a control variable can be declared in the first expression of the header. Value from this local variable will persist after the loop has ended.</p>
+<p><strong>Example 2:</strong></p>
+<pre><code class="language-go">for i = 20; 10; -1 {
+    map(collection) := map(collection) + $i%4;
+}
+</code></pre>
+<h3 id="while">While</h3>
+<p><code>While</code> will iterate a state block indefinitely until the header expression returns false.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-go">while var(20) &lt; 40 {
+    var(20) := var(20) + 1;
+}
+</code></pre>
+<h3 id="breakcontinue">Break/Continue</h3>
+<p>Break/continue statements are useful to control the flow of the loop blocks. They're expected to be inside a loop block and must end with a <code>;</code>. Changing states inside loops will also break them.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-go">let i = 0;
+while $i &lt; 10 {
+    if $i = 8 {
+        break;
+    }
+    let i = $i + 1;
+    if $i &gt; 5 {
+        continue;
+    }
+    map(collector) := map(collector) + 1;
+}
+</code></pre>
+<p>For safety and performance reasons, loops will be automatically broken after 2500 iterations.</p>
+<h2 id="functions">Functions</h2>
+<p>A function is a group of processes that allows you to call and execute the work you have written previously in a separate location.</p>
+<p>Instead of writing a process to be used many times, it is possible to abstract the process in the form of a function and only write the call statement in a Statedef itself.</p>
+<p>In CNS, the more complicated the functions to be implemented, the more complicated the code becomes. However, in ZSS, this can be solved to some extent by using functions.</p>
+<h3 id="function-definition">Function definition</h3>
+<p>Use: <code>[Function FunctionName()]</code></p>
+<p><strong>Example:</strong> Function that plays voice during KO.</p>
+<pre><code class="language-c#">[Function PlayKOSound()]
+playSnd{value: 11,0}
+</code></pre>
+<p>You can also write arguments and return values if you need them.</p>
+<p><code>[Function FunctionName(argumentName) return valueName]</code></p>
+<h3 id="calling-a-function">Calling a function</h3>
+<p>Write in the format of: 
+<code>call FunctionName();</code><br/>
+Only the functions written above the calling state can be called, so pay attention to the order of calls.</p>
+<p>Example: Calling the PlayKOSound() function written above:<br/>
+<code>call PlayKOSound ();</code><br/>
+You can also include arguments by using:
+<code>call FunctionName(argumentName);</code><br/>
+See below for details.</p>
+<h3 id="function-arguments">Function arguments</h3>
+<p>A function can receive arguments and process it. This could be used to write processes that differ in input.<br/>
+Arguments are listed within the parentheses, and are separated by commas.
+To call the argument inside the function, use <code>$</code>.</p>
+<p><strong>Example:</strong> Play a sound in the volume specified in the argument.</p>
+<pre><code class="language-csharp">[Function PlayKOSound(VoiceVolume)]
+playSnd{
+    value: 11,0;
+    volumescale: $VoiceVolume;
+}
+</code></pre>
+<ul>
+<li>The received argument is treated as a local variable by the function.<br/>
+To call it we use:
+<code>call PlayKOSound(200);</code> or <code>call PlayKOSound(50);</code></li>
+</ul>
+<p>Multiple arguments could be used.
+<strong>Example:</strong> The function above but with the capacity of also setting the frequency.</p>
+<pre><code class="language-csharp">[Function PlayKOSound(VoiceVolume, Frequency)]
+PlaySnd{
+    value: 11,0;
+    volumeScale: $VoiceVolume;
+    freqMul: $Frequency;
+}
+</code></pre>
+<p>And to call it we use:
+<code>call PlayKOSound(200, 0.5);</code></p>
+<h3 id="function-return-value">Function return value</h3>
+<p>Functions can return values to the caller. The value can be specified by writing it after the function definition. The returned value can be assigned to a variable.</p>
+<p>A example of a Function with return argument:</p>
+<pre><code class="language-js">[Function IsHelperID() ret]
+
+let ret = 0;
+
+if isHelper(1) {
+    let ret = 1;
+} else if isHelper(2) {
+    let ret = 2;
+} else if isHelper(3) {
+    let ret = 3;
+} else if isHelper(4) {
+    let ret = 4;
+} else if isHelper(5) {
+    let ret = 5;
+}
+</code></pre>
+<p>In this case the return value was specified as <code>ret</code> in <code>[Function IsHelperID () ret]</code><br/>
+As an example, you can retrieve the value like this:</p>
+<pre><code class="language-js">let helperIdValue = call IsHelperID();
+</code></pre></body></html>

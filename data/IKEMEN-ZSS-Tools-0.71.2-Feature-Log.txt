@@ -1,0 +1,25 @@
+IKEMaker 0.71.2 — SFF/AIR authority correction
+
+SFF-ONLY INTAKE AND ASSEMBLY
+- Artist Intake creates no AIR draft and reads no GIF timing.
+- Two-SFF Assembly changes no AIR file.
+- Package metadata records scope SFF_ONLY and the policy to preserve the existing
+  destination/template AIR unchanged.
+- Sprite identity, grouping, naming metadata, axes, palettes, provenance, and the
+  reviewed SprMaker2 build remain the only responsibilities of these workflows.
+
+DELIBERATE GIF TO AIR
+- The AIR viewer now contains a separate GIF → AIR action.
+- The user chooses the destination action, SFF group, first sprite index, and timing.
+- Compilation GIFs default to uniform one-tick elements for later AIR authoring.
+- Uniform custom timing is available.
+- GIF-delay timing is available only through an explicit choice and only when every
+  frame exposes a reliable delay.
+- Existing AIR actions require explicit replacement confirmation.
+- Missing mapped SFF identities are disclosed before the AIR mapping is created.
+- The AIR editor changes without automatic saving; SFF data is never changed.
+
+VERIFICATION
+- GIF/AIR generation, appending, replacement, and timing-choice behavior have pure
+  model coverage.
+- The complete automated suite passes: 142 test files.

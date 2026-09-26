@@ -1,0 +1,30 @@
+IKEMEN ZSS Tools 0.41.0
+=======================
+
+Learning / Advanced semantic equivalence
+-----------------------------------------
+- Added an executable cross-domain equivalence gate.
+- All 155 controller snippets are compared after removing teaching comments.
+- Reviewed controller fields and values are compared between modes.
+- ZSS/Lua completion and core hover information are compared.
+- Guided and Clean character scaffolds remain explicit choices in both modes;
+  only the recommendation order changes.
+- Every Advanced shortcut must resolve to a control already present in the
+  ordinary workspace.
+- Removed wording that implied Learning had different safety defaults.
+- Added an offline semantic-equivalence policy and evidence document.
+
+Explainable ZSS diagnostics
+---------------------------
+- Current ZSS safety, AIR timing-sync, and authored-function diagnostic codes
+  now have bundled meanings and concrete review steps.
+- The editor lightbulb offers Explain IKEMEN diagnostic for covered findings.
+- Explanations open as non-mutating Markdown and never claim an automatic fix.
+- A coverage test prevents current diagnostic explanations from disappearing.
+
+Safety and compatibility
+------------------------
+- Experience settings remain outside mutation, stale-file, backup, history,
+  and transaction APIs.
+- Diagnostic explanations do not edit project files.
+- All active terminology targets IKEMEN 1.0 only.

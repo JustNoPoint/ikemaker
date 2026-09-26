@@ -1,0 +1,35 @@
+IKEMaker 0.77.2
+================
+
+Visual coordinate editing
+-------------------------
+- JNP Move Constants: drag the yellow hit-spark marker to draft the active
+  window's sparkX/sparkY pair. Multi-hit windows retain their own spark2,
+  spark3, and later pairs. Source code changes only through the existing
+  explicit Apply buttons.
+- Universal HitDef Editor: drag the yellow spark marker to draft sparkxy,
+  then use Apply to Code.
+- Helper Lab: drag the amber spawn marker or projectile sprite to draft Spawn
+  X/Y. Hold Shift while dragging to pan.
+- Explod Composer and Position & Camera were audited and already provide
+  direct marker dragging with Shift-drag panning.
+
+Contact-result quick editing
+----------------------------
+- The JNP contact-result card now edits move-local damage, ground hitstun,
+  ground slide time, guard stun, and the applicable Counter/Punish values.
+- The card shows inherited chip damage, pause times, air hit time, ground,
+  guard and air velocities, and Y acceleration when the assigned game profile
+  exposes them.
+- Inherited profile values are labeled shared and open their exact source.
+  This prevents a game-wide light/medium/heavy profile edit from appearing to
+  be a one-move change.
+- The UI explains that HitDef has no independent guard.slidetime: guard motion
+  is governed by guard.hittime and guard.velocity.
+
+Safety
+------
+- Dragging updates retained drafts; it does not silently rewrite gameplay
+  source.
+- Existing panning, opponent positioning, zoom, Undo, source-conflict checks,
+  and explicit apply workflows remain intact.

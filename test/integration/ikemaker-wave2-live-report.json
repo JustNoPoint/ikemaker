@@ -1,0 +1,150 @@
+{
+  "startedAt": "2026-09-12T13:25:52.878Z",
+  "passed": true,
+  "checks": {
+    "extensionDiscovered": true,
+    "extensionActive": true,
+    "version": "0.70.0",
+    "displayName": "IKEMaker",
+    "commandCount": 151,
+    "missingCommands": [],
+    "finalTabs": [
+      "Welcome",
+      "Project & Team Manager",
+      "Ryu · AIR: Anim.air",
+      "Ryu · SFF: Ryu_Development.sff",
+      "Ryu · SND: Sound.snd",
+      "Stage: Mountainside Temple",
+      "UI: IKEMEN1",
+      "select.def — Roster Manager",
+      "commonoptions.zss — Visual Structure",
+      "Anim.air"
+    ]
+  },
+  "surfaces": [
+    {
+      "command": "ikemen.projectManager.open",
+      "filename": "<IKEMEN_ROOT>\\chars\\template",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager"
+      ]
+    },
+    {
+      "command": "air.openAnimationPreview",
+      "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\Anim.air",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Anim.air"
+      ]
+    },
+    {
+      "command": "sff.openViewer",
+      "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu_Development.sff",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Ryu · SFF: Ryu_Development.sff",
+        "Anim.air"
+      ]
+    },
+    {
+      "command": "snd.openViewer",
+      "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\Sound.snd",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Ryu · SFF: Ryu_Development.sff",
+        "Ryu · SND: Sound.snd",
+        "Anim.air"
+      ]
+    },
+    {
+      "command": "ikemen.stage.openWorkspace",
+      "filename": "<IKEMEN_ROOT>\\stages\\kfm.def",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Ryu · SFF: Ryu_Development.sff",
+        "Ryu · SND: Sound.snd",
+        "Stage: Mountainside Temple",
+        "Anim.air"
+      ]
+    },
+    {
+      "command": "ikemen.ui.openWorkspace",
+      "filename": "<IKEMEN_ROOT>\\data\\ikemen1\\system.def",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Ryu · SFF: Ryu_Development.sff",
+        "Ryu · SND: Sound.snd",
+        "Stage: Mountainside Temple",
+        "UI: IKEMEN1",
+        "Anim.air"
+      ]
+    },
+    {
+      "command": "ikemen.selectDef.openWorkspace",
+      "filename": "<IKEMEN_ROOT>\\data\\select.def",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Ryu · SFF: Ryu_Development.sff",
+        "Ryu · SND: Sound.snd",
+        "Stage: Mountainside Temple",
+        "UI: IKEMEN1",
+        "select.def — Roster Manager",
+        "Anim.air"
+      ]
+    },
+    {
+      "command": "ikemen.codeStructure.openWorkspace",
+      "filename": "<IKEMEN_ROOT>\\chars\\template\\commonoptions.zss",
+      "exists": true,
+      "invoked": true,
+      "tabMatched": true,
+      "openTabs": [
+        "Welcome",
+        "Project & Team Manager",
+        "Ryu · AIR: Anim.air",
+        "Ryu · SFF: Ryu_Development.sff",
+        "Ryu · SND: Sound.snd",
+        "Stage: Mountainside Temple",
+        "UI: IKEMEN1",
+        "select.def — Roster Manager",
+        "commonoptions.zss — Visual Structure",
+        "Anim.air"
+      ]
+    }
+  ],
+  "finishedAt": "2026-09-12T13:26:09.331Z"
+}

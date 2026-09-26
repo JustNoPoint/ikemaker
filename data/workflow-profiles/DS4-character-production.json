@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "ds4-character-production",
+  "version": 3,
+  "name": "Vampire Soldier Character Production",
+  "description": "Vampire Soldier's independent Darkstalkers-sequel profile. It separates foundation-complete conversion validity from final DS4 design completion and does not inherit the DS crossover roster or Street Fighter reimagining rubric.",
+  "extends": "bundled:jnp-character-production",
+  "blocks": ["bundled-block:first-grounded-light-normal"],
+  "phases": [
+    {
+      "id": "ds4-foundation-complete",
+      "name": "Foundation-complete / conversion-valid",
+      "summary": "Verify Vampire Savior-derived behavior and the current technical foundation without claiming final sequel completion.",
+      "steps": [
+        {"id": "ds4-foundation.source", "label": "Applicable Vampire Savior Foundation v1 behavior, evidence, supported cases, and known gaps are identified", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds4-foundation.technical", "label": "Reusable technical foundation is integrated without importing DS crossover policy", "discipline": "Code", "action": "open-code"},
+        {"id": "ds4-foundation.compare", "label": "Current behavior is compared and tested against every declared DS4 deviation", "discipline": "Testing", "action": "launch-training"},
+        {"id": "ds4-foundation.debt", "label": "Unresolved sequel direction is recorded as design debt or an open decision", "discipline": "Production", "action": "open-requirements"},
+        {"id": "ds4-foundation.status", "label": "Record explicitly says Foundation-complete / conversion-valid and not final completion", "discipline": "Review", "action": "open-requirements"}
+      ]
+    },
+    {
+      "id": "ds4-design-complete",
+      "name": "DS4 design-complete",
+      "summary": "Complete the approved sequel design and review the character against the finished DS4 ruleset.",
+      "steps": [
+        {"id": "ds4-design.authority", "label": "JustNoPoint has approved every applicable sequel system and character decision", "discipline": "Design", "action": "open-requirements"},
+        {"id": "ds4-design.deviations", "label": "All approved DS4 deviations affecting this character are implemented", "discipline": "Code", "action": "open-code"},
+        {"id": "ds4-design.avatar-fit", "label": "Avatar-influenced concepts have documented purpose and coherent Darkstalkers fit", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds4-design.ruleset-test", "label": "Character passes review and testing against the complete DS4 ruleset", "discipline": "Testing", "action": "launch-training"},
+        {"id": "ds4-design.reopen-audit", "label": "Later approved DS4 rules have reopened and revalidated every affected gate", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds4-design.signoff", "label": "JustNoPoint explicitly signs off DS4 design-complete status", "discipline": "Review", "action": "open-requirements"}
+      ]
+    },
+    {
+      "id": "ds4-portable-origin",
+      "name": "Provisional DS4-first character origin",
+      "summary": "When scheduling selects this route, preserve portable identity/content while isolating DS4 sequel implementation.",
+      "steps": [
+        {"id": "ds4-port.route-approved", "label": "JustNoPoint approves DS4-first scheduling for this character; Anita and Rever remain provisional candidates", "discipline": "Production", "action": "open-requirements"},
+        {"id": "ds4-port.identity-record", "label": "Source-neutral concept, research, visual/audio assets, move intent, and character goals are versioned where practical", "discipline": "Production", "action": "open-requirements"},
+        {"id": "ds4-port.adapter-boundary", "label": "DS4 states, constants, effects, sounds, metadata, controls, resources, tests, and balance remain game-owned", "discipline": "Code", "action": "open-code"},
+        {"id": "ds4-port.provenance", "label": "Port-difference record tracks DS4-only decisions, retained behavior, assets, and unresolved questions", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds4-port.transfer", "label": "Any later transfer uses a reviewed patch or versioned snapshot without live cross-project references", "discipline": "Review", "action": "open-code"},
+        {"id": "ds4-port.fix-classification", "label": "Later changes are classified before propagation as character-neutral, shared-mechanism, or game-specific", "discipline": "Review", "action": "open-requirements"}
+      ]
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('assert'),vm=require('vm');
+const workspace=require('../src/asset_workspace');
+const nodes=new Map(),frames=[],sent=[],listeners=[],dispatch=[];
+const search={id:'search',value:'',dispatchEvent(event){dispatch.push(event.type);}},scroll={id:'actions',scrollTop:0,scrollLeft:0};nodes.set('search',search);nodes.set('actions',scroll);
+let clean=false;
+const sandbox={document:{body:{dataset:{}},querySelector:()=>({dataset:{toolbarSurface:'air'}}),querySelectorAll:selector=>selector==='input[id]'?[search]:[scroll],getElementById:id=>nodes.get(id)},vscode:{getState:()=>({activeAction:20}),postMessage:message=>sent.push(message)},addEventListener:(name,fn)=>listeners.push(fn),requestAnimationFrame:fn=>frames.push(fn),Event:class{constructor(type){this.type=type;}},MessageEvent:class{constructor(type,options){this.type=type;this.data=options.data;}},window:{dispatchEvent:event=>dispatch.push(event.data)},ikemenCanLeaveAsset:()=>clean,ikemenNavigationSelection:()=>({group:20,frameIndex:2}),ikemenResumeAsset:{reference:{group:20,frameIndex:2},fields:{search:'walk'},scroll:[{id:'actions',top:170,left:4}]}};
+vm.runInNewContext(workspace.clientScript(),sandbox);assert.strictEqual(sent.length,0,'Ready waits until view initialization');
+frames.shift()();assert.strictEqual(sent.at(-1).type,'assetWorkspaceReady');assert.strictEqual(search.value,'walk');assert.strictEqual(dispatch[0].action,20);assert.strictEqual(dispatch[0].frameIndex,2);frames.shift()();assert.strictEqual(scroll.scrollTop,170);
+listeners[0]({data:{type:'assetWorkspaceCapture',id:1}});assert.strictEqual(sent.at(-1).clean,false,'Dirty editor refuses replacement');clean=true;listeners[0]({data:{type:'assetWorkspaceCapture',id:2}});assert.strictEqual(sent.at(-1).clean,true);assert.strictEqual(sent.at(-1).fields.search,'walk');assert.strictEqual(sent.at(-1).scroll[0].top,170);assert.strictEqual(sent.at(-1).state.activeAction,20);
+console.log('Asset workspace client: ready ordering, selection/filter/scroll restoration and dirty/clean capture passed');

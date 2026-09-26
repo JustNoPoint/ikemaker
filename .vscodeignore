@@ -1,0 +1,13 @@
+.vsixmanifest
+test/**
+*.vsix
+node_modules/**
+tools/vsce-npm-shim/**
+test-fixtures/**
+test-artifacts/**
+archive/**
+.vsix-stage*/**
+.vscode-live*/**
+IKEMaker-*-*/**
+*.zip
+*.log

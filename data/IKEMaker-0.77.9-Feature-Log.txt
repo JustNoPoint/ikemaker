@@ -1,0 +1,16 @@
+IKEMaker 0.77.9
+
+VISIBLE PROJECT MAP ACCESS
+
+- Browse Maps… is directly available under IKEMaker Tools > ZSS, CNS, and Lua.
+- Browse Maps… is the first child under Project Data > Maps, including while the legacy inventory is scanning and when it contains no maps.
+- Both entry points reuse the existing Project Maps panel, scopes, search, project resolution, stale-source checks, and destination safeguards.
+- Project Data labels the browser as scoped and multi-format so its results are not confused with the older workspace-wide ZSS-only logger below it.
+- When no reliable file context exists, the entry point offers explicit character selection. Cancelling character selection closes the launch without opening or recapturing another editor.
+- An active Lua file may provide project context, but it never becomes a map insertion destination. Unsupported or unresolved destinations remain browse-only.
+- Broader Project Data category browsers remain deferred in Post-Testing-Feature-Backlog.md.
+
+VERIFICATION
+
+- Focused tests cover hub visibility, first-child tree placement, scanning/empty/failed/partial inventory access, explicit selection, unresolved active files, cancellation during editor focus changes, and Lua browse-only behavior.
+- All 298 automated test files pass. Packaging and installation remain blocked pending New Dev Chat source and exact-package review.

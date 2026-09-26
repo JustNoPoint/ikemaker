@@ -1,0 +1,74 @@
+'use strict';
+
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const vm = require('vm');
+const Module = require('module');
+
+const load = Module._load;
+Module._load = function patched(request, parent, main) { if (request === 'vscode') return {}; return load.call(this, request, parent, main); };
+const { uiPayload, uiHtml, embeddedActions } = require('../src/screenpack_workspace');
+const { workspaceExperience } = require('../src/experience_model');
+Module._load = load;
+
+const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemen-ui-workspace-'));
+try {
+  const filename = path.join(directory, 'system.def');
+  fs.writeFileSync(filename, `[Info]\nname=Sample UI\nlocalcoord=1280,720\n[Files]\nspr=missing.sff\nfight=fight.def\n[Title Info]\nmenu.pos=640,200\nmenu.item.font=1,0,0\ncursor.spr=100,0\ncursor.offset=20,4\ncursor.window=0,0,1280,720\nlogo.anim=500\nlogo.offset=640,40\n[Begin Action 500]\n101,2, 3,-4, 5\n[Select Info]\nrows=2\ncolumns=5\npos=100,120\ncell.size=24,24\ncell.spacing=2,2\np1.face.pos=200,300\np1.face.spr=9000,1\np2.face.pos=1080,300\np2.face.spr=9000,1\n`, 'utf8');
+  const payload = uiPayload(filename);
+  assert.strictEqual(payload.type, 'screenpack');
+  assert.strictEqual(payload.model.screens.length, 2);
+  assert.ok(payload.sffError);
+  assert.deepStrictEqual(payload.animations[500], { frames: [{ sprite: [101, 2], offset: [3, -4], time: 5 }], sprite: [101, 2], offset: [3, -4], time: 5 });
+  assert.deepStrictEqual(payload.model.selectGrid.position, [100, 120]);
+  const html = uiHtml(payload);
+  assert(html.includes('aria-label="Screenpack section"'));
+  assert(html.includes('aria-label="Visible sprite layers"'));
+  assert(html.includes('title="Toggle background layer -1"'));
+  assert(html.includes('aria-label="Screenpack visual preview"'));
+  assert(html.includes('role="status" aria-live="polite"'));
+  const clientScript = html.match(/<script>([\s\S]*)<\/script>/);
+  assert.ok(clientScript, 'screenpack workspace should contain a client script');
+  assert.doesNotThrow(() => new vm.Script(clientScript[1], { filename: 'screenpack-client.js' }), 'generated screenpack workspace JavaScript should compile');
+  assert.match(html, /Screenpack \/ Fight UI/);
+  assert.match(html, /Mirror P1/);
+  assert.match(html, /Apply reviewed position/);
+  assert.match(html, /safeArea/);
+  assert.match(html, /data-layer="2"/);
+  assert.match(html, /data\.animations/);
+  assert.match(html, /Direct save/);
+  assert.match(html, /screenpackDraft/);
+  assert.match(html, /ikemenCanKeepDraft/);
+  assert.match(html, /ikemenNavigationSelection/);
+  assert.match(html, /Discard preview draft/);
+  assert.match(html, /data-ikemen-related/, 'shared controls must survive attributes on the section selector');
+  assert.match(html, /data-ikemen-launch="game"/);
+  assert.match(html, /Screenpack \/ Fight UI · Learning/);
+  assert.match(html, /<details open><summary><b>What am I editing\?/);
+  assert.match(html, /class="guided-workflow"/);
+  assert.match(html, /\[Review\] Confirm screenpack local coordinates/);
+  assert.match(html, /data-workflow-action="control:screen"/);
+  assert.match(html, /class="task-recipes" open/);
+  assert.match(html, /Distinguish pos from offset/);
+  assert.match(html, /closest\('\[data-workflow-action\]'\)/);
+  assert.doesNotMatch(html, /Advanced shortcuts/);
+  const advanced = uiHtml(uiPayload(filename, workspaceExperience('screenpack', 'advanced')));
+  assert.match(advanced, /Screenpack \/ Fight UI · Advanced/);
+  assert.doesNotMatch(advanced, /<details open><summary><b>What am I editing\?/);
+  assert.match(advanced, /class="guided-workflow"/);
+  assert.match(advanced, /Advanced shortcuts/);
+  assert.match(advanced, /class="task-recipes"/);
+  assert.doesNotMatch(advanced, /class="task-recipes" open/);
+  assert.match(advanced, /data-workflow-action="control:mirror"/);
+  const layoutPayload = uiPayload(filename, workspaceExperience('screenpack', 'learning'), 'select-layout');
+  const layout = uiHtml(layoutPayload);
+  assert.match(layout, /CHARACTER SELECT LAYOUT BUILDER/);
+  assert.match(layout, /LAYOUT MODE/);
+  assert.match(layout, /Review and apply grid/);
+  assert.match(layout, /applySelectGrid/);
+  assert.match(layout, /drawSelectGrid/);
+} finally { fs.rmSync(directory, { recursive: true, force: true }); }
+
+console.log('Screenpack workspace tests passed');

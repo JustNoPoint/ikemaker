@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.join(__dirname,'..'),read=file=>fs.readFileSync(path.join(root,file),'utf8');
+const organizer=read('src/palette_index_organizer_workspace.js'),intake=read('src/artist_intake_workspace.js'),feature=read('data/IKEMEN-ZSS-Tools-0.75.5-Feature-Log.txt');
+assert.match(organizer,/one reserved blank index between adjacent rows/i);
+assert.match(organizer,/never inserts gaps between shades/i);
+assert.match(organizer,/artist only needs that SFF/i);
+assert.match(intake,/one shared palette/i);
+assert.match(intake,/CS working SFF validation failed/i);
+assert.match(intake,/artist-facing result is only the temporary SFF/i);
+assert.match(intake,/ACT, ACO, GPL, swatches, CSV, and full palette packs wait for approval/i);
+assert.match(feature,/provisional CS artist handoff requires only the temporary SFF/i);
+console.log('Provisional CS handoff-policy tests passed');

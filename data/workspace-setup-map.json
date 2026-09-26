@@ -1,0 +1,27 @@
+{
+  "version": 1,
+  "scopeRules": [
+    { "scope": "character", "prefixes": ["air.", "sff.", "snd.", "zss.", "cns.", "inp.", "cmd.", "ikemen.character.", "ikemen.move", "ikemen.hitDef", "ikemen.helper", "ikemen.throw", "ikemen.spatial", "ikemen.explod", "ikemen.position", "ikemen.command", "ikemen.palette", "ikemen.artist", "ikemen.cnsConverter"] },
+    { "scope": "stage", "prefixes": ["ikemen.stage.", "ikemen.stageRig", "ikemen.parallax"] },
+    { "scope": "ui", "prefixes": ["ikemen.ui.", "ikemen.selectDef.", "ikemen.menuModes.", "ikemen.story", "ikemen.storyboard"] }
+  ],
+  "sharedCommands": [
+    "ikemen.openHome", "ikemen.changeMode", "ikemen.help.open", "ikemen.docs.openOffline", "ikemen.docs.updateOffline",
+    "ikemen.showVersion", "ikemen.showPlatformCapabilities", "ikemen.openExtensionSettings", "ikemen.openTools",
+    "ikemen.launchGame", "ikemen.launchMirrorCurrent", "ikemen.launchTrainingCurrent", "ikemen.launchTrainingConfigured",
+    "ikemen.productionWorkflow.open", "ikemen.projectManager.open", "ikemen.testSessions.open", "ikemen.mutations.openHistory",
+    "ikemen.relatedWork.open", "ikemen.file.createNew", "ikemen.workbench.create", "ikemen.workbench.open", "ikemen.workbench.refresh"
+  ],
+  "teamControls": ["team-assignment", "team-handoff", "team-review"],
+  "soloControls": ["issue-reporting", "personal-tasks"],
+  "screenMap": [
+    { "screen": "Home", "scopes": ["shared", "full-game", "character", "stage", "ui"], "collaboration": ["solo", "team"] },
+    { "screen": "Help and Offline Docs", "scopes": ["shared", "full-game", "character", "stage", "ui"], "collaboration": ["solo", "team"] },
+    { "screen": "Roster, Menu, Story and Screenpack", "scopes": ["full-game", "ui"], "collaboration": ["solo", "team"] },
+    { "screen": "Character Authoring and Asset Viewers", "scopes": ["full-game", "character"], "collaboration": ["solo", "team"] },
+    { "screen": "Stage Authoring and Stage Rig", "scopes": ["full-game", "stage"], "collaboration": ["solo", "team"] },
+    { "screen": "Production Workflow", "scopes": ["shared", "full-game", "character", "stage", "ui"], "collaboration": ["solo", "team"], "soloKeeps": ["issue-reporting", "personal-tasks"], "teamAdds": ["team-assignment", "team-handoff", "team-review"] },
+    { "screen": "Project and Team Manager", "scopes": ["shared", "full-game", "character", "stage", "ui"], "collaboration": ["solo", "team"], "soloKeeps": ["issue-reporting", "personal-tasks"], "teamAdds": ["team-assignment", "team-handoff", "team-review"] },
+    { "screen": "Tests, Recovery and Diagnostics", "scopes": ["shared", "full-game", "character", "stage", "ui"], "collaboration": ["solo", "team"] }
+  ]
+}

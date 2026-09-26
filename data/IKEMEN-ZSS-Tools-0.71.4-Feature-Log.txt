@@ -1,0 +1,11 @@
+IKEMaker 0.71.4 — Persistent installed-version display
+
+- The bottom VS Code status bar displays `IKEMaker <version>` continuously.
+- Startup activation makes the display independent of opening an IKEMaker file,
+  visual workspace, information document, or sidebar category.
+- Quick Start lists the installed version as its first entry.
+- Clicking either display is optional and can open IKEMaker or copy the version.
+- Desktop and browser-host entry points expose the same version command.
+
+The display reads the installed extension package version; project files and game
+profiles cannot override it.

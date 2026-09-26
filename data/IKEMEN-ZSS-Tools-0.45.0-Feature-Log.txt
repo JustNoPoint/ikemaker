@@ -1,0 +1,30 @@
+IKEMEN ZSS Tools 0.45.0
+=======================
+
+Character selection has two deliberately separate workspaces.
+
+Roster Manager — Safe Mode
+--------------------------
+- The select.def editor is now unmistakably labeled ROSTER MANAGER and SAFE MODE.
+- Its actions remain limited to roster entries, assigned stages, arcade orders,
+  select.def options, Story Mode records, and preserved custom source.
+- A separate advanced button enters the Character Select Layout Builder.
+
+Character Select Layout Builder — Advanced Mode
+------------------------------------------------
+- The active motif is resolved from save/config.ini when available.
+- Entry requires a modal confirmation naming the motif file that will be edited.
+- The workspace is prominently labeled CHARACTER SELECT LAYOUT BUILDER and
+  warns that it edits motif presentation rather than the roster.
+- [Select Info] rows, columns, position, cell.size, and cell.spacing are rendered
+  as a cyan cell-grid preview over the normal screenpack canvas.
+- Grid dimensions, origin, cell size, and spacing can be adjusted live.
+- Applying the grid presents an exact summary, requires confirmation, and uses
+  the extension's configured backup and mutation-history policy.
+- Existing screenpack element positioning, layers, sprites, animations, guides,
+  safe areas, preview profiles, and source navigation remain available.
+- Restored VS Code panels remember whether they were in normal Screenpack mode
+  or Character Select Layout mode.
+
+The Layout Builder never rewrites select.def or rearranges the roster. The
+Roster Manager never writes motif layout values.

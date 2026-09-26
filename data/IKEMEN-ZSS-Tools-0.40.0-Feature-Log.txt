@@ -1,0 +1,41 @@
+IKEMEN ZSS Tools 0.40.0
+=======================
+
+Reviewed ZSS controller authoring
+---------------------------------
+- Controller completion now inserts active snippet fields for documented
+  required options instead of commenting every option out.
+- ZSS: Insert State Controller with Options can be launched from the command
+  palette or controller tree.
+- The wizard selects a native controller, always includes required fields,
+  lets the author choose only needed optional fields, validates every selected
+  value, and inserts through the normal undoable editor path.
+- Learning adds concise controller ownership/required-field comments.
+- Advanced inserts the same selected native controller values without those
+  teaching comments.
+
+Correct CNS visual structure
+----------------------------
+- CNS files now use a dedicated section parser in the Visual Code Structure
+  workspace instead of the ZSS brace parser.
+- StateDefs contain their State controller sections.
+- triggerall/triggerN assignments appear as conditions.
+- Controller options appear as assignments and are matched against the bundled
+  IKEMEN 1.0 controller catalog.
+- type, triggers, persistent, and ignorehitpause are not incorrectly presented
+  as controller parameters.
+
+Offline language paths
+----------------------
+- ZSS guidance connects ownership, timing, controller insertion, and audits.
+- CNS guidance explains section ownership, trigger grouping, and reviewed
+  CNS-to-ZSS concept mapping without claiming automatic conversion.
+- Lua guidance explains project-owned modules, supported frontend ownership,
+  offline API intelligence, fallback testing, and rollback boundaries.
+- Learning opens the language path; Advanced retains it collapsed.
+
+Safety and compatibility
+------------------------
+- Controller insertion is an ordinary VS Code edit and remains undoable.
+- No IKEMEN default Lua file is modified or recommended for project modules.
+- All active terminology targets IKEMEN 1.0 only.

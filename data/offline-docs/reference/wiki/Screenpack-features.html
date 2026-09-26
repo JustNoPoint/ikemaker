@@ -1,0 +1,248 @@
+<html><head><meta charset="utf-8"/><title>Screenpack-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Screenpack-features">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="new-parameters"><a name="parameters">New parameters</a></h1>
+<p>There are many new screenpack parameters, but they won’t be documented until the engine stabilizes feature-wise. Until then, everything related to these parameters may change without notice.</p>
+<p>In the meantime, you can reference parameter names (with comments describing new features) for all parameters available in <code>data/system.base.def</code>, which is copied directly from <code>src/resources/defaultMotif.ini</code> (the default motif config loaded before <code>system.def</code>).</p>
+<p>The default screenpack in <code>data/mugen1/system.def</code> can also be used as a showcase of many new features, and it is ready to be copied/adapted into other screenpacks.</p>
+<p>Refer to <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info#installing_mugen">this article</a> for information on how to update MUGEN screenpacks to use Ikemen GO features.</p>
+<h1 id="menus"><a name="menus">Menus</a></h1>
+<p>Menus are defined by <code>menu.itemname.*</code> lines in your screenpack DEF. This covers the main menu, options, and all other menu screens.</p>
+<h2 id="basic-rules">Basic rules</h2>
+<h3 id="show-rename-an-item">Show / rename an item</h3>
+<pre><code class="language-ini">menu.itemname.arcade = "ARCADE"
+</code></pre>
+<h3 id="disable-hide-an-item">Disable (hide) an item</h3>
+<p>Write the key <strong>with no value</strong> (commenting it out is not enough to disable default entries):</p>
+<pre><code class="language-ini">menu.itemname.arcade =
+</code></pre>
+<h3 id="change-order">Change order</h3>
+<p>Items appear <strong>in the order they are written</strong> in the DEF.</p>
+<h3 id="ikemen-only-modes">Ikemen-only modes</h3>
+<p>Many Ikemen GO extra modes have <strong>no <code>itemname</code> by default</strong>, so they won’t show up unless you add them:</p>
+<pre><code class="language-ini">menu.itemname.freebattle = "QUICK MATCH"
+</code></pre>
+<h2 id="submenus-grouping">Submenus (grouping)</h2>
+<h3 id="syntax">Syntax</h3>
+<pre><code class="language-ini">menu.itemname.&lt;optional_submenus&gt;.&lt;item&gt; = "Displayed text"
+</code></pre>
+<ul>
+<li><code>&lt;optional_submenus&gt;</code> = <strong>any strings you want</strong>, separated by dots. They are only for grouping (like folders).</li>
+<li><code>&lt;item&gt;</code> = an engine-reserved item id (list below).</li>
+</ul>
+<h3 id="how-to-make-a-submenu">How to make a submenu</h3>
+<p>A submenu needs <strong>two parts</strong>:</p>
+<ol>
+<li>A line that creates the submenu entry (the “button”):</li>
+</ol>
+<pre><code class="language-ini">menu.itemname.extras = "EXTRAS"
+</code></pre>
+<ol start="2">
+<li>Lines that put items inside it (same prefix):</li>
+</ol>
+<pre><code class="language-ini">menu.itemname.extras.freebattle = "QUICK MATCH"
+menu.itemname.extras.back       = "BACK"
+</code></pre>
+<h3 id="disabling-a-submenu">Disabling a submenu</h3>
+<p>If you disable only the submenu entry:</p>
+<pre><code class="language-ini">menu.itemname.menuvideo =
+</code></pre>
+<p>…the contents under <code>menuvideo.*</code> will be also <strong>removed</strong>.</p>
+<p>When rebuilding from scratch, do one of these:</p>
+<ul>
+<li><strong>Use a new submenu name</strong>, or</li>
+<li><strong>Disable the specific items inside</strong> the submenu.</li>
+</ul>
+<h3 id="notes">Notes</h3>
+<ul>
+<li><code>back</code> goes to the previous menu.</li>
+<li><code>spacer</code> adds an empty line. For multiple spacers use <code>spacer1</code>, <code>spacer2</code>, etc. (any non-empty value enables them).</li>
+</ul>
+<hr/>
+<h2 id="supported-item-names-reserved-by-the-engine">Supported <code>item</code> names (reserved by the engine)</h2>
+<p><code>item</code> = strings used to start modes, change settings, and control menus.</p>
+<h3 id="all-menus">All menus</h3>
+<ul>
+<li><code>back</code>: back to previous menu</li>
+<li><code>spacer</code>: empty spacer line (use <code>spacer1</code>, <code>spacer2</code>, ...; any value enables it)</li>
+</ul>
+<h3 id="main-menu-mugen-defaults">Main menu (MUGEN defaults)</h3>
+<p>These are default MUGEN items, loaded by default if the screenpack does not override them with custom menus:</p>
+<ul>
+<li><code>arcade</code>: Arcade Mode</li>
+<li><code>versus</code>: Versus Mode</li>
+<li><code>teamarcade</code>: Team Arcade</li>
+<li><code>teamversus</code>: Team Versus</li>
+<li><code>teamcoop</code>: Team Cooperative</li>
+<li><code>survival</code>: Survival</li>
+<li><code>survivalcoop</code>: Survival Cooperative</li>
+<li><code>training</code>: Training Mode</li>
+<li><code>watch</code>: Watch Mode</li>
+<li><code>options</code>: Options</li>
+<li><code>exit</code>: Exit the game</li>
+</ul>
+<h3 id="main-menu-ikemen-go-extras">Main menu (Ikemen GO extras)</h3>
+<p>The items listed below can be added to implement Ikemen GO exclusive modes in the menu system:</p>
+<ul>
+<li><code>versuscoop</code>: Versus Cooperative</li>
+<li><code>freebattle</code>: Quick Match</li>
+<li><code>storymode</code>: Story Mode</li>
+<li><code>serverhost</code>: Host Game</li>
+<li><code>serverjoin</code>: Join Game (reserved submenu)</li>
+<li><code>server</code>: opened automatically by <code>serverhost</code>/<code>serverjoin</code> (reserved submenu)</li>
+<li><code>joinadd</code>: New IP Address</li>
+<li><code>netplayversus</code>: Online Versus</li>
+<li><code>netplayteamcoop</code>: Online Cooperative</li>
+<li><code>netplaysurvivalcoop</code>: Online Survival</li>
+<li><code>timeattack</code>: Time Attack</li>
+<li><code>bonusgames</code>: Bonus Games (reserved submenu)</li>
+<li><code>randomtest</code>: Endless Watch</li>
+<li><code>replay</code>: Replay</li>
+<li><code>back</code>: back to the previous menu</li>
+<li><code>bonus</code>: used internally (reserved)</li>
+<li><code>connect</code>: used internally (reserved)</li>
+</ul>
+<p>New game modes can be added via external modules. In <a href="https://github.com/ikemen-engine/modules">this repository</a>, we share the following extra modes as a reference:</p>
+<ul>
+<li><code>bossrush</code>: Boss Rush</li>
+<li><code>vs100kumite</code>: VS 100 Kumite</li>
+<li><code>timechallenge</code>: Time Challenge</li>
+<li><code>scorechallenge</code>: Score Challenge</li>
+</ul>
+<h3 id="options">Options</h3>
+<ul>
+<li><code>language</code>: Language</li>
+<li><code>difficulty</code>: Difficulty Level</li>
+<li><code>roundtime</code>: Time Limit</li>
+<li><code>lifemul</code>: Life</li>
+<li><code>singlevsteamlife</code>: Single VS Team Life</li>
+<li><code>gamespeed</code>: Game Speed</li>
+<li><code>roundsnumsingle</code>: Rounds to Win (Single)</li>
+<li><code>maxdrawgames</code>: Max Draw Games</li>
+<li><code>credits</code>: Credits</li>
+<li><code>aipalette</code>: Arcade Palette</li>
+<li><code>aisurvivalpalette</code>: Survival Palette</li>
+<li><code>airamping</code>: AI Ramping</li>
+<li><code>quickcontinue</code>: Quick Continue</li>
+<li><code>autoguard</code>: Auto-Guard</li>
+<li><code>dizzy</code>: Dizzy</li>
+<li><code>guardbreak</code>: Guard Break</li>
+<li><code>redlife</code>: Red Life</li>
+<li><code>teamduplicates</code>: Team Duplicates</li>
+<li><code>teamlifeshare</code>: Team Life Share</li>
+<li><code>teampowershare</code>: Team Power Share</li>
+<li><code>roundsnumtag</code>: Rounds to Win (Tag)</li>
+<li><code>losekotag</code>: Partner KOed Lose</li>
+<li><code>mintag</code>: Min Tag Chars</li>
+<li><code>maxtag</code>: Max Tag Chars</li>
+<li><code>roundsnumsimul</code>: Rounds to Win (Simul)</li>
+<li><code>losekosimul</code>: Player KOed Lose</li>
+<li><code>minsimul</code>: Min Simul Chars</li>
+<li><code>maxsimul</code>: Max Simul Chars</li>
+<li><code>turnsrecoverybase</code>: Turns Recovery Base</li>
+<li><code>turnsrecoverybonus</code>: Turns Recovery Bonus</li>
+<li><code>minturns</code>: Min Turns Chars</li>
+<li><code>maxturns</code>: Max Turns Chars</li>
+<li><code>gl32</code>: OpenGL 3.2 Renderer</li>
+<li><code>gl21</code>: OpenGL 2.1 Renderer</li>
+<li><code>vk13</code>: Vulkan 1.3 Renderer</li>
+<li><code>resolution</code>: Resolution (reserved submenu)</li>
+<li><code>resolution.WxH</code>: Resolution from suffix (e.g. <code>320x240</code>)</li>
+<li><code>resolution.customres</code>: Custom resolution input</li>
+<li><code>fullscreen</code>: Fullscreen</li>
+<li><code>vsync</code>: VSync</li>
+<li><code>aspectratio</code>: Aspect Ratio (reserved submenu)</li>
+<li><code>aspectratio.defaultaspect</code>: Default Aspect Ratio</li>
+<li><code>aspectratio.stageaspect</code>: Stage Aspect Ratio</li>
+<li><code>aspectratio.customaspect</code>: Custom Aspect Ratio</li>
+<li><code>aspectratio.WxH</code>: Aspect Ratio from suffix (e.g. <code>3x4</code>)</li>
+<li><code>keepaspect</code>: Keep Aspect Ratio</li>
+<li><code>windowscalemode</code>: Window Scale Mode</li>
+<li><code>msaa</code>: MSAA</li>
+<li><code>shaders</code>: Shaders (reserved submenu; auto-populated from <code>external/shaders</code>)</li>
+<li><code>noshader</code>: Disable selected shader</li>
+<li><code>enablemodel</code>: 3D Model</li>
+<li><code>enablemodelshadow</code>: 3D Model Shadow</li>
+<li><code>mastervolume</code>: Master Volume</li>
+<li><code>bgmvolume</code>: BGM Volume</li>
+<li><code>sfxvolume</code>: SFX Volume</li>
+<li><code>audioducking</code>: Audio Ducking</li>
+<li><code>stereoeffects</code>: Stereo Effects</li>
+<li><code>panningrange</code>: Panning Range</li>
+<li><code>keyboard</code>: Key Config</li>
+<li><code>gamepad</code>: Joystick Config</li>
+<li><code>inputdefault</code>: Reset Key/Joystick settings</li>
+<li><code>players</code>: Max Players</li>
+<li><code>debugkeys</code>: Debug Keys</li>
+<li><code>debugmode</code>: Debug Mode</li>
+<li><code>portchange</code>: Port Change</li>
+<li><code>netcode</code>: Netcode</li>
+<li><code>framedelay</code>: Rollback Frame Delay</li>
+<li><code>default</code>: Default Values</li>
+<li><code>savereturn</code>: Save and Return</li>
+<li><code>return</code>: Return Without Saving</li>
+</ul>
+<h3 id="key-menu">Key menu</h3>
+<ul>
+<li><code>configall</code>: Config All</li>
+<li><code>up</code>: Up</li>
+<li><code>down</code>: Down</li>
+<li><code>left</code>: Left</li>
+<li><code>righ</code>: Right</li>
+<li><code>a</code>: A</li>
+<li><code>b</code>: B</li>
+<li><code>c</code>: C</li>
+<li><code>x</code>: X</li>
+<li><code>y</code>: Y</li>
+<li><code>z</code>: Z</li>
+<li><code>start</code>: Start</li>
+<li><code>d</code>: D</li>
+<li><code>w</code>: W</li>
+<li><code>menu</code>: Menu</li>
+<li><code>rumble</code>: Rumble</li>
+<li><code>bac</code>: Back</li>
+<li><code>page</code>: Page</li>
+</ul>
+<h3 id="pause-menu">Pause menu</h3>
+<ul>
+<li><code>keyboard</code>: Key Config</li>
+<li><code>gamepad</code>: Joystick Config</li>
+<li><code>inputdefault</code>: Reset Key/Joystick settings</li>
+<li><code>commandlist</code>: Movelists</li>
+<li><code>characterchange</code>: Back to select screen</li>
+<li><code>exit</code>: Back to main menu</li>
+<li><code>reset</code>: Round Reset</li>
+<li><code>reload</code>: Rematch</li>
+</ul>
+<h3 id="training-menu">Training menu</h3>
+<p>Same as the Pause menu, with a few additional training-specific items:</p>
+<ul>
+<li><code>dummycontrol</code>: Dummy Control</li>
+<li><code>ailevel</code>: AI Level</li>
+<li><code>dummymode</code>: Dummy Mode</li>
+<li><code>guardmode</code>: Guard Mode</li>
+<li><code>fallrecovery</code>: Fall Recovery</li>
+<li><code>distance</code>: Distance</li>
+<li><code>buttonjam</code>: Button Jam</li>
+</ul>
+<hr/>
+<h2 id="extra-behavior-and-tips">Extra behavior and tips</h2>
+<ul>
+<li>You can mix and move items into different submenus (including nested ones) without limitations.</li>
+<li>Submenus should be declared before items that use them.</li>
+<li>In the Main Menu, if a submenu contains only one valid option (<code>back</code> does not count), Ikemen may skip showing the submenu and trigger that option directly.</li>
+<li>Itemnames added via external modules also work with this system.</li>
+<li>See <code>data/system.base.def</code> for a complete example.</li>
+</ul>
+<h3 id="disabling-default-options-categories-start-from-scratch">Disabling default Options categories (start from scratch)</h3>
+<pre><code class="language-ini">menu.itemname.menugame =
+menu.itemname.menuvideo =
+menu.itemname.menuaudio =
+menu.itemname.menuinput =
+menu.itemname.menuengine =
+menu.itemname.spacer1 =
+menu.itemname.portchange = Port Change
+menu.itemname.default = Default Values
+menu.itemname.spacer2 =
+menu.itemname.savereturn = Save and Return
+menu.itemname.return = Return Without Saving
+</code></pre>
+<h1 id="selectdef-parameters-and-options"><a name="select">select.def parameters and options</a></h1>
+<p>Refer to the default <code>select.def</code> file distributed with the engine for details and guides regarding new character and stage parameters, as well as new mode options that can be set via <code>select.def</code>.</p></body></html>

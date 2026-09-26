@@ -1,0 +1,41 @@
+'use strict';
+const {runtime:visualRuntime}=require('./air_visual');
+const {parseAir}=require('./air_preview_model');
+const {frameAt,runtime:playbackRuntime}=require('./air_playback');
+function build(text,actionNumber,archive,encode){
+  const action=parseAir(text).find(item=>item.number===actionNumber);
+  if(!action)throw Error('The selected AIR action is missing or has no frames.');
+  const images=new Map(),missing=new Set();
+  const frames=action.frames.map(frame=>{
+    const identity=frame.group+','+frame.index,sprite=frame.group<0?undefined:archive.sprites.find(item=>item.group===frame.group&&item.number===frame.index);
+    if(sprite&&!images.has(identity))images.set(identity,{media:encode(archive,sprite),width:sprite.width,height:sprite.height,axisX:sprite.axisX,axisY:sprite.axisY});
+    if(!sprite&&frame.group>=0)missing.add(identity);
+    return {group:frame.group,index:frame.index,x:frame.x,y:frame.y,rawTime:frame.rawTime,flags:frame.flags,scaleX:frame.scaleX,scaleY:frame.scaleY,angle:frame.angle,blend:frame.blend,interpolate:frame.interpolate,clsn1:frame.clsn1,clsn2:frame.clsn2,identity};
+  });
+  return{number:action.number,loopStart:action.loopStart,frames,images:Object.fromEntries(images),missing:[...missing]};
+}
+function bounds(action,visual=visualRuntime()){
+  const result={left:0,right:0,top:0,bottom:0};
+  const include=([x,y])=>{result.left=Math.min(result.left,x);result.right=Math.max(result.right,x);result.top=Math.min(result.top,y);result.bottom=Math.max(result.bottom,y);};
+  for(const [index,frame] of action.frames.entries()){const image=action.images[frame.identity];if(image)visual.motionCorners(image,action,index).forEach(include);for(const box of [...frame.clsn1,...frame.clsn2]){include([box[0],box[1]]);include([box[2],box[3]]);}}
+  return result;
+}
+function client(models,playback,bounds,visual){const vscode=acquireVsCodeApi();vscode.setState({kind:'air'});document.getElementById('swap').onclick=()=>vscode.postMessage({type:'swap'});
+  const all=models.map(item=>bounds(item.animation,visual)),box={left:Math.min(...all.map(b=>b.left)),right:Math.max(...all.map(b=>b.right)),top:Math.min(...all.map(b=>b.top)),bottom:Math.max(...all.map(b=>b.bottom))};
+  const scale=Math.min(440/Math.max(1,box.right-box.left),360/Math.max(1,box.bottom-box.top),4),ox=240-(box.left+box.right)*scale/2,oy=210-(box.top+box.bottom)*scale/2;
+  const sides=models.map((model,index)=>({model,index,tick:0,playing:false,images:{},failed:new Set(),canvas:document.getElementById('animation-'+index)}));
+  function draw(side){const ctx=side.canvas.getContext('2d'),action=side.model.animation,position=playback.locate(action,side.tick),index=position.index,frame=visual.sample(action,index,position.elapsed);ctx.clearRect(0,0,480,420);ctx.fillStyle='#132033';ctx.fillRect(0,0,480,420);ctx.strokeStyle='#34475e';const step=32*scale,gx=((ox%step)+step)%step,gy=((oy%step)+step)%step;for(let x=gx;x<480;x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,420);ctx.stroke()}for(let y=gy;y<420;y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(480,y);ctx.stroke()}ctx.imageSmoothingEnabled=false;ctx.save();ctx.translate(ox,oy);ctx.scale(scale,scale);ctx.lineWidth=1/scale;ctx.strokeStyle='#5cb6ff';ctx.beginPath();ctx.moveTo(-480/scale,0);ctx.lineTo(480/scale,0);ctx.moveTo(0,-420/scale);ctx.lineTo(0,420/scale);ctx.stroke();const info=action.images[frame.identity],image=side.images[frame.identity];if(info&&image)visual.drawSprite(ctx,image,info,frame);if(document.getElementById('boxes').checked)for(const [kind,color] of [['clsn1','#ff5353'],['clsn2','#5395ff']]){ctx.strokeStyle=color;for(const b of frame[kind])ctx.strokeRect(b[0],b[1],b[2]-b[0],b[3]-b[1]);}ctx.restore();document.getElementById('status-'+side.index).textContent='Tick '+Math.floor(side.tick)+' · Element '+(index+1)+' / '+action.frames.length+(frame.group<0?' · Blank frame':!info?' · Missing sprite '+frame.identity:side.failed.has(frame.identity)?' · Could not decode sprite '+frame.identity:!image?' · Loading sprite '+frame.identity:'');}
+  let ready=false,last=performance.now();
+  Promise.all(sides.flatMap(side=>Object.entries(side.model.animation.images).map(([id,info])=>new Promise(resolve=>{const image=new Image();image.onload=()=>{side.images[id]=image;resolve();};image.onerror=()=>{side.failed.add(id);resolve();};image.src=info.media;})))).then(()=>{ready=true;for(const button of document.querySelectorAll('[data-play],#play-both'))button.disabled=false;sides.forEach(draw);});
+  for(const button of document.querySelectorAll('[data-play]'))button.onclick=()=>{const side=sides[Number(button.dataset.play)];side.playing=!side.playing;button.textContent=side.playing?'Pause':'Play';};
+  document.getElementById('play-both').onclick=()=>{const play=!sides.every(side=>side.playing);for(const side of sides)side.playing=play;for(const button of document.querySelectorAll('[data-play]'))button.textContent=play?'Pause':'Play';};
+  function seek(tick){document.getElementById('tick').value=String(tick);for(const side of sides){side.tick=tick;side.playing=false;draw(side);}for(const button of document.querySelectorAll('[data-play]'))button.textContent='Play';}
+  document.getElementById('reset').onclick=()=>seek(0);document.getElementById('seek').onclick=()=>{const value=Number(document.getElementById('tick').value);seek(Number.isFinite(value)?Math.max(0,value):0);};document.getElementById('boxes').onchange=()=>sides.forEach(draw);
+  function animate(now){const elapsed=Math.min(250,now-last);last=now;if(ready&&!document.hidden)for(const side of sides)if(side.playing){side.tick+=elapsed*60/1000;draw(side);}requestAnimationFrame(animate);}requestAnimationFrame(animate);
+}
+function html(primary,reference,nonce){
+  const escape=value=>String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const models=[primary,reference],data=JSON.stringify(models).replace(/</g,'\\u003c');
+  return `<!doctype html><html><head><meta http-equiv="Content-Security-Policy" content="default-src 'none'; img-src data:; style-src 'unsafe-inline'; script-src 'nonce-${nonce}'"><style>body{font:var(--vscode-font-size) var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground);padding:12px}main{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}section{min-width:0}canvas{width:100%;background:#292929}p{overflow-wrap:anywhere}button,input{font:inherit;color:var(--vscode-input-foreground);background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);padding:6px;margin:3px}input[type=number]{width:70px}.controls{display:flex;flex-wrap:wrap;align-items:center;gap:6px}.controls label,.seek-controls{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}.controls button,.controls input{margin:0}.controls button{white-space:nowrap}:focus-visible{outline:2px solid var(--vscode-focusBorder)}@media(max-width:650px){main{grid-template-columns:1fr}}</style></head><body><h1>Compare animations</h1><p>Frozen AIR text and sprite snapshots, shown at the same scale and origin. Playback uses 60 ticks per second.</p><div class="controls" aria-label="Comparison controls"><button id="play-both" disabled>Play / Pause Both</button><button id="reset">Reset Both</button><button id="swap">Swap primary and reference</button><span class="seek-controls"><label>Tick <input id="tick" type="number" min="0" value="0"></label><button id="seek">Go to Tick</button></span><label><input type="checkbox" id="boxes" checked> Collision boxes</label></div><main>${models.map((item,index)=>`<section><h2>${index?'Reference':'Primary'} · ${escape(item.identity)}</h2><p>${escape(item.filename)}</p><p>${escape(item.detail)}</p><button data-play="${index}" disabled>Play</button><p id="status-${index}" role="status">Loading sprites…</p><canvas id="animation-${index}" width="480" height="420" aria-label="${index?'Reference':'Primary'} animation preview"></canvas></section>`).join('')}</main><script nonce="${nonce}">(${client.toString()})(${data},(${playbackRuntime.toString()})(),${bounds.toString()},(${visualRuntime.toString()})());</script></body></html>`;
+}
+module.exports={frameAt,build,bounds,html,client};

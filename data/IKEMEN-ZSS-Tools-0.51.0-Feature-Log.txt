@@ -1,0 +1,21 @@
+IKEMEN ZSS Tools 0.51.0
+
+Team coordination and QA intake
+
+- Added a persistent Team Directory with public handles, multiple roles, and
+  active/inactive membership that preserves project history.
+- Default roles now include Director, Coder, Animator, CS, Palette, Sound,
+  Voice, QA, Stage, and Screenpack. Spriter is intentionally omitted because
+  it overlaps with Animator; CS and Voice remain separate specialties.
+- Added Report Intake for problem descriptions plus screenshot/log evidence.
+- Reports remain pending until explicitly accepted as a typed ticket or
+  rejected with a retained reason.
+- Added automatic watching for ticket creators and assignees, manual
+  watch/unwatch controls, ticket comments, @person and @role mentions, and a
+  personal unread-notification inbox.
+- Workflow identity is explicitly configurable and no longer falls back to a
+  private operating-system account name.
+
+All coordination remains in readable project JSON. Notifications become
+visible after collaborators receive the shared data; no external account or
+credential is required.

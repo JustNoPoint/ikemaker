@@ -1,0 +1,38 @@
+IKEMaker 0.77.7
+
+RECOGNITION-FIRST MAP AUTHORING
+
+- Added a project map registry built from literal map(name) uses in ZSS, CNS, CMD, and ST code.
+- Added two complementary interfaces: a remembered family picker for quick insertion and a full hierarchical/searchable browser for learning, discovery, and review.
+- The browser keeps exact map spelling visible and shows associated source comments, observed assigned expressions, read/write counts, existing source uses, applicability, and honest Unknown ownership/runtime-receiver values.
+- Name-derived families are clearly labeled suggestions. They never rename maps or claim an authored taxonomy.
+- Recent selections and the last selected family are remembered per workspace.
+- Confirmed map namespaces are interpreted as Author > Game > remaining categories (JNP/DvS, JNP/SF6, JNP/DS4, and TeamZ2/HDBZ). A resolved game sees its matching namespace plus genuinely indexed unnamespaced/shared dependencies; unresolved project identity does not become an unrestricted insertion scope.
+- Added completion and hover support in ZSS/CNS text editors. Collection and insertion now share one grammar resolver, so `.inp`, `.jnp`, explicitly opted-in `.txt`, and `.zss` documents opened as plaintext are classified consistently.
+- Normal text tabs recognize `.zss`, `.cns`, `.cmd`, `.st`, `.inp`, and `.jnp` code. A generic `.txt` requires an explicit per-file local-workspace choice to treat it as ZSS or CNS, so ordinary notes never become coding destinations by filename alone.
+- Added Maps access only to currently verified visual fields: Helper Lab map names/map tables/expressions, Universal HitDef expression parameters, JNP Move Constants connected ZSS code and CNS expressions, and Spatial Composer trigger expressions. Other planners and read-only previews do not advertise insertion.
+- AIR, SFF, SND, numeric fields, search/filter fields, prose fields, and non-coding workspaces are intentionally excluded.
+
+INSERTION SAFETY
+
+- Text insertion captures the exact document, language grammar, version, and selection before opening any picker, then revalidates before applying a normal VS Code Undo-compatible edit.
+- The captured destination URI also freezes the project/game scan seed for picker, browser, lookup, and refresh operations; switching tabs during a prompt or after source navigation cannot change the inventory behind that destination.
+- Visual insertion uses an explicit field adapter, then captures its stable identity, render epoch, selection, grammar, language, and original value. It refuses stale, disabled, read-only, removed, or replaced destinations, acknowledges rejection, and passes success through the workspace's existing input/change draft path.
+- Operations are grammar-aware. Name fields receive an exact name; expression fields offer reads/comparisons; code fields also offer assignments and arithmetic updates. Values are requested explicitly and never invented.
+- Lua insertion remains excluded until a separate validated Lua adapter exists.
+
+COLLECTOR CORRECTION
+
+- Corrected map access classification: := is assignment, arithmetic assignment is read/write, and = remains comparison/read. Existing equality tests are no longer falsely reported as writers.
+- Incomplete project scans are labeled rather than presented as comprehensive.
+- Character-bound screens/editors scope collection to the nearest character DEF and assigned code dependencies. Cache identity includes the exact DEF/context and dependency list; edits, deletion, or renaming of assigned external dependencies and DEF files invalidate warm results. When no project/game can be resolved, insertion and completion results remain empty instead of merging unrelated workspace maps.
+
+NEW DEV CHAT REVIEW
+
+- Implemented after New Dev Chat required separation of collection, meaning, and presentation; exact-destination revalidation; honest unknowns; conservative grouping; source provenance; and explicit screen/grammar adapters.
+- Deferred expansions include authored taxonomy rules, richer ownership/receiver contracts, favorites/relevance ranking, and family-level recipes such as publishing a complete UI event.
+
+VERIFICATION
+
+- Added focused model, text-grammar, visual-adapter, and integration contract tests.
+- The complete extension suite (now 293 test files) must pass. Packaging and installation remain blocked until New Dev Chat signs off on this exact revised source.

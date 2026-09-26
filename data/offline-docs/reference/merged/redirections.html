@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html lang="en-US">
+<head>
+<meta charset="utf-8"/>
+<meta content="IE=edge" http-equiv="X-UA-Compatible"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<!-- Begin Jekyll SEO tag v2.8.0 -->
+<title>Merged Trigger Redirection Reference | Ikemen GO Merged Documentation</title>
+<meta content="Jekyll v3.10.0" name="generator"/>
+<meta content="Merged Trigger Redirection Reference" property="og:title"/>
+<meta content="en_US" property="og:locale"/>
+<meta content="Automatically generated merged documentation for M.U.G.E.N 1.1 and Ikemen GO" name="description"/>
+<meta content="Automatically generated merged documentation for M.U.G.E.N 1.1 and Ikemen GO" property="og:description"/>
+<link href="redirections.html" rel="canonical"/>
+<meta content="https://potsmugen.github.io/ikemen-merged-docs/redirections.html" property="og:url"/>
+<meta content="Ikemen GO Merged Documentation" property="og:site_name"/>
+<meta content="website" property="og:type"/>
+<meta content="summary" name="twitter:card"/>
+<meta content="Merged Trigger Redirection Reference" property="twitter:title"/>
+<!-- End Jekyll SEO tag -->
+<!-- start custom head snippets, customize with your own _includes/head-custom.html file -->
+<!-- Setup Google Analytics -->
+<!-- You can set your favicon here -->
+<!-- link rel="shortcut icon" type="image/x-icon" href="/ikemen-merged-docs/favicon.ico" -->
+<!-- end custom head snippets -->
+<style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head>
+<body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://potsmugen.github.io/ikemen-merged-docs/redirections.html">Original source (online)</a> · Snapshot 2026-09-13</div>
+<div class="container-lg px-3 my-5 markdown-body">
+<h1><a href="index.html">Ikemen GO Merged Documentation</a></h1>
+<h1 id="merged-trigger-redirection-reference">Merged Trigger Redirection Reference</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ul>
+<li><a href="#enemy-old">enemy (old)</a></li>
+<li><a href="#enemyn-old">enemy(n) (old)</a></li>
+<li><a href="#enemynear-old">enemyNear (old)</a></li>
+<li><a href="#enemynearn-old">enemyNear(n) (old)</a></li>
+<li><a href="#helper-old">helper (old)</a></li>
+<li><a href="#helper-changed">Helper (changed)</a></li>
+<li><a href="#helperid-old">helper(ID) (old)</a></li>
+<li><a href="#helperindexn-new">HelperIndex(n) (new)</a></li>
+<li><a href="#p2-new">P2 (new)</a></li>
+<li><a href="#parent-old">parent (old)</a></li>
+<li><a href="#partner-old">partner (old)</a></li>
+<li><a href="#partnern-old">partner(n) (old)</a></li>
+<li><a href="#playern-new">Player(n) (new)</a></li>
+<li><a href="#playeridid-old">playerID(ID) (old)</a></li>
+<li><a href="#playerindexn-new">PlayerIndex(n) (new)</a></li>
+<li><a href="#root-old">root (old)</a></li>
+<li><a href="#stateowner-new">StateOwner (new)</a></li>
+<li><a href="#target-old">target (old)</a></li>
+<li><a href="#target-changed">Target (changed)</a></li>
+<li><a href="#targetid-old">target(ID) (old)</a></li>
+</ul>
+<hr/>
+<h1 id="trigger-redirections">Trigger Redirections</h1>
+<h2 id="enemy-old">enemy (old)</h2>
+<p>Redirects the trigger to the first opponent found.<br/>
+Normal helpers and neutral players are not considered opponents.<br/>
+See the related trigger <code class="language-plaintext highlighter-rouge">numenemy</code> in the trigger documentation.</p>
+<hr/>
+<h2 id="enemyn-old">enemy(n) (old)</h2>
+<p><code class="language-plaintext highlighter-rouge">n</code> should be a well-formed expression that evaluates to a non-negative integer.<br/>
+The trigger is redirected to the n’th opponent.</p>
+<hr/>
+<h2 id="enemynear-old">enemyNear (old)</h2>
+<p>Redirects the trigger to the nearest opponent.</p>
+<hr/>
+<h2 id="enemynearn-old">enemyNear(n) (old)</h2>
+<p><code class="language-plaintext highlighter-rouge">n</code> should be a well-formed expression that evaluates to a non-negative integer.<br/>
+The trigger is redirected to the n’th-nearest opponent.</p>
+<hr/>
+<h2 id="helper-old">helper (old)</h2>
+<p>Redirects the trigger to the first helper found. See the related trigger <code class="language-plaintext highlighter-rouge">NumHelper</code> in the trigger documentation.</p>
+<hr/>
+<h2 id="helper-changed">Helper (changed)</h2>
+<p>The <code class="language-plaintext highlighter-rouge">Helper</code> redirection now also accepts an optional index argument, through the new format <code class="language-plaintext highlighter-rouge">Helper(ID, index)</code>. Defaults to 0 (first one).<br/>
+The old formats still work exactly the same.</p>
+<p>Example:</p>
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">trigger1</span> <span class="p">=</span> <span class="s">NumHelper(1005) &gt;= 2</span>
+<span class="py">trigger1</span> <span class="p">=</span> <span class="s">Helper(1005, 1), MoveType = A; The second helper with ID 1005</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="helperid-old">helper(ID) (old)</h2>
+<p>ID should be a well-formed expression that evaluates to a positive integer. The trigger is then redirected to a helper with the<br/>
+corresponding ID number.</p>
+<hr/>
+<h2 id="helperindexn-new">HelperIndex(n) (new)</h2>
+<p>Redirects the trigger to the helper entity by index.</p>
+<p>Each helper is assigned an index according to their position among the total number of helpers a player has. These indexes begin at 1, with index 0 being a special case that represents the <code class="language-plaintext highlighter-rouge">root</code> player. A player with 5 helpers, for instance, will have helpers with indexes 1 through 5.</p>
+<p>It takes redirections into account, allowing the return of a helper’s helpers.</p>
+<p><strong>Example:</strong></p>
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">trigger1</span> <span class="p">=</span> <span class="s">NumHelper &gt;= 2</span>
+<span class="py">trigger1</span> <span class="p">=</span> <span class="s">HelperIndex(2), MoveType = A</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="p2-new">P2 (new)</h2>
+<p>Redirects the trigger to the same player as the “P2” family of triggers (P2StateNo, etc). So, for instance, <code class="language-plaintext highlighter-rouge">P2, StateNo</code> is equivalent to <code class="language-plaintext highlighter-rouge">P2StateNo</code>.</p>
+<p>The “P2” enemy has some notable properties:</p>
+<ul>
+<li>If it is in state 5150 (KO), it will be ignored</li>
+<li>Is the one the character will always be facing automatically (<code class="language-plaintext highlighter-rouge">facep2</code>, etc)</li>
+<li>Only changes when another enemy is at least 30 pixels closer to the player, making it less erratic during team modes</li>
+</ul>
+<p>All of these properties make <code class="language-plaintext highlighter-rouge">P2</code> the optimal enemy redirection in most cases.</p>
+<p>Note: This redirection should not be mistaken for “Player(2)”, which is always player number 2.</p>
+<p><strong>Example:</strong></p>
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">trigger1</span> <span class="p">=</span> <span class="s">P2, DizzyPoints &lt;= 100</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="parent-old">parent (old)</h2>
+<p>Redirects the trigger to the player’s parent. (Player must be a helper.)</p>
+<hr/>
+<h2 id="partner-old">partner (old)</h2>
+<p>Redirects the trigger to the player’s partner. Normal helpers and neutral players are not considered opponents. See the related trigger <code class="language-plaintext highlighter-rouge">numpartner</code> in the trigger documentation.</p>
+<hr/>
+<h2 id="partnern-old">partner(n) (old)</h2>
+<p><code class="language-plaintext highlighter-rouge">n</code> should be a well-formed expression that evaluates to a non-negative integer.<br/>
+The trigger is redirected to the n’th partner.</p>
+<hr/>
+<h2 id="playern-new">Player(n) (new)</h2>
+<p>Redirects a trigger to the character with the specified PlayerNo.</p>
+<p><strong>Example:</strong></p>
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">trigger1</span> <span class="p">=</span> <span class="s">Player(1), AILevel</span>
+<span class="py">trigger2</span> <span class="p">=</span> <span class="s">Player(TeamLeader), MoveType = A</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="playeridid-old">playerID(ID) (old)</h2>
+<p><code class="language-plaintext highlighter-rouge">n</code> should be a well-formed expression that evaluates to a non-negative integer.<br/>
+The trigger is redirected to the player with unique ID equal to ID. See the <code class="language-plaintext highlighter-rouge">ID</code> and <code class="language-plaintext highlighter-rouge">PlayerExistID</code> triggers in the trigger documentation.</p>
+<hr/>
+<h2 id="playerindexn-new">PlayerIndex(n) (new)</h2>
+<p>Each player is assigned a specific index in the internal player list. <code class="language-plaintext highlighter-rouge">PlayerIndex</code> will redirect a trigger to the player (helpers included) with the specified index. The first index is 0. If there are 20 players on screen, valid indexes will be 0 through 19.</p>
+<p>Like all “index” triggers, this is especially useful in <code class="language-plaintext highlighter-rouge">for</code> and <code class="language-plaintext highlighter-rouge">while</code> loops.</p>
+<p><strong>Example:</strong></p>
+<div class="language-go highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="n">trigger1</span> <span class="o">=</span> <span class="n">PlayerIndexExist</span><span class="p">(</span><span class="m">1</span><span class="p">)</span>
+<span class="n">trigger1</span> <span class="o">=</span> <span class="n">PlayerIndex</span><span class="p">(</span><span class="m">1</span><span class="p">),</span> <span class="n">id</span> <span class="o">=</span> <span class="m">56</span>
+
+<span class="err">#</span> <span class="n">Count</span> <span class="n">all</span> <span class="n">explods</span> <span class="n">on</span> <span class="n">screen</span>
+<span class="n">let</span> <span class="n">totalExplod</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span>
+<span class="k">for</span> <span class="n">i</span> <span class="o">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">NumPlayer</span> <span class="o">-</span> <span class="m">1</span><span class="p">;</span> <span class="m">1</span> <span class="p">{</span>
+	<span class="k">if</span> <span class="n">PlayerIndexExist</span><span class="p">(</span><span class="err">$</span><span class="n">i</span><span class="p">)</span> <span class="p">{</span>
+		<span class="n">let</span> <span class="n">totalExplod</span> <span class="o">=</span> <span class="err">$</span><span class="n">totalExplod</span> <span class="o">+</span> <span class="n">PlayerIndex</span><span class="p">(</span><span class="err">$</span><span class="n">i</span><span class="p">),</span> <span class="n">NumExplod</span><span class="p">;</span>
+	<span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="root-old">root (old)</h2>
+<p>Redirects the trigger to the root.</p>
+<hr/>
+<h2 id="stateowner-new">StateOwner (new)</h2>
+<p>Redirects a trigger to the owner of the current state the character is in. Useful when a custom stated target needs to redirect a trigger to the player.<br/>
+Note: states are owned by the root.</p>
+<p><strong>Example:</strong></p>
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">trigger1</span> <span class="p">=</span> <span class="s">StateOwner,AILevel</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="target-old">target (old)</h2>
+<p>Redirects the trigger to the first target found.</p>
+<hr/>
+<h2 id="target-changed">Target (changed)</h2>
+<p>The <code class="language-plaintext highlighter-rouge">Target</code> redirection now also accepts an optional index argument, through the new format <code class="language-plaintext highlighter-rouge">Target(ID, index)</code>. Defaults to 0 (first one).<br/>
+The old format still works exactly the same.</p>
+<p>Example:</p>
+<div class="language-ini highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="py">trigger1</span> <span class="p">=</span> <span class="s">NumTarget &gt;= 2</span>
+<span class="py">trigger1</span> <span class="p">=</span> <span class="s">Target(-1, 1), Alive; The second target with any ID</span>
+</code></pre></div></div>
+<hr/>
+<h2 id="targetid-old">target(ID) (old)</h2>
+<p><code class="language-plaintext highlighter-rouge">ID</code> should be a well-formed expression that evaluates to a non-negative integer. The trigger is then redirected to a target with the corresponding targetID.<br/>
+The targetID is specified in the <code class="language-plaintext highlighter-rouge">ID</code> parameter of a HitDef controller.</p>
+<hr/>
+<div class="footer border-top border-gray-light mt-5 pt-3 text-right text-gray">
+        This site is open source. <a href="https://github.com/potsmugen/ikemen-merged-docs/edit/main/docs/redirections.md">Improve this page</a>.
+      </div>
+</div>
+</body>
+</html>

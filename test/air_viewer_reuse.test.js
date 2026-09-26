@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
+const groups=require('../src/viewer_group');
+(async()=>{
+  groups.resetViewerGroupForTests();
+  const source=fs.readFileSync(path.join(__dirname,'../src/air_viewer.js'),'utf8');
+  const body=source.slice(source.indexOf('function airPanelKey('),source.indexOf('function tabFilename('));
+  const filename=path.resolve('C:/chars/Hero/Hero.air'),reveals=[],messages=[],created=[];let multiple=false;
+  const panel={viewColumn:2,reveal:(column,preserveFocus)=>reveals.push({column,preserveFocus}),webview:{postMessage:message=>messages.push(message)}};
+  const openPanels=new Map([[filename.toLowerCase(),{panel}]]);
+  const sandbox={require:name=>{assert.strictEqual(name,'./asset_workspace');return {beforeOpen:async()=>true,multiple:()=>multiple};},path,process:{platform:'win32'},openPanels,reusableViewColumn:()=>0,restoredAssetColumn:groups.restoredAssetColumn,preferredViewerColumn:()=>4,isClosingFile:()=>false,inferCharacterFiles:()=>({sffPath:'C:/shared.sff'}),trackViewerPanel:panel=>panel,characterLabel:()=> 'Hero',restoreAirSession:panel=>({panel}),vscode:{Uri:{file:fsPath=>({fsPath})},ViewColumn:{Beside:-2},workspace:{textDocuments:[{fileName:filename,getText:()=>''}]},window:{tabGroups:{all:[{viewColumn:2,tabs:[{input:{viewType:'ikemenAirWorkspace'}}]},{viewColumn:3,tabs:[{input:{uri:{fsPath:'C:/source.zss'}}}]}]},createWebviewPanel:(type,title,column)=>{created.push(column);return{viewColumn:column};},showInformationMessage(){}}}};
+  vm.runInNewContext(body,sandbox);
+  await sandbox.openAirPreview({fsPath:filename.toUpperCase()},{action:210,preserveFocus:false,sourceColumn:3});
+  assert.deepStrictEqual(reveals,[{column:2,preserveFocus:false}],'explicit navigation preserves the existing AIR location despite another preferred group');
+  assert.strictEqual(created.length,0,'Windows path casing cannot create another viewer');assert.strictEqual(messages[0].action,210);
+  const revealCount=reveals.length;await sandbox.openAirPreview({fsPath:filename},{automatic:true});assert.strictEqual(reveals.length,revealCount,'Simple mode must not spawn or activate AIR merely because code was opened');
+  multiple=true;await sandbox.openAirPreview({fsPath:filename},{automatic:true,sourceColumn:2});assert.strictEqual(reveals.length,revealCount,'automatic source synchronization must not steal focus back from the nested AIR text tab');
+  openPanels.clear();sandbox.preferredViewerColumn=fallback=>fallback;
+  await sandbox.openAirPreview({fsPath:filename},{sourceColumn:3});
+  assert.deepStrictEqual(created,[2],'pending restored asset tabs provide a destination before their sessions are ready');
+  console.log('AIR existing-tab location, Windows identity and pending-restoration group reuse passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});

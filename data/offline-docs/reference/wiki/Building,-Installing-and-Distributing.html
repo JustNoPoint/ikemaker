@@ -1,0 +1,66 @@
+<html><head><meta charset="utf-8"/><title>Building,-Installing-and-Distributing</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Building%2C-Installing-and-Distributing">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="building"><a name="building">Building</a></h1>
+<p>Refer to the BUILDING.md file provided with the engine for detailed instructions.</p>
+<h1 id="installing-and-distributing"><a name="installing">Installing and distributing</a></h1>
+<h2 id="installing-the-engine"><a name="installing_engine">Installing the engine</a></h2>
+<p>The latest release version of Ikemen GO is available for download on the <a href="https://github.com/ikemen-engine/Ikemen-GO/releases">releases page</a>. For those who want to test experimental features (at the cost of possible unreported bugs), the nightly version can be found on the releases page <a href="https://github.com/ikemen-engine/Ikemen-GO/releases/tag/nightly">under the "nightly" tag</a>. Both versions of the engine comes with sample content, so it's ready to use right after extracting it.</p>
+<h2 id="installing-characters-and-stages"><a name="installing_chars">Installing characters and stages</a></h2>
+<p>Extract downloaded characters into the <code>chars</code> directory and stages into the <code>stages</code> directory. Character and stages also have to be added into the <code>select.def</code> file (by default located in <code>data/select.def</code>, but the path can be changed by custom motifs, read below for more information).</p>
+<p>Refer to the default <code>select.def</code> file distributed with the engine for more detailed information on how to add characters and stages.</p>
+<p><strong><em>NOTE</em></strong>: if using Android, <strong><em>DO NOT</em></strong> edit <code>data/select.def</code> directly! Place a copy of the <code>select.def</code> in the subfolder of your chosen motif e.g. if your motif folder with your <code>system.def</code> is the default <code>ikemen1</code> motif, then place a copy of <code>select.def</code> in <code>data/ikemen1/select.def</code> and edit that file. Android will overwrite <code>data/select.def</code> by default if any changes are detected due to the automatic update logic that is normally used by the application to extract assets for first-time installs and nightly upgrade logic.</p>
+<h2 id="using-motifs"><a name="installing_motifs">Using motifs</a></h2>
+<p>A motif is a custom configuration of the graphics and sounds used in the game's interface, as well as other things such as the character roster. The base motif is found in the <em>data/</em> directory. Custom motifs are placed as subdirectories under <em>data/</em>. For example, the "kfm" motif is placed in <em>data/kfm/</em> directory and can be assigned as <code>motif</code> in <em>save/config.json</em> or called via <code>-r</code> <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#cmd">command line argument</a>.</p>
+<p>Here's what a motif covers:
+- character roster and stage list, character and stage parameters, basic modes settings (select.def)
+- screenpack definition file with parameters that control graphics, sounds and music interface, customization options (system.def)
+- storyboard files
+- lifebar definition file with parameters that control fight screen graphics and sounds (fight.def)</p>
+<p>To set the default motif, edit the <code>save/config.json</code> file (equivalent to Mugen's <code>data/mugen.cfg</code>) with a text editor, and change "motif" setting to your motif path, e.g. <em>data/kfm/system.def</em>.</p>
+<p>To install a downloaded motif, first extract the file into a new directory. Open that directory to see if there are files in it; if so, move that directory into Ikemen's <em>data/</em> directory. If there is a single directory instead, move that bottom-level directory into the <em>data/</em> directory.</p>
+<h2 id="customizing-and-distributing-motifs"><a name="installing_customizing">Customizing and distributing motifs</a></h2>
+<p>First things first, let's quote Mugen's system.def file:</p>
+<p><strong><em>DO NOT MODIFY OR OVERWRITE MOTIF FILES</em></strong></p>
+<p>Information like this is also present in Mugen's read me file. While not enforced, following this advice is even more important in Ikemen Go than it used to be in Mugen, due to how often this engine is updated and how base files are meant to be used as a working example of new features. Keeping the content portable makes migration between versions much easier.</p>
+<p>To make your own motif, create a subdirectory under <em>data/</em> with the name of your motif, and copy system.def into the new directory. If you'd like to edit any other files besides system.def, make copies of them in your motif directory and change them there. Any data file that doesn't exist in your motif directory will default to the one in the <em>data/</em> directory, so if you did not copy <em>select.def</em> over, <em>data/select.def</em> will be used when you run with your motif selected.</p>
+<p>Fonts are search in directories in the following order:
+- motif subdirectory
+- <em>data/</em> directory (not recommended to keep custom fonts here)
+- <em>font/</em> directory (not recommended to keep custom fonts here)</p>
+<p>In other words the recommended place for custom fonts is inside your motif subdirectory, alongside all the other motif files (use relative paths to reference subdirectory, E.g. <em>font/myFont.def</em> referenced in <em>data/kfm/system.def</em> file will first check if the font is present in <em>data/kfm/font/myFont.def</em> path, before looking anywhere else)</p>
+<p>Unless you're making a fullgame/compilation, do NOT distribute your motif with Ikemen GO executable or files that are not related to motif. The engine is available on different operating systems, so for many users convince of having an executable included in the package is meaningless. Files unrelated to motif makes migration between engine version harder for people that want to install your motif.</p>
+<h2 id="updating-mugen-content"><a name="installing_mugen">Updating Mugen content</a></h2>
+<p>Ikemen GO aims for full compatibility with characters, stages, storyboards, lifebars and screenpacks released for Mugen 1.0 and Mugen 1.1 (official engine releases). When it comes to Winmugen content the compatibility is meant to be at the same level as Mugen 1.1 (we're not aiming for better backward compatibility than Mugen itself does). If something doesn't work it means that either the content itself is buggy (Ikemen Go engine and scripts are less tolerant for wrong syntax compared to Mugen) or it's a compatibility issue that should be <a href="https://github.com/ikemen-engine/Ikemen-GO/issues">reported here</a>. Be sure to search to make sure your issue hasn't already been reported.</p>
+<p>Characters and stages can use any of the new Ikemen GO features, regardless of <code>mugenversion</code> parameter set in their DEF files.</p>
+<p>To maintain backward compatibility with Mugen content, almost all Ikemen GO specific screenpack and lifebar features are disabled by default - after installing a Mugen motif you will get pretty much the same functionality as in vanilla Mugen, with almost none of the Ikemen GO additions, such as <a href="Screenpack-features.html#submenus">submenus</a>, new <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#modes">game modes</a>, <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#tag">tag</a> and <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#ratio">ratio</a> team modes, <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#score">score</a> system, and many other features unique to Ikemen GO.</p>
+<p>In order to update Mugen motifs start by testing the engine, without replacing default screenpack and lifebar, to familiarize yourself with new functionalities. Ikemen GO comes with default motif files that can be used as a base for updating Mugen screenpack and lifebars:
+- <em>data/select.def</em>: character roster and stage list with comments explaining all the new character and stage parameters, as well as basic modes settings
+- <em>data/system.def</em>: Winmugen 240p screenpack definition file
+- <em>data/mugen1/system.def</em>: Mugen 1.0 720p screenpack definition file
+- <em>data/big/system.def</em>: a version of Mugen 1.0 720p screenpack with more slots
+- <em>data/fight.def</em>: Winmugen 240p lifebar definition file
+- <em>data/mugen1/system.def</em>: Mugen 1.0 720p lifebar definition file</p>
+<p>Updating Mugen motif is a matter of copying new motif sections and parameters over from one of the default Ikemen GO motif DEF files to your screenpack and/or lifebar DEF files, and adjusting their values as needed. They are all marked with <em>Ikemen feature</em> comment, for easier recognizing which parameters are unique to Ikemen GO. You don't need special knowledge to do so - any Mugen screenpack or lifebar tutorial will teach you how to work with motifs.</p>
+<p>As of today only new <a href="Lifebar-features.html">lifebar features</a> have been fully documented. As mentioned in the <a href="Screenpack-features.html">screenpack page</a>, screenpack parameters won't be documented until the engine stabilize feature-wise. Until then everything related to these parameters may change without notice. Most of the new screenpack parameters have self-explanatory names though, so it should be fairly easy to use them despite lack of documentation.</p>
+<p><code>data/work</code> directory contains art and sound assets that can be easily imported to your custom screenpack and lifebar files using <a href="http://fighterfactory.virtualltek.com/">Fighter Factory</a> program (<em>import.ffe</em> files can be used to automate assets importing).</p>
+<h2 id="updating-to-new-engine-version"><a name="installing_updating">Updating to new engine version</a></h2>
+<p>Updating to new version (if you use content that follows guidance present in this article) is a matter of moving over your motif subdirectory, <em>chars</em>, <em>sound</em>, <em>stage</em> folders and setting correct path in <em>save/config.json</em> <code>motif</code> setting. About a minute of work total.</p>
+<h2 id="installing-additional-content-android"><a name="installing_android">Installing additional content (Android)</a></h2>
+<p>Additional content can be installed to the Android version by either plugging it in File Transfer mode on supported devices, or by issuing ADB commands to the <code>/sdcard/Android/data/org.ikemen_engine.ikemen_go/files/</code> and its respective directories (all typical folders from the Nightly such as <code>data</code>, <code>chars</code>, <code>stages</code>, etc. will be located here). (Note: <code>/sdcard/</code> is a special folder on Android, the device does not need to have an SD card to have this folder)</p>
+<p>For example, to push a new options.lua using adb:</p>
+<pre><code class="language-bash">adb push /path/to/external/script/options.lua /sdcard/Android/data/org.ikemen_engine.ikemen_go/files/external/script/options.lua
+</code></pre>
+<h1 id="linux-distro-compatibility"><a name="linux_compatibility">Linux Distro Compatibility</a></h1>
+<p>Linux distro compatibility as of 2024-03-26</p>
+<ul>
+<li>Ubuntu/Debian - Supported</li>
+<li>Arch/Artix - Requires GlibC/Mesa/OpenAL installed/updated</li>
+<li>SUSE - Supported</li>
+<li>Manjaro - Supported</li>
+<li>Fedora - Supported</li>
+<li>Tiny Core - Unsupported</li>
+<li>Puppy - Requires GlibC/Mesa/OpenAL installed/updated</li>
+<li>Batocera - <a href="https://wiki.batocera.org/systems:ikemen">Supported</a></li>
+<li>Solus - ?</li>
+<li>Kali - Requires GlibC/Mesa/OpenAL installed/updated  </li>
+<li>Alpine - Requires building against MUSL</li>
+</ul>
+<p>Thanks to Cylia Margatroid and Gacel for testing.</p></body></html>

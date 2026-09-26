@@ -1,0 +1,7 @@
+Tiny.snd
+wav/swing.wav
+0
+0
+wav/hit.wav
+1
+0

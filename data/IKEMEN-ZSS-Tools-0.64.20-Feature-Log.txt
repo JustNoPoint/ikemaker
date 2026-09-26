@@ -1,0 +1,15 @@
+IKEMaker 0.64.20
+
+Universal HitDef scene preview
+
+- Extends the Universal HitDef Editor with the shared character AIR/SFF preview pipeline.
+- Shows synchronized P1 attack and P2 reaction animation tracks with manual stepping and playback.
+- Uses the character's assigned default palette throughout the preview.
+- Displays Clsn1 and Clsn2, spark position, target velocity, facing, snap placement, and authored envshake.
+- Applies HitDef palfx.mul and palfx.add to P2 in the preview.
+- Automatically disables the dark positioning treatment while PalFX is active so color review remains accurate.
+- Allows choosing a different P1 animation or P2 reaction without changing source code.
+- Provides source navigation from p1stateno and p2stateno to the destination state.
+- Routes detailed bind and throw sequencing into the existing Throw Creator instead of duplicating it.
+- Supports wheel zoom, drag panning, frame selection, Related Work, and all three standard IKEMEN launch controls.
+- Keeps character selection explicit when a shared/common code file cannot identify one character safely.

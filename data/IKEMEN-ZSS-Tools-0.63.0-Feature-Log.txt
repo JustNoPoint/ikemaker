@@ -1,0 +1,12 @@
+IKEMEN ZSS Tools 0.63.0
+
+- Added reviewed single-file CNS to ZSS conversion.
+- Added character-wide conversion driven by st/st1/etc. assignments in the character DEF.
+- Preserved CNS triggerall, trigger group AND/OR semantics, StateDefs, controllers, comments, persistent, and ignorehitpause.
+- Added native conversion for legacy var(index) VarSet/VarAdd shorthand.
+- Mixed constants/state files keep their original CNS constants while state sections move to ZSS.
+- Constants-only CNS files and unsupported structures cannot be applied.
+- Redirected ignorehitpause, unknown catalog entries, duplicate parameters, malformed lines, and other compatibility risks are explicitly reviewable.
+- Added side-by-side source/output viewing, Problems integration, copy, save-only, and save-plus-DEF-update workflows.
+- Added stale-source protection, transactional writes, backups, mutation history, and Recovery Center compatibility.
+- Added the converter to IKEMaker, editor context actions, Related Work, offline documentation, and browser capability reporting.

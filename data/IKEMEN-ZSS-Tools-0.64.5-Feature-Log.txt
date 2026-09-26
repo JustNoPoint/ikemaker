@@ -1,0 +1,18 @@
+IKEMaker 0.64.5
+
+LEGACY COMMON STATE RESOLUTION
+
+- Character dependency inspection now follows MUGEN/IKEMEN stcommon search
+  behavior instead of assuming every assignment is character-relative.
+- A legacy `stcommon = common1.cns` assignment can resolve to the game's
+  data/common1.cns.
+- IKEMEN's automatic `.zss` fallback is recognized, so a common1.cns assignment
+  may resolve to data/common1.cns.zss when that is the installed engine file.
+- If none of the valid locations exists, the ordinary missing-file diagnostic is
+  retained.
+
+VERIFICATION
+
+- The actual Goku character in the combined test copy resolves its common1.cns
+  with zero missing dependency-tree files.
+- Both CNS and CNS-to-ZSS fallback paths have automated regression coverage.

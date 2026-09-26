@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
+const source=fs.readFileSync(path.join(__dirname,'../src/air_viewer.js'),'utf8');
+let rect={width:240,height:240},draws=0;const canvas={width:320,height:260};
+const box={canvas,stage:{getBoundingClientRect:()=>rect},draw:()=>draws++};
+const start=source.indexOf('function size(){'),end=source.indexOf('new ResizeObserver(size)',start);
+vm.runInNewContext(source.slice(start,end),box);
+box.size();assert.deepStrictEqual([canvas.width,canvas.height],[240,240],'narrow preview uses the same scale for both axes');
+box.size();assert.equal(draws,1,'unchanged observer callback must not redraw');
+rect={width:0,height:0};box.size();assert.deepStrictEqual([canvas.width,canvas.height],[240,240]);
+rect={width:800,height:420};box.size();assert.deepStrictEqual([canvas.width,canvas.height],[800,420]);assert.equal(draws,2);
+console.log('AIR canvas resize: narrow proportions, stable repeat and hidden panel passed');

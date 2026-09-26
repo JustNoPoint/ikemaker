@@ -1,0 +1,28 @@
+IKEMEN ZSS Tools 0.58.0
+=======================
+
+Guided character sessions
+-------------------------
+
+- Open Character now asks what kind of work the user wants to perform instead
+  of opening one fixed and incomplete tab set.
+- Choices include character essentials, the complete connection tree,
+  animation/disappearing-frame repair, attack properties, sound work, every
+  connected code file, and workflow/QA.
+- Choices can be combined and are remembered independently for each character.
+- Character essentials include the DEF-assigned SFF, AIR text, constants, and
+  SND archive. Sound work also discovers character-local split SND archives.
+- Character workbench file categories now include external/shared files reached
+  through the character DEF, not only files physically inside its folder.
+
+AIR/SFF validation
+------------------
+
+- AIR diagnostics now resolve the character's assigned SFF and detect animation
+  elements that reference absent sprites.
+- Required and recommended system actions receive line-level errors explaining
+  exactly when the character will fail to draw.
+- A bounded summary reports the full AIR/SFF mismatch without flooding Problems
+  with thousands of low-priority errors from retained unused animations.
+- The AIR visual workspace marks missing frames in red, labels them
+  MISSING, and reports the total missing-frame count.

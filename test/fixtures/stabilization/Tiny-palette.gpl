@@ -1,0 +1,8 @@
+GIMP Palette
+Name: Tiny indexed palette
+Columns: 4
+# Index 0 remains the project transparency color.
+0 255 200 Transparency
+255 255 255 White
+128 0 0 Cloth Dark
+255 0 0 Cloth Light

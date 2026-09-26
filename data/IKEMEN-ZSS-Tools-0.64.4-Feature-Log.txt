@@ -1,0 +1,15 @@
+IKEMaker 0.64.4
+
+PINNED BROWSE CONTROLS
+
+- Folder browsing is now the first choice in shared Open pickers, followed by
+  direct file browsing.
+- Open Character shows separate folder and DEF-file controls before currently
+  open and detected roster characters, so large rosters never bury Browse.
+- The roster select.def picker also keeps its Browse control above detected files.
+- Folder and file controls use distinct VS Code icons and plain descriptions.
+
+VERIFICATION
+
+- Browse ordering has an automated regression check.
+- All 114 automated test files pass.

@@ -1,0 +1,51 @@
+'use strict';
+
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+
+const read = (name) => fs.readFileSync(path.join(__dirname, '..', 'src', name), 'utf8');
+const launch = read('launch_controls.js');
+const client = read('map_registry_client.js');
+const ui = read('map_registry_ui.js');
+const grammar = read('map_registry_grammar.js');
+const service = read('map_registry_service.js');
+const extension = read('extension.js');
+
+assert.ok(launch.includes("'move_constants'"));
+assert.ok(launch.includes("'helper', 'hitdef'"));
+assert.ok(launch.includes("'spatial_composer'"));
+const allowlist = /const MAP_AUTHORING_SURFACES = new Set\(\[([\s\S]*?)\]\);/.exec(launch)[1];
+assert.ok(!allowlist.includes("'air'"));
+assert.ok(!allowlist.includes("'sff'"));
+assert.ok(!allowlist.includes("'throw_creator'"), 'a visual planner without code/expression fields must not advertise insertion');
+assert.ok(client.includes("!['', 'text'].includes"), 'numeric asset fields must not become code insertion targets');
+assert.ok(client.includes('expected: field.value'));
+assert.ok(client.includes('field.value === message.target.expected'));
+assert.ok(client.includes('renderEpoch === message.target.epoch'));
+assert.ok(client.includes("surface === 'helper'"));
+assert.ok(client.includes("surface === 'hitdef'"));
+assert.ok(client.includes("surface === 'move_constants'"));
+assert.ok(client.includes("surface === 'spatial_composer'"));
+assert.ok(ui.includes('document.version !== target.version'));
+assert.ok(ui.includes('target = editorTarget(vscode, context)'), 'native destination must be captured at command entry');
+assert.ok(ui.includes('configureTextGrammar'));
+assert.ok(grammar.includes("['.cns', '.cmd', '.st', '.inp', '.jnp']"));
+assert.ok(service.includes('scopeFiles'));
+assert.ok(service.includes('Assigned Runtime Files'));
+assert.ok(service.includes('textGrammar(document, this.context)'));
+assert.ok(ui.includes('seedForTarget'));
+assert.ok(ui.includes('progressiveBrowserHtml'));
+assert.ok(ui.includes('Narrow further:'));
+assert.ok(ui.includes('maps · '));
+assert.ok(ui.includes('Reference only'));
+assert.ok(ui.includes('Search all maps'));
+assert.ok(ui.includes('Recent'));
+assert.ok(ui.includes('last group'));
+assert.ok(ui.includes('$(arrow-left) Back'));
+assert.ok(ui.includes('No writer observed means only'));
+assert.ok(ui.includes('Source ownership:'));
+assert.ok(grammar.includes("['zss', 'ikemen-cns']"));
+assert.ok(extension.includes("require('./map_registry_ui').register"));
+
+console.log('Map registry integration contract tests passed');

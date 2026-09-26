@@ -1,0 +1,13 @@
+IKEMaker 0.77.3
+
+CONNECTED CODE OWNERSHIP
+
+- Connected Code now determines shared ownership from the actual character DEF context and resolved source path.
+- A move StateDef assigned from outside the character folder is labeled "shared". This includes the SF6 template normals.zss State 200 used by Ryu.
+- Character-local StateDefs and functions remain distinct and are not mislabeled as shared.
+- Explanations distinguish the scope and warn when editing an assigned template source can affect other characters.
+- Regression coverage verifies both shared-template and character-local StateDef cases.
+
+VERIFICATION
+
+- All 285 automated test files pass.

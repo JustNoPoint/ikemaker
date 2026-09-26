@@ -1,0 +1,6 @@
+IKEMaker 0.76.4 — Viewer/text placement
+
+- A visual workspace first opens in the shared viewer group beside text code.
+- Move Lab now follows the same placement contract as AIR, SFF, SND, HitDef, and the other visual workspaces.
+- Once a viewer is open, other viewers reuse that viewer group.
+- A user can still drag viewer tabs elsewhere; IKEMaker respects the most recently activated viewer location.

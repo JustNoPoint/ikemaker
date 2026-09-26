@@ -1,0 +1,21 @@
+IKEMEN ZSS Tools 0.28.0
+=======================
+
+Native ZSS and CNS language intelligence
+----------------------------------------
+- Added context-aware state-controller completion for ZSS and CNS.
+- Added controller-option completion that excludes options already authored.
+- Added offline hover documentation for controllers and their dotted options.
+- Generated a 158-entry trigger catalog from the locally archived official
+  IKEMEN 1.0 new/changed trigger documentation.
+- Added trigger completion and hover help in expression contexts.
+- Generated a 338-entry Lua API and hook catalog from the locally archived
+  official IKEMEN 1.0 Lua documentation.
+- Added Lua function completion, argument snippets, and offline hover help.
+- Learning mode adds usage and return-value guidance; Advanced mode keeps the
+  same documentation available in a compact presentation.
+
+Verification
+------------
+- Added pure context/parser tests and VS Code provider-registration tests.
+- All 44 extension test files pass.

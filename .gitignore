@@ -1,0 +1,14 @@
+node_modules/
+tmp/
+out/
+dist/
+release/
+releases/
+*.vsix
+*.zip
+*.log
+.DS_Store
+Thumbs.db
+.vscode/
+.ikemen-tools/
+

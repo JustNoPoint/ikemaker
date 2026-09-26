@@ -1,0 +1,22 @@
+'use strict';
+const assert = require('assert');
+const model = require('../src/project_context_model');
+const registry = require('../src/project_registry').createDefault();
+const root = 'D:\\Game';
+
+let context = model.contextFor('D:\\Game\\chars\\template\\SF6template\\systems\\drive.zss', root, registry);
+assert.equal(context.project.id, 'sf6'); assert.equal(context.ownership, 'game'); assert.equal(context.assetType, 'Code');
+context = model.contextFor('D:\\Game\\chars\\Ryu\\normals.zss', root, registry);
+assert.equal(context.character.name, 'Ryu'); assert.equal(context.ownership, 'character');
+context = model.contextFor('D:\\Game\\chars\\template\\common.zss', root, registry);
+assert.equal(context.project.id, 'universal'); assert.equal(context.ownership, 'universal');
+context = model.contextFor('D:\\Game\\chars\\template\\development\\vscode\\extension.js', root, registry);
+assert.equal(context.ownership, 'tooling-generated');
+context = model.contextFor('D:\\Tests\\HDBZ 6.1 - Copy\\chars\\GokuZ2\\GokuZ2.def', 'D:\\Tests\\HDBZ 6.1 - Copy', registry);
+assert.equal(context.project.id, 'hdbz'); assert.equal(context.character.name, 'GokuZ2');
+context = model.contextFor('D:\\Tests\\HDBZ 6.1 - Copy\\SF6-Test-Project\\chars\\Ryu\\Ryu.def', 'D:\\Tests\\HDBZ 6.1 - Copy\\SF6-Test-Project', registry);
+assert.equal(context.project.id, 'sf6'); assert.equal(context.character.name, 'Ryu');
+const configured = { ...registry, assets: { ownership: { 'chars/template/template.def': 'game' }, projects: { 'chars/template/template.def': 'sf6' } } };
+context = model.contextFor('D:\\Game\\chars\\template\\template.def', root, configured); assert.equal(context.ownership, 'game'); assert.equal(context.project.id, 'sf6');
+assert.equal(context.engineTarget.version, '1.0.0');
+console.log('Project context model tests passed');

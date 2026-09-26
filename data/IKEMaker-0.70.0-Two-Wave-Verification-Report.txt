@@ -1,0 +1,82 @@
+IKEMaker 0.70.0 — Two-Wave Verification Report
+Date: 2026-09-12
+
+WAVE 1 — IMPROVEMENT AND COHESION
+
+PASS  Product naming and navigation
+- Installed display name and primary sidebar surface use IKEMaker.
+- Project & Team Manager is available from Quick Start, Create New, and Game
+  and Project Profiles. Common entry points intentionally remain duplicated.
+- Older internal file markers remain stable for compatibility.
+
+PASS  Project, game, and team management
+- Games are independent from work projects and teams.
+- A work project can be assigned, reassigned, or unassigned at any time.
+- A work project can reference zero or one authoritative game, never two.
+- A work project can optionally reference one responsible team.
+- Games can change Hobby / Commercial / Undecided and content-basis labels.
+- Teams can be named and renamed.
+- Members, handles, active status, standard job classes, and custom job classes
+  can be added or edited. Inactive people remain in history.
+- Schema 1 and 2 registries migrate to schema 3.
+- New public registries start neutral and do not expose project-specific games.
+
+PASS  Workflow bridge
+- Production Workflow can open Project & Team Manager from Team Directory.
+- It can explicitly import/update the assigned registry team.
+- Import matches handles, updates roles, adds missing members, and preserves
+  local-only members plus every ticket, comment, notification, and history item.
+
+WAVE 2 — AUTOMATED FINAL VERIFICATION
+
+PASS  139 automated test files.
+PASS  All extension source JavaScript files parse.
+PASS  151 contributed commands; zero duplicate IDs.
+PASS  Every command is registered, including dynamic individual-file creators.
+PASS  Every package menu entry references a declared command.
+PASS  Open/create coverage exists for character, stage, screenpack, SFF, AIR,
+      SND, ZSS, CNS, CMD, DEF, Lua, and text data.
+PASS  Viewer routing tests cover the shared visual viewer group.
+PASS  Button-contract checks cover fixed IDs, visible labels, client bindings,
+      and literal webview-to-extension messages.
+PASS  Accessibility foundation covers keyboard focus, disabled controls,
+      reduced motion, forced colors, inferred field labels, canvases, and images.
+PASS  Mutating operations remain behind the transactional-write authority audit.
+
+INSTALLED-EXTENSION SMOKE COVERAGE
+
+PASS  Completed against the installed IKEMaker 0.70.0 package on 2026-09-12.
+PASS  Extension discovered and activated; all 151 runtime commands present.
+PASS  Every visual surface listed below opened and produced its expected tab.
+
+- Extension discovery, activation, version, and display-name check.
+- Runtime discovery of every contributed command.
+- Project & Team Manager.
+- AIR Code + Visual Workspace.
+- SFF Sprite Browser.
+- SND Archive Workspace.
+- Stage Visual Workspace.
+- Screenpack / Fight UI Workspace.
+- Roster Manager.
+- Visual Code Structure.
+
+WHAT STILL REQUIRES JNP / HUMAN TESTING
+
+1. Judge pixel-level layout, wording, density, hover-help quality, scrolling,
+   zooming, and readability on the actual monitor arrangements people use.
+2. Exercise every interactive picker through both completion and Cancel. The
+   models and command wiring are tested, but automated tests cannot judge whether
+   a folder/file dialog opens at the most convenient human location every time.
+3. Visually inspect animation, palette/color accuracy, collision dragging,
+   sound playback, waveform behavior, and stage/screenpack composition.
+4. Verify external programs and binaries on their real installations: IKEMEN,
+   SprMaker2, SndMaker, Photoshop, Aseprite, audio editors, emulators, and Cheat
+   Engine. Paths and capability handling are tested; third-party UI is not.
+5. Run gameplay, controller, training, Infinite VS, online/rollback, mobile, and
+   game-profile-specific test suites. Static code cannot certify live behavior.
+6. Use disposable copies to test final destructive workflows: SFF crop/rebuild,
+   palette replacement, Complete Project, updater packaging, and recovery/undo.
+
+This list is intentionally limited to visual judgment, external applications,
+runtime gameplay, and destructive operations. Everything safely verifiable from
+the extension package is part of the automated and installed smoke passes above.

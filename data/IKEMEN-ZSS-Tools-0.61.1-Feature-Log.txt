@@ -1,0 +1,18 @@
+IKEMEN ZSS Tools 0.61.1
+=======================
+
+Screen cohesion and connected-work navigation
+
+- Added the same Game, Infinite VS, Training, and Related Work controls to all visual creation screens.
+- Related Work resolves the active character DEF and its assigned SFF, AIR, SND, command, constants, movelist, and state files.
+- Related Work connects character authoring to the dependency tree, visual code structure, move constants, production workflow, and Test & Diagnostic Suite.
+- Game-level screens connect to roster, menus, story/dialogue, screenpack/fight UI, stages, and recovery.
+- Roster-to-story, roster-to-related-tool, and story-to-palette actions now retain their originating select.def context.
+- Added desktop and browser-host command registration for IKEMEN: Open Related Work.
+- Added a regression audit requiring every visual screen to expose and handle the shared controls.
+
+Safety
+
+- Navigation is read-only until the destination tool performs its normal reviewed operation.
+- Missing or ambiguous character context opens the established character chooser instead of guessing.
+- Existing transactional saves, backups, validation, and Undo behavior are unchanged.

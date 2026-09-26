@@ -1,0 +1,25 @@
+'use strict';
+const assert = require('assert');
+const registry = require('../src/project_registry');
+
+const migrated = registry.normalize({ schemaVersion: 1, games: [{ id: 'SF6', name: 'Street Fighter' }], characters: [{ id: 'Ryu', projectId: 'SF6' }] });
+assert.equal(migrated.schemaVersion, 4);
+assert.equal(migrated.projects[0].id, 'sf6');
+assert.equal(migrated.characters[0].projectId, 'sf6');
+assert(registry.createDefault().projects.some((item) => item.id === 'ds4'));
+assert.deepStrictEqual(registry.createStarter().projects.map((item) => item.id), ['universal'], 'new public registries must not seed project-specific game profiles');
+assert.equal(registry.validate({ projects: [{ id: 'a' }, { id: 'a' }] }).issues[0].level, 'error');
+assert.deepStrictEqual(registry.normalize({ sffBuildProfiles: { projects: { sf6: { projectId: 'sf6' } } } }).sffBuildProfiles.projects.sf6, { projectId: 'sf6' });
+const classified = registry.normalize({ projects: [{ id: 'original', distributionIntent: 'commercial', contentBasis: 'original', sourceResearch: false }] }).projects[0];
+assert.equal(classified.distributionIntent, 'commercial');
+assert.equal(classified.contentBasis, 'original');
+assert.equal(classified.sourceResearch, false);
+assert.deepStrictEqual(registry.normalize({ schemaVersion: 2 }).teams, []);
+assert.deepStrictEqual(registry.normalize({ schemaVersion: 2 }).workProjects, []);
+assert.equal(migrated.projects[0].engineTarget.version, '1.0.0');
+const explicit = registry.normalize({ schemaVersion: 4, projects: [{ id: 'next', engineTarget: { buildId: 'nightly-abc', channel: 'nightly', version: 'nightly', commit: 'abc', platform: 'windows-x64', installationId: 'nightly-abc:hash', executableSha256: 'a'.repeat(64), identityStatus: 'verified' }, engineAdoptionHistory: [{ previousTarget: {}, newTarget: { buildId: 'nightly-abc', channel: 'nightly', installationId: 'nightly-abc:hash', executableSha256: 'a'.repeat(64), identityStatus: 'verified' }, catalogRevision: 2 }] }] }).projects[0];
+assert.equal(explicit.engineTarget.buildId, 'nightly-abc');
+assert.equal(explicit.engineAdoptionHistory.length, 1);
+assert.equal(explicit.engineTarget.installationId, 'nightly-abc:hash');
+assert.equal(explicit.engineAdoptionHistory[0].newTarget.executableSha256, 'a'.repeat(64));
+console.log('Project registry tests passed');

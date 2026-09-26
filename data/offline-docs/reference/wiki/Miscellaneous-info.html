@@ -1,0 +1,738 @@
+<html><head><meta charset="utf-8"/><title>Miscellaneous-info</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-info">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="character-processing-order"><a name="character_processing_order">Character processing order</a></h1>
+<p>Individual characters have a specific order in which they are processed in relation to one another, determined by their MoveType or ID. Characters are processed as follows:</p>
+<ol>
+<li>Players in MoveType A</li>
+<li>Helpers in MoveType A</li>
+<li>Players in MoveType I</li>
+<li>Players in MoveType H</li>
+<li>Helpers in MoveType I</li>
+<li>Helpers in MoveType H</li>
+</ol>
+<p>If two characters are in the same tier, they will be processed according to their ID, with characters with a lower ID being processed first.</p>
+<p>For example, when both P1 and P2 are idle, P1 will be processed before P2. If P2 attacks and P1 does not, however, P2 will be processed first.</p>
+<p>This order serves to minimize the mechanical differences between characters fighting in the left or right side of the screen.</p>
+<h1 id="challenger-match"><a name="challenger">Challenger match</a></h1>
+<p>During Arcade or Team Arcade, another player can interrupt the current run by pressing Start on a different controller. This triggers a challenger match, where the original Arcade player stays on the P1 side and the interrupting player joins as P2.</p>
+<p>After the challenger match ends, the winner takes control of the Arcade run. They are sent back through the appropriate selection flow (Character Select for Arcade, or Team/Character Select for Team Arcade), and then the run resumes from the exact point where it was interrupted.</p>
+<p>All Arcade progress is preserved, including match number, score, roster, and upcoming opponents. Only control of the run changes hands.</p>
+<h1 id="command-line-arguments"><a name="cmd">Command line arguments</a></h1>
+<p>Ikemen GO accepts optional command line parameters for Quick-VS mode.</p>
+<p>The format is (optional parameters are enclosed in square brackets):</p>
+<pre><code class="language-ini">  ./Ikemen_GO [player1 player2 [-s stage]]
+</code></pre>
+<p>For example, to start quick versus between players named <em>kfm</em> and <em>suave</em>, you can type:</p>
+<pre><code class="language-ini">  ./Ikemen_GO kfm suave
+</code></pre>
+<p>To play the same two characters in a stage named <em>temple</em>, type:</p>
+<pre><code class="language-ini">  ./Ikemen_GO kfm suave -s temple
+</code></pre>
+<p>You can specify exact .def files paths for both players and stage:</p>
+<pre><code class="language-ini">  ./Ikemen_GO kfm/newkfm.def suave -s stages/temple.def
+</code></pre>
+<p>Here is a list of all supported command line options:</p>
+<p>Quick VS Options:
+* <code>-p&lt;n&gt; &lt;playername&gt;</code>: Loads player n, eg. -p3 kfm (if missing players are loaded in order ascending)
+* <code>-p&lt;n&gt;.ai &lt;level&gt;</code>: Sets player n's AI to <em>\&lt;level&gt;</em>, eg. -p1.ai 8
+* <code>-p&lt;n&gt;.color &lt;col&gt;</code> / <code>-p&lt;n&gt;.pal &lt;col&gt;</code>: Sets player n's palette to <em>\&lt;col&gt;</em>
+* <code>-p&lt;n&gt;.power &lt;power&gt;</code>: Sets player n's power to <em>\&lt;power&gt;</em>
+* <code>-p&lt;n&gt;.life &lt;life&gt;</code>: Sets player n's life to <em>\&lt;life&gt;</em>
+* <code>-p&lt;n&gt;.lifeMax &lt;lifeMax&gt;</code>: Sets player n's max life to <em>\&lt;lifeMax&gt;</em>
+* <code>-p&lt;n&gt;.dizzyPoints &lt;dizzyPoints&gt;</code>: Sets player n's <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#dizzy">dizzy points</a> to <em>\&lt;dizzyPoints&gt;</em>
+* <code>-p&lt;n&gt;.guardPoints &lt;guardPoints&gt;</code>: Sets player n's <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#guardbreak">guard points</a> to <em>\&lt;guardPoints&gt;</em>
+* <code>-p&lt;n&gt;.input &lt;pn&gt;</code>: Sets player n's controls to use <em>\&lt;pn&gt;</em>'s input settings
+* <code>-tmode1 &lt;tmode&gt;</code>: Sets p1 team mode to <em>\&lt;tmode&gt;</em>
+* <code>-tmode2 &lt;tmode&gt;</code>: Sets p2 team mode to <em>\&lt;tmode&gt;</em>
+* <code>-time &lt;num&gt;</code>: Round time (-1 to disable)
+* <code>-rounds &lt;num&gt;</code>: Plays for <em>\&lt;num&gt;</em> rounds, and then quits
+* <code>-s &lt;stagename&gt;</code>: Loads stage <em>\&lt;stagename&gt;</em>. eg. -s stages/stage0.def
+* <code>-loadmotif</code>: Quick-VS started without skipping motif, chars and stage loading
+* <code>-ip</code>: Can be used to establish netplay connection for Quick-VS. Set IP address for peer, leave the argument blank for host</p>
+<p>General/Debug Options:
+* <code>-h</code> / <code>-?</code>: Displays help screen listing some of these parameters
+* <code>-log &lt;logfile&gt;</code>: Records match data to <em>\&lt;logfile&gt;</em>
+* <code>-r &lt;path&gt;</code> / <code>-rubric &lt;path&gt;</code>: Loads motif <em>\&lt;path&gt;</em>. eg. -r motifdir or -r motifdir/system.def
+* <code>-fight &lt;path&gt;</code>: Loads fight screen <em>\&lt;path&gt;</em>. eg. -fight data/fight.def
+* <code>-storyboard &lt;path&gt;</code>: Loads storyboard <em>\&lt;path&gt;</em>. eg. -storyboard chars/kfm/intro.def
+* <code>-config &lt;path&gt;</code>: Loads <em>\&lt;path&gt;</em> config file. eg. -config save/config2.json
+* <code>-stats &lt;path&gt;</code>: Loads <em>\&lt;path&gt;</em> stats file. eg. -stats save/stats2.json
+* <code>-debug</code>: Start the match with debug mode already enabled
+* <code>-nojoy</code>: Disables joysticks
+* <code>-nomusic</code>: Disables music
+* <code>-nosound</code>: Disables all sound effects and music
+* <code>-togglelifebars</code>: Disables display of the Life and Power bars
+* <code>-maxpowermode</code>: Enables auto-refill of Power bars
+* <code>-ailevel &lt;level&gt;</code>: Changes game difficulty setting to <em>\&lt;level&gt;</em> (1-8)
+* <code>-speed &lt;speed&gt;</code>: Changes game speed setting to <em>\&lt;speed&gt;</em> (10%-200%)
+* <code>-stresstest &lt;frameskip&gt;</code>: Stability test (AI matches at speed increased by <em>\&lt;frameskip&gt;</em>)
+* <code>-speedtest</code>: Speed test (match speed x100)
+* <code>-windowed</code>: Disables fullscreen
+* <code>-setport</code>: Overrides port number</p>
+<h1 id="common-files-air-cmd-const-fx-states"><a name="common">Common files (air, cmd, const, fx, states)</a></h1>
+<p>Common files can be defined in dedicated <em>save/config.json</em> arrays. Files path lookup priority: character def directory, screenpack directory, lifebar directory, main ikemen directory, data directory.</p>
+<ul>
+<li>
+<p><a name="CommonAir"><code>CommonAir</code></a>: Common animations using character's local sprites. Appended to the character's AIR data.</p>
+</li>
+<li>
+<p><a name="CommonCmd"><code>CommonCmd</code></a>: Common commands. Appended to the character's CMD data.</p>
+</li>
+<li>
+<p><a name="CommonConst"><code>CommonConst</code></a>: Common constants. Appended to the character's CNS data. Can be overridden in the character's own [Constants] group.</p>
+</li>
+<li>
+<p><a name="CommonFX"><code>CommonFX</code></a>: CommonFx are packs of graphic and/or sound effects defined in a .def file that can be called during the match by using a specific prefix before animation and sound numbers, much like 'F' for the lifebar's fightfx. They can be used in all places where lifebar's FightFx can be used. Sample CommonFx .def file:</p>
+</li>
+</ul>
+<pre><code class="language-ini">[Info]
+prefix = MK
+fx.scale = 1
+localcoord = 320, 240
+
+[Files]
+sff = mk.sff
+air = mk.air
+snd = mk.snd
+</code></pre>
+<blockquote>
+<p>[!NOTE]
+The letters "F" and "S" are currently reserved and should not be used for your own prefixes.  </p>
+</blockquote>
+<ul>
+<li><a name="CommonStates"><code>CommonStates</code></a>: Common states. These are similar to <code>common1.cns</code>, except they will be loaded regardless of the character's <code>DEF</code> file.  </li>
+</ul>
+<pre><code class="language-ini">  "CommonStates": [
+    "data/functions.zss",
+    "data/action.zss",
+    "data/dizzy.zss",
+    "data/guardbreak.zss",
+    "data/score.zss",
+    "data/tag.zss",
+    "data/training.zss"
+  ],
+</code></pre>
+<h1 id="corner-push"><a name="dizzy">Corner Push</a></h1>
+<p>Ikemen's corner push slightly differs from Mugen's. Instead of only being checked at the moment a hit connects, the velocity offset is now saved and will only be applied when the target reaches the corner. This means hitting an opponent that's a bit away from the corner can still inflict corner push on the player, unlike Mugen. This change should in theory not break any Mugen characters, so it skips backward compatibility checks.  </p>
+<p>In addition, if the character has IkemenVersion, the corner push friction will depend on what the target is doing (standing, crouching, etc) like a regular hit would, instead of using a fixed, arbitrary value.</p>
+<h1 id="dizzy-mechanics"><a name="dizzy">Dizzy mechanics</a></h1>
+<p>Ikemen GO offers common solution for Dizzy mechanics, often found in commercial games.</p>
+<p>When this feature is enabled in options, the character loses Dizzy Points by receiving damage. Once there are no Dizzy Points left, the character goes into Dizzy state (short stun period in which they are vulnerable).</p>
+<p>Dizzy functionality can be adjusted via <code>data/dizzy.zss</code> file. Individual states listed there can be overridden by adding them to character's own code, and the negative states can be disabled on a per-character basis, by setting <code>Default.Enable.Dizzy</code> to 0 in character's CNS file under <a href="Character-features.html#cns_constants">[Constants]</a> section.</p>
+<p>Exact Dizzy Points damage value can be assigned directly in HitDef, via optional <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#changed_hitdef_dizzypoints">dizzypoints</a> parameter. If omitted, it defaults to <em>hit_damage</em> (from HitDef <code>damage</code> parameter) multiplied by the value of <code>Default.LifeToDizzyPointsMul</code> / <code>Super.LifeToDizzyPointsMul</code> specified in <code>data/common.const</code>.</p>
+<p>Dizzy Points will start to recover, if character menages to avoid pressure (blocking and receiving damage) for a while.</p>
+<p>Amount of Dizzy Points to start with can be set via <a href="Character-features.html#cns_data_dizzypoints">dizzypoints</a> parameter under character's cns [Data] section. If omitted, it defaults to <em>Life</em> parameter.</p>
+<p>Dizzy Points can be optionally visualized by meter, via lifebar <a href="Lifebar-features.html#new_stunbar">[StunBar]</a> section. Being strucked increases the meter (full stun meter means that the character has no Dizzy Points left and is forced to Dizzy state)</p>
+<p>State numbers reserved by Ikemen GO Dizzy implementation, as defined in <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#CommonConst">common.const</a>:</p>
+<pre><code class="language-ini">; dizzy.zss states
+StateDizzy = 6565300
+StateDizzyFallDown_standCrouch = 6565301
+StateDizzyFallDown_air = 6565302
+StateDizzyLyingDown = 6565303
+StateDizzyBirdsHelper = 6565310
+</code></pre>
+<h1 id="game-modes"><a name="modes">Game Modes</a></h1>
+<p>By default Ikemen GO supports following game modes:</p>
+<ul>
+<li><strong>Arcade Mode</strong> (<code>arcade</code>) fight against AI-controlled opponents in a customizable arcade ladder</li>
+<li><strong>Team Arcade</strong> (<code>teamarcade</code>) team of fighters fights against AI-controlled opponents in a customizable arcade ladder</li>
+<li><strong>Team Cooperative</strong> (<code>teamcoop</code>) team up with other player(s) against AI-controlled opponents in a customizable arcade ladder</li>
+<li><strong>Versus Mode</strong> (<code>versus</code>) choose a fighter to defeat a player controlled opponent</li>
+<li><strong>Team Versus</strong> (<code>teamversus</code>) choose a team of fighters to defeat team of player controlled opponents</li>
+<li><strong>Versus Cooperative</strong> (<code>versuscoop</code>) team up with other player(s) to defeat co-op team of player controlled opponents</li>
+<li><strong>Quick Match</strong> (<code>freebattle</code>) practice your skills against AI controlled CPU character(s) of your choice</li>
+<li><strong>Story Mode</strong> (<code>storymode</code>) follow story mode arcs designed for this mugen game (for this mode to show up in main menu at least 1 arc needs to be assigned under [StoryMode] group in select.def)</li>
+<li><strong>Online Versus</strong> (<code>netplayversus</code>) choose fighter(s) to defeat online player controlled opponent(s)</li>
+<li><strong>Online Cooperative</strong> (<code>netplayteamcoop</code>) team up with online player against AI-controlled opponents in a customizable arcade ladder</li>
+<li><strong>Online Survival</strong> (<code>netplaysurvivalcoop</code>) defeat as many opponents as you can in a row with an online player controlled teammate</li>
+<li><strong>Training Mode</strong> (<code>training</code>) practice special attacks and combos with a customizable AI-controlled opponent</li>
+<li><strong>Time Attack</strong> (<code>timeattack</code>) fight against AI-controlled opponents in a customizable arcade ladder, beating previous time records</li>
+<li><strong>Survival</strong> (<code>survival</code>) defeat as many opponents as you can on a single Health Meter</li>
+<li><strong>Survival Cooperative</strong> (<code>survivalcoop</code>) defeat as many opponents as you can with a player controlled teammate, on a single Health Meter</li>
+<li><strong>Boss Rush</strong> (<code>bossrush</code>) defeat all bosses in a row (for this mode to show up in main menu at least 1 character needs <code>boss = 1</code> parameter set in select.def)</li>
+<li><strong>Bonus Games</strong> (<code>bonusgames</code>) - defeat selected bonus character (for this mode to show up in main menu at least 1 character needs <code>bonus = 1</code> parameter set in select.def)</li>
+<li><strong>Watch Mode</strong> (<code>watch</code>) watch CPU controlled match of your choice</li>
+<li><strong>Randomtest</strong> (<code>randomtest</code>) watch endless CPU controlled matches (unlike demo that triggers in main menu, this mode is not completely random, matches results are saved to <em>save/autolevel.save</em> file, which grades characters AI based on how they performed against each other)</li>
+<li><strong>Replay</strong> (<code>replay</code>) watch saved replays of your online matches</li>
+<li><strong>Options</strong> (<code>options</code>) adjust game settings</li>
+</ul>
+<p>Which modes are selectable in-game and how they are orginized is <a href="Screenpack-features.html#menus">adjustable</a> via screenpack.</p>
+<h1 id="global-states"><a name="states">Global states</a></h1>
+<p>In MUGEN, each character has access to three special, global states, numbered -1, -2, and -3. These states are constantly executed without the character having to be in them.</p>
+<p>State -1 generally contains state controllers that determine state transition rules based on user input (commands) or CPU instructions (AI).<br/>
+State -2 contains other state controllers that need to be checked every tick.<br/>
+State -3 contains state controllers which should be checked every tick unless the player is temporarily using another player's state data (for instance, when the player is being thrown).  </p>
+<p>Once declared in one file, these states can't be assigned again in different file.  </p>
+<p>If the character is a "helper", i.e. spawned by the <code>Helper</code> state controller, it will not have access to states -2 and -3. The helper will not access state -1 either, unless it has <code>keyctrl</code> parameter enabled.</p>
+<p>Ikemen GO works similarly, but allows for more flexibility. Each negative state can have multiple <code>Statedef</code> declarations across multiple files, appending each on top of existing ones. This allows, for example, using the <code>common1.cns</code> file for global code that affects all characters that reference it.  </p>
+<p>Ikemen GO also allows helpers to access states -2 and -3 through the <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#changed_helper_keyctrl">keyctrl</a> parameter.</p>
+<p>Most notably, Ikemen GO also offers 2 new global states:
+* StateDef -4: This state functions like State -2, except that is not halted by Pause/SuperPause and can be used by helpers without any limitations (even if keyctrl is set to 0).<br/>
+* StateDef +1: This state functions like State -4, except that it is processed after the character's current state. This allows some checks that are not possible in negative states.</p>
+<p>States in Ikemen GO are processed in this order: <code>-4</code>, <code>-3</code>, <code>-2</code>, <code>-1</code>, <code>normal states</code>, <code>+1</code></p>
+<p><strong>Global state execution quick reference</strong>
+State | Pause | Custom State | Helper States
+--- | :---: | :---:| :---:
+-4 | ✔️ | ✔️ | ✔️ 
+-3 | ❌ | ❌ | ❌
+-2 | ❌ | ✔️ | ❌
+-1 | ❌ | ❌ | ❌
++1 | ✔️ | ✔️ | ✔️</p>
+<h1 id="guard-break-mechanics"><a name="guardbreak">Guard Break mechanics</a></h1>
+<p>Ikemen GO offers common solution for Guard Break (Guard Crush) mechanics, often found in commercial games.</p>
+<p>When this feature is enabled in options, the character loses Guard Points by blocking attacks. Once there are no Guard Points left, the character goes into Guard Break state (short stun period in which they are vulnerable).</p>
+<p>Guard Break functionality can be adjusted via <code>data/guardbreak.zss</code> file. Individual states listed there can be overridden by adding them to character's own code, and the negative states can be disabled on a per-character basis, by setting <code>Default.Enable.GuardBreak</code> to 0 in character's CNS file under <a href="Character-features.html#cns_constants">[Constants]</a> section.</p>
+<p>Exact Guard Points damage value can be assigned directly in HitDef, via optional <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#changed_hitdef_guardpoints">guardpoints</a> parameter. If omitted, it defaults to <em>hit_damage</em> (from HitDef <code>damage</code> parameter) multiplied by the value of <code>Default.LifeToGuardPointsMul</code> / <code>Super.LifeToGuardPointsMul</code> specified in <code>data/common.const</code>.</p>
+<p>Guard Points will start to recover, if character menages to avoid pressure (blocking and receiving damage) for a while.</p>
+<p>Amount of Guard Points to start with can be set via <a href="Character-features.html#cns_data_guardpoints">guardpoints</a> parameter under character's cns [Data] section. If omitted, it defaults to <em>Life</em> parameter.</p>
+<p>Guard Points can be optionally visualized by meter, via lifebar <a href="Lifebar-features.html#new_guardbar">[GuardBar]</a> section. Blocking attacks decreases the meter (empty guard meter means that the character has no Guard Points left and is forced to Guard Break state)</p>
+<p>State numbers reserved by Ikemen GO Guard Break implementation, as defined in <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#CommonConst">common.const</a>:</p>
+<pre><code class="language-ini">; guardbreak.zss states
+StateGuardBreakHit = 6565400
+StateGuardBreakRecover = 6565401
+</code></pre>
+<h1 id="input-options"><a name="inputoptions">Input Options</a></h1>
+<p>The <code>config.ini</code> file allows setting some extra input options.</p>
+<h2 id="button-assist"><a name="inputoptions_buttonassist">Button Assist</a></h2>
+<p>Mugen's input parser can be erratic when it comes to input delay. This delay, however, can make pressing two buttons simultaneously easier to do than in a classic arcade fighting game.
+Because many players are used to this extra leniency, Ikemen GO offers the option to delay button presses by a single frame to make simultaneous button presses easier to perform as in Mugen.</p>
+<pre><code class="language-ini">ButtonAssist = 1
+</code></pre>
+<h2 id="socd-resolution"><a name="inputoptions_socdresolution">SOCD Resolution</a></h2>
+<p>This setting allows defining how you want SOCD (simultaneous opposing cardinal directions) to be resolved by the engine. In other words, you can define what should happen if a player presses forward and back or up and down simultaenously.</p>
+<blockquote>
+<p>0 = No resolution<br/>
+Allows pressing both directions at the same time. Mugen behavior.  </p>
+<p>1 = Last input priority<br/>
+Only the last direction is registered.  </p>
+<p>2 = Absolute priority<br/>
+F has priority over B. U has priority over D.</p>
+<p>3 = First direction priority<br/>
+Only the first direction is registered.  </p>
+<p>4 = Deny either direction<br/>
+Nothing happens. Ikemen behavior up until version 0.99. Default behavior.  </p>
+</blockquote>
+<p>Currently this feature only works in offline play. During netplay type 4 is enforced.  </p>
+<pre><code class="language-ini">SOCDResolution = 4
+</code></pre>
+<h1 id="guarding-and-frame-advantage"><a name="guarding_frameadvantage">Guarding and frame advantage</a></h1>
+<p>In Mugen, characters will check if they should start guarding before processing their states. This makes it so that a character is unable to guard in the same frame where they return to an idle state, and wrongly makes them able to guard in the first frame of an attack.</p>
+<p>In Ikemen GO, a character's states will be processed before checking if the character should start guarding. This allows a character to guard in the same frame that they return to an idle state. This is similar to most fighting games, but the opposite of what Mugen did.</p>
+<p>Because of this change and to maintain backward compatibility, Mugen characters (without ikemenversion) inflict +1 "hittime" in every Hitdef.</p>
+<blockquote>
+<p>[!NOTE]
+For these reasons, frame data scripts developed for Mugen may be off by 1 frame when used in Ikemen GO.</p>
+</blockquote>
+<h1 id="gamepads-gamecontrollerdbtxt"><a name="gamepads">Gamepads (GameControllerDb.txt)</a></h1>
+<p>IKEMEN GO uses <strong>SDL's GameController system</strong> for gamepads. SDL turns your device's <strong>raw hardware inputs</strong> into a <strong>standardized controller layout</strong> (A/B/X/Y, Back/Start, L1/R1, etc.) using a mapping database.</p>
+<p>That means there are <strong>two separate layers</strong> you can change:</p>
+<p>1) <strong>IKEMEN GO bindings</strong> (what action Light Kick / Menu / etc. is bound to)<br/>
+2) <strong>SDL controller mapping</strong> (what your physical button is considered: A vs B vs X vs Y, which axis is "left stick", etc.)</p>
+<hr/>
+<h2 id="in-game-bindings">In-game bindings</h2>
+<p>Use this when the controller works and the buttons are <em>basically correct</em>, but you want different actions.</p>
+<ul>
+<li>Go to <strong>Options → Input Settings → Joystick Config</strong></li>
+<li>Bind IKEMEN GO actions to the standardized SDL buttons.</li>
+</ul>
+<p>This does <strong>not</strong> fix a controller whose physical buttons are being interpreted as the wrong SDL buttons.</p>
+<hr/>
+<h2 id="sdl-raw-remapping-fix-wrong-buttons-controller-not-detected"><a name="gamepads_fix">SDL raw remapping (fix wrong buttons / controller not detected)</a></h2>
+<p>Use this when:</p>
+<ul>
+<li>IKEMEN GO shows <strong>Controller not detected</strong>, or</li>
+<li>The controller is detected but <strong>face buttons / triggers / d-pad / axes are wrong</strong> (swapped, mismatched, inverted, etc.)</li>
+</ul>
+<p>SDL mappings are stored/overridden here:</p>
+<ul>
+<li><code>external/gamecontrollerdb.txt</code></li>
+</ul>
+<h3 id="steps">Steps</h3>
+<p>1) <strong>Connect the controller</strong>
+   * Plug it in and make sure the OS sees it (see troubleshooting if needed).</p>
+<p>2) <strong>Generate an SDL mapping line</strong>
+   * Use the SDL Gamepad Tool:<br/>
+     https://generalarcade.com/gamepadtool/
+   * Follow the prompts and copy the resulting <strong>single-line mapping string</strong>.</p>
+<p>3) <strong>Add/replace the mapping in IKEMEN GO</strong>
+   * Open: <code>external/gamecontrollerdb.txt</code>
+   * Paste the mapping on a <strong>new line</strong>.
+   * If a line already exists for the same device, <strong>remove the old one</strong> (duplicates can cause confusing results).
+   * Save.</p>
+<p>4) <strong>Restart IKEMEN GO</strong>
+   * Fully close and re-open.</p>
+<p>5) <strong>Rebind actions (optional)</strong>
+   * Back to <strong>Options → Input Settings → Joystick Config</strong> to bind game actions.</p>
+<h3 id="submit-your-mapping-upstream"><a name="gamepads_submit">Submit your mapping upstream</a></h3>
+<p>If your mapping is accepted into SDL's community database, future Ikemen GO builds (that always ship latest SDL mappings) will recognize your controller without manual edits.</p>
+<p>Submit here:
+https://github.com/mdqinc/SDL_GameControllerDB</p>
+<p>Include:
+* the mapping line from the tool
+* adapter/controller name (example: <code>"SANWA SUPPLY JY-PSUAD2 + DUALSHOCK 2"</code>)
+* platform (Windows)</p>
+<hr/>
+<h2 id="troubleshooting"><a name="gamepads_troubleshooting">Troubleshooting</a></h2>
+<h3 id="1-steam-input-non-game-controller-layouts-wrong-buttons-taunts-on-a-double-inputs-in-menus">1) Steam Input / "Non-Game Controller Layouts" (wrong buttons, taunts on A, double inputs in menus)</h3>
+<p>Steam can apply <strong>Desktop / Non-Game Controller Layouts</strong> to your controller even if IKEMEN GO isn't launched through Steam. This commonly causes:
+* wrong actions from face buttons in-game (e.g. "A" sometimes triggers Taunt)
+* extra/double inputs in menus (mapping jumps to the next item and overwrites)
+* generally "bananas" UI behavior</p>
+<p><strong>Fix</strong>
+1. Open <strong>Steam → Settings → Controller</strong>
+2. Find <strong>Non-Game Controller Layouts</strong>
+3. Open <strong>Desktop Layout</strong> (and any other non-game layouts you use)
+4. Set to <strong>Disabled / empty bindings</strong> (or disable Steam Input for that layout)
+5. Restart IKEMEN GO</p>
+<hr/>
+<h3 id="2-menu-scrolling-repeats-too-fast-jittery-analog-analogdeadtime">2) Menu scrolling repeats too fast / jittery analog (AnalogDeadTime)</h3>
+<p>IKEMEN GO can rate-limit analog-axis menu scrolling via <code>config.ini</code>:</p>
+<pre><code class="language-ini">[Input]
+; Dead time (in ms) used to limit gamepad analog-axis scrolling behavior.
+AnalogDeadTime             = 20
+````
+
+* Increase it if menus "skip" entries (try **50–150**).
+* Decrease it if you want faster analog scrolling.
+
+---
+
+### 3) SDL Gamepad Tool doesn't detect the controller
+
+1. Verify Windows sees it:
+
+   * **Win+R → `joy.cpl`** (Game Controllers)
+2. Try a different USB port (prefer USB 2.0) and avoid unpowered hubs.
+
+---
+
+### 4) "Stuck axis" during joystick config (AxisSkip)
+
+Some adapters report an axis as permanently held (often triggers). If IKEMEN GO logs lines like:
+
+```txt
+[input_glfw.go][checkAxisForTrigger] 1.AXIS joy=0 i=2 s:-5 axes[i]=-1, name =
+</code></pre>
+<p>Note the number after <code>i=</code> (example: <code>2</code>). Then edit your line in <code>external/gamecontrollerdb.txt</code> and add an <code>AxisSkip</code> tag <strong>inside the controller name field</strong>.</p>
+<p>Pattern:</p>
+<ul>
+<li>Before:</li>
+<li><code>...,My Controller,platform:Windows,...</code></li>
+<li>After:</li>
+<li><code>...,My Controller AxisSkip_2,platform:Windows,...</code></li>
+</ul>
+<p>If another stuck axis appears later (e.g. <code>i=5</code>), append it:
+* <code>My Controller AxisSkip_2_5</code></p>
+<p>Repeat until the stuck-axis messages stop.</p>
+<h1 id="juggle-system"><a name="jugglesystem">Juggle system</a></h1>
+<p>The native juggle system used by characters behaves slightly differently from Mugen if the character has <code>ikemenversion</code>. It will generally behave in a more predictable way. The following changes are present:</p>
+<ul>
+<li>
+<p>Juggle points will be evaluated even if the enemy is not yet a target of the player</p>
+</li>
+<li>
+<p>Juggle points will not be evaluated if the enemy is not in a falling state</p>
+</li>
+</ul>
+<p>In addition, when a <code>StateDef</code> is not <code>movetype = A</code>, its <code>juggle</code> parameter will default to 0 rather than inheriting the previous state's value. This behavior currently does not require <code>ikemenversion</code>.</p>
+<h1 id="movelists"><a name="movelists">Movelists</a></h1>
+<p>Ikemen GO's pause menu allows viewing character's input commands during the game. The command data has to be assigned via th character's DEF file, under the <em>[Files]</em> section, using the new <a href="Character-features.html#def_files_movelist">movelist</a> parameter.</p>
+<p>The implementation is similar to the <a href="http://www.progettosnaps.net/command/">command.dat</a> format from MAME (the same concept, just with additional align and colors syntax, and more intuitive glyph naming conventions).</p>
+<p>Here is an example movelist declaration:</p>
+<pre><code>&lt;#f0f000&gt;:Throws:&lt;/&gt;
+Seoi Nage               [_B/_F]_+[^MP/^HP]
+Tsukami Nage                [_B/_F]_+[^MK/^HK]
+
+&lt;#f0f000&gt;:Air Throw:&lt;/&gt;
+Izuna Otoshi                _AIR[_B/_F]_+[^MP/^HP]
+
+&lt;#f0f000&gt;:Command Moves:&lt;/&gt;
+Hiji Otoshi             _AIR_D_+^MP
+Kubi Kudaki             _F_+^MP
+Kamaitachi              _DF_+^HK
+Sankaku Tobi                _AIRcorner_F
+
+&lt;#f0f000&gt;:Special Moves:&lt;/&gt;
+Forward Leap                _D_DF_F_+^P
+_!Bushin Izuna Otoshi           _)^P
+_!Izuna No Hiji Otoshi          _(^P
+Houzantou               _D_DB_B_+^P
+</code></pre>
+<p>Which, with default screenpack and art resources distributed with the engine, is automatically converted to look like this in-game:</p>
+<p><img alt="movelist" src="../assets/bd60a1eba7056bb2.png"/></p>
+<p>A <code>movelist.dat</code> file is a normal text file in which text can be mixed with image references (known as <em>glyphs</em>). Declared glyphs (by default prefixed with <code>_</code> and <code>^</code>, followed by uppercase letters or symbols) are swapped with appropriate images scaled to match the font height. Enclosing a portion of text between <code>&lt;#hex_rgba&gt;&lt;/&gt;</code> (where <code>hex_rgba</code> is an HTML-style RGBA hex color, such as <code>#ffffffff</code>) changes text color. Text alignment can be adjusted in each line via TAB key (none = left align, 1 TAB = text centered, 2 or more = right align). Other than that, the file's text is rendered exactly as-is.</p>
+<p>Refer to <em>chars/kfm/movelist.dat</em> for another example of movelist declaration.</p>
+<p>Glyph sprits in an SFF file are expected to have the offsets: x = 0, y = sprite height. It is recommended to use a resolution of 64x64 for glyphs. New glyphs can be added into an SFF file and declared via a screenpack DEF file under the new <code>[Glyphs]</code> section, using the following format:
+<code>glyphTextRef = spriteGroup, spriteIndex</code></p>
+<p>Below is an example declaring two new glyphs, <code>^3P</code> and <code>_QCF</code>:</p>
+<pre><code class="language-ini">[Glyphs]
+^3P = 64, 0
+_QCF = 109, 0
+</code></pre>
+<p>Refer to the <code>[Menu]</code> section in the screenpack's DEF file distributed with the engine (<em><code>data/system.def</code></em>) for a list of parameters that can be used to adjust fonts, scale, positioning etc.</p>
+<p>Below is a list of all the glyphs included with Ikemen GO by default:</p>
+<table border="1" class="tftable">
+<tr><th>Image</th><th>Glyph</th><th>Sprite</th><th>Comment</th></tr>
+<tr><td><img <="" src="../assets/dec84c78d0657c9f.png" td=""/><td>^A</td><td>1, 0</td><td>A</td></td></tr>
+<tr><td><img <="" src="../assets/c1afcbc2b09fefbf.png" td=""/><td>^B</td><td>2, 0</td><td>B</td></td></tr>
+<tr><td><img <="" src="../assets/abadec236f627769.png" td=""/><td>^C</td><td>3, 0</td><td>C</td></td></tr>
+<tr><td><img <="" src="../assets/cb3d1f699f7ac703.png" td=""/><td>^D</td><td>4, 0</td><td>D</td></td></tr>
+<tr><td><img <="" src="../assets/5e9c0d30faf1c2b0.png" td=""/><td>^W</td><td>23, 0</td><td>W</td></td></tr>
+<tr><td><img <="" src="../assets/4d51f37f540c7db7.png" td=""/><td>^X</td><td>24, 0</td><td>X</td></td></tr>
+<tr><td><img <="" src="../assets/4c88c89c5be9b013.png" td=""/><td>^Y</td><td>25, 0</td><td>Y</td></td></tr>
+<tr><td><img <="" src="../assets/61d3893a1a5ab50a.png" td=""/><td>^Z</td><td>26, 0</td><td>Z</td></td></tr>
+<tr><td><img <="" src="../assets/6a0b742700f719d5.png" td=""/><td>_+</td><td>39, 0</td><td>+ (press at the same time as previous button)</td></td></tr>
+<tr><td><img <="" src="../assets/fb4abacba8b06a2d.png" td=""/><td>_.</td><td>40, 0</td><td>...</td></td></tr>
+<tr><td><img <="" src="../assets/404946ad91c4a2e7.png" td=""/><td>_DB</td><td>41, 0</td><td>Down-Back</td></td></tr>
+<tr><td><img <="" src="../assets/f4829584744a401d.png" td=""/><td>_D</td><td>42, 0</td><td>Down</td></td></tr>
+<tr><td><img <="" src="../assets/d39c1ca60d80f106.png" td=""/><td>_DF</td><td>43, 0</td><td>Down-Forward</td></td></tr>
+<tr><td><img <="" src="../assets/69e25c318056e6bf.png" td=""/><td>_B</td><td>44, 0</td><td>Back</td></td></tr>
+<tr><td><img <="" src="../assets/5406947ca9a56195.png" td=""/><td>_F</td><td>46, 0</td><td>Forward</td></td></tr>
+<tr><td><img <="" src="../assets/95e97f2d5c20a9f7.png" td=""/><td>_UB</td><td>47, 0</td><td>Up-Back</td></td></tr>
+<tr><td><img <="" src="../assets/bc28608a846c31b4.png" td=""/><td>_U</td><td>48, 0</td><td>Up</td></td></tr>
+<tr><td><img <="" src="../assets/bfaf1a861abdef15.png" td=""/><td>_UF</td><td>49, 0</td><td>Up-Forward</td></td></tr>
+<tr><td><img <="" src="../assets/16641944017134c4.png" td=""/><td>^S</td><td>51, 0</td><td>Start</td></td></tr>
+<tr><td><img <="" src="../assets/b44fa82a83411261.png" td=""/><td>^M</td><td>52, 0</td><td>Menu (Select/Back)</td></td></tr>
+<tr><td><img <="" src="../assets/eb16ffb324d6022d.png" td=""/><td>^P</td><td>53, 0</td><td>Any Punch (X / Y / Z)</td></td></tr>
+<tr><td><img <="" src="../assets/2317d020c159f8e2.png" td=""/><td>^K</td><td>54, 0</td><td>Any Kick (A / B / C)</td></td></tr>
+<tr><td><img <="" src="../assets/28db840372595d3a.png" td=""/><td>^LP</td><td>57, 0</td><td>Light Punch (X)</td></td></tr>
+<tr><td><img <="" src="../assets/00649ee5a3fdffbc.png" td=""/><td>^MP</td><td>58, 0</td><td>Medium Punch (Y)</td></td></tr>
+<tr><td><img <="" src="../assets/bc6933a624d0fe50.png" td=""/><td>^HP</td><td>59, 0</td><td>Heavy Punch (Z)</td></td></tr>
+<tr><td><img <="" src="../assets/75fffc65ad5c170f.png" td=""/><td>^LK</td><td>60, 0</td><td>Light Kick (A)</td></td></tr>
+<tr><td><img <="" src="../assets/fc7648e31811368b.png" td=""/><td>^MK</td><td>61, 0</td><td>Medium Kick (B)</td></td></tr>
+<tr><td><img <="" src="../assets/7376d6f61131ba92.png" td=""/><td>^HK</td><td>62, 0</td><td>Heavy Kick (C)</td></td></tr>
+<tr><td><img <="" src="../assets/3bdc074bef7afce3.png" td=""/><td>^3K</td><td>63, 0</td><td>3 Kick (A+B+C)</td></td></tr>
+<tr><td><img <="" src="../assets/fcb2da73046f11a5.png" td=""/><td>^3P</td><td>64, 0</td><td>3 Punch (X+Y+Z)</td></td></tr>
+<tr><td><img <="" src="../assets/bcbc137c27a81d1d.png" td=""/><td>^2K</td><td>65, 0</td><td>2 Kick (A+B / B+C / A+C)</td></td></tr>
+<tr><td><img <="" src="../assets/4311ab2255041296.png" td=""/><td>^2P</td><td>66, 0</td><td>2 Punch (X+Y / Y+Z / X+Z)</td></td></tr>
+<tr><td><img <="" src="../assets/965ee140a23144a9.png" td=""/><td>_-</td><td>90, 0</td><td>Arrow (tap following Button immediately - use in combos)</td></td></tr>
+<tr><td><img <="" src="../assets/886a3c2ed91804ef.png" td=""/><td>_!</td><td>91, 0</td><td>Continue Arrow (follow with this move)</td></td></tr>
+<tr><td><img <="" src="../assets/4850691f98789e5f.png" td=""/><td>~DB</td><td>92, 0</td><td>hold Down-Back</td></td></tr>
+<tr><td><img <="" src="../assets/8993c49c0774a1ec.png" td=""/><td>~D</td><td>93, 0</td><td>hold Down</td></td></tr>
+<tr><td><img <="" src="../assets/ffd44375ebf16286.png" td=""/><td>~DF</td><td>94, 0</td><td>hold Down-Forward</td></td></tr>
+<tr><td><img <="" src="../assets/13e7c081ed6a8b8e.png" td=""/><td>~B</td><td>95, 0</td><td>hold Back</td></td></tr>
+<tr><td><img <="" src="../assets/6d0ac18343fa253f.png" td=""/><td>~F</td><td>96, 0</td><td>hold Forward</td></td></tr>
+<tr><td><img <="" src="../assets/79564d51cbde022d.png" td=""/><td>~UB</td><td>97, 0</td><td>hold Up-Back</td></td></tr>
+<tr><td><img <="" src="../assets/146ebe68751af70b.png" td=""/><td>~U</td><td>98, 0</td><td>hold Up</td></td></tr>
+<tr><td><img <="" src="../assets/ff610cc61e54892d.png" td=""/><td>~UF</td><td>99, 0</td><td>hold Up-Forward</td></td></tr>
+<tr><td><img <="" src="../assets/ba2b23f447ab42db.png" td=""/><td>_HCB</td><td>100, 0</td><td>1/2 Circle Back</td></td></tr>
+<tr><td><img <="" src="../assets/b40723ef53ab2564.png" td=""/><td>_HUF</td><td>101, 0</td><td>1/2 Circle Forward Up</td></td></tr>
+<tr><td><img <="" src="../assets/1cbe9cec26812958.png" td=""/><td>_HCF</td><td>102, 0</td><td>1/2 Circle Forward</td></td></tr>
+<tr><td><img <="" src="../assets/47acdce0f1be6dfb.png" td=""/><td>_HUB</td><td>103, 0</td><td>1/2 Circle Back Up</td></td></tr>
+<tr><td><img <="" src="../assets/b67b05500f8020bf.png" td=""/><td>_QFD</td><td>104, 0</td><td>1/4 Circle Forward Down</td></td></tr>
+<tr><td><img <="" src="../assets/18576fad3bf03f1c.png" td=""/><td>_QDB / _QCB</td><td>105, 0</td><td>1/4 Circle Down Back</td></td></tr>
+<tr><td><img <="" src="../assets/dd7d04486bc16e2d.png" td=""/><td>_QBU</td><td>106, 0</td><td>1/4 Circle Back Up</td></td></tr>
+<tr><td><img <="" src="../assets/3d0df670e5d953ee.png" td=""/><td>_QUF</td><td>107, 0</td><td>1/4 Circle Up Forward</td></td></tr>
+<tr><td><img <="" src="../assets/10e56a0aada4674e.png" td=""/><td>_QBD</td><td>108, 0</td><td>1/4 Circle Back Down</td></td></tr>
+<tr><td><img <="" src="../assets/3af23bcb22a8f3cc.png" td=""/><td>_QDF / _QCF</td><td>109, 0</td><td>1/4 Circle Down Forward</td></td></tr>
+<tr><td><img <="" src="../assets/978a9c0f7da92c38.png" td=""/><td>_QFU</td><td>110, 0</td><td>1/4 Circle Forward Up</td></td></tr>
+<tr><td><img <="" src="../assets/c04e3a2590319a91.png" td=""/><td>_QUB</td><td>111, 0</td><td>1/4 Circle Up Back</td></td></tr>
+<tr><td><img <="" src="../assets/539f1155cf84d5e4.png" td=""/><td>_FDF</td><td>112, 0</td><td>Full Clock Forward</td></td></tr>
+<tr><td><img <="" src="../assets/aa7eb2f73a65ab9a.png" td=""/><td>_FUB</td><td>113, 0</td><td>Full Clock Back</td></td></tr>
+<tr><td><img <="" src="../assets/f63da76dcc88fdf1.png" td=""/><td>_FUF</td><td>114, 0</td><td>Full Count Forward</td></td></tr>
+<tr><td><img <="" src="../assets/7475afebb78a8883.png" td=""/><td>_FDB</td><td>115, 0</td><td>Full Count Back</td></td></tr>
+<tr><td><img <="" src="../assets/a7c93081ffb27df9.png" td=""/><td>_XFF</td><td>116, 0</td><td>2x Forward</td></td></tr>
+<tr><td><img <="" src="../assets/25be28c1820577f9.png" td=""/><td>_XBB</td><td>117, 0</td><td>2x Back</td></td></tr>
+<tr><td><img <="" src="../assets/da042c22dd8779e6.png" td=""/><td>_DSF</td><td>118, 0</td><td>Dragon Screw Forward</td></td></tr>
+<tr><td><img <="" src="../assets/5957963cd5bd5d44.png" td=""/><td>_DSB</td><td>119, 0</td><td>Dragon Screw Back</td></td></tr>
+<tr><td><img <="" src="../assets/27925100eb309f7b.png" td=""/><td>_AIR</td><td>121, 0</td><td>AIR</td></td></tr>
+<tr><td><img <="" src="../assets/9c018e2c8f7b4a7a.png" td=""/><td>_TAP</td><td>122, 0</td><td>TAP</td></td></tr>
+<tr><td><img <="" src="../assets/eeacd4d4d65aecfa.png" td=""/><td>_MAX</td><td>123, 0</td><td>MAX</td></td></tr>
+<tr><td><img <="" src="../assets/1bb7fc38479654a9.png" td=""/><td>_EX</td><td>124, 0</td><td>EX</td></td></tr>
+<tr><td><img <="" src="../assets/4258b261e327448f.png" td=""/><td>_^</td><td>127, 0</td><td>Air</td></td></tr>
+<tr><td><img <="" src="../assets/58c1e1ca125689fa.png" td=""/><td>_=</td><td>128, 0</td><td>Squatting</td></td></tr>
+<tr><td><img <="" src="../assets/0d7055e1b39df33e.png" td=""/><td>_)</td><td>129, 0</td><td>Close</td></td></tr>
+<tr><td><img <="" src="../assets/702880a4ddccd9ec.png" td=""/><td>_(</td><td>130, 0</td><td>Away</td></td></tr>
+<tr><td><img <="" src="../assets/5d80d8a70de5d8de.png" td=""/><td>_`</td><td>135, 0</td><td>Small Dot</td></td></tr>
+<tr><td><img <="" src="../assets/a56905c4dfe17f8b.png" td=""/><td>_CHARGE</td><td>136, 0</td><td>Charge</td></td></tr>
+<tr><td><img <="" src="../assets/3e6edd3564546d43.png" td=""/><td>_HOLD</td><td>137, 0</td><td>Hold</td></td></tr>
+<tr><td><img <="" src="../assets/af23a1e9b2653ef5.png" td=""/><td>_RELEASE</td><td>138, 0</td><td>Release</td></td></tr>
+<tr><td><img <="" src="../assets/79c2a2feecc23a2e.png" td=""/><td>_MASH</td><td>139, 0</td><td>Mash</td></td></tr>
+<tr><td><img <="" src="../assets/163207f2e58eee2b.png" td=""/><td>_CLOSE</td><td>140, 0</td><td>Close</td></td></tr>
+<tr><td><img <="" src="../assets/87f8ada5313a33cf.png" td=""/><td>_FAR</td><td>141, 0</td><td>Far</td></td></tr>
+<tr><td><img <="" src="../assets/9e267533b6a0978f.png" td=""/><td>_AIROK</td><td>142, 0</td><td>AIR OK</td></td></tr>
+<tr><td><img <="" src="../assets/2c12b1c3a2dbc78a.png" td=""/><td>_THROW</td><td>143, 0</td><td>Throw</td></td></tr>
+<tr><td><img <="" src="../assets/3fba33f0ea11a358.png" td=""/><td>_COUNTER</td><td>144, 0</td><td>Counter</td></td></tr>
+</table>
+<h1 id="mugen-compatibility-indicator"><a name="mugencompatibilityindicator">Mugen Compatibility Indicator</a></h1>
+<p>When a Mugen character is loaded, the clipboard will print a message indicating which compatibility mode the character is using (WinMugen, 1.0 or 1.1). This is important because the behavior of some state controllers may change according to it.</p>
+<h1 id="midi-playback"><a name="midi">MIDI playback</a></h1>
+<p>Ikemen GO supports playback of MIDI files with use of a soundfont (.sf2) file. This file is not included in Ikemen GO by default, but can be supplied by placing a <code>soundfont.sf2</code> file into the <code>sound</code> directory.</p>
+<h1 id="new-buttons"><a name="buttons">New buttons</a></h1>
+<p>Ikemen GO supports 2 more button assignments: <code>d</code> and <code>w</code>. By default they're declared in common.cmd file and are used by common tag  code (tag.zss) to switch tag team players.</p>
+<h1 id="netplay"><a name="netplay">Netplay</a></h1>
+<h2 id="general-information"><a name="netplay_general">General information</a></h2>
+<p>In Ikemen GO there are no dedicated servers, one player hosts and the other connects. Ikemen's netcode is your typical delay-based netcode. Because of how peer-to-peer netplay works (the engine only sends inputs and waits to the other player to receive them), both players essentially need the same game and configuration (all options from <code>Game Settings</code> and <code>Engine Settings</code> should not differ, e.g. speed, life, time etc. Video, Audio, and Input settings can be unique to each game since they don't affect gameplay)</p>
+<p>The host never has to enter anything in the IP window when attempting netplay; the peer, however, needs to enter the host's public IP. By default, simply doing that won't work, even with Ikemen Go being allowed through the firewall.</p>
+<p>A common solution is for the host to <a href="https://www.noip.com/support/knowledgebase/general-port-forwarding-guide/">forward port</a> 7500 (or whatever port they want to use, most people leave it at the default of 7500) through their router settings; doing so allows the peer to enter the host's public IP when connecting and all should be good. Be aware that the peer does not need to port forward, just the host.</p>
+<p>The process can be streamlined by using VLAN/LANbridgers/tunneling software like Hamachi and Radmin. Both players will need to install the same software and occupy the same room/lobby/whatever, with the peer entering the host's IP address as assigned by the software (instead of sharing their public IP).</p>
+<p>If this has all been done correctly and you're still not able to connect, make sure Ikemen GO and the VLAN are allowed through your firewall. Also try swapping who's hosting, as sometimes people aren't able to host, but can connect just fine.</p>
+<p>However, it's possible to open multiple instances and play online.</p>
+<h2 id="hamachi-lan"><a name="netplay_hamachi">Hamachi LAN</a></h2>
+<p>You can setup a <a href="https://www.vpn.net">Hamachi LAN</a> which allows people in your Hamachi network to connect to your LAN server via Hamachi connection.</p>
+<p><strong>Setup</strong>
+1. Get your friends to join your Hamachi network. (Network&gt;Join an existing network...)</p>
+<p><strong>Host</strong>
+1. Set the Hamachi options and open the LAN network.
+2. Distribute the virtual IPv4 (IP) address in the 25.x.x.x range to the other players; this can be done over Hamachi's chat window or another chat method.
+3. Start IKEMEN and go to "Network".
+4. Press "Host Game" and wait for your opponent to join.</p>
+<p><strong>Other Players</strong>
+1. Start IKEMEN and go to "Network".
+2. Press "Join Game" and "New Address" (if it's the first time you're connecting to this opponent)
+3. Enter the opponent name into IKEMEN. Press Enter.
+4. Type in virtual IPv4 (IP) address that you've received from your oppoent. Press Enter. You are now done adding in your opponent to your list of names to connect to.
+5. The network game will start after selecting the player's name that is currently hosting a game.</p>
+<h1 id="order-select"><a name="orderselect">Order Select</a></h1>
+<p>Ikemen GO expands Mugen versus screen order switching system with a more advanced implementation inspired by commercial games, such as King of Fighters and Capcom vs SNK 2.</p>
+<p>To maintain backward compatibility with Mugen screenpacks, by default the new system visually doesn't differ from normal versus screen, with all action buttons being set to confirm currently selected order. To enable full order select functionality, appropriate parameters needs to be added into your screenpack <em>system.def</em> file. Refer to <em>data/system.base.def</em> <code>[VS Screen]</code> section for a full list of available order parameters.</p>
+<p>After assembling your team (all team modes are valid), you can change your team order before each match start loading. The order switching is achieved by pressing buttons associated with particular team position (for example A, B, X, Y), until you select all fighters in your team (with last team member being selected automatically). For CPU controlled side, order selection is randomized.</p>
+<p>You can press skip button (Start by default) at any time to stop changing the order. In such case your remaining team slots will be filled in the order the characters were originally selected. Optionally additional timer can be implemented to limit amount of time player has for making the order decision.</p>
+<p>Screenpack can be set to display visual feedback how many team members still needs to be selected, but the exact order position fighters occupy is revealed only when both sides confirm their order (which results in characters portraits and icons changing to optional <em>done</em> variant, with portraits and names positioning adjusted in order of selected team members).</p>
+<p>By default Order Select system is enabled in following <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#modes">game modes</a>: <em>arcade</em>, <em>bossrush</em>, <em>freebattle</em>, <em>netplayversus</em>, <em>survival</em>, <em>timeattack</em>, <em>versus</em>. Order Select can be also disabled on per team side basis - if team consist of only a single character, or if it's disabled by appropriate <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#arcs_functions_launchfight">launchFight</a> function argument.</p>
+<h1 id="rankings"><a name="rankings">Rankings</a></h1>
+<p>Game modes that have certain goal to achieve log data of your achievements forming high score tables (rankings). Depending on game mode goal, different data is displayed in ranking tables: total <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#score">score</a>, time to clear the mode, amount of enemies beaten. By default there are 10 logged results rendered in ranking. Scoring better than the worst logged result allows player to enter his or her name during ranking screen and the result is being logged in the <code>save/stats.json</code> file. Playthrough assisted with debug keys is not logged for future use.</p>
+<p>How rankings look like can be adjusted via <code>[Hiscore Info]</code> screenpack section (refer to default system.def distributed with engine for a working example).</p>
+<p>Rankings are displayed in following situations:
+- in modes that can be "cleared" when there are no more matches left (either due to losing and not having any credits left, or finishing whole mode), after results screen
+- as part of the <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#attract">attract mode</a> loop
+- by pressing start button when any of the modes that produces rankings is higlighted in main menu (needs at least 1 hiscore data already logged, key can be changed or disabled via <code>menu.hiscore.key</code> parameter under screenpack <em>[Title Info]</em>)</p>
+<h1 id="red-life-mechanics"><a name="redlife">Red Life mechanics</a></h1>
+<p>Ikemen GO offers common solution for Red Life mechanics, often found in commercial games with Tag mode.</p>
+<p>When this feature is enabled in options, characters utilize a Red Life bar in addition to their regular Life bar.</p>
+<p>Red Life measures how much life a character can recover under the right conditions. Its working principle is that characters start each round with their secondary Red Life bar set to the same value as their maximum Life. Whenever a character takes damage, a percentage of it is subtracted from their Red Life. When the character is resting, their Life recovers slowly until it is the same as their Red Life. Life regeneration implementation can be adjusted via <code>data/tag.zss</code> file.</p>
+<p>Exact Red Life value can be assigned directly in HitDef, via optional <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#changed_hitdef_redlife">redlife</a> parameter. If omitted, it defaults to hit_damage (from HitDef damage parameter) multiplied by the value of <code>Default.LifeToRedLifeMul</code> (for normal and special attacks) or <code>Super.LifeToRedLifeMul</code> (for hyper attacks) specified in <code>data/common.const</code>. <em>TargetLifeAdd</em> by default also affects Red Life and is multiplied by this constant.</p>
+<p>Dedicated state controllers can be used to manually control red life value: <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_targetredlifeadd">TargetRedLifeAdd</a>, <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_redlifeadd">RedLifeAdd</a>, <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_redlifeset">RedLifeSet</a>.</p>
+<p>Red Life can be optionally visualized under [LifeBar] section, via <a href="Lifebar-features.html#existing_lifebar_redlife">pX.red</a> element. Since life recovery happens (by default) only when character is tagged out, visualizing Red Life only makes sense for <a href="Lifebar-features.html#new_taglifebar">[Tag LifeBar]</a> section and its variants.</p>
+<h1 id="save-files"><a name="save">Save files</a></h1>
+<p>Configuration, game stats, replays and error logs are stored in the <code>save</code> directory.</p>
+<h1 id="score-system"><a name="score">Score system</a></h1>
+<p>Ikemen GO has in-engine support for scores that is flexible enough to allow creating both Capcom vs SNK 2 style GP System (float values, same move affecting both attacker's and opponent's score) as well as traditional Street Fighter style scores. Values can be assigned directly in HitDef sctrl, scores are remembered between matches, lifebar def file has now [Score] section, where you can adjust how it will be rendered in-game.</p>
+<p>By default the engine is also distributed with score.zss file, which contains global code that works for all characters without patching, implementing default score rewards (HitDef score assignment prevents default score reward for damage dealt).</p>
+<p>The default score reward system is easy to edit (score.zss has self-explanatory code, thanks to the extensive use of dedicated triggers and named maps), follows score rewards known from classic Capcom fighting games (designed after Street Fighter Alpha 3, tracks everything that game gave score rewards for, using roughly the same values), and is tied to damage in order to give comparable results to all mugen characters.</p>
+<h1 id="shaders"><a name="shaders">Shaders</a></h1>
+<p>I.K.E.M.E.N-Go supports OpenGL shaders written as paired .frag and .vert files. The .frag and .vert must be identically named and are case-sensitive on UNIX platforms. OpenGL 2.1 (<code>#version 120</code>), OpenGL 3.2 (<code>#version 150</code>) and Vulkan 1.3 (SPIR-V) are supported; keep in mind shaders written for one platform may not support the other unless the differences are properly accounted for. The default <a href="https://github.com/ikemen-engine/Ikemen-GO/tree/develop/external/shaders">shaders included with the engine</a> include support for both OpenGL 2.1, OpenGL 3.2 and Vulkan 1.3(SPIR-V compiled from glsl version 450) so it is recommended that you study these default shaders for reference when converting or writing your own shaders for the engine.</p>
+<p>Ikemen GO does not support on the fly compilation of SPIR-V shader from glsl file. You will have to compile your own shaders into SPIR-V in order to use them in Vulkan. Install Vulkan SDK and use the following commands to compile glsl shaders to SPIR-V. 
+<code>glslc -fshader-stage=vert shader.vert.glsl -o shader.vert.spv -std=450</code>
+<code>glslc -fshader-stage=frag shader.frag.glsl -o shader.frag.spv -std=450</code></p>
+<p>For more information on writing OpenGL shaders, please read the <a href="https://www.khronos.org/opengl/wiki/OpenGL_Shading_Language">official Khronos documentation</a> for the OpenGL shading language. Specifically, the <a href="https://www.khronos.org/opengl/wiki/Core_Language_(GLSL)">Core Language Specification</a> may be of particular interest.</p>
+<p>Select the shaders in the options menu (or add them in config.ini) in the order you want them processed.</p>
+<h2 id="custom-sprite-shaders"><a name="shaders_custom">Custom Sprite Shaders</a></h2>
+<p>IKEMEN GO allows users to replace the default sprite rendering shader <a href="https://github.com/ikemen-engine/Ikemen-GO/blob/develop/src/shaders/sprite.frag.glsl">src/shaders/sprite.frag.glsl</a> with custom fragment shaders. This enables advanced visual effects like spatial distortion, dynamic glows, and normal mapping on a per character or per effect basis.
+<a href="Character-features.html#shaders">Characters can load their own custom shaders via their .def files.</a></p>
+<p>In addition to the standard variables provided by the default shader, custom shaders have access to several unique variables:</p>
+<p><strong>float iTime:</strong> </p>
+<p>Indicates the tick of seconds since the game started. The value is equivalent to GameTime / 60.0.</p>
+<p><strong>float sTime:</strong> </p>
+<p>Represents the tick of frames since the shader was applied. The count automatically stops when the game enters a pause or pause state.</p>
+<p><strong>vec2 iResolution:</strong> </p>
+<p>The current rendering resolution of the game.</p>
+<p><strong>float aspectRatio:</strong> </p>
+<p>Normally 1.0. If the aspect ratio is changed (e.g., via the pause menu), this value changes accordingly.</p>
+<p><strong>sampler2D bgl_RenderedTexture:</strong> </p>
+<p>Stores the texture obtained from the back buffer (the screen behind the sprite) at the exact moment the shader is called.  </p>
+<p>Note: The engine parses the shader file for the exact string "bgl_RenderedTexture". If it is found, the GrabPass process is executed. Because this operation is performance heavy, be aware that the capture will occur even if the string is commented out in your shader code.</p>
+<p><strong>sampler2D tex1, tex2:</strong> </p>
+<p>Custom textures or animations passed from state controllers. Useful for normal maps, masks, or displacement maps.</p>
+<p><strong>float p0 to p15:</strong> </p>
+<p>Dynamic parameters passed from CNS/ZSS state controllers using shaderparam.pX = value.</p>
+<details>
+<summary>Example Template</summary>
+
+Here is a basic template for creating a custom sprite shader that supports both OpenGL and Vulkan.
+
+
+<pre><code>//When converting to SPV, specify version 450
+//#version 450 core
+
+#if __VERSION__ &gt;= 450
+    // VULKAN PATH
+    #define COMPAT_TEXTURE texture
+    layout(binding = 1) uniform UniformBufferObject  {
+        vec4 x1x2x4x3;
+        vec4 tint;
+        vec3 add;
+        vec3 mult;
+        float alpha, gray, hue;
+        int mask;
+        bool isFlat, isRgba, isTrapez, neg;
+        float iTime;
+        vec2 iResolution;
+        float aspectRatio;
+        float sTime;
+    };
+    layout(push_constant, std430) uniform u {
+        vec4 palUV;
+        float p0, p1, p2, p3, p4, p5, p6, p7;
+        float p8, p9, p10, p11, p12, p13, p14, p15;
+    };
+    layout(binding = 2) uniform sampler2D tex;
+    layout(binding = 3) uniform sampler2D pal;
+    // Specifying the name of the bgl_texture to be used for GrabPass processing will execute the process of creating a BackBuffer
+    // Do not specify the name of the bgl_texture if you do not use a BackBuffer
+    layout(binding = 5) uniform sampler2D tex1;
+    layout(binding = 6) uniform sampler2D tex2;
+    layout(location = 0) in vec2 texcoord;
+    layout(location = 0) out vec4 FragColor;
+#else
+    // OPENGL / GLES PATH
+    #define COMPAT_VARYING in
+    #define COMPAT_TEXTURE texture
+    #ifdef GL_ES
+        precision highp float;
+        precision highp int;
+    #endif
+    out vec4 FragColor;
+
+    uniform sampler2D tex;
+    uniform sampler2D pal;
+    // Specifying the name of the bgl_texture to be used for GrabPass processing will execute the process of creating a BackBuffer
+    // Do not specify the name of the bgl_texture if you do not use a BackBuffer
+    uniform sampler2D tex1;
+    uniform sampler2D tex2;
+
+    uniform vec4 x1x2x4x3;
+    uniform vec4 tint;
+    uniform vec3 add, mult;
+    uniform float alpha, gray, hue;
+    uniform int mask;
+    uniform bool isFlat, isRgba, isTrapez, neg;
+
+    uniform float p0, p1, p2, p3, p4, p5, p6, p7;
+    uniform float p8, p9, p10, p11, p12, p13, p14, p15;
+
+    uniform float iTime;
+    uniform vec2 iResolution;
+    uniform float aspectRatio;
+    uniform float sTime;
+
+    COMPAT_VARYING vec2 texcoord;
+#endif
+
+vec3 rgb2hsv(vec3 c)
+{
+    vec4 K = vec4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    vec4 p = mix(vec4(c.bg, K.wz), vec4(c.gb, K.xy), step(c.b, c.g));
+    vec4 q = mix(vec4(p.xyw, c.r), vec4(c.r, p.yzx), step(p.x, c.r));
+
+    float d = q.x - min(q.w, q.y);
+    float e = 1.0e-10;
+    return vec3(abs(q.z + (q.w - q.y) / (6.0 * d + e)), d / (q.x + e), q.x);
+}
+
+vec3 hsv2rgb(vec3 c)
+{
+    vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
+    vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
+    return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
+}
+
+vec3 hue_shift(vec3 color, float dhue) {
+    vec3 colorhsv = rgb2hsv(color);
+    colorhsv.x = mod(colorhsv.x+dhue, 1.0);
+    return hsv2rgb(colorhsv);
+}
+
+vec4 GetIkemenPixel(vec2 uv) {
+    vec4 c;
+    vec3 neg_base = vec3(1.0);
+    vec3 final_add = add;
+    vec4 final_mul = vec4(mult, alpha);
+
+    // Select flat color or textures
+    if (isFlat) {
+        c = tint; 
+
+        // Treat flat colors like RGBA for math consistency
+        neg_base *= c.a;
+        final_add *= c.a;
+        final_mul.rgb *= alpha;
+    } else {
+        //vec2 uv = texcoord;
+        if (isTrapez) {
+            vec2 bounds = mix(x1x2x4x3.zw, x1x2x4x3.xy, uv.y);
+            float gap = bounds[1] - bounds[0];
+            #ifdef GL_ES
+                if (abs(gap) &lt; 0.0001) gap = 0.0001;
+            #endif
+            uv.x = (gl_FragCoord.x - bounds[0]) / gap;
+        }
+        c = COMPAT_TEXTURE(tex, uv);
+
+        // Select with or without palette
+        if (isRgba) {
+            if (mask == -1) c.a = 1.0;
+            neg_base *= c.a;
+            final_add *= c.a;
+            final_mul.rgb *= alpha;
+        } else {
+            // Palette lookup
+            #if __VERSION__ &gt;= 450
+                c = COMPAT_TEXTURE(pal, vec2(palUV[0]+palUV[2]*c.r*0.9966, palUV[1]));
+            #else
+                c = COMPAT_TEXTURE(pal, vec2(c.r*0.9966, 0.5));
+            #endif
+            if (mask == -1) c.a = 1.0;
+        }
+    }
+
+    // Apply PalFX
+    // Hue
+    if (hue != 0.0) {
+        c.rgb = hue_shift(c.rgb, hue);
+    }
+    // Invertall
+    if (neg) {
+        c.rgb = neg_base - c.rgb;
+    }
+    // Color
+    c.rgb = mix(vec3((c.r + c.g + c.b) / 3.0), c.rgb, 1.0 - gray);
+    // Add
+    c.rgb += final_add;
+    // Mul
+    c *= final_mul;
+
+    // Apply tint
+    // Sprites only, because flat colors are already tinted
+    if (!isFlat) {
+        c.rgb = mix(c.rgb, tint.rgb * c.a, tint.a);
+    }
+    return c;
+}
+// ----------------------
+
+
+void main() {
+    vec2 uv = texcoord;
+
+    vec4 baseColor = GetIkemenPixel(uv);
+
+    FragColor = baseColor;
+}
+</code></pre>
+</details>
+<h1 id="tag-team-mode"><a name="tag">Tag Team mode</a></h1>
+<p>New team mode option meant to be used with CNS/ZSS code that implements Tag system. The engine is distributed with <code>data/tag.zss</code> file, containing global tag code that works for all characters without patching. Individual states from this file can be overridden by adding them to character's own code, and the negative states can be disabled on a per-character basis, by setting <code>Default.Enable.Tag</code> to 0 in character's CNS file under <a href="Character-features.html#cns_constants">[Constants]</a> section.</p>
+<p><a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#changed_teammode">TeamMode</a> trigger recognizes this team mode as <code>Tag</code>. Unlike Simul mode, AI of the characters controlled by the player side is disabled.</p>
+<p>To enable Tag Mode option add following line to screenpack DEF file, under [Select Info]:</p>
+<pre><code class="language-ini">teammenu.itemname.tag = Tag ;or other name that you want to display in team selection screen
+</code></pre>
+<p>Ikemen GO is distributed with barebones implementation of tag system that by default allows players to switch only when point character is having control, staying on the ground, and is not being hit. This code can be used as a base code for custom tag implementations.</p>
+<p>If you're using some other tag system, default zss file assignment in <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#CommonStates">CommonStates</a> should be removed from config.json (or replaced with another CNS/ZSS file that handles this task, if the external tag system is meant to be installed this way - refer to readme file distributed with tag system of your choice)</p>
+<p>State numbers reserved by Ikemen GO tag implementation, as defined in <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#CommonConst">common.const</a>:</p>
+<pre><code class="language-ini">; tag.zss states
+StateTagEnteringScreen = 6565600
+StateTagLeavingScreen = 6565610
+StateTagWaitingOutside = 6565611
+StateTagJumpingIn = 6565620
+StateTagLanding = 6565621
+</code></pre>
+<h1 id="verbose-debug"><a name="verbose_debug">Verbose Debug</a></h1>
+<p>Most non-fatal errors that aren't printed to the in-game console will be printed to the command line. Errors such as unknown parameters in CNS, missing sprites or missing BGM files. For this reason it's advised to check it while debugging content.  </p>
+<h1 id="zss-file-format"><a name="zss">ZSS file format</a></h1>
+<p>ZSS (Zantei State Script), added in IKEMEN GO, is a state description format that can be used instead of CNS. The basic structure is the same as CNS, but the syntax is significantly different.</p>
+<p>Almost all CNS descriptions can be replaced with ZSS, and local variables and functions can be used as features that are not available in CNS. ZSS could be useful for the people who:
+* Feel that the CNS format is redundant.
+* Want to compress or reuse code.
+* Don't like to describe complicated processes many times.
+* Have programming experience.</p>
+<p>For a reference, check out <code>kfm_zss</code> character and the default ZSS files distributed with the engine, located in data directory.</p>
+<p>Full ZSS documentation is available here: https://github.com/ikemen-engine/Ikemen-GO/wiki/ZSS</p></body></html>

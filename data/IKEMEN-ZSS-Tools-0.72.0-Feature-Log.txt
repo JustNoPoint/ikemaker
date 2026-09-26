@@ -1,0 +1,22 @@
+IKEMaker 0.72.0
+
+CREATE-NEW AND STORYBOARD AUTHORING
+
+- Added a visual IKEMEN 1.0 storyboard editor.
+- Added starter creation for character openings, character endings, credits,
+  game openings, logo sequences, loading screens, game-over sequences, and
+  between-fight story scenes.
+- Each new storyboard creates a portable DEF and matching blank SFF and opens
+  directly in the visual editor.
+- Storyboard scenes can be added, duplicated, removed, previewed, and edited
+  for duration and clear color with transactional writes and recovery history.
+- Added direct storyboard creation and opening controls to Story & Dialogue.
+- Stage Workspace can now add normal, animated, and parallax backgrounds,
+  duplicate a background, or remove a background section.
+- Screenpack / Fight UI Workspace can now create screen sections and add
+  sprite, animation, or text/font elements to the selected screen.
+- Added the new commands to Quick Start, Create New, and Stages and
+  Screenpacks so users do not need to know which editor owns the feature.
+
+The storyboard formats follow bundled IKEMEN 1.0 documentation and remain
+plain editable DEF source. IKEMaker does not introduce a private runtime.

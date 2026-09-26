@@ -1,0 +1,20 @@
+'use strict';
+const assert=require('assert'),vm=require('vm'),modes=require('../src/interface_mode'),visibility=require('../src/mode_visibility');
+let mode='workspace';modes.configure({workspace:{getConfiguration:()=>({get:key=>key==='interfaceMode'?mode:undefined,inspect:()=>({globalValue:mode})})}},{});
+const listeners={},posted=[],style={textContent:'workspace',nonce:'keep-this-nonce'},field={value:'Unsubmitted report',selectionStart:4},options={dataset:{mode:'workspace',toolbarSurface:'air'},querySelector:()=>({})};let dialogOpen=false,notice,focused,updates=0;const focusTarget={focus:()=>{focused=true;}};
+const document={body:{append:value=>{notice=value;}},createElement:()=>({setAttribute(){}}),querySelector:selector=>selector==='dialog[open]'?(dialogOpen?{}:null):focusTarget,querySelectorAll:selector=>selector==='[data-ikemen-mode-style]'?[style]:selector==='[data-toolbar-surface]'?[options]:[],addEventListener:(type,fn,capture)=>{assert.equal(capture,true);listeners[type]=fn;}};
+Object.defineProperty(document.body,'innerHTML',{set(){throw Error('Mode switch must not replace the page');}});
+vm.runInNewContext(visibility.clientScript(),{document,ikemenModeVisibilityChanged:()=>updates++,addEventListener:(type,fn)=>{listeners[type]=fn;},vscode:{postMessage:message=>posted.push(message)}});
+const deliver=mode=>listeners.message({data:{type:'ikemenModeVisibility',mode,css:visibility.css(mode)}});
+assert.equal(posted[0].type,'ikemenModeReady');document.activeElement={closest:selector=>selector==='.launch-controls'};deliver('player');assert.equal(focused,true,'focus moves from hidden toolbar to Player navigation');document.activeElement=field;focused=false;assert.equal(options.dataset.mode,'player');assert.equal(updates,1);assert.equal(options.dataset.compact,'true');assert(style.textContent.includes('.launch-controls'));assert.equal(style.nonce,'keep-this-nonce');assert.equal(field.value,'Unsubmitted report');assert.equal(field.selectionStart,4);assert.equal(posted.at(-1).type,'viewerLayoutReady');
+dialogOpen=true;deliver('simple');assert.equal(options.dataset.mode,'player');assert(!notice.hidden);deliver('workspace');dialogOpen=false;listeners.close();assert.equal(options.dataset.mode,'workspace');assert.equal(updates,2,'dependent filters refresh after deferred mode application');assert.equal(options.dataset.compact,'false');assert(notice.hidden);assert.equal(style.textContent,'.player-navigation{display:none!important}');assert.equal(focused,false,'typing focus is not moved by a mode change');
+const count=posted.length;deliver('workspace');assert.equal(posted.length,count,'same mode must not reset layout');
+listeners.message({data:{type:'ikemenModeVisibility',mode:'bad',css:'bad'}});assert.equal(options.dataset.mode,'workspace');
+(async()=>{
+ const messages=[];let dispose;const panel={webview:{postMessage:async m=>{messages.push(m);}},onDidDispose:fn=>{dispose=fn;}};
+ assert.equal(await visibility.handle({type:'unrelated'},panel),false);
+ await visibility.handle({type:'ikemenModeReady'},panel);assert.equal(messages[0].mode,'workspace');mode='simple';await visibility.publish(mode);assert.equal(messages.at(-1).mode,'simple');
+ const broken={webview:{postMessage:async()=>{throw Error('disposed while broadcasting');}},onDidDispose(){}};await assert.rejects(visibility.handle({type:'ikemenModeReady'},broken));await visibility.publish('player');assert.equal(messages.at(-1).mode,'player','failed peer must not block other open pages');dispose();const before=messages.length;await visibility.publish('workspace');assert.equal(messages.length,before);
+ const html=require('../src/webview_policy').protect('<html><head>'+visibility.html()+'</head><body></body></html>');assert(/<style[^>]*nonce=/.test(html));
+ console.log('Live modes preserve page and nonce, defer dialogs, apply latest mode preferences, ignore repeats and tolerate disposed peers');
+})().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,0 +1,4 @@
+OriginalRelativePath,BaseGroup,ComputedGroup,ImageIndex,AxisX,AxisY,LayerNumber,LayerRole,ReviewStatus
+base/idle.png,0,0,0,0,0,0,base,APPROVED
+base/slp.png,200,200,0,0,0,0,base,APPROVED
+layer1/slp.png,200,10200,0,0,0,1,front,REVIEW

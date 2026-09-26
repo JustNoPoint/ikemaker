@@ -1,0 +1,13 @@
+IKEMEN ZSS Tools 0.55.0
+Modular production workflows and private-project boundary
+
+- Separates the reusable JNP production process from game-specific policy.
+- Adds bundled SF, DS vs SF, DS4 / Vampire Soldier, and HDBZ character profiles.
+- Keeps HDBZ compatible with the shared production foundation without placing it in the three-game Capcom shell.
+- Adds versioned workflow blocks and a detailed First Grounded Light Normal learning, QA, evidence, failure-review, and owner-signoff block.
+- Adds Profile tools for duplicating profiles, inheriting from a chosen parent, importing blocks, and exporting phases as project blocks.
+- Displays applied blocks, learning notes, acceptance requirements, and evidence gates in the Production Workflow.
+- Preserves stable progress IDs while profiles and reusable blocks evolve.
+- Documents ownership boundaries for universal mechanisms, game adapters/policy, character content, and tooling.
+- Adds a neutral private-workspace starter outside the extension folder with a private authority contract, import ledger, private workflow, and manual sanitized packet bridge.
+- Explicitly forbids live path dependencies, automatic synchronization, private identifiers, assets, mechanics, logs, and roadmap data from crossing the private/shared boundary.

@@ -1,0 +1,7 @@
+{
+  "schemaVersion": 1,
+  "characterId": "tiny",
+  "options": [
+    {"id":"beard","label":"Beard","layerBank":1,"default":false,"onlineSafe":"requires native synchronized option map"}
+  ]
+}

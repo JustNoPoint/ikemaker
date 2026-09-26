@@ -1,0 +1,92 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "IKEMEN ZSS",
+  "scopeName": "source.zss",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#declarations" },
+    { "include": "#strings" },
+    { "include": "#numbers" },
+    { "include": "#keywords" },
+    { "include": "#controllers" },
+    { "include": "#maps" },
+    { "include": "#variables" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        { "name": "comment.line.number-sign.zss", "match": "#.*$" }
+      ]
+    },
+    "declarations": {
+      "patterns": [
+        {
+          "name": "meta.statedef.zss",
+          "begin": "(?i)(\\[\\s*)(StateDef)\\b",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.section.begin.zss" },
+            "2": { "name": "storage.type.statedef.zss" }
+          },
+          "end": "\\]",
+          "endCaptures": { "0": { "name": "punctuation.definition.section.end.zss" } },
+          "patterns": [
+            { "include": "#comments" },
+            { "include": "#numbers" },
+            { "include": "#keywords" }
+          ]
+        },
+        {
+          "name": "meta.function.zss",
+          "begin": "(?i)(\\[\\s*)(Function)\\s+([A-Za-z_][A-Za-z0-9_.]*)",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.section.begin.zss" },
+            "2": { "name": "storage.type.function.zss" },
+            "3": { "name": "entity.name.function.zss" }
+          },
+          "end": "\\]",
+          "endCaptures": { "0": { "name": "punctuation.definition.section.end.zss" } },
+          "patterns": [{ "include": "#variables" }]
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.zss",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [
+            { "name": "constant.character.escape.zss", "match": "\\\\." }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        { "name": "constant.numeric.zss", "match": "(?<![A-Za-z_])[-+]?(?:0[xX][0-9A-Fa-f]+|(?:\\d+\\.?(?:\\d*)?|\\.\\d+))(?![A-Za-z_])" }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        { "name": "keyword.control.zss", "match": "(?i)\\b(if|else|while|for|switch|case|default|break|continue|call|let|return|ignoreHitPause|persistent)\\b" },
+        { "name": "constant.language.zss", "match": "(?i)\\b(true|false|null|S|C|A|L|U|N|I|H)\\b" },
+        { "name": "keyword.operator.zss", "match": ":=|&&|\\|\\||!=|<=|>=|[=<>!+*/%-]" }
+      ]
+    },
+    "controllers": {
+      "patterns": [
+        { "name": "support.function.controller.zss", "match": "\\b[A-Za-z_][A-Za-z0-9_.]*(?=\\s*\\{)" }
+      ]
+    },
+    "maps": {
+      "patterns": [
+        { "name": "variable.other.map.zss", "match": "(?i)\\bmap(?=\\s*\\()" }
+      ]
+    },
+    "variables": {
+      "patterns": [
+        { "name": "variable.other.local.zss", "match": "\\$[A-Za-z_][A-Za-z0-9_]*" }
+      ]
+    }
+  }
+}

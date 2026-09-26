@@ -1,0 +1,21 @@
+IKEMAKER 0.66.0 — MANUAL SPATIAL AUTHORING CHECKLIST
+
+[ ] Open a character, then open Universal Move Lab. Confirm Explods & Position is
+    one tab and the existing move, throw, animation, resource, code, and test tabs remain.
+[ ] Open Explod Composer. Confirm the character/profile context and assigned AIR/SFF
+    preview load. Mouse wheel zooms; Shift-drag pans; double-click or Fit recenters.
+[ ] Set stage-space/P1, drag the marker, and confirm X/Y and generated Explod code update.
+[ ] Set screen-space/None, choose each resolution, and confirm the screen position is
+    retained in that local-coordinate system.
+[ ] Add Modify, Bind, and Remove events on different ticks. Seek them and right-click
+    an event to remove it. Confirm generated code follows the timeline.
+[ ] Check appearance/layers and Advanced are collapsed initially and expand cleanly.
+[ ] Select a ZSS source and Insert at Cursor. Confirm it stays unsaved and Undo removes it.
+[ ] Repeat a basic Explod output as CNS and inspect the familiar controller blocks.
+[ ] Open Position & Camera. Test world, relative, target, parent, root, and helper intent.
+[ ] Confirm screen-lock shows a visible camera-sensitive review warning.
+[ ] Open both tools from Throw Creator, Related Work, Character Authoring, and a source
+    editor context menu. Confirm they reuse the viewer group rather than crowding code.
+[ ] Launch Game, Infinite VS, and Training buttons from the workspace.
+[ ] Resize to a standard-width window. Confirm the right rail hides before the canvas or
+    essential inputs become unusable and keyboard focus remains visible.

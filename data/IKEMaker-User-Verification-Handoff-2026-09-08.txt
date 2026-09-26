@@ -1,0 +1,105 @@
+IKEMAKER 0.64.1 - USER VERIFICATION HANDOFF
+Target: IKEMEN GO 1.0
+Test workspace: disposable combined HDBZ + SF6/Ryu copy
+
+VERIFIED AUTOMATICALLY OR DIRECTLY
+
+- All 113 automated test files pass.
+- Primary visual workspaces carry the same Related Work, Game, Infinite VS, and Training controls.
+- Keyboard Command Palette access works in the combined workspace.
+- Shared keyboard focus, reduced-motion, forced-color/high-contrast, control-label, and canvas-label support is present.
+- 63,501 files were scanned in the combined copy.
+- 198/198 SFF archives parsed; 107,171 sprites were inventoried and representative sprites rendered.
+- 53/53 AIR files parsed; 19,778 actions and 154,163 frames were inventoried.
+- 51/51 SND archives parsed; 9,065 sounds were inventoried.
+- 59/59 stages parsed.
+- The active HDBZ motif and roster parsed with 20 real portraits plus one special cell and no roster-resolution problem.
+- Goku's DEF resolved every assigned core SFF, AIR, SND, command, constants, and state file.
+- Ryu's nested SF6 DEF resolved every assigned core SFF, AIR, SND, command, constants, and state file.
+- Goku's archive reports 2,270 sprites and 365 palettes. Ryu's reports 612 sprites and 3 palettes.
+- Both the HDBZ/Goku root and nested SF6/Ryu root launched responsive infinite mirror-match processes.
+- Existing HDBZ duplicate SND IDs, duplicate Goku sprite IDs, motif missing-sprite references, and authored code warnings remain visible as project findings. They were not rewritten or mislabeled as parser failures.
+
+JUSTNOPOINT/JNP NEEDS TO VERIFY
+
+1. WORKSPACE LAYOUT AND ACCESSIBILITY
+- At your normal ultrawide resolution, open each main workspace and confirm its header remains usable beside two left panes, two right panes, and Codex chat.
+- Resize to narrower editor groups and confirm important controls remain reachable by scrolling or compact presentation rather than overlapping.
+- Test 100%, 125%, and any normally used Windows display scaling.
+- Use Tab and Shift+Tab through SFF, AIR, SND, Palette, Roster, Stage, Screenpack, Code Structure, Constants, Test Suite, and Throw Creator. Confirm focus order feels natural.
+- Confirm the focus outline is visible, Enter/Space activate focused buttons, hover descriptions are understandable, and disabled controls are distinct.
+- If used, test Windows High Contrast and reduced-motion settings.
+- Save and restore each workspace preset after closing and reopening VS Code.
+
+2. LAUNCHERS AND PROFILE SELECTION
+- Test Ctrl+Alt+F5 for a normal game launch.
+- Test Ctrl+Alt+F6 for infinite-time/infinite-round VS using both Goku/HDBZ and Ryu/SF6 as the active character.
+- Test Ctrl+Alt+F7 for the training mirror and confirm it never starts at Time Over.
+- Confirm character, stage, Single/Simul/Turns/Tag settings, and the active nested game root are honored.
+- Test keyboard and controller behavior. Process startup was verified; gameplay input was not.
+- Verify Stage Rig labels, pause visibility, camera bounds, zoom, tension, triggers, P2-only movement, and mirrored two-player movement in game.
+
+3. SFF, AIR, SND, AND PALETTE INTERACTION
+- Visually inspect representative legacy HDBZ and modern SF6 SFF sprites, axes, palette colors, layers, onion skins, pan, mouse-wheel zoom, sorting, marking, and multi-selection.
+- Exercise direct SFF save on a disposable archive, restore it through Recovery Center, and test SprMaker2 rebuild with autosave disabled.
+- Verify single-sprite, group, and whole-SFF cropping against artwork with intentional empty margins.
+- In AIR, confirm animation starts paused, text-cursor synchronization selects the expected action, palettes match SFF defaults, and no unintended blinking occurs.
+- Select, move, add, and remove overlapping Clsn boxes; test Shift multi-selection and per-frame push/width/depth/guard-distance overlays.
+- Review Ryu's reported missing-sprite frames in game. Detection is automatic; only visual review can choose the correct replacement.
+- Play HDBZ and Ryu sounds. Confirm waveform, volume, looping, export, external editor, sound-profile prefix calls, and SndMaker rebuild behavior.
+- Test ACT, indexed PNG, Photoshop swatch, and Aseprite palette exports in their actual applications.
+- Verify palette 1,1 defaults, form-linked RemapPal aliases, child variants, user-created palettes, and true-color PalFX output in game.
+
+4. CODE AUTHORING
+- Right-click real cross-file functions and state changes and confirm Go to Definition reaches the correct file and line.
+- Insert representative ZSS and CNS controllers, including optional fields, and compile them in IKEMEN.
+- Confirm Visual Code Structure refreshes when changing active files and nested blocks match the text source.
+- Convert a disposable CNS state file to ZSS and compare live behavior. Ambiguous constructs intentionally remain for review.
+- Compare Learning and Advanced presentations for the same task; only explanation density should change.
+
+5. ROSTER, STAGE, SCREENPACK, STORY, AND MODES
+- Compare Roster Manager pixel-for-pixel with HDBZ: background layers, cell positions, motif graphics, small/large portraits, stage previews, and scaling.
+- Toggle names/numbers; drag one and multiple characters; test Undo/Redo; save and reopen select.def.
+- Assign stages, set arcade orders, inspect exclusions, and verify the no-preview-image fallback.
+- Test portrait and stage-preview replacement with indexed and true-color art.
+- Create and launch a disposable custom menu mode and short native story/dialogue route. Verify ordering, portraits, choices, and return flow.
+- Move stage and screenpack elements visually, apply reviewed positions, reopen, and compare to the live game.
+- Dynamic Lua-driven motif behavior remains authoritative only in IKEMEN.
+
+6. THROW CREATOR
+- Build one real throw in a disposable character copy and compile its generated ZSS.
+- Test bind/release timing, TargetState/ChangeAnim2, P2 completion, interruption, facing, corner behavior, and cleanup.
+- Verify back/front parts, Explod IDs, sprpriority/LayerNo, onion skins, and overlapping collision selection.
+- Test a multi-hit throw with more than one contact/spark coordinate.
+- Run the temporary live preview, confirm poses/positions, then confirm automatic and manual profile disable.
+- Compare opponents with different heights and widths. Batch compatibility preview is a future convenience.
+
+7. COMPLETE PROJECT AND PATCH RELEASE
+- Capture intended defaults in a disposable full-game copy and inspect the release profile.
+- Run Audit Public Release and resolve every blocker deliberately.
+- Complete a public copy and compare mappings, menus, character options, sound/visual settings, generated palettes, logs/replays, and SFFs against the dev copy.
+- Verify version display and automatic increment, then repeat with a manual version.
+- Verify full-release and patch manifests, hashes, archives, exclusions, and update metadata before publishing.
+- Test the finished copy on a second Windows machine or clean user profile.
+
+8. ENVIRONMENTS NOT FULLY VERIFIABLE HERE
+- Real online/netplay synchronization, rollback, disconnect/reconnect, and mismatched-content handling.
+- Every physical controller, analog macro mapping, hot-plugging, and remapping screen.
+- Android and iPhone/browser-host behavior.
+- Photoshop, Aseprite, Audacity, and other external-editor round trips beyond file generation and launch paths.
+- Screen-reader speech quality and personal accessibility preferences.
+- Long-session memory/performance with several very large characters open simultaneously.
+- Artistic correctness, animation feel, hit timing, throw readability, balance, and JNP owner signoff.
+
+RECOMMENDED ORDER
+
+1. Ryu SFF/AIR cleanup and normal launch.
+2. Ryu training mirror and sLP regression.
+3. One real Throw Creator exercise.
+4. Goku/HDBZ legacy SFF, AIR, SND, roster, and launch checks.
+5. Stage and screenpack visual comparisons.
+6. Complete Project rehearsal on a disposable copy.
+7. Clean-profile and second-machine test.
+8. Netplay and controller matrix.
+
+For each failure record the active game profile, character, file, workspace, exact action, expected result, actual result, and a screenshot when visual. Treat repeated friction as an IKEMaker issue. Keep game-content findings separate unless IKEMaker explains them incorrectly.

@@ -1,0 +1,48 @@
+'use strict';
+const assert = require('assert');
+const seed = require('../data/engine-capability-catalog.json');
+const knowledge = require('../src/engine_knowledge_model');
+const updater = require('../src/updater');
+
+const snapshot = { checkedAt: '2026-09-24T12:00:00.000Z', sources: { wiki: { marker: 'wiki-rev', docs: 'https://example.test/wiki', features: ['TransformClsn (new)'] } }, buildObservations: [{ channel: 'nightly', version: 'nightly', commit: 'abcdef1234567890', platform: 'windows-x64', sourceId: 'github-develop', url: 'https://example.test/commit', observedAt: '2026-09-24T12:00:00.000Z' }] };
+const result = knowledge.refreshCatalog(seed, snapshot);
+assert.equal(result.promoted, true);
+assert(result.catalog.builds.some((item) => item.commit === 'abcdef1234567890'));
+const firstNightly = result.catalog.builds.find((item) => item.commit === 'abcdef1234567890');
+assert(firstNightly.id.includes('abcdef123456'), 'moving build IDs must include the exact commit identity');
+const secondNightly = knowledge.refreshCatalog(result.catalog, { checkedAt: '2026-09-24T12:30:00.000Z', sources: {}, buildObservations: [{ channel: 'nightly', version: 'nightly', commit: 'fedcba9876543210', platform: 'windows-x64' }] });
+assert(secondNightly.catalog.builds.some((item) => item.commit === 'abcdef1234567890'));
+assert(secondNightly.catalog.builds.some((item) => item.commit === 'fedcba9876543210'));
+const reusedId = knowledge.refreshCatalog(result.catalog, { checkedAt: '2026-09-24T12:45:00.000Z', sources: {}, buildObservations: [{ id: firstNightly.id, channel: 'nightly', version: 'nightly', commit: '1111111111111111', platform: 'windows-x64' }] });
+assert(reusedId.catalog.builds.some((item) => item.commit === 'abcdef1234567890'), 'a reused ID must not overwrite the original build');
+assert(reusedId.catalog.builds.some((item) => item.commit === '1111111111111111'), 'the conflicting artifact must receive a distinct retained ID');
+assert(reusedId.catalog.conflicts.some((item) => item.buildId === firstNightly.id), 'build identity conflict must remain visible');
+const capability = result.catalog.capabilities.find((item) => item.id === 'transformclsn');
+assert(capability);
+assert.deepStrictEqual(capability.buildIds, [], 'documentation does not prove exact build support');
+assert.equal(capability.ikemakerSupport, 'discovered');
+const disagreement = knowledge.refreshCatalog(result.catalog, { checkedAt: '2026-09-24T13:00:00.000Z', sources: {}, customCapabilities: [{ id: 'transformclsn', changeKind: 'removed', buildIds: [], evidence: [{ sourceId: 'other', revision: '2', status: 'observed' }] }] });
+assert(disagreement.catalog.conflicts.some((item) => item.capabilityId === 'transformclsn'), 'disagreements must remain visible');
+const merged = knowledge.mergeSnapshot({ sources: { wiki: { marker: 'good', features: [] } } }, { checkedAt: snapshot.checkedAt, sources: { wiki: { error: 'offline', features: [] } } });
+assert.equal(merged.sources.wiki.marker, 'good');
+assert.equal(merged.sources.wiki.lastError, 'offline');
+(async () => {
+  const fetcher = async (url) => {
+    if (url === updater.BUILD_SOURCES.releases) return JSON.stringify([{ tag_name: 'v1.1.0', published_at: '2026-10-01T00:00:00Z', html_url: 'https://example.test/release' }]);
+    if (url.endsWith('/commits/v1.1.0')) return JSON.stringify({ sha: '1111111111111111111111111111111111111111' });
+    if (url === updater.BUILD_SOURCES.develop) return JSON.stringify({ sha: '2222222222222222222222222222222222222222', html_url: 'https://example.test/nightly', commit: { committer: { date: '2026-10-02T00:00:00Z' } } });
+    if (url.includes('/releases/latest')) return JSON.stringify({ id: 1, published_at: '2026-10-01T00:00:00Z', target_commitish: 'release/1.1' });
+    return '<a href="#feature">Feature (new)</a>'.repeat(120);
+  };
+  const discovered = await updater.buildSnapshot(fetcher);
+  assert(discovered.buildObservations.some((item) => item.version === '1.1.0' && item.commit.startsWith('1111')));
+  assert(discovered.buildObservations.some((item) => item.channel === 'nightly' && item.commit.startsWith('2222')));
+  assert(!discovered.sources['github-releases'].error);
+  const customUrl = 'https://example.test/custom-catalog.json';
+  const custom = await updater.discoverCustomCatalogs(async () => JSON.stringify({ schemaVersion: 1, builds: [{ id: 'fork-build', channel: 'custom', version: 'fork-1', commit: '3333333333333333333333333333333333333333' }], capabilities: [{ id: 'fork-feature', buildIds: ['fork-build'], evidence: [{ domain: 'runtime', status: 'verified' }] }] }), discovered.checkedAt, [customUrl]);
+  assert.equal(custom.observations[0].monitorOnly, true);
+  assert.equal(custom.capabilities[0].evidence[0].status, 'observed', 'remote catalogs cannot import local verification');
+  const invalid = await updater.discoverCustomCatalogs(async () => '{}', discovered.checkedAt, ['file:///unsafe.json']);
+  assert(/HTTPS/.test(invalid.sources['custom-catalog-1'].error));
+  console.log('Engine knowledge model tests passed');
+})().catch((error) => { console.error(error); process.exitCode = 1; });

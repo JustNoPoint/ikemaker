@@ -1,0 +1,54 @@
+{
+  "StateDef": {
+    "prefix": "statedef",
+    "body": [
+      "# ${2:State name}",
+      "[StateDef ${1:0}; type: ${3:S}; movetype: ${4:I}; physics: ${5:S};]",
+      "",
+      "${0}"
+    ],
+    "description": "Create an IKEMEN ZSS StateDef"
+  },
+  "Function": {
+    "prefix": "function",
+    "body": [
+      "# ${2:Function description}",
+      "[Function ${1:FunctionName}(${3})${4: ret}]",
+      "${0}"
+    ],
+    "description": "Create an IKEMEN ZSS function"
+  },
+  "State controller": {
+    "prefix": "sctrl",
+    "body": [
+      "${1:changeState}{",
+      "\t${2:value}: ${3:0};",
+      "}"
+    ],
+    "description": "Create a block-style ZSS state controller"
+  },
+  "Configuration map": {
+    "prefix": "cfgmap",
+    "body": "map(JNP_cfg_${1:name}) := ${2:0};",
+    "description": "Create a template configuration map assignment"
+  },
+  "Custom-state ownership contract": {
+    "prefix": "customstatecontract",
+    "body": [
+      "# @customstate controller=${1:attacker}",
+      "# @position-owner ${2:attacker}",
+      "# @facing-owner ${3:attacker}",
+      "# @sync JNP_${4:SystemName}"
+    ],
+    "description": "Document the owner and synchronization contract for custom states"
+  },
+  "GameTime synchronization handshake": {
+    "prefix": "synchandshake",
+    "body": [
+      "map(JNP_${1:system}_sync_epoch) := gameTime;",
+      "map(JNP_${1:system}_sync_phase) := ${2:1};",
+      "${0}"
+    ],
+    "description": "Create a namespaced, GameTime-stamped synchronization handshake"
+  }
+}

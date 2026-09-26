@@ -1,0 +1,197 @@
+<html><head><meta charset="utf-8"/><title>Background-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Background-features">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="changes-to-background-parameters"><a name="changed">Changes to Background Parameters</a></h1>
+<p>Some background parameters are carried over from MUGEN, but with their functionality altered.</p>
+<h2 id="bg-shared-parameters"><a name="changed_bg">[BG] (shared parameters)</a></h2>
+<h3 id="zoomdelta"><a name="changed_bg_zoomdelta">zoomdelta</a></h3>
+<blockquote>
+<p>zoomdelta = <em>dzoom_x</em>, <em>dzoom_y</em> (float, float)<br/>
+Specifies the amount that the camera zoom affects the scale of the element. Defaults to 1,1.  </p>
+</blockquote>
+<p>The second item of <code>zoomdelta</code> is not read in MUGEN 1.1, but here it is processed as <strong>Y direction</strong> zoomdelta. If omitted, the same value as the first item is entered and the same processing as MUGEN 1.1 is performed.</p>
+<h3 id="layerno"><a name="changed_bg_layerno">layerno</a></h3>
+<blockquote>
+<p>layerno = <em>layer_number</em> (int)<br/>
+Specifies the stage layer on which the element will be drawn  </p>
+</blockquote>
+<p>In addition to 0 and 1, this parameter now also accepts <strong>-1</strong>.<br/>
+Elements in layer <strong>-1</strong> will be drawn <strong>behind layer 0</strong>. While this does not alter stage functionality itself, it can allow characters to be drawn between the elements in those two layers.  </p>
+<p><em>Note:</em> For the sake of backwards compatibility, currently this feature only works in stages with <code>ikemenversion</code>.</p>
+<h2 id="bgctrl-controllers"><a name="changed_bgctrl">[BGCtrl] (controllers)</a></h2>
+<h3 id="sinx-and-siny"><a name="changed_bgctrl_sinxy">SinX and SinY</a></h3>
+<p>MUGEN 1.1 has a bug where <code>SinX</code> and <code>SinY</code> of a <code>BGCtrl</code> ignore the parent <code>BGCtrlDef</code> <em>looptime</em>. Therefore, in Ikemen GO, the movement of <code>SinX</code> and <code>SinY</code> of a stage created with MUGEN 1.1 in mind may look strange.<br/>
+This can be solved by <strong>matching the looptime of <code>BGCtrlDef</code></strong> and the <strong>period</strong> (2nd value) of <code>SinX</code> and <code>SinY</code>.</p>
+<h1 id="new-background-parameters"><a name="new">New Background Parameters</a></h1>
+<p>Below are new parameters exclusive to Ikemen GO.</p>
+<h2 id="bgdef-definition"><a name="new_bgdef">[BGDef] (definition)</a></h2>
+<h3 id="roundpos"><a name="new_bgdef_roundpos">RoundPos</a></h3>
+<blockquote>
+<p>RoundPos = <em>round_flag</em> (bool)<br/>
+Set to 1 to round the position of background elements to floor, emulating older MUGEN behavior.</p>
+</blockquote>
+<p>Defaults to <strong>1</strong> if <code>mugenversion</code> is below <strong>1.0</strong> and <code>ikemenversion</code> is <strong>0</strong> (older stages). Otherwise defaults to <strong>1</strong>.<br/>
+This parameter can also be used in an individual background element (<code>[BG]</code> block).</p>
+<h3 id="model"><a name="new_bgdef_model">Model</a></h3>
+<blockquote>
+<p>Model = <em>model_file</em> (string)<br/>
+Filename of a 3D model file. Supported: <strong>gltf</strong>, <strong>glb</strong>.</p>
+</blockquote>
+<p>It is recommended to use PNG/JPEG/embedded image formats for textures. <strong>Compressed DDS</strong> textures are <strong>not</strong> supported.<br/>
+Make sure the world origin of the model is at the camera starting point.</p>
+<h3 id="scenenumber"><a name="new_bgdef_scenenumber">SceneNumber</a></h3>
+<blockquote>
+<p>SceneNumber = <em>scene_number</em> (int)<br/>
+Scene to use from a 3D model file. </p>
+</blockquote>
+<p>Defaults to 0. Requires <code>Model</code> to be defined.</p>
+<h3 id="fov"><a name="new_bgdef_fov">FOV</a></h3>
+<blockquote>
+<p>FOV = <em>field_of_view</em> (float)<br/>
+Field of view used for a 3D model.</p>
+</blockquote>
+<p>Defaults to 0. Requires <code>Model</code> to be defined.</p>
+<h3 id="near"><a name="new_bgdef_near">Near</a></h3>
+<blockquote>
+<p>Near = <em>near_distance</em> (float)<br/>
+The near plane of the view frustum when the 3D model is rendered.</p>
+</blockquote>
+<p>Defaults to 0. It is recommended to set this to a low but non-zero value, such as <code>0.1</code>. Requires <code>Model</code> to be defined.</p>
+<h3 id="far"><a name="new_bgdef_near">Far</a></h3>
+<blockquote>
+<p>Far = <em>far_distance</em> (float)<br/>
+The far plane of the view frustum when the 3D model is rendered.</p>
+</blockquote>
+<p>Defaults to 0. It is recommended to set this to a high value, such as <code>1000</code>. Requires <code>Model</code> to be defined.</p>
+<h3 id="modeloffset"><a name="new_bgdef_modeloffset">ModelOffset</a></h3>
+<blockquote>
+<p>ModelOffset = <em>offset_x</em>, <em>offset_y</em>, <em>offset_z</em> (float, float, float)<br/>
+Positional offset of a 3D model</p>
+</blockquote>
+<p>Defaults to 0, 0, 0. Translates the model in 3D space, with (0, 0, 0) being the world origin of the model. Requires <code>Model</code> to be defined.</p>
+<h3 id="modelrotate"><a name="new_bgdef_modelrotate">ModelRotate</a></h3>
+<blockquote>
+<p>ModelRotate = <em>rotate_x</em>, <em>rotate_y</em>, <em>rotate_z</em> (float, float, float)<br/>
+Rotational offset of a 3D model</p>
+</blockquote>
+<p>Defaults to 0, 0, 0. Rotates the model in 3D space around the world origin of the model. Requires <code>Model</code> to be defined.</p>
+<h3 id="modelscale"><a name="new_bgdef_modelscale">ModelScale</a></h3>
+<blockquote>
+<p>ModelScale = <em>scale_x</em>, <em>scale_y</em>, <em>scale_z</em> (float, float, float)<br/>
+Scale factor of a 3D model</p>
+</blockquote>
+<p>Defaults to 1, 1, 1. Scales the model around the world origin of the model. Requires <code>Model</code> to be defined.</p>
+<h2 id="bg-type-video"><a name="new_bgvideo">[BG] (type = video)</a></h2>
+<p>Ikemen GO adds a <strong>video</strong> background type that plays media as a BG element. It uses the usual <code>[BG ...]</code> block and participates in draw order like other BG types.</p>
+<h3 id="media-support">Media support</h3>
+<ul>
+<li><strong>Containers:</strong> WebM (<code>.webm</code>), Matroska (<code>.mkv</code>)  </li>
+<li><strong>Video codecs:</strong> VP8, VP9  </li>
+<li><strong>Audio codecs:</strong> Opus, Vorbis  <blockquote>
+<p>Audio plays if present in the media.</p>
+</blockquote>
+</li>
+</ul>
+<h3 id="coordinate-system-base-pivot">Coordinate system &amp; base pivot</h3>
+<ul>
+<li><strong>Stages:</strong> base pivot is the <strong>center of the screen</strong>.  </li>
+<li><strong>Motifs &amp; storyboards:</strong> base pivot is the <strong>top-left of the screen</strong>.</li>
+</ul>
+<h3 id="parameters-video-specific">Parameters (video-specific)</h3>
+<blockquote>
+<p>type = <code>video</code> (string, required)<br/>
+Must be set to <code>video</code>.</p>
+<p>path = <em>filepath</em> (string, required)<br/>
+Path to the media file. By default resolves relative to the engine’s <strong>video</strong> directory (absolute paths also supported).</p>
+<p>volume = <em>volume</em> (int, optional)<br/>
+Audio playback volume. Defaults to <strong>100</strong>.</p>
+<p>loop = <em>loop_flag</em> (boolean int, optional)<br/>
+Set to <strong>1</strong> to loop the video. Defaults to <strong>0</strong>.</p>
+<p>scalemode = <em>mode</em> (string, optional)<br/>
+How the video frame is sized into the window. Defaults to <strong>none</strong>.<br/>
+<code>none</code> (no scaling) · <code>fit</code> (uniform fit, letter/pillar-box if needed) · <code>fitwidth</code> (match width; crop/pad height) · <code>fitheight</code> (match height; crop/pad width) · <code>zoomfill</code> (uniform cover; center-crop overflow) · <code>stretch</code> (non-uniform fill; may distort).</p>
+<p>scalefilter = <em>filter</em> (string, optional)<br/>
+Scaling filter. Defaults to <strong>fastbilinear</strong>. Options: <code>lanczos</code>, <code>fastbilinear</code>, <code>bilinear</code>, <code>bicubic</code>, <code>experimental</code>, <code>neighbor</code>, <code>area</code>, <code>bicublin</code>, <code>gauss</code>, <code>sinc</code>, <code>spline</code>.</p>
+</blockquote>
+<p><em>Note:</em> Element-level transforms like <code>scalestart</code>/<code>scaledelta</code> and camera zoom (<code>zoomdelta</code>, <code>zoomscaledelta</code>) are applied <strong>in addition</strong> to the size implied by <code>scalemode</code>.</p>
+<h3 id="standard-background-parameters">Standard background parameters</h3>
+<p>The following work with video the same as for normal/anim elements unless noted:<br/>
+<code>layerno</code>, <code>start</code>, <code>delta</code>, <code>positionlink</code>, <code>id</code>, <code>velocity</code>, <code>sin.x</code>, <code>sin.y</code>, <code>scalestart</code>, <code>scaledelta</code>, <code>zoomdelta</code>, <code>zoomscaledelta</code>, <code>maskwindow</code>, <code>window</code>, <code>windowdelta</code>, <code>roundpos</code>, <code>angle</code>, <code>xangle</code>, <code>yangle</code>, <code>projection</code>, <code>focallength</code>, <code>xshear</code>.</p>
+<h3 id="untested">Untested</h3>
+<p><code>trans</code>, <code>alpha</code>, <code>palfx</code>.</p>
+<h2 id="bg-shared-parameters_1"><a name="new_bg">[BG] (shared parameters)</a></h2>
+<h3 id="angle"><a name="new_bg_angle">Angle</a></h3>
+<blockquote>
+<p>Angle = <em>angle</em> (int)<br/>
+Specifies the rotation angle of the BG element. Defaults to 0.</p>
+</blockquote>
+<h3 id="xangle"><a name="new_bg_xangle">XAngle</a></h3>
+<blockquote>
+<p>XAngle = <em>xangle</em> (int)<br/>
+Specifies the X-axis rotation of the BG element. Defaults to 0.</p>
+</blockquote>
+<h3 id="yangle"><a name="new_bg_yangle">YAngle</a></h3>
+<blockquote>
+<p>YAngle = <em>yangle</em> (int)<br/>
+Specifies the Y-axis rotation of the BG element. Defaults to 0.</p>
+</blockquote>
+<h3 id="autoresizeparallax"><a name="new_bg_autoresizeparallax">AutoResizeParallax</a></h3>
+<blockquote>
+<p>AutoResizeParallax = <em>resize_flag</em> (boolean)<br/>
+Set to 1 to auto-correct parallax size when zooming out. Defaults to 0.</p>
+</blockquote>
+<p>Specifies whether to automatically adjust the size of <code>parallax</code> elements when zooming out. By setting this to <strong>0</strong> and specifying <code>ZoomDelta</code>, you can reproduce the same behavior as when <code>parallax</code> zooms out in MUGEN 1.1.</p>
+<h3 id="xbottomzoomdelta"><a name="new_bg_xbottomzoomdelta">XBottomZoomDelta</a></h3>
+<blockquote>
+<p>XBottomZoomDelta = <em>xzoom</em> (float)<br/>
+Specifies the X scale reduction rate of the <strong>bottom edge</strong> of the image when zooming out. Omitted by default.</p>
+</blockquote>
+<p>Countermeasure for stages using <code>parallax</code> where the X scale on the bottom surface becomes abnormally small / freezes at severe zoom-out (by design). Works <strong>only if</strong> <a href="#new_bg_autoresizeparallax"><code>AutoResizeParallax</code></a> is set to <strong>1</strong>.</p>
+<h3 id="projection"><a name="new_bg_projection">projection</a></h3>
+<blockquote>
+<p>Projection = <em>projection</em> (string)<br/>
+<code>perspective</code>: distortion relative to the <strong>center of the screen</strong><br/>
+<code>perspective2</code>: distortion relative to the <strong>sprite</strong><br/>
+<code>orthographic</code>: no distortion<br/>
+Defaults to <code>orthographic</code>.</p>
+</blockquote>
+<h3 id="focallength"><a name="new_bg_focallength">FocalLength</a></h3>
+<blockquote>
+<p>FocalLength = <em>focallength</em> (float)<br/>
+Focal length for perspective projections. Has no effect unless <code>projection</code> is <code>perspective</code> or <code>perspective2</code>.</p>
+</blockquote>
+<h3 id="xshear"><a name="new_bg_xshear">XShear</a></h3>
+<blockquote>
+<p>XShear = <em>xshear</em> (float)<br/>
+Specifies horizontal shearing to apply to the BG element. Defaults to 0.</p>
+</blockquote>
+<h3 id="zoomscaledelta"><a name="new_bg_zoomscaledelta">ZoomScaleDelta</a></h3>
+<blockquote>
+<p>ZoomScaleDelta = <em>zscale_dx</em>, <em>zscale_dy</em> (float, float)<br/>
+Reverse-correction of <code>ZoomDelta</code>. Defaults to 0,0.</p>
+</blockquote>
+<p>Applies an inverse correction to <code>ZoomDelta</code>, mainly to correct image ratio distortion when zooming out. Reads two values for X and Y; you may apply the correction to just one axis by omitting the other.</p>
+<h2 id="bgctrl-controllers_1"><a name="new_bgctrl">[BGCtrl] (controllers)</a></h2>
+<h3 id="palfx"><a name="new_bgctrl_palfx">PalFX</a></h3>
+<p>Works like character <code>PalFX</code>, but for <strong>background elements</strong>. The effect is applied <strong>permanently</strong> (due to how <code>BGCtrl</code>s work). To reset it, declare <code>PalFX</code> again with empty parameters (all are optional). Using <code>BGPalFX</code> in a character will temporarily override all <code>PalFX</code> <code>BGCtrl</code>.</p>
+<p><em>Example syntax:</em></p>
+<pre><code class="language-ini">; Example only — actual parameters mirror char PalFX
+[BGCtrl pal_example]
+type = PalFX
+time = 0, 60
+; add = r,g,b
+; mul = r,g,b
+; sinadd = r,g,b, period, offset
+</code></pre>
+<h3 id="remappal"><a name="new_bgctrl_remappal">RemapPal</a></h3>
+<p>Remaps a palette from the stage SFF file to another palette from the same file. This can be used to perform static palette changes without duplicating sprites, and to remap palettes dynamically using <code>ModifyBGCtrl</code>.</p>
+<p><em>Example syntax:</em></p>
+<pre><code class="language-ini">[BGCtrl 1]
+type = RemapPal
+time = 200
+source = 0,0
+dest = 2,5
+</code></pre>
+<h3 id="sctrlid"><a name="new_bgctrl_sctrlid">SctrlId</a></h3>
+<blockquote>
+<p>sctrlid = <em>ID</em> (int)<br/>
+Specifies an ID number to refer to this background controller block by.</p>
+</blockquote>
+<p>Used so a character’s <a href="State-controllers-%28new%29.html#modifybgctrl"><code>ModifyBGCtrl</code></a> can target specific stage background controllers. Different controllers may share the same ID if necessary.</p></body></html>

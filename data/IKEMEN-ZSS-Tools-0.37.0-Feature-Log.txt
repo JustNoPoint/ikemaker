@@ -1,0 +1,26 @@
+IKEMEN ZSS Tools 0.37.0
+=======================
+
+Actionable guided workflows
+---------------------------
+- Added a Go action to every state-aware workflow step.
+- SFF steps route to groups, review, palettes, validation/tools, and Save SFF.
+- AIR steps route to SFF attachment, actions, collision, runtime geometry, and
+  source association panels.
+- SND steps route to archive entries, profile creation, archive assignment,
+  split-contract auditing, and build manifests.
+- Stage steps route to camera reset, assets/diagnostics, backgrounds,
+  parallax/inspection, and validation.
+- Screenpack/fight UI steps route to coordinates, diagnostics, screens,
+  viewport preview, and validation.
+- Command/movelist steps route to owning files, organized filters, the timing
+  timeline, diagnostics, and displayed movelist mode.
+- Workflow navigation activates existing controls; it adds no alternate write
+  or mutation authority.
+
+Verification
+------------
+- Added safe workflow-action markup and client navigation tests.
+- Added per-workspace checks for action targets and installed event routing.
+- All 54 extension test files pass.
+- Current extension wording uses only the IKEMEN 1.0 baseline.

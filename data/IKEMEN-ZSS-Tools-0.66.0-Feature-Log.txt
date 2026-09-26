@@ -1,0 +1,40 @@
+IKEMAKER 0.66.0 — SPATIAL AUTHORING
+
+This release adds a shared spatial-authoring layer to the Universal Move Lab.
+
+Explod Composer
+- Creates reviewed Explod, ModifyExplod, ExplodBindTime, and RemoveExplod code.
+- Supports stage and screen space, P1/P2/front/back/edge anchors, drag placement,
+  velocity, acceleration, binding, lifetime, scale, angle, priority, layer number,
+  transparency, palette remapping, and a timeline of changes.
+- Uses the assigned AIR/SFF and default palette for contextual animation preview.
+- Makes 320x240, 640x360, 1280x720, and 1920x1080 local-coordinate intent explicit.
+
+Position & Camera
+- Authors world and relative placement for self, target, parent, root, and helpers.
+- Generates PosSet, PosAdd, VelSet, TargetBind, BindToParent, BindToRoot, and
+  ScreenBound scaffolds for ZSS, with conservative CNS output where appropriate.
+- Distinguishes one-time screen placement from a persistent screen lock.
+- Persistent locks are visibly flagged as camera-sensitive and require live review.
+
+Shared experience
+- Mouse wheel zoom, Shift-drag pan, direct drag placement, Fit, playback, timeline,
+  launch controls, Related Work, context identity, and keyboard accessibility match
+  the other IKEMaker visual workspaces.
+- Common fields stay visible; motion, appearance, layers, and advanced IKEMEN fields
+  are progressively disclosed so the screen remains usable on standard monitors.
+- Code previews do not write files. Insert at Cursor uses the open VS Code document,
+  remains unsaved, and can be reversed with normal VS Code Undo.
+- Throw Creator links directly to both spatial tools and remains in the shared viewer
+  group. Move Lab adds one compact Explods & Position mode instead of duplicating UI.
+
+Validation and recovery
+- Invalid animation/local-coordinate input is blocked by model validation.
+- Forever-lived Explods and persistent screen locks produce explicit review warnings.
+- Timeline operations use one Explod ID and highlight risky duplicate creates.
+- Generated text is deterministic and covered by automated ZSS/CNS tests.
+
+Test status at package time
+- 132 automated test files passed, including the new spatial model/workspace tests.
+- Isolated installed-extension activation and live Ryu workspace verification are
+  recorded separately in test/integration/spatial-composer-live-report.json.

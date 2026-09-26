@@ -1,0 +1,36 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path'),os=require('os');
+const registry=require('../src/viewer_archive_registry');
+const folder=fs.mkdtempSync(path.join(os.tmpdir(),'viewer-archives-'));
+try{
+  const def=path.join(folder,'char.def'),fx=path.join(folder,'shared fx.def'),air=path.join(folder,'shared.air');
+  fs.writeFileSync(air,'[Begin Action 200]\n0,0,0,0,1\n');
+  fs.writeFileSync(fx,'[Info]\nprefix = SF6FX\n[Files]\nair = shared.air\nsff = shared.sff\nsnd = shared.snd\n');
+  fs.writeFileSync(def,'[Info]\nfightfx.prefix = SF6FX\n[Files]\nfx = "shared fx.def", missing.def\n');
+  let record=registry.collect(def,{gameRoot:folder});
+  assert.strictEqual(record.candidates.length,1);assert(record.diagnostics.some(item=>item.includes('missing.def')));
+  assert.strictEqual(registry.resolveReference(record,'f','air').candidates[0].air,air);
+  assert.strictEqual(registry.resolveReference(record,'sf6fx','snd').candidates[0].snd,path.join(folder,'shared.snd'));
+  assert.strictEqual(registry.resolveReference(record,'unknown','air').candidates.length,0);
+  fs.writeFileSync(path.join(folder,'duplicate.def'),'[Info]\nprefix = SF6FX\n[Files]\nair = alternate.air\n');
+  record=registry.collect(def,{gameRoot:folder,extraDefs:['duplicate.def','shared fx.def']});
+  assert.strictEqual(registry.resolveReference(record,'SF6FX','air').candidates.length,2,'duplicate prefixes remain explicit choices; identical definitions deduplicate');
+  const profile=require('../src/sound_profile'),data=profile.template('Ryu');
+  fs.writeFileSync(path.join(folder,profile.PROFILE_FILENAME),JSON.stringify(data));
+  record=registry.collect(def,{gameRoot:folder});
+  assert(record.candidates.some(item=>item.prefix==='ryufx'&&item.source.startsWith('Sound profile:')));
+  const dirty=registry.collect(def,{gameRoot:folder,readText:file=>file===fx?'[Info]\nprefix = UPDATED\n[Files]\nair = shared.air':fs.readFileSync(file,'utf8')});
+  assert(dirty.candidates.some(item=>item.prefix==='updated'),'unsaved DEF contents participate in resolution');
+  assert.deepStrictEqual(registry.splitFiles('"a,b.def", c.def'),['a,b.def','c.def']);
+  fs.mkdirSync(path.join(folder,'save'));fs.mkdirSync(path.join(folder,'motif'));
+  fs.writeFileSync(path.join(folder,'save','config.ini'),'[Config]\nMotif = motif/system.def\n[Common]\nFx2 = shared fx.def\n');
+  fs.writeFileSync(path.join(folder,'motif','system.def'),'[Files]\nfight = fight.def\n');
+  fs.writeFileSync(path.join(folder,'motif','fight.def'),'[Files]\nfightfx.air = fightfx.air\nfightfx.sff = fightfx.sff\ncommon.snd = common.snd\n');
+  fs.writeFileSync(path.join(folder,'motif','fightfx.air'),'[Begin Action 0]\n');
+  fs.writeFileSync(def,'[Files]\n');record=registry.collect(def,{gameRoot:folder});
+  assert.strictEqual(registry.resolveReference(record,'f','air').candidates[0].air,path.join(folder,'motif','fightfx.air'));
+  assert(record.candidates.some(item=>item.prefix==='sf6fx'&&item.source.startsWith('Game Common.Fx')));
+  const combined=registry.resolveReference({candidates:[{prefix:'fx',snd:'a.snd',air:'a.air',sff:'a.sff'},{prefix:'fx',snd:'a.snd',air:'',sff:''}],diagnostics:[]},'fx','snd');
+  assert.strictEqual(combined.candidates.length,1);assert.strictEqual(combined.candidates[0].air,'a.air','a sound profile must not erase native cross-viewer connections');
+  console.log('Shared archive DEF/profile resolution, overrides, duplicate prefixes, dirty documents and diagnostics passed');
+}finally{fs.rmSync(folder,{recursive:true,force:true});}

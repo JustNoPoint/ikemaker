@@ -1,0 +1,11 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+const { parseAirInventory } = require('../src/requirements');
+const root = path.join(__dirname, 'fixtures', 'stabilization'), required = ['Tiny.air', 'Tiny.zss', 'Tiny-sff-manifest.csv', 'Tiny-snd-manifest.txt', 'Tiny-sound-profile.json', 'Tiny-palette.gpl', 'Tiny-costume-profile.json', 'Tiny-throw.air', 'Tiny-online-map.zss', 'project-registry-v1.json'];
+for (const filename of required) assert.ok(fs.existsSync(path.join(root, filename)), `missing stabilization fixture ${filename}`);
+assert.strictEqual(parseAirInventory(fs.readFileSync(path.join(root, 'Tiny-throw.air'), 'utf8')).size, 2);
+assert.strictEqual(JSON.parse(fs.readFileSync(path.join(root, 'Tiny-sound-profile.json'))).archives[0].role, 'characterFx');
+assert.strictEqual(JSON.parse(fs.readFileSync(path.join(root, 'Tiny-costume-profile.json'))).options[0].layerBank, 1);
+console.log('Stabilization fixture tests passed');

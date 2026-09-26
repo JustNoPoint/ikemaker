@@ -1,0 +1,24 @@
+IKEMEN ZSS Tools 0.32.0
+=======================
+
+Palette and sound mutation safety
+---------------------------------
+- Migrated immutable palette master creation to one atomic JSON plus ACT
+  transaction.
+- Migrated palette build plans and per-screen/per-group preview preferences to
+  transactional writes with hidden backups and mutation history.
+- Migrated sound-profile creation, archive assignment, and named sound events.
+- Migrated single and bulk native CommonFX DEF generation.
+- Migrated SndMaker manifest sorting and add/replace/remove operations.
+- Sound-build workspace creation now commits all exported WAV files, its
+  manifest, and the profile assignment as one all-or-nothing transaction.
+- Large sound-build creation records one aggregate history item instead of one
+  item per WAV file.
+- SFF and SND workspace headers now expose the relevant backup/history policy.
+- The older sound-backup toggle remains honored alongside the shared policy.
+
+Verification
+------------
+- Added aggregate bulk-journal coverage.
+- Retained rollback, stale-write, conflict, and backup coverage.
+- All 49 extension test files pass.

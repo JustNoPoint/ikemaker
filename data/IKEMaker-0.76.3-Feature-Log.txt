@@ -1,0 +1,7 @@
+IKEMaker 0.76.3 — Universal attack discovery
+
+- Move Lab now discovers attacks from the character's authored CNS/ZSS HitDef controllers.
+- Every detected attack is listed even when the character has only one.
+- Selecting an entry opens that exact HitDef in the visual HitDef editor.
+- JNP Move Constants are presented separately as optional project-specific modular profiles.
+- Direct-HitDef creators are not required or encouraged to adopt Move Constants.

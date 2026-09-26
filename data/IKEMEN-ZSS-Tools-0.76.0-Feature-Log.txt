@@ -1,0 +1,36 @@
+IKEMaker 0.76.0 — Engine Target and Capability Registry
+=======================================================
+
+- Added schema-4 per-game engine targets with a conservative pinned IKEMEN GO
+  1.0.0 default and preserved adoption history.
+- Added a bundled versioned engine/capability catalog and explicit consumer
+  coverage inventory.
+- Expanded the existing upstream monitor to discover official releases and the
+  exact develop/nightly commit. Documentation observations remain unverified.
+- Added validated HTTPS custom-fork catalog sources. Remote metadata is treated
+  as declarative evidence and never imports local verification or executable
+  behavior.
+- Partial/offline refreshes retain last-good source data; invalid catalogs are
+  refused rather than replacing the usable snapshot.
+- Added Project Manager Engine Targets UI for knowledge refresh, report review,
+  exact executable registration and explicit per-game adoption.
+- Added exact-target launch resolution to regular game/training/versus launch,
+  Stage Rig and IKEMaker test sessions. Non-stable targets cannot silently use
+  the global executable path.
+- Implicit stable projects keep their established configured/root executable;
+  globally registering another stable binary cannot redirect them.
+- Project adoption now pins an installed-artifact ID and executable SHA-256.
+  Local files are labeled authenticated only when they match trusted catalog
+  evidence; otherwise a separate warning can adopt them as user-asserted.
+- Moving nightly observations receive commit-specific immutable IDs. Reused
+  IDs with different commits or hashes are retained as visible conflicts.
+- Added capability decisions for supported, unsupported, unverified,
+  conflicting, removed, fallback, changed, deprecated and unknown states.
+  Runtime/project evidence and fallback evidence must name the exact build they
+  prove. Future editor/generator integration remains honestly listed as
+  undeclared until implemented.
+
+Verification in this pass was intentionally inexpensive: focused model tests,
+workspace HTML checks, launch-resolver tests, syntax checks and JSON parsing.
+No engine launch, broad UI automation, package/install wave, large project scan
+or production target adoption was performed.

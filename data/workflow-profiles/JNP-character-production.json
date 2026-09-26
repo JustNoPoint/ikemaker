@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "id": "jnp-character-production",
+  "version": 2,
+  "name": "JNP Character Production Foundation",
+  "description": "Reusable character-production gates for setup, SFF, AIR, movement, get-hits, sound, QA, and sign-off. Game policy enters through profiles and workflow blocks.",
+  "statuses": ["not-started", "in-progress", "ready-for-review", "blocked", "needs-testing", "passed", "intentionally-skipped", "revisit-later"],
+  "phases": [
+    {
+      "id": "character-setup",
+      "name": "1. Character Setup",
+      "summary": "Establish native files and project ownership before production assets are measured.",
+      "steps": [
+        {"id": "setup.files", "label": "Character DEF and required native files resolve", "discipline": "Code", "detect": "character-files", "action": "open-def"},
+        {"id": "setup.profile", "label": "Project naming and requirements profiles are selected", "discipline": "Production", "action": "open-requirements"},
+        {"id": "setup.coordinates", "label": "Local coordinates and character constants are reviewed", "discipline": "Code", "action": "open-constants"},
+        {"id": "setup.folders", "label": "Production, unassigned, and archival ownership is clear", "discipline": "Production", "action": "open-character-folder"}
+      ]
+    },
+    {
+      "id": "sff-foundation",
+      "name": "2. SFF Foundation",
+      "summary": "Create a stable uncropped, indexed sprite foundation before animation and state work expands.",
+      "steps": [
+        {"id": "sff.exists", "label": "Character SFF is assigned and readable", "discipline": "SFF / AIR", "detect": "sff-readable", "action": "open-sff"},
+        {"id": "sff.palette", "label": "Master palette is protected and the default palette is assigned", "discipline": "Palette", "action": "open-sff-palettes"},
+        {"id": "sff.required", "label": "Required sprites and animations pass the project requirements audit", "discipline": "SFF / AIR", "action": "audit-requirements"},
+        {"id": "sff.axes", "label": "Feet, middle, and head axis references are present and reviewed", "discipline": "SFF / AIR", "action": "open-sff"},
+        {"id": "sff.classification", "label": "Unassigned, classified, layered, and archived sprites are reviewed", "discipline": "SFF / AIR", "action": "review-unassigned"},
+        {"id": "sff.validation", "label": "SFF validation has no unexplained errors", "discipline": "Review", "action": "open-sff"}
+      ]
+    },
+    {
+      "id": "basic-movement",
+      "name": "3. Basic Movement",
+      "summary": "Complete the movement and guard foundation needed for meaningful in-engine testing.",
+      "steps": [
+        {"id": "movement.actions", "label": "Standing, turning, crouching, walking, jumping, and landing actions exist", "discipline": "SFF / AIR", "detect": "basic-actions", "action": "open-air"},
+        {"id": "movement.guard", "label": "Standing, crouching, and aerial guard animations are reviewed", "discipline": "SFF / AIR", "action": "open-air"},
+        {"id": "movement.states", "label": "Movement transitions use reviewed native or project-owned states", "discipline": "Code", "action": "open-code"},
+        {"id": "movement.collision", "label": "Movement Clsn2 and runtime size boxes are reviewed", "discipline": "SFF / AIR", "action": "open-air"},
+        {"id": "movement.test", "label": "Movement and guard behavior pass an in-engine test", "discipline": "Testing", "action": "launch-training"}
+      ]
+    },
+    {
+      "id": "gethit-foundation",
+      "name": "4. Get-Hit Foundation",
+      "summary": "Make the character safe to strike, launch, knock down, and recover before move testing broadens.",
+      "steps": [
+        {"id": "gethit.actions", "label": "Required standing, crouching, aerial, fall, trip, and recovery actions exist", "discipline": "SFF / AIR", "detect": "gethit-actions", "action": "open-air"},
+        {"id": "gethit.guard-separation", "label": "Guard reactions remain distinguishable from true hit reactions", "discipline": "Code", "action": "open-code"},
+        {"id": "gethit.regions", "label": "Authored hit-region behavior and metadata are reviewed", "discipline": "Code", "action": "open-code"},
+        {"id": "gethit.visibility", "label": "No get-hit sequence contains an unexplained invisible frame", "discipline": "Review", "action": "open-air"},
+        {"id": "gethit.test", "label": "Ground, air, knockdown, trip, and recovery reactions pass testing", "discipline": "Testing", "action": "launch-training"}
+      ]
+    }
+  ]
+}

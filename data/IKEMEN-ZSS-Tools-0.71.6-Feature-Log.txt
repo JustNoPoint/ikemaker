@@ -1,0 +1,6 @@
+IKEMaker 0.71.6
+
+- Opens the IKEMaker activity-bar panel automatically when VS Code starts.
+- Makes creation and player tools immediately visible instead of initially leaving new users in Explorer.
+- Adds Personal Workspace and Preferences > Choose Opening Sidebar.
+- Allows experienced VS Code users to restore normal Explorer or previously active sidebar behavior.

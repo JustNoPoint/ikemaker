@@ -1,0 +1,9 @@
+IKEMEN ZSS Tools 0.56.2
+
+RYU WORKFLOW REHEARSAL MAINTENANCE
+
+- Fixes character selection after focus moves into an SFF, AIR, or other custom visual workspace.
+- Preserves the open-file discovery order while placing the shared template DEF after concrete character DEFs.
+- Prevents template.def from becoming the default character merely because no text editor is focused.
+- Adds a regression check covering the concrete-character-before-template rule.
+- Retains all Ryu Baseline v1 evidence and JNP sign-off gates from 0.56.1.

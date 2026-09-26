@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('assert'),vm=require('vm');
+const {referenceFor,findBlock,clientScript}=require('../src/code_structure_navigation');
+const node={kind:'controller',title:'HitDef',signature:'HitDef',sourceExcerpt:'HitDef{\n damage:30;\n}',startLine:4};
+const ref=referenceFor(node);
+assert.equal(findBlock([{...node,startLine:40}],ref).startLine,40,'line movement keeps a unique unchanged block');
+assert.equal(findBlock([{...node,sourceExcerpt:'changed'}],ref),null);
+assert.equal(findBlock([node,{...node}],ref),null,'identical duplicates are ambiguous');
+const parent={kind:'state',title:'State 200',startLine:0,children:[node]},model={children:[parent]};
+const fields={search:{value:'hidden'},filter:{value:'function'}};
+const selected=[];const collapsed=new Set(['state:0:State 200']);
+const context={model,selected:node,all:()=>[parent,node],$:id=>fields[id],collapsed,idFor:n=>n.kind+':'+n.startLine+':'+n.title,select:(n,reveal)=>selected.push({n,reveal})};
+vm.createContext(context);vm.runInContext(clientScript(),context);
+assert(context.ikemenCanRestoreNavigation(ref));context.ikemenRestoreNavigation(ref);
+assert.equal(fields.search.value,'');assert.equal(fields.filter.value,'all');assert.equal(collapsed.size,0);
+assert.equal(selected[0].n,node);assert.equal(selected[0].reveal,false,'history selection must not create another source visit');
+assert.throws(()=>context.ikemenRestoreNavigation({...ref,title:'Deleted'}),/changed/);
+console.log('Code block identity, moved/changed/ambiguous target and visible selection restoration passed');

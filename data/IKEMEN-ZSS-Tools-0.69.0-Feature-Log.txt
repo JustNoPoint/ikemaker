@@ -1,0 +1,18 @@
+IKEMaker 0.69.0 — Helper Lab completion
+
+- Adds a stopped-by-default projectile preview with AIR timing, SFF sprites, Clsn1,
+  Clsn2, velocity path, tick stepping, playback, mouse-wheel zoom, and drag pan.
+- Adds safe existing-helper round-trip editing. Static helper creation sites can be
+  loaded, reviewed, and replaced as one unsaved VS Code edit. Owned StateDefs are
+  protected from replacement.
+- Keeps computed helper IDs inspection-only so numeric editing cannot erase an
+  expression.
+- Adds project-level reusable helper recipes. Loading never inserts code.
+- Adds guided scaffolds for visual followers, companions, input readers, hitbox
+  proxies, and resource emitters. Fireball and Super Fireball remain the complete
+  gameplay recipes.
+- Adds hierarchy issue filters and map/data-flow filters.
+- Adds explicit documentation of static-analysis and runtime-test boundaries.
+- Fixes generated webview newline escaping and tests the compiled browser script.
+
+Automated verification: all 136 test files pass.

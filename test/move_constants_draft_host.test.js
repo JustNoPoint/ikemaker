@@ -1,0 +1,19 @@
+'use strict';
+const assert=require('assert'),vm=require('vm'),fs=require('fs'),path=require('path');const {FormDrafts}=require('../src/form_drafts');const constants=require('../src/move_constants_model');
+const source=fs.readFileSync(path.join(__dirname,'../src/move_constants_workspace.js'),'utf8');
+let text='[Constants]\nnormal.mp.moveID = 200\nnormal.mp.damage = 30\nnormal.mp.hitstun = 12\n',allow=false,refreshes=0;const sent=[],warnings=[];
+const document={uri:{},getText:()=>text,lineCount:5,lineAt:()=>({lineNumber:4,text:''})};
+const sandbox={...constants,currentText:async()=>text,formDrafts:new FormDrafts(),draftKey:(def,id)=>def+'#'+id,session:{assets:{defPath:'A.def',constants:'A.cns'},draftDefs:new Set(['a.def']),panel:{webview:{postMessage:async message=>sent.push(message)}}},handleLaunchMessage:async()=>false,refresh:async()=>refreshes++,vscode:{workspace:{openTextDocument:async()=>document,applyEdit:async edit=>{if(allow)text=edit.value;return allow;}},WorkspaceEdit:class{replace(uri,range,value){this.value=value;}},Range:class{},window:{showWarningMessage:async message=>warnings.push(message)}}};
+vm.createContext(sandbox);vm.runInContext(source.slice(source.indexOf('async function handle('),source.indexOf('async function openMoveConstantsWorkspace(')),sandbox);
+(async()=>{
+ const fields={damage:{base:30,value:40},hitstun:{base:12,value:18}};
+ await sandbox.handle({type:'moveFormDraft',defPath:'A.def',sourceId:'normal.mp',draft:fields});
+ const apply={type:'apply',defPath:'A.def',sourceId:'normal.mp',suffix:'damage',name:'normal.mp.damage',base:30,value:40};
+ await sandbox.handle(apply);assert.deepEqual(sandbox.formDrafts.read('A.def#normal.mp'),fields);assert.equal(refreshes,0,'failed apply cannot refresh away the draft');
+ allow=true;await sandbox.handle({...apply,base:25});assert.equal(warnings.length,1);assert(text.includes('damage = 30'));
+ await sandbox.handle({...apply,defPath:'B.def'});assert(text.includes('damage = 30'));
+ await sandbox.handle(apply);assert(text.includes('damage = 40'));assert.deepEqual(sandbox.formDrafts.read('A.def#normal.mp'),{hitstun:fields.hitstun});assert.equal(refreshes,1);assert.equal(sent.at(-2).type,'moveFieldApplied');
+ const storageValues={};const storage={get:key=>storageValues[key],update:async(key,value)=>storageValues[key]=value};
+ const hitdef=new FormDrafts(storage),move=new FormDrafts(storage,'ikemaker.moveConstantDrafts.v1');await hitdef.stage('one',{value:1});await move.stage('two',{value:2});assert(new FormDrafts(storage).read('one'));assert(new FormDrafts(storage,'ikemaker.moveConstantDrafts.v1').read('two'));
+ console.log('Move field Apply rejects source conflicts/wrong context, retains failed and unrelated drafts, and isolates storage from HitDef');
+})().catch(error=>{console.error(error);process.exitCode=1;});

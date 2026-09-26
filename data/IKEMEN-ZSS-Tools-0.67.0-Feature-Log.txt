@@ -1,0 +1,21 @@
+IKEMAKER 0.67.0 — HELPER AUTHORING FOUNDATION
+
+- Adds Helper Lab under Character Authoring and ZSS/CNS/Lua.
+- Creates reviewable ZSS or CNS Helper controllers and their owned StateDef.
+- Initializes named maps directly on helper creation and supports ExtendsMap.
+- Captures LastPlayerID into a helper-family-specific map for exact-instance routing.
+- Detects helper creation sites across connected character code.
+- Builds a recursive helper tree when one helper-owned StateDef creates another helper.
+- Opens the exact source line from helper-tree and detected map-flow entries.
+- Authors directional self, parent, root, helper, PlayerID, and team map contracts.
+- Warns about duplicate family IDs, missing IDs/states, recursive same-state spawning,
+  missing cleanup scaffolds, and relevant projectile ownership choices.
+- Bridges Helper Lab to Move Lab, Position & Camera, Explod Composer, the controller
+  browser, and the full character connection tree.
+- Keeps readable names and maps separate from runtime identity: ID selects a helper
+  family; index or captured PlayerID selects a particular instance.
+- Records the wider helper communication surface for later visual expansion: vars,
+  state/animation, position/velocity/binds, resources, targets, life, power, and hit state.
+- Generates previews only. Code is copied or inserted unsaved and remains undoable.
+
+Automated verification: 134 test files.

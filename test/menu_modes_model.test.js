@@ -1,0 +1,34 @@
+'use strict';
+
+const assert = require('assert');
+const { parseDef } = require('../src/def_model');
+const { parseSelectDef } = require('../src/select_def_model');
+const { menuEntries, orderCounts, finiteMaxMatches, installedActionIds, buildMenuModesModel } = require('../src/menu_modes_model');
+
+const system = parseDef(`[Files]\nspr = system.sff\n[Title Info]\nmenu.itemname.menupractice = PRACTICE\nmenu.itemname.menupractice.training = TRAINING\nmenu.itemname.arcade = ARCADE\nmenu.itemname.mycustom = DREAM MODE\n`);
+const select = parseSelectDef(`[Characters]\nRyu/Ryu.def, order=1\nKen/Ken.def, order=1, ordertimeattack=2\nBoss/Boss.def, order=3\nHidden/Hidden.def, order=1, exclude=1\n[Options]\narcade.maxmatches = 2,0,1\n`);
+const entries = menuEntries(system);
+assert.strictEqual(entries.length, 4);
+assert.strictEqual(entries.find((x) => x.action === 'training').capability, 'native');
+assert.strictEqual(entries.find((x) => x.action === 'mycustom').capability, 'module');
+assert.strictEqual(entries.find((x) => x.action === 'menupractice').capability, 'submenu');
+const orders = orderCounts(select);
+assert.deepStrictEqual(orders.find((x) => x.mode === 'default').counts, [{ order: 1, count: 2 }, { order: 3, count: 1 }]);
+assert.deepStrictEqual(orders.find((x) => x.mode === 'timeattack').counts, [{ order: 2, count: 1 }]);
+assert.strictEqual(finiteMaxMatches(orders.find((x) => x.mode === 'default').counts), '2,0,1');
+const model = buildMenuModesModel(system, select, { systemFile: 'system.def', selectFile: 'select.def' });
+assert.strictEqual(model.fightAll.optionKey, 'timeattack.maxmatches');
+assert.strictEqual(model.fightAll.optionValue, '0,1');
+assert.match(model.fightAll.blockedReason, /Only 1 of 3/);
+assert.ok(model.nativeActions.some((x) => x.id === 'bonusgames'));
+assert.strictEqual(model.recipes.find((x) => x.id === 'bossrush').status, 'module');
+const installed = installedActionIds(`main.t_itemname = {\n['arcade'] = function() end,\n['futuremode'] = function() end,\n}\nmain.t_itemname.teamarcade = main.t_itemname.arcade\nif gameOption('Debug.DumpLuaTables') then end`);
+assert.deepStrictEqual(installed, ['arcade', 'futuremode', 'teamarcade']);
+const verified = buildMenuModesModel(parseDef('[Title Info]\nmenu.itemname.futuremode = FUTURE\n'), select, {}, installed);
+assert.strictEqual(verified.menu[0].capability, 'native');
+assert.ok(verified.nativeActions.some((x) => x.id === 'futuremode'));
+const fallback = buildMenuModesModel(system, parseSelectDef('[Characters]\nRyu, order=1\nKen, order=3\n'));
+assert.strictEqual(fallback.fightAll.orderSource, 'order');
+assert.strictEqual(fallback.fightAll.optionValue, '1,0,1');
+assert.strictEqual(fallback.fightAll.blockedReason, '');
+console.log('Menu and modes model tests passed');

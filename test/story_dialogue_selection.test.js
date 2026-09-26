@@ -1,0 +1,47 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const original=Module._load,root=fs.mkdtempSync(path.join(os.tmpdir(),'story-dialogue-selection-'));
+const makeGame=name=>{const data=path.join(root,name,'data'),select=path.join(data,'select.def');fs.mkdirSync(data,{recursive:true});fs.writeFileSync(select,'[Characters]\nRyu/Ryu.def\n[StoryMode]\nname = ryu\ndisplayname = Ryu Story\npath = data/story/ryu.lua\n');return select;};
+const first=makeGame('one'),second=makeGame('two'),commands=new Map(),supports=new Map(),sessionRecords=new Map(),created=[];
+const storageValues={};
+const workspaceState={get:(key,fallback)=>storageValues[key]??fallback,update:async(key,value)=>{storageValues[key]=value;}};
+const key=value=>path.resolve(value).toLowerCase();
+const document=filename=>({fileName:filename,uri:{fsPath:filename,toString:()=>key(filename)},getText:()=>fs.readFileSync(filename,'utf8'),lineCount:1,lineAt:()=>({lineNumber:0,text:''})});
+function makePanel(){const received=[],disposed=[];const panel={title:'',reveals:0,reveal(){this.reveals++;},onDidDispose(fn){disposed.push(fn);},dispose(){for(const fn of disposed)fn();},webview:{cspSource:'test:',html:'',messages:[],onDidReceiveMessage(fn){received.push(fn);return{dispose(){}};},postMessage(message){this.messages.push(message);return true;}}};panel.send=message=>{for(const fn of received)fn(message);};created.push(panel);return panel;}
+const vscode={ViewColumn:{Active:1},Uri:{file:fsPath=>({fsPath})},window:{activeTextEditor:null,createWebviewPanel:()=>makePanel(),registerWebviewPanelSerializer:()=>({dispose(){}}),showErrorMessage:message=>{throw Error(message);}},workspace:{workspaceFolders:[],textDocuments:[],getConfiguration:()=>({get:(_,fallback)=>fallback}),openTextDocument:async uri=>document(uri.fsPath),onDidChangeTextDocument:()=>({dispose(){}})},commands:{registerCommand:(name,fn)=>{commands.set(name,fn);return{dispose(){}};},executeCommand:async()=>{}},env:{clipboard:{writeText:async()=>{}}}};
+Module._load=function(request,parent,main){
+ if(request==='vscode')return vscode;
+ if(request==='./viewer_sessions')return{register:(panel,file,kind)=>sessionRecords.set(`${key(file)}|${kind}`,panel)};
+ if(request==='./viewer_close')return{support:(panel,options)=>supports.set(panel,options)};
+ if(request==='./viewer_group')return{preferredViewerColumn:()=>2,trackViewerPanel:value=>value,revealInViewerGroup:value=>value.reveal()};
+ if(request==='./launch_controls')return{launchControlsHtml:()=>'',launchControlsClientScript:()=>'',handleLaunchMessage:async()=>false};
+ if(request==='./webview_policy')return{protect:value=>value};
+ return original.call(this,request,parent,main);
+};
+(async()=>{
+ const workspace=require('../src/story_dialogue_workspace');
+ workspace.registerStoryDialogueWorkspace({workspaceState,subscriptions:[]});
+ const one=await workspace.openStoryDialogueWorkspace({fsPath:first},'dialogue');
+ const two=await workspace.openStoryDialogueWorkspace({fsPath:second},'creator');
+ const draft={label:'Recovered rival',enemy:'Ken',phase:'post',group:9100,hidebars:false,lines:[{side:'p2',portrait:'3',wait:'12',text:'Again?',soundGroup:'5',soundIndex:'1'}]};
+ one.send({type:'dialogueDraft',revision:7,draft});
+ await new Promise(resolve=>setImmediate(resolve));
+ assert.deepEqual(one.webview.messages.at(-1),{type:'dialogueDraftStored',revision:7});
+ assert.equal(supports.get(one).isBusy(),false,'draft persistence completes before close is allowed');
+ one.dispose();
+ const reopened=await workspace.openStoryDialogueWorkspace({fsPath:first},'dialogue');
+ assert.notStrictEqual(reopened,one,'a disposed Story & Dialogue panel can be reopened');
+ assert.match(reopened.webview.html,/Recovered rival/,'host-backed dialogue draft survives direct close and reopen');
+ assert.match(reopened.webview.html,/Again\?/,'all dialogue beats are recovered');
+ const reused=await workspace.openStoryDialogueWorkspace({fsPath:first},'player');
+ assert.strictEqual(reused,reopened,'the same roster reuses its exact panel');
+ assert.notStrictEqual(two,reopened,'different rosters keep independently bound Story & Dialogue panels');
+ assert.equal(created.length,3,'two initial rosters plus one reopened disposed roster are created');
+ assert.strictEqual(sessionRecords.get(`${key(first)}|story_dialogue`),reopened);
+ reopened.send({type:'discardDialogueDraft'});await new Promise(resolve=>setImmediate(resolve));reopened.dispose();
+ const clean=await workspace.openStoryDialogueWorkspace({fsPath:first},'dialogue');
+ assert.doesNotMatch(clean.webview.html,/Recovered rival/,'explicit discard removes only this roster draft');
+ assert.match(two.webview.html,/let view=vscode\.getState\(\)\?\.view\|\|'creator'/,'the other roster keeps its own selected view');
+ assert(commands.has('ikemen.storyDialogue.openCreator'),'the typed preset command is registered');
+ console.log('Story & Dialogue drafts survive direct close, discard exactly, isolate rosters, reuse panels, and expose typed preset selection');
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>{Module._load=original;fs.rmSync(root,{recursive:true,force:true});});

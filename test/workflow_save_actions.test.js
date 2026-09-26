@@ -1,0 +1,25 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'workflow-actions-'));let autosave=false,stored={},preview,confirmation='Discard Changes';
+const vscode={Uri:{file:fsPath=>({fsPath})},commands:{registerCommand:()=>({dispose(){}})},workspace:{getConfiguration:()=>({get:(key,fallback)=>key==='autoSave'?autosave:fallback}),textDocuments:[],openTextDocument:async options=>{preview=options;return options;}},window:{showTextDocument:async()=>{},showWarningMessage:async()=>confirmation,showInformationMessage:()=>{}}};
+const original=Module._load;Module._load=function(name,...args){return name==='vscode'?vscode:original.call(this,name,...args);};
+(async()=>{try{
+ const w=require('../src/production_workflow_workspace');
+ const context={extensionPath:path.resolve(__dirname,'..'),subscriptions:[],workspaceState:{get:(key,fallback)=>stored[key]??fallback,async update(key,value){if(value===undefined)delete stored[key];else stored[key]=value;}}};w.registerProductionWorkflow(context);
+ const folder=path.join(root,'chars','Tester');fs.mkdirSync(folder,{recursive:true});const def=path.join(folder,'test.def');fs.writeFileSync(def,'[Info]\nname=Tester\n[Files]\nsprite=test.sff\nanim=test.air\ncns=test.cns\n');
+ const character=w.characterContext(def),session={state:w.loadState(context,character),panel:{webview:{postMessage:()=>{}}}};
+ await w.handle(context,session,{type:'issueDraft',defPath:def,values:{title:'Retained report',body:'Unsubmitted details'}});
+ assert.strictEqual(w.loadState(context,character).issueDraft.title,'Retained report','A freshly opened workflow must recover the locally stored form');
+ await w.handle(context,session,{type:'openProgress'});assert(preview?.content);assert(!fs.existsSync(session.state.progressPath),'Preview must not create progress metadata');
+ await w.handle(context,session,{type:'ticketOpen'});assert(!fs.existsSync(session.state.ticketPath),'Preview must not create a board');
+ await w.handle(context,session,{type:'status',id:'gethit.guard-separation',status:'in-progress'});assert(session.state.hasDraft);assert(!fs.existsSync(session.state.progressPath));
+ await w.handle(context,session,{type:'refresh'});assert(session.state.hasDraft,'Refresh retains the draft');
+ confirmation=undefined;await w.handle(context,session,{type:'discardWorkflow'});assert(session.state.hasDraft,'Cancelling discard retains draft');
+ await w.handle(context,session,{type:'saveWorkflow'});assert(fs.existsSync(session.state.progressPath));assert(!session.state.hasDraft);
+ autosave=true;await w.handle(context,session,{type:'status',id:'gethit.guard-separation',status:'not-started'});assert(!session.state.hasDraft);assert.strictEqual(JSON.parse(fs.readFileSync(session.state.progressPath)).items['gethit.guard-separation'].status,'not-started');
+ autosave=false;await w.handle(context,session,{type:'status',id:'gethit.guard-separation',status:'in-progress'});
+ await w.handle(context,session,{type:'issueSubmit',input:{title:'Test issue',body:'Details',destination:'ticket'}});assert(fs.existsSync(session.state.ticketPath));assert(session.state.hasDraft,'Explicit issue submit must not save unrelated character edits');
+ assert.strictEqual(w.loadState(context,character).issueDraft,null,'Successful submit clears the local form draft');
+ confirmation='Discard Changes';await w.handle(context,session,{type:'discardWorkflow'});assert(!session.state.hasDraft);
+ console.log('Workflow host actions: no-write previews, autosave off/on, refresh, cancel/discard, manual save and isolated explicit issue submit passed');
+}finally{Module._load=original;fs.rmSync(root,{recursive:true,force:true});}})().catch(error=>{console.error(error);process.exitCode=1;});

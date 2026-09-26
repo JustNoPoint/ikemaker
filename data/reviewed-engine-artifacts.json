@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "artifacts": [
+    {
+      "repository": "ikemen-engine/Ikemen-GO",
+      "platform": "windows-x64",
+      "commit": "76dd472f1c3876d64f52232e514bfaef9ada6aad",
+      "artifactSha256": "5ec5a9d1923bf84e7b7e0e44e949af2cbc1a78a345b4bc912106becae428fa75",
+      "reviewedAt": "2026-09-25",
+      "reviewBasis": "Exact release identity, source delta, archive, executable, and project three-way migration review."
+    }
+  ]
+}

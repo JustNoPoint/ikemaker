@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('assert');
+const operations = require('../src/palette_selection_operations');
+const colors = Array.from({ length: 256 }, (_, index) => [index, index, index, index === 0 ? 0 : 255]);
+assert.deepStrictEqual(operations.normalizeIndices([3, 2, 3, -1, 256]), [2, 3]);
+assert.deepStrictEqual(operations.adjustRgb(colors, [10], { r: 20 })[10].slice(0, 3), [30, 10, 10]);
+assert.deepStrictEqual(operations.applyPreset(colors, [20], 'invert')[20].slice(0, 3), [235, 235, 235]);
+const gradient = operations.fillGradient(colors, [10, 20, 30]); assert.deepStrictEqual(gradient[20].slice(0, 3), [20, 20, 20]);
+const swapped = operations.swapSelected(colors, [10, 20]); assert.deepStrictEqual(swapped[10].slice(0, 3), [20, 20, 20]); assert.strictEqual(swapped[10][3], colors[10][3]);
+const reversed = operations.reverseSelected(colors, [10, 20, 30]); assert.deepStrictEqual(reversed[10].slice(0, 3), [30, 30, 30]);
+const duplicates = colors.map(color => color.slice()); duplicates[11] = duplicates[10].slice(); assert(operations.duplicateGroups(duplicates).some(group => group.indices.includes(10) && group.indices.includes(11)));
+assert.match(operations.selectionHtml(), /Selected Index Operations/); assert.doesNotThrow(() => new (require('vm').Script)(operations.selectionClientScript()));
+console.log('palette selection operation tests passed');

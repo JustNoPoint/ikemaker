@@ -1,0 +1,20 @@
+IKEMaker 0.64.2
+
+PUBLIC/PRIVATE PACKAGE BOUNDARY
+
+- Removed every private-project identifier, test-profile entry, workflow reference,
+  progression note, and documentation reference from the public extension source.
+- Public onboarding offers Default / Universal or creation of the user's own project
+  profile. It does not ask ordinary users to select a JNP game profile.
+- A future private game layer must be packaged separately over the public IKEMaker
+  core. The public package must never depend on that layer.
+
+SF6 PHASE 2
+
+- Added cross-view asset consistency review.
+- Added Placeholder, Gameplay Ready, Presentation Ready, and Final readiness states.
+- Added reproducible SFF and sound manifest rebuild verification.
+
+TESTING
+
+- All 113 automated test files pass after the public-package scrub.

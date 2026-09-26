@@ -1,0 +1,1430 @@
+<html><head><meta charset="utf-8"/><title>State-controllers-(new)</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers-%28new%29">Original source (online)</a> · Snapshot 2026-09-13</div><p>The state controller featured in this page are completely new to Ikemen GO.  </p>
+<p>Use the sidebar for quick navigation.  </p>
+<h1 id="new-state-controller-features"><a name="changed_all">New state controller features</a></h1>
+<p>Both new and old state controllers can now take advantage of some global new features.</p>
+<h2 id="fightfx-actions"><a name="changed_all_fightfx">fightfx actions</a></h2>
+<p>All the remaining CNS parameters used to assign character actions that didn't support the <code>F</code> prefix (<em>[Statedef]</em>, <em>ChangeState</em>, <em>SelfState</em>, <em>ChangeAnim</em>, <em>ChangeAnim2</em>, <em>Projectile</em>) have access to loading animations from <code>fightfx.air</code>. The implementation is the same as in the <em>Explod</em> anim parameter.  </p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[Statedef 1000]
+anim = F 300
+</code></pre>
+<h2 id="redirectid"><a name="changed_all_redirectid">RedirectID</a></h2>
+<p>This feature can be utilized with all state controllers, including legacy ones. It is an optional parameter that sends the execution of the state controller to the player with the designated PlayerID. Unlike custom states, this parameter allows interfering with a player's behavior without putting them in another player's states.</p>
+<p>For state controllers that normally stop state execution (ChangeState and SelfState), redirecting to an ID different from the owner will not stop the execution of the current state code.</p>
+<p><strong>Examples:</strong><br/>
+A poison effect that reduces life, applied without touching the opponent:</p>
+<pre><code class="language-ini">[State -2, Poison]
+type = LifeAdd
+trigger1 = &lt;Is the enemy poisoned?&gt; trigger  
+value = -1
+kill = 0
+RedirectID = &lt;Enemy id here&gt;  
+</code></pre>
+<p>Increasing a team leader's map, regardless of who is running it, if leader's map is &lt; 10.</p>
+<pre><code class="language-ini">[State Test]
+type = MapAdd
+trigger1 = Player(TeamLeader), Map(SomeLeaderMap) &lt; 10
+Map = "SomeLeaderMap"
+value = 1
+RedirectID = Player(TeamLeader), ID
+</code></pre>
+<p>Due to limitations in how some logic must be handled, certain state controllers may not work with RedirectID. Usually because of the order the players are processed in.<br/>
+TODO: list of sctrls that can't be redirected.</p>
+<h1 id="new-state-controllers"><a name="new">New state controllers</a></h1>
+<h2 id="assertanalogvector"><a name="new_assertanalogvector">AssertAnalogVector</a></h2>
+<p>This controller allows (de)activating the player's analog vectors without input from a joystick. Values will be clamped to <code>[-1,1]</code> with the exception of analog triggers which are normalized to <code>[0,1]</code>.</p>
+<p><strong>Optional parameters:</strong> </p>
+<p><strong>leftx = <em>vector</em> (float)</strong><br/>
+Sets the <code>LeftX</code> analog vector. Defaults to 0.</p>
+<p><strong>lefty = <em>vector</em> (float)</strong><br/>
+Sets the <code>LeftY</code> analog vector. Defaults to 0.</p>
+<p><strong>rightx = <em>vector</em> (float)</strong><br/>
+Sets the <code>RightX</code> analog vector. Defaults to 0.</p>
+<p><strong>righty = <em>vector</em> (float)</strong><br/>
+Sets the <code>RightY</code> analog vector. Defaults to 0.</p>
+<p><strong>lefttrigger = <em>vector</em> (float)</strong><br/>
+Sets the <code>LeftTrigger</code> analog vector. Defaults to 0.</p>
+<p><strong>righttrigger = <em>vector</em> (float)</strong><br/>
+Sets the <code>RightTrigger</code> analog vector. Defaults to 0.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State -1, AssertAnalogVector]
+type = AssertAnalogVector
+leftx = 0.125
+lefty = -0.5
+rightx = 0
+righty = 0
+lefttrigger = 0.75
+righttrigger = 0
+</code></pre>
+<h2 id="assertcommand"><a name="new_assertcommand">AssertCommand</a></h2>
+<p>This controller allows (de)activating the player's commands without any button presses. If the player has multiple commands with the same name, the controller will affect all of them.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>name = <em>command_name</em> (string)<br/>
+String specifying the command to assert.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>buffer.time = <em>time</em> (int)<br/>
+Number of ticks during which the command will be buffered. Defaults to 1.  </p>
+</blockquote>
+<p>Examples:</p>
+<pre><code class="language-ini">[State Test]
+type = AssertCommand
+trigger1 = time = 10
+name = "QCF_x"
+buffer.time = 5
+</code></pre>
+<p>When the name parameter is set to "" (empty), a random command from all the commands the character has will be activated.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = AssertCommand
+trigger1 = time = 10
+name = ""
+</code></pre>
+<h2 id="assertinput"><a name="new_assertinput">AssertInput</a></h2>
+<p>This controller allows you to assert up to three input flags simultaneously via single sctrl. Similarly to AssertSpecial, there is no limit how many times this controller is called. Each flag will be automatically "de-asserted" at every game tick, so you must assert a flag for each tick that you want it to be active. Ikemen interprets input flags the same was as if corresponding input keys were pressed.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>flag = <em>flag_name</em> (string)<br/>
+String specifying the flag to assert.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>flag2 = <em>flag_name</em> (string)<br/>
+An optional flag to assert.  </p>
+<p>flag3 = <em>flag_name</em> (string)<br/>
+Another optional flag to assert.  </p>
+<p>flag4 = <em>flag_name</em> (string) <br/>
+Another optional flag to assert.  </p>
+<p>flag5 = <em>flag_name</em> (string) <br/>
+Another optional flag to assert.  </p>
+<p>flag6 = <em>flag_name</em> (string) <br/>
+Another optional flag to assert.  </p>
+<p>flag7 = <em>flag_name</em> (string) <br/>
+Another optional flag to assert.  </p>
+<p>flag8 = <em>flag_name</em> (string) <br/>
+Another optional flag to assert.  </p>
+</blockquote>
+<p><strong>Details:</strong><br/>
+The flag name can be one of the following input keys (case sensitive):<br/>
+U, D, L, R, a, b, c, x, y, z, s, d, w, m<br/>
+B, F   </p>
+<h2 id="camera-experimental"><a name="new_camera">Camera</a> [EXPERIMENTAL]</h2>
+<p><strong>This SCTRL is still experimental and subject to possible changes, there is no guarantee this will be supported as is in future IKEMEN Go versions.</strong> </p>
+<p>Changes the camera position and the way players interact with screen and stage edges.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>view = "<em>view_type</em>" (string)<br/>
+Specifies the type of view to implement.<br/>
+Valid values are "Fighting", "Follow" or "Free". Fighting works like common MUGEN camera. Follow anchors the camera to a specific player/helper and follows it. Free is not bound to anything other than the own camera's limitations.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>Pos: X (float), Y (float). This should be used during Free view, as it lets a character directly control the camera position values.<br/>
+FollowID: ID (int). When in Follow view and a player/helper ID is specified in this parameter, camera will start following that player/helper.  </p>
+</blockquote>
+<p><strong>Details:</strong> </p>
+<blockquote>
+<p>When in Free view, Screenbound and Movecamera will not influence camera or char positions. Follow view will only be influenced by Screenbound/Movecamera from the player being followed (this might change in the future).</p>
+</blockquote>
+<h2 id="changemovelist"><a name="new_changemovelist">ChangeMovelist</a></h2>
+<p>Selects which movelist assigned in the character's DEF file should be displayed in the Pause menu command list.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>value = <em>movelist_index</em> (int)<br/>
+Specifies the index of the movelist to use. Defaults to 0.  </p>
+</blockquote>
+<p>The movelist files are specified in the character's DEF file, under the <code>[Files]</code> group. <code>movelist</code> and <code>movelist0</code> both refer to index 0.</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State 5900, Evil Ryu movelist]
+type = ChangeMovelist
+trigger1 = PalNo &gt; 6
+value = 1
+</code></pre>
+<h2 id="depth"><a name="new_depth">Depth</a></h2>
+<p>Temporarily changes the depth size of the player's for 1 frame. Similar to Width in function. </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>edge = <em>edgedepth_front, edgedepth_back</em> (int, int)<br/>
+Sets the player's edge depth in front and behind. Edge depth determines how close the player can get to the topbound and botbound of the screen. These parameters default to 0,0 if omitted.  </p>
+<p>player = <em>playdepth_front, playdepth_back</em> (int, int)<br/>
+Sets the player depth in front and behind. Player depth determines how close the player can get to other players depth and also determines the hitable depth area of a player. These parameters default to 0,0 if omitted  </p>
+<p>Alternate syntax:<br/>
+value = <em>value = depth_front, depth_back</em> (int, int)<br/>
+This is a shorthand syntax for setting both edge depth and player depth simultaneously. This may only be used if the edge and player parameters are not specified.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = Depth
+trigger1 = P2StateType = A
+value = 0, 0
+player = 40, 0
+edge = 0, 0
+</code></pre>
+<h2 id="dialogue"><a name="new_dialogue">Dialogue</a></h2>
+<p>Assigns dialogue data to be displayed either right before the lifebar calls the fight during first round (last frame of  RoundState = 1) or at the last active frame of the final round (RoundState = 4, right before screen starts fading out). If more than 1 player calls this sctrl, who will end up initiating dialogue is chosen randomly.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>textX = "<em>dialogue_info</em>" (string)<br/>
+String containing information needed for displaying dialogue. There can be multiple <em>text</em> parameters assigned, each suffixed with numbers in ascending order. The parameter stores both text, as well as optional tokens (enclosed in &lt;&gt; brackets) for controlling other aspects of dialogue (listed below).</p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>hidebars = <em>bars_flag</em> (int)<br/>
+Set to nonzero to hide lifebars as soon as the sctrl is called (by default lifebar is hidden only when actual dialogue starts).  </p>
+<p>force = <em>force_flag</em> (int)<br/>
+Set to nonzero to force dialogue start immediately, ignoring normal rules.  </p>
+</blockquote>
+<p>How the rendered dialogue will look like (positioning, default face sprites, background definition, default time between text etc.) is controlled by <code>[Dialogue Info]</code> screenpack parameters (refer to system.def distributed with engine for a working example). By default player who called the state controller will use screenpack parameters prefixed with <em>p1</em> and his <em>enemy(0)</em> will be assigned to use <em>p2</em> parameters (this is adjustable via text tokens).</p>
+<p>With appropriate screenpack parameters it's possible to skip to the next <em>text</em> parameter during dialogue via button press, without ending it all together. If this screenpack group is missing, dialogue won't be initiated at all (<code>enabled</code> parameter defaults to 0).</p>
+<p><strong>Optional text tokens</strong></p>
+<p>Tokens prefixed with <em>pX</em> (where X is 1 or 2) refers to screenpack <code>[Dialogue Info]</code> parameters prefixed the same way. Some tokens accepts <em>redirection</em> argument that points to which player assets (sprite, sound, anim, state) should be used.</p>
+<p>Following redirection are supported:
+- <code>self</code>: redirects to player that called the sctrl
+- <code>playerno(X)</code>: redirects to <a href="Triggers-%28new%29.html#new_playerno">playerno</a> X
+- <code>enemy(X)</code>: redirects to enemy X of the player that called the sctrl (defaults to 0, the first enemy, if bracket is ommiteed)
+- <code>partner(X)</code>: redirects to partner X of the player that called the sctrl (defaults to 0, the first partner, if bracket is ommiteed)
+- <code>enemyname(name)</code>: redirects to the enemy with matching name (the internal <code>name</code> parameter specified in .DEF file)
+- <code>partnername(name)</code>: redirects to the partner with matching name (the internal <code>name</code> parameter specified in .DEF file)</p>
+<p>Token list:
+- <code>&lt;pX&gt;</code>: changes which dialogue box side (replace X with 1 or 2) should be used to render text. Defaults to p1 side.
+- <code>&lt;pXname=name&gt;</code>: changes pX side name displayed during dialogue to the string within quotation marks
+- <code>&lt;pXname=redirection&gt;</code>: changes pX side name displayed during dialogue to the redirected player displayname (as specified in displayname parameter within the .DEF file)
+- <code>&lt;pXface=redirection,group_or_anim,sprite_no&gt;</code>: changes pX side sprite group and index used to render the face portrait. If only one value is assigned, it is treated as an animation to play while the portrait is active. Defaults to the sprite numbers defined by the screenpack (and falls back to those if the specified sprites are missing), unless <em>group_or_anim</em> is set to -1, in which case face rendering is completely disabled.
+- <code>&lt;sound=redirection,group_no,sound_no,volumescale&gt;</code>: plays back a sound. <em>volumescale</em> argument is optional (defaults to 100).
+- <code>&lt;anim=redirection,anim_no&gt;</code>: changes the action number of the player's animation
+- <code>&lt;state=redirection,state_no&gt;</code>: changes the state number of the player
+- <code>&lt;map=redirection,map_name,value,map_type&gt;</code>: modifies player's map. <em>map_type</em> controls what kind of operation on map should be performed (<code>set</code>: equivalent of <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_mapset">MapSet</a>, <code>add</code>: equivalent of <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_mapadd">MapAdd</a>), 
+- <code>&lt;displayname=redirection&gt;</code>: part of the dialogue text replaced automatically with redirected player displayname (as specified in displayname parameter within the .DEF file)
+- <code>&lt;wait=ticks&gt;</code>: amount of ticks delay before sctrl resume further text parameter parsing</p>
+<p>As an example, below code showcases Symphony of the Night (in)famous cutscene recreated with Dialogue sctrl, using various advanced tokens (keep in mind that in most cases, when you don't have to switch face sprites, play voiceovers or adjust timings, the only commonly used <em>text</em> token is <code>&lt;pX&gt;</code>)</p>
+<p>Click on the image to watch the video corresponding to below code.</p>
+<p><a href="http://www.youtube.com/watch?v=BbUnJT9KnnU" title="Ikemen GO SotN cutscene"><img alt="IMAGE ALT TEXT" src="http://img.youtube.com/vi/BbUnJT9KnnU/0.jpg"/></a></p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State 191, Dialogue]
+type = Dialogue
+trigger1 = enemy,Name="Demitri Maximoff"
+hidebars = 1
+text1 = "&lt;p1&gt;&lt;p1face=self,9100,0&gt;&lt;p2face=enemy,9100,4&gt;&lt;sound=self,9100,0&gt;Die monster.&lt;wait=60&gt; You don't belong in this world!"
+text2 = "&lt;p2&gt;&lt;sound=enemy,9100,0&gt;It was not by my hand that I am once again given flesh.&lt;wait=120&gt; I was called here by humans, who wish to pay me tribute.&lt;wait=170&gt;"
+text3 = "&lt;p1&gt;&lt;p1face=self,9100,1&gt;&lt;sound=self,9100,1&gt;Tribute!?!&lt;wait=30&gt; You steal men's souls, and make them your slaves!&lt;wait=90&gt;"
+text4 = "&lt;p2&gt;&lt;p2face=enemy,9100,2&gt;&lt;sound=enemy,9100,1&gt;Perhaps the same could be said of all religions...&lt;wait=30&gt;"
+text5 = "&lt;p1&gt;&lt;p1face=self,9100,7&gt;&lt;sound=self,9100,2&gt;Your words are as empty as your soul!&lt;wait=80&gt;&lt;p1face=self,9100,4&gt; Mankind ill needs a savior such as you!&lt;wait=70&gt;"
+text6 = "&lt;p2&gt;&lt;p2face=enemy,9100,5&gt;&lt;sound=enemy,9100,2&gt;What is a man?&lt;wait=75&gt;&lt;p1face=self,9100,2&gt; A miserable little pile of secrets!&lt;wait=75&gt; But enough talk...&lt;wait=30&gt; Have at you!"
+
+[State 180, Dialogue]
+type = Dialogue
+trigger1 = Win &amp;&amp; enemy,Name="Demitri Maximoff"
+text1 = "&lt;p2&gt;&lt;p1face=self,9100,6&gt;&lt;p2face=enemy,9100,3&gt;&lt;sound=enemy,9200,0&gt;&lt;anim=self,0&gt;&lt;state=enemy,5500&gt;How?&lt;wait=120&gt; How is that I have been so defeated?&lt;wait=120&gt;"
+text2 = "&lt;p1&gt;&lt;p1face=self,9100,3&gt;&lt;sound=self,9200,0&gt;&lt;displayname=enemy&gt;, you have been doomed ever since you lost the ability to love.&lt;wait=20&gt;"
+text3 = "&lt;p2&gt;&lt;p2face=enemy,9100,0&gt;&lt;sound=enemy,9200,1&gt;Ah...&lt;wait=90&gt; sarcasm.&lt;p1face=self,9100,5&gt;&lt;wait=40&gt;&lt;state=self,186&gt;"
+</code></pre>
+<h2 id="dizzyset"><a name="new_dizzyset">DizzySet</a></h2>
+<p>Sets the player's Dizzy flag. For the duration that this flag is set, combo hit counter does not reset and the combo count lifebar text will stay on screen. </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>dizzy_flag</em> (int)<br/>
+Set to nonzero to add Dizzy flag, or 0 to remove it.  </p>
+</blockquote>
+<h2 id="dizzypointsadd"><a name="new_dizzypointsadd">DizzyPointsAdd</a></h2>
+<p>Adds the specified amount to the player's dizzy points.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_amt</em> (int)<br/>
+<em>add_amt</em> is the number to add to the player's dizzy points.  </p>
+</blockquote>
+<h2 id="dizzypointsset"><a name="new_dizzypointsset">DizzyPointsSet</a></h2>
+<p>Sets the amount of dizzy points that the player has.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>set_amt</em> (int)<br/>
+<em>set_amt</em> is the new value to set the player's dizzy points to.  </p>
+</blockquote>
+<h2 id="gethitvarset"><a name="new_grthitvarset">GetHitVarSet</a></h2>
+<p>Changes a player's <code>GetHitVar</code> directly, without requiring a hit.  </p>
+<p>Supported parameters:<br/>
+airtype, animtype, attr, chainid, ctrltime, damage, dizzypoints, down.recovertime, fall, fall.damage, fall.envshake.ampl, fall.envshake.freq, fall.envshake.mul, fall.envshake.phase, fall.envshake.time, fall.kill, fall.recover, fall.recovertime, fall.xvel, fall.yvel, fallcount, groundtype, guardcount, guarded, guardpoints, hitcount, hitshaketime, hittime, ID, playerno, redlife, slidetime, xvel, yaccel, yvel</p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = GetHitVarSet
+trigger1 = time = 10
+fall.recovertime= 0
+</code></pre>
+<h2 id="groundleveloffset"><a name="new_groundleveloffset">GroundLevelOffset</a></h2>
+<p>Applies a temporary offset to the player's ground level, which is otherwise 0. This makes the player treat a different position as <code>pos y = 0</code>, and therefore allows coding features such as platforms.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = offset (float)  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = GroundLevelOffset
+trigger1 = Pos X + CameraPos X = [-160, 0]
+trigger1 = Pos Y + GroundLevel &lt;= -60
+value = -60
+</code></pre>
+<h2 id="guardbreakset"><a name="new_guardbreakset">GuardBreakSet</a></h2>
+<p>Sets the player's Guard Break flag.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>break_flag</em> (int)<br/>
+Set to nonzero to add Guard Break flag, or 0 to remove it.  </p>
+</blockquote>
+<h2 id="guardpointsadd"><a name="new_guardpointsadd">GuardPointsAdd</a></h2>
+<p>Adds the specified amount to the player's guard points.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_amt</em> (int)<br/>
+<em>add_amt</em> is the number to add to the player's guard points.  </p>
+</blockquote>
+<h2 id="guardpointsset"><a name="new_guardpointsset">GuardPointsSet</a></h2>
+<p>Sets the amount of guard points that the player has.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>set_amt</em> (int)<br/>
+<em>set_amt</em> is the new value to set the player's guard points to.  </p>
+</blockquote>
+<h2 id="height"><a name="new_height">Height</a></h2>
+<p>Temporarily changes the vertical size of the player's "push box" for 1 frame. Similar to Width in function: the values are added to the height, as defined in the player's constants file—they do not override them. A positive value will make the box larger, and a negative one will make it smaller.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>top_extra_size, bottom_extra_size</em> (int)</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = Height
+trigger1 = P2StateType = L
+value = 0, -30
+</code></pre>
+<h2 id="lifebaraction"><a name="new_lifebaraction">LifebarAction</a></h2>
+<p>Displays text/sprites/anims synchronized with each other, using <a href="Lifebar-features.html#new_action">lifebar data</a>. The intended use case is implementation of messages, often found in commercial fighting games.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>top = <em>top_flag</em> (int)<br/>
+Set to nonzero to move the message on top of the messages queue (by default new messages are appended to the end).  </p>
+<p>time = <em>time_set</em> (int)<br/>
+Specifies how long in ticks the message should be displayed. Defaults to time assigned by lifebar DEF file.  </p>
+<p>timemul = <em>time_mul</em> (float)<br/>
+Specifies the desired time multiplier. For instance, <em>time_mul</em> of 0.5 halves the time in which the message is displayed.  </p>
+<p>anim = <em>anim_no</em> (int)<br/>
+Specifies the number of the animation that should be used as a message (declared in lifebar DEF file).  </p>
+<p>spr = <em>group_no</em>, <em>sprite_no</em> (int, int)<br/>
+Values correspond to the identifying pair assigned to sprite in the lifebar sff file.  </p>
+<p>snd = <em>group_no</em>, <em>sound_no</em> (int, int)<br/>
+Values correspond to the identifying pair assigned to sound in the lifebar snd file.  </p>
+<p>text = <em>"message"</em> (string)<br/>
+Text to be rendered as a message.  </p>
+<p>font.no = <em>font_no</em> (int)<br/>
+<em>font_no</em> specifies the number of the lifebar font to use for text rendering. Defaults to the font assigned by lifebar DEF file.  </p>
+<p>font.bank = <em>bank_no</em> (int)<br/>
+Color bank of the font to use. Refer to the font for what color banks it has. Defaults to the bank assigned by lifebar DEF file.  </p>
+<p>font.align = <em>alignment</em> (int)<br/>
+<em>alignment</em> is a number representing the text alignment. 1 is left, 0 means center, and -1 is for right-alignment. Defaults to the alignment assigned by lifebar DEF file.  </p>
+<p>font.color = <em>r, g, b, a</em> (int, int, int, int)<br/>
+Color adjustment values for the font. Defaults to values assigned by lifebar DEF file. Alpha is optional.  </p>
+<p>palfx.key = LifebarAction can accept all the same key values from <a href="http://www.elecbyte.com/mugendocs/sctrls.html#palfx">PalFX state controller</a> for message text rendering.  </p>
+<p>refreshtype = <em>type</em> (int)<br/>
+Determines how to handle duplicate messages:<br/>
+0 lets duplicates stack<br/>
+1 refreshes timer of an identical message instead of adding a new one<br/>
+2 (default) is like 1, except the existing message also reappears from outside the screen  </p>
+</blockquote>
+<p>Refer to <em>data/action.zss</em> file and default lifebar distributed with engine for a working example.</p>
+<h2 id="loadfile"><a name="new_loadfile">LoadFile</a></h2>
+<p>Loads the specified data and overrides the data of the execution character. Note that all the data before reading will disappear.</p>
+<p><strong>Required parameters:</strong> </p>
+<p><strong>savedata = <em>var_type</em> (string)</strong><br/>
+Specifies the data type that should be read. Valid values for var_type are "var", "fvar", and "map".  </p>
+<p><strong>path = "<em>save_path</em>" (string)</strong><br/>
+Specifies the path of the file to be read (relative to the character folder). An error occurs if you make a mistake in the path.  </p>
+<p><strong>Optional parameters:</strong> </p>
+<p><strong>maps = <em>map_1</em>, <em>map_2</em>, <em>map_3</em>... (string)</strong><br/>
+A list of maps to load. Defaults to empty.  </p>
+<p><strong>maps.include = <em>filter</em> (string)</strong><br/>
+All maps containing this string in their names will be loaded. Defaults to empty.  </p>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = LoadFile
+trigger1 = time = 10
+savedata = var
+path = "kfm.gob"
+</code></pre>
+<h2 id="mapadd"><a name="new_mapadd">MapAdd</a></h2>
+<p>Adds value to player's map.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p><em>map = "</em>map_name<em>" (string)</em><br/>
+Specifies a name of the map that we add value to.  </p>
+<p><strong>value = <em>expr</em> (int or float)</strong><br/>
+<em>expr</em> is the value to add to the map.  </p>
+</blockquote>
+<h2 id="mapreset"><a name="new_mapreset">MapReset</a></h2>
+<p>Clears all of the player's maps, except those containing the specified strings.<br/>
+Maps that are defined in the character's DEF file will be reset to the value specified there.  </p>
+<p><strong>Required parameters:</strong> </p>
+<p>none  </p>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p><strong>exclude = "<em>exception_string</em>"</strong> (string)<br/>
+If a map's name contains this string, it won't be cleared.</p>
+<p><strong>exclude2 = "<em>exception_string</em>"</strong> (string)<br/>
+Extra filter parameters. Up to <code>exclude8</code>.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code>mapReset{exclude: "level_"; exclude2: "experience_"; exclude3: "score_"}
+</code></pre>
+<h2 id="mapset"><a name="new_mapset">MapSet</a></h2>
+<p>Sets value to player's map. This state controller can be used to change a number that has already been set via character's DEF file or to set a new map.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we assign value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to assign to the map.  </p>
+</blockquote>
+<h2 id="matchrestart"><a name="new_matchrestart">MatchRestart</a></h2>
+<p>Reset the round or match and resume. By default (when no optional parameters are set) has the same effect as F4 debug key (round restart). Optionally allows characters and stage reloading, which also changes the state controller functionality to work like shift+F4 debug key (match restart).</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>pXdef = "<em>char_path</em>" (string)<br/>
+Path of the def file to read when reloading player 1-8 (replace X with player number). <em>char_path</em> can be relative to the folder of character that triggered MatchRestart or top ikemen directory.  </p>
+<p>stagedef = "<em>stage_path</em>" (string)<br/>
+Path of the stage def file to read when reloading. <em>stage_path</em> can be relative to the folder of character that triggered MatchRestart or top ikemen directory.  </p>
+<p>reload = <em>p1, p2, p3, p4, p5, p6, p7, p8</em> (int)<br/>
+This parameter specifies whether to reload particular character. Defaults to 0 (round is reset without characters reloading) <br/>
+Note: Reloading files does not work during netplay due to synchronization limitations.</p>
+<p>resetmatch = "<em>flag</em>" (int)<br/>
+If set to 1, the match will restart from Round 1 instead of the current round. Unlike standard reloading, this allows restarting the match without reloading assets (reload=0), making it compatible with netplay. Defaults to 0.<br/>
+Note: This parameter will be ignored in Turns mode if the active characters have already switched and reload is not enabled, as the original characters are no longer in memory.</p>
+<p>preservevars = <em>p1, p2, p3, p4, p5, p6, p7, p8</em> (int)<br/>
+This parameter specifies whether to preserve variables (var, fvar, map) for a particular character after the restart. Defaults to 0.<br/>
+Note: In the first round, the default common state will have all var and fvar reset by the varRangeSet in StateDef 5900. If you want to carry over variables to the first round, you will need to overwrite the StateDef 5900.</p>
+<p>pXpalette = <em>pal_no</em> (int)<br/>
+Specifies the palette number (1-12) to be used for player X (replace X with player number) upon restarting. If not specified, the character retains the currently selected palette.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = MatchRestart
+trigger1 = time = 10
+p1def = "kfm.def"
+p2def = "../suavedude/suavedude.def"
+stagedef = "stages/stage0.def"
+reload = 1, 1
+</code></pre>
+<h2 id="modifybgctrl"><a name="new_modifybgctrl">ModifyBGCtrl</a></h2>
+<p>Modifies the parameters of an existing stage <a href="http://www.elecbyte.com/mugendocs/bgs.html#background-controllers">background controller</a>.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>id = <em>sctrlid</em> (int)<br/>
+Specifies which controllers should be modified (all BGCtrl marked with <a href="Stage-features.html#bgctrl_sctrlid">sctrlid</a> will be affected)  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>time = <em>start_time</em>, <em>end_time</em>, <em>looptime</em> (int)<br/>
+time values that should modify background controller time parameter.  </p>
+<p>value = <em>value_1</em>, <em>value_2</em>, <em>value_3</em> (int)<br/>
+values that should modify background controller value parameter (used by following BGCtrl types: <em>Visible</em>, <em>Enabled</em>, <em>Anim</em>, <em>SinX</em>, <em>SinY</em>; only SinX and SinY use more than 1 value).  </p>
+<p>x = <em>value_x</em> (float)<br/>
+x value that should modify background controller <em>x</em> parameter (used by following BGCtrl types: <em>VelSet</em>, <em>VelAdd</em>, <em>PosSet</em>, <em>PosAdd</em>).  </p>
+<p>y = <em>value_y</em> (float)<br/>
+y value that should modify background controller <em>y</em> parameter (used by following BGCtrl types: <em>VelSet</em>, <em>VelAdd</em>, <em>PosSet</em>, <em>PosAdd</em>).  </p>
+<p>Notes:<br/>
+This state controller affects background controllers marked with <a href="Stage-features.html#bgctrl_sctrlid">sctrlid</a>, which is normally not known by individual characters. For this reason the best way to use this sctrl is through <a href="Stage-features.html#info_attachedchar">AttachedChar</a> associated with particular stage.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+trigger1 = 1
+type = ModifyBGCtrl
+sctrlID = 1
+value = 0
+</code></pre>
+<h2 id="modifybgctrl3d"><a name="new_modifybgctrl">ModifyBGCtrl3D</a></h2>
+<p>Modifies the parameters of an existing <a href="https://github.com/ikemen-engine/Ikemen-GO/Stage-features-(3d)/">3D stage background controller</a>.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>id = <em>sctrlid</em> (int)<br/>
+Specifies which controllers should be modified (all BGCtrl marked with <a href="Stage-features.html#bgctrl_sctrlid">sctrlid</a> will be affected)  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>time = <em>start_time</em>, <em>end_time</em>, <em>looptime</em> (int)<br/>
+time values that should modify background controller time parameter.  </p>
+<p>value = <em>value_1</em>, <em>value_2</em>, <em>value_3</em> (int)<br/>
+values that should modify background controller value parameter (used by following BGCtrl types: <em>Visible</em>, <em>Enabled</em>, <em>Anim</em>).  </p>
+<p>Notes:<br/>
+This state controller affects background controllers marked with <a href="Stage-features.html#bgctrl_sctrlid">sctrlid</a>, which is normally not known by individual characters. For this reason the best way to use this sctrl is through <a href="Stage-features.html#info_attachedchar">AttachedChar</a> associated with particular stage.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State -2, Test]
+type = ModifyBGCtrl3d
+trigger1 = MoveType = A &amp;&amp; Time = 1
+id = 17
+time = 0
+value = 1
+</code></pre>
+<h2 id="modifybgm"><a name="new_modifybgm">ModifyBgm</a></h2>
+<p>Modifies currently playing music.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>volume = <em>volume_scale</em> (int)<br/>
+<em>volume_scale</em> alters volume for currently playing bgm.  </p>
+<p>loopstart = <em>start_sample</em> (int)<br/>
+Loop start position sample number.  </p>
+<p>loopend = <em>end_sample</em> (int)<br/>
+Loop end position sample number.  </p>
+<p>position = <em>sample_point</em> (int)<br/>
+Sample point to where the music should seek.  </p>
+<p>freqmul = <em>freqmul</em> (float)<br/>
+Frequency multiplier of the BGM (control pitch &amp; tempo).  </p>
+<p>loopcount = <em>loop_count</em> (int)<br/>
+Changes the number of times this BGM should loop.  </p>
+</blockquote>
+<h2 id="modifyhitdef"><a name="new_modifyhitdef">ModifyHitDef</a></h2>
+<p>Using this state controller will update the specified parameters of the player's currently active <code>HitDef</code>. Has no effect if no <code>HitDef</code> is active.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>same as HitDef  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifyHitdef
+trigger1 = AnimElem = 5
+hitFlag = MA
+damage = 100, 25
+</code></pre>
+<h2 id="modifyplayer"><a name="new_modifyplayer">ModifyPlayer</a></h2>
+<p>Allows changing some player parameters that are otherwise out of reach, or don't justify having their own dedicated state controllers. Some parameters should be used with care.  </p>
+<p>Note: This state controller was briefly named <code>ModifyChar</code> during development. A previous nightly state controller named <code>MoveHitSet</code> was also integrated into it.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ailevel = <em>ailevel</em> (int)<br/>
+Sets the character's ailevel.  </p>
+<p>alive = <em>flag</em> (bool)<br/>
+Toggles the character's alive flag on or off.  </p>
+<p>attack = <em>attack_value</em> (int)<br/>
+Changes the player's attack value.  </p>
+<p>defence = <em>defence_value</em> (int)<br/>
+Changes the player's defence value.  </p>
+<p>displayname = <em>name</em>(string)<br/>
+Changes the character's displayname.  </p>
+<p>lifebarname = <em>name</em> (string)<br/>
+Changes the character's lifebarname.  </p>
+<p>lifemax = <em>points</em> (int)<br/>
+Changes the character's maximum life points.  </p>
+<p>powermax = <em>points</em> (int)<br/>
+Changes the character's maximum life points.  </p>
+<p>dizzypointsmax = <em>points</em> (int)<br/>
+Changes the character's maximum dizzy points.  </p>
+<p>guardpointsmax = <em>points</em> (int)<br/>
+Changes the character's maximum guardpoints.  </p>
+<p>teamside = <em>side</em> (int)<br/>
+Changes the character's team side.  </p>
+<p>helpervar.ID = <em>id</em> (int)<br/>
+Changes a helper's helper ID.  </p>
+<p>helpername = <em>name</em> (string)<br/>
+Changes a helper's name.  </p>
+<p>movehit = <em>time</em> (int)<br/>
+Sets the player's MoveHit timer to the specified value.  </p>
+<p>moveguarded = <em>time</em> (int)<br/>
+Sets the player's MoveGuarded timer to the specified value.  </p>
+<p>movereversed = <em>time</em> (int)<br/>
+Sets the player's MoveReversed timer to the specified value.  </p>
+<p>movecountered = <em>flag</em> (bool)<br/>
+Toggles the player's MoveCountered flag on or off.  </p>
+<p>hitpausetime = <em>time</em> (int)<br/>
+Sets the player's hitpausetime to the specified value.  </p>
+<p>pausemovetime = <em>time</em> (int)<br/>
+Sets the player's pausemovetime to the specified value.  </p>
+<p>supermovetime = <em>time</em> (int)<br/>
+Sets the player's supermovetime to the specified value.  </p>
+<p>unhittabletime = <em>time</em> (int)<br/>
+Sets the player's "unhittable" timer to the specified value.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifyPlayer
+trigger1 = time = 0
+displayname = "Suave Dude"
+lifemax = 2000
+teamside = 2
+</code></pre>
+<h2 id="modifyprojectile"><a name="new_modifyprojectile">ModifyProjectile</a></h2>
+<p>Using this state controller will update the specified parameters for the projectiles with the specified <code>ID</code>. Syntax is essentially the same as for <code>Projectile</code>.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = projectile_ID (int)<br/>
+The ID of the projectiles to modify. Defaults to -1 (all the player's projectiles)  </p>
+<p>index = projectile_index (int)<br/>
+The index of the projectile to modify. Defaults to -1 (all the player's projectiles)  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifyProjectile
+trigger1 = AnimElem = 4
+ID = 1005     ; Modify the projectile with this ID
+index = 0     ; Modify the first instance of this projectile
+projID = 1010 ; Replace their ID with this one
+accel = -0.1, -0.1
+teamside = 2
+</code></pre>
+<h2 id="modifyreflection"><a name="new_modifyReflection">ModifyReflection</a></h2>
+<p>This state controller allows modifying parameters of a char's Reflection</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>anim = <em>anim_no</em> (int)<br/>
+animelem = elem_no (int)<br/>
+animplayerno = <em>anim_player_no</em> (int)<br/>
+spriteplayerno = <em>sprite_player_no</em> (int)<br/>
+color = <em>r</em>, <em>g</em>, <em>b</em> (int, int, int)<br/>
+intensity = intensity (int)<br/>
+offset = <em>x</em>, <em>y</em> (float, float)<br/>
+window = <em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em> (float, float, float, float)<br/>
+xshear = xshear (float)<br/>
+xscale = xscale (float)<br/>
+yscale = yscale (float)<br/>
+projection = projection (string) <br/>
+focallength = focallength (float)   </p>
+</blockquote>
+<h2 id="modifyreversaldef"><a name="new_modifyreversaldef">ModifyReversalDef</a></h2>
+<p>Using this state controller will update the specified parameters of the player's currently active <code>ReversalDef</code>. Has no effect if no <code>ReversalDef</code> is active.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>same as ReversalDef  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifyReversalDef
+trigger1 = AnimElem = 4
+reversal.attr = S, AA
+fall = 0
+</code></pre>
+<h2 id="modifyshadow"><a name="new_modifyShadow">ModifyShadow</a></h2>
+<p>This state controller allows modifying parameters of a char's Shadow</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>anim = <em>anim_no</em> (int)<br/>
+animelem = elem_no (int)<br/>
+animplayerno = <em>anim_player_no</em> (int)<br/>
+spriteplayerno = <em>sprite_player_no</em> (int)<br/>
+color = <em>r</em>, <em>g</em>, <em>b</em> (int, int, int)<br/>
+intensity = intensity (int)<br/>
+offset = <em>x</em>, <em>y</em> (float, float)<br/>
+window = <em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em> (float, float, float, float)<br/>
+xshear = xshear (float)<br/>
+xscale = xscale (float)<br/>
+yscale = yscale (float)<br/>
+projection = projection (string) <br/>
+focallength = focallength (float)   </p>
+</blockquote>
+<h2 id="modifysnd"><a name="new_modifysnd">ModifySnd</a></h2>
+<p>Modifies the following sound parameters on-the-fly. This cannot modify the <code>lowpriority</code> parameter. If you need your sound to be low priority, call PlaySnd with the respective parameter set.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>channel = <em>channelNo</em> (int)<br/>
+The sound channel to modify. Use -1 to modify all sound channels on the entity.  </p>
+<p>volume = <em>volume</em> (int)<br/>
+Changes the volume of the specified sound channel.</p>
+<p>volumescale = <em>scale</em> (int)<br/>
+Changes the volume scale of the specified sound channel.  </p>
+<p>freqmul = <em>freqmul</em> (float)<br/>
+Changes the sound channel's frequency multiplier. </p>
+<p>pan = <em>pan</em> (float)<br/>
+Changes the sound channel's pan.  </p>
+<p>abspan = <em>abspan</em> (float)<br/>
+Changes the sound channel's absolute pan.  </p>
+<p>priority = <em>priority</em> (int)<br/>
+Changes the sound channel's priority.  </p>
+<p>loopstart = <em>loop_start_sample</em> (int)<br/>
+Changes the sound's loop start point.  </p>
+<p>loopend = <em>loop_end_sample</em> (int)<br/>
+Changes the sound's loop end point.  </p>
+<p>position = <em>new_position_sample</em> (int)<br/>
+Changes the position of the currently playing sound. Behavior is undefined when the channel is unspecified (-1).  </p>
+<p>loop = <em>new_loop_value</em> (bool)<br/>
+Changes whether or not this sound should loop forever (nonzero) or not at all (0). This parameter is ignored if <code>loopcount</code> is nonzero.  </p>
+<p>loopcount = <em>new_loop_count</em> (int)<br/>
+Changes the number of times this sound should loop.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifySnd
+trigger1 = FightTime
+channel = 5
+volumescale = floor(50*(1 + cos(pi*fightTime/256)))
+freqmul = 1 + cos(pi*fightTime/256)
+</code></pre>
+<h2 id="modifystagebg"><a name="new_modifystagebg">ModifyStageBG</a></h2>
+<p>This state controller allows modifying the stage's BG elements. Refer to stage documentation for more information.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>At least one parameter modification  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = stagebg_ID (int)<br/>
+The ID of the BG to modify. Defaults to -1 (all)  </p>
+<p>index = stagebg_index (int)<br/>
+The index of the BG to modify. Defaults to -1 (all)  </p>
+<p>actionno = <em>anim</em> (int)<br/>
+Changes the animation for anim type elements.  </p>
+<p>alpha = <em>source, destination</em> (int, int)<br/>
+Changes the transparency's alpha parameters. Requires trans parameter.  </p>
+<p>angle = <em>angle</em> (int) <br/>
+Changes the angle parameter.   </p>
+<p>Xangle = <em>Xangle</em> (int) <br/>
+Changes the Xangle parameter.   </p>
+<p>Yangle = <em>Yangle</em> (int) <br/>
+Changes the Yangle parameter.   </p>
+<p>delta.x = <em>delta</em> (float)<br/>
+Changes the X delta.  </p>
+<p>delta.y = <em>delta</em> (float)<br/>
+Changes the Y delta.  </p>
+<p>layerno = <em>layer</em> (int)<br/>
+Changes the layer number.  </p>
+<p>pos.x = <em>position</em> (float)<br/>
+Changes the X position in relation to the starting position.  </p>
+<p>pos.y = <em>position</em> (float)<br/>
+Changes the Y position in relation to the starting position.  </p>
+<p>spriteno = <em>group, image</em> (int, int)<br/>
+Changes the sprite number for normal type elements.  </p>
+<p>start.x = <em>position</em> (float)<br/>
+Changes the X starting position.  </p>
+<p>start.y = <em>position</em> (float)<br/>
+Changes the Y starting position.  </p>
+<p>scalestart = <em>scale x, scale y</em> (float, float)<br/>
+Changes the scalestart parameter.  </p>
+<p>trans = <em>trans_type</em> (string)<br/>
+Changes the transparency type.  </p>
+<p>velocity.x = <em>velocity</em> (float)<br/>
+Changes the X velocity.  </p>
+<p>velocity.y = <em>velocity</em> (float)<br/>
+Changes the Y velocity.  </p>
+<p>xshear = <em>xshear</em> (float)<br/>
+Changes the xshear parameter.  </p>
+<p>focallength = <em>focallength</em> (float)<br/>
+Changes the focallength parameter.  </p>
+<p>projection = <em>projection</em> (string)<br/>
+Changes the projection parameter.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifyStageBG
+trigger1 = time = 0
+ID = 3
+index = -1
+velocity.x = 4
+</code></pre>
+<h2 id="modifystagevar"><a name="new_modifystagevar">ModifyStageVar</a></h2>
+<p>This SCTRL lets a character modify basic stage parameters or "stage vars", as declared in the stage .def file. Not all parameters are modifable for now, but the SCTRL could be expanded in the future to allow it.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>camera.ytension.enable = <em>enable_flag</em> (bool)<br/>
+camera.boundleft = <em>bound_left</em> (int)<br/>
+camera.boundright = <em>bound_right</em> (int)<br/>
+camera.boundhigh = <em>bound_high</em> (int)<br/>
+camera.boundlow = <em>bound_low</em> (int)<br/>
+camera.verticalfollow = <em>vertical_follow</em> (float)<br/>
+camera.floortension = <em>floor_tension</em> (int)<br/>
+camera.tensionhigh = <em>tension_high</em> (int)<br/>
+camera.tensionlow = <em>tension_low</em> (int)<br/>
+camera.tension = <em>tension</em> (int)<br/>
+camera.startzoom = <em>start_zoom</em> (float)<br/>
+camera.zoomout = <em>zoom_in</em> (float)<br/>
+camera.zoomin = <em>zoom_out</em> (float)<br/>
+camera.zoomindelay = <em>zoom_in_delay</em> (float)<br/>
+camera.zoominspeed = <em>zoom_in_speed</em> (float)<br/>
+camera.zoomoutspeed = <em>zoom_out_speed</em> (float)<br/>
+camera.tensionvel = <em>tension_vel</em> (float)<br/>
+camera.cuthigh = <em>cut_high</em> (float)<br/>
+camera.cutlow = <em>cut_low</em> (float)<br/>
+camera.yscrollspeed = <em>y_scroll_speed</em> (float)<br/>
+camera.ytension.enable = <em>enable_flag</em> (bool)<br/>
+camera.autocenter = <em>enable_flag</em> (bool)<br/>
+playerinfo.leftbound = <em>left_bound</em> (float)<br/>
+playerinfo.rightbound = <em>right_bound</em> (float)<br/>
+playerinfo.topbound = <em>top_bound</em> (float)<br/>
+playerinfo.botbound = <em>bot_bound</em> (float)<br/>
+playerinfo.p1startx = <em>p1startx_pos</em> (int)<br/>
+playerinfo.p2startx = <em>p2startx_pos</em> (int)<br/>
+playerinfo.p1starty = <em>p1starty_pos</em> (int)<br/>
+playerinfo.p2starty = <em>p2starty_pos</em> (int)<br/>
+playerinfo.p1startz = <em>p1startz_pos</em> (int)<br/>
+playerinfo.p2startz = <em>p2startz_pos</em> (int)<br/>
+playerinfo.p1facing = <em>p1_facing</em> (int)<br/>
+playerinfo.p2facing = <em>p2_facing</em> (int)<br/>
+scaling.topscale = <em>top_scale</em> (float) (&lt;mugen 1.0)<br/>
+bound.screenleft = <em>screen_left</em> (int)<br/>
+bound.screenright = <em>screen_right</em> (int)<br/>
+stageinfo.autoturn = <em>autoturn</em> (bool)<br/>
+stageinfo.resetbg = <em>resetbg</em> (bool)<br/>
+stageinfo.xscale = <em>xscale</em> (float)<br/>
+stageinfo.yscale = <em>yscale</em> (float)<br/>
+stageinfo.zoffset = <em>zoffset</em> (int)<br/>
+stageinfo.zoffsetlink = <em>zoffset_link</em> (int)<br/>
+shadow.angle = <em>angle</em> (int)<br/>
+shadow.color = <em>r</em>, <em>g</em>, <em>b</em> (int, int, int)
+shadow.fade.range = <em>end</em>, <em>begin</em> (int, int)<br/>
+shadow.focallength = <em>focallength</em> (float)<br/>
+shadow.intensity = <em>intensity</em> (int)<br/>
+shadow.offset = <em>xoff</em>, <em>yoff</em> (float, float)<br/>
+shadow.projection = <em>projection</em> (string)<br/>
+shadow.window = <em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em> (float, float, float, float)<br/>
+shadow.xangle = <em>xangle</em> (int)<br/>
+shadow.xscale = <em>scale</em> (float)<br/>
+shadow.xshear = <em>xshear</em> (float)<br/>
+shadow.yangle = <em>yangle</em> (int)<br/>
+shadow.ydelta = <em>delta</em> (float)<br/>
+shadow.yscale = <em>scale</em> (float)<br/>
+reflection.angle = <em>angle</em> (int)<br/>
+reflection.fade.range = <em>end</em>, <em>begin</em> (int, int)<br/>
+reflection.focallength = <em>focallength</em> (float)<br/>
+reflection.intensity = <em>intensity</em> (int)<br/>
+reflection.offset = <em>xoff</em>, <em>yoff</em> (float, float)<br/>
+reflection.projection = <em>projection</em> (string)<br/>
+reflection.window = <em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em> (float, float, float, float)<br/>
+reflection.xangle = <em>xangle</em> (int)<br/>
+reflection.xscale = <em>scale</em> (float)<br/>
+reflection.yangle = <em>yangle</em> (int)<br/>
+reflection.ydelta = <em>delta</em> (float)<br/>
+reflection.yscale = <em>scale</em> (float)  </p>
+</blockquote>
+<p><strong>Details:</strong> </p>
+<blockquote>
+<p>camera.ytension.enable is enabled by default when a stage uses tensionhigh and tensionlow  </p>
+</blockquote>
+<h2 id="modifytext"><a name="new_modifytext">ModifyText</a></h2>
+<p>Using this state controller will update the specified parameters for the texts with the specified ID. Syntax is essentially the same as for Text sctrl.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = text_id (int)<br/>
+The ID of the texts to modify. Defaults to -1 (all the player's texts)<br/>
+index = text_index (int)<br/>
+The index of the texts to modify. Defaults to -1 (all the player's texts)  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ModifyText
+trigger = 1
+ID = 50   ;Modify text with this ID
+index = 0 ;Modify the first instance of this text
+velocity = .3, 0
+scale = 4, 4
+params = animElemNo(0) ;Update params
+</code></pre>
+<h2 id="overrideclsn"><a name="new_overrideclsn">OverrideClsn</a></h2>
+<p>This state controller allows you to directly modify a player’s collision boxes without changing their animation.</p>
+<p><strong>Required parameters</strong><br/>
+None.</p>
+<p><strong>Optional parameters</strong> </p>
+<ul>
+<li>
+<p><strong>group</strong> = <em>group</em> (int)<br/>
+The type of collision box to override.<br/>
+Valid values: <code>Clsn1</code>, <code>Clsn2</code>, <code>Size</code>, <code>None</code>.<br/>
+Using <code>None</code> removes all active Clsn overrides.<br/>
+Defaults to <code>None</code>.  </p>
+</li>
+<li>
+<p><strong>index</strong> = <em>index</em> (int)<br/>
+The index of the box to modify.<br/>
+Use <code>-1</code> to affect all boxes.<br/>
+Using an out-of-bounds index will append a new box.<br/>
+Defaults to <code>0</code>.  </p>
+</li>
+<li>
+<p><strong>rect</strong> = <em>x1, y1, x2, y2</em> (float)<br/>
+The rectangle, or coordinates for the box.<br/>
+Using <code>0, 0, 0, 0</code> removes the box.</p>
+</li>
+</ul>
+<p><strong>Examples:</strong></p>
+<pre><code class="language-ini">[State Test]; Force player to have at least one Clsn1 box
+type = OverrideClsn
+trigger1 = 1
+group = Clsn1
+index = 0
+rect = 0, -100, 50, -50
+</code></pre>
+<pre><code># Remove all Clsn2 boxes from the player
+overrideClsn{group: Clsn2; index = -1; rect = 0, 0, 0, 0}
+</code></pre>
+<h2 id="parentmapadd"><a name="new_parentmapadd">ParentMapAdd</a></h2>
+<p>If the player is a helper, adds value to parent's map. If the player is not a helper, this controller does nothing. Parent refers to the instance that spawned the helper.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we add value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to add to the map.  </p>
+</blockquote>
+<h2 id="parentmapset"><a name="new_parentmapset">ParentMapSet</a></h2>
+<p>If the player is a helper, sets value to parent's map. If the player is not a helper, this controller does nothing. Parent refers to the instance that spawned the helper.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we assign value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to assign to the map.  </p>
+</blockquote>
+<h2 id="playbgm"><a name="new_playbgm">PlayBgm</a></h2>
+<p>Plays back a music. Supported file formats: <em>mp3</em>, <em>ogg</em>, <em>wav</em>. </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>bgm = "<em>bgm_path</em>" (string)<br/>
+Path of the music file to play. Leave it blank if you want to stop current music. <em>bgm_path</em> file lookup starts relative to character's directory, followed by checking path relative to top ikemen directory, finally the file existance is checked in <em>sound</em> directory.  </p>
+<p>loop = <em>loop_flag</em> (int)<br/>
+Set <em>loop_flag</em> to a nonzero value to have the bgm loop over and over, or 0 to disable looping. Defaults to 1.</p>
+<p>volume = <em>volume_scale</em> (int)<br/>
+Adjust the volume. 100 is for 100%. Defaults to 100. If <em>bgm_path</em> is not specified, <em>volume_scale</em> alters volume for currently playing bgm.  </p>
+<p>loopstart = <em>start_sample</em> (int)<br/>
+Loop start position sample number.  </p>
+<p>loopend = <em>end_sample</em> (int)<br/>
+Loop end position sample number.  </p>
+<p>startposition = <em>sample_point</em> (int)<br/>
+Sample point where the music should start playing.  </p>
+<p>freqmul = <em>freqmul</em> (float)<br/>
+Frequency multiplier of the BGM (control pitch &amp; tempo).  </p>
+<p>loopcount = <em>loop_count</em> (int)<br/>
+Changes the number of times this BGM should loop.  </p>
+</blockquote>
+<h2 id="printtoconsole"><a name="new_printtoconsole">PrintToConsole</a></h2>
+<p>This controller is only useful for debugging. PrintToConsole prints a specified message to debug mode console, as well as terminal / command line window, if it's opened.</p>
+<p>The syntax is the same as DisplayToClipboard:</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>text = "<em>format_string</em>" (string)<br/>
+<em>format_string</em> must be encased in double-quotes. It is a printf format string, so if you know about printf, you can skip this description. The format string contains any text you wish to display. You can also use \n to generate a line break, and \t to generate a tab character (tab width is equivalent to 4 characters). To display the value of an arithmetic expression, you can put a %d (for ints) or a %f (for floats) in the format string, then specify the expression in the params list. To display a % character, you must put %% in the format string.  </p>
+<p>Following format specifiers are accepted: %v (any type), %d, %i, %f, %F, %e, %E, %g, or %G. Format specifier syntax such as %0.2f is also supported. Recognized escape sequences are \n, \t, \, and \".  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>params = <em>exp_1, exp_2, (...)</em><br/>
+Unlimited amount of numeric arguments can be specified in the format string. These should be listed under the params item, in order. The type of each parameter must match its format specifier. You cannot specify more or less parameters than are called for in the format string.  </p>
+<p>If there is a type mismatch between the format specifier and the parameter actually provided, then the actual value of the parameter will be shown in an appropriate form for that type, using default formatting options.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = PrintToConsole
+text = "The value of var(17) is %d, which is %f%% of 23.\n\t--Kiwi."
+params = var(17):=1,var(17)/.230
+
+; prints the following to console:
+;The value of var(17) is 1, which is 4.347826% of 23.
+;   --Kiwi.
+</code></pre>
+<h2 id="redlifeadd"><a name="new_redlifeadd">RedLifeAdd</a></h2>
+<p>Adds the specified amount to the player's red life, scaled by the player's defense multiplier if necessary.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_amt</em> (int)<br/>
+<em>add_amt</em> is the number to add to the player's red life.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>absolute = <em>abs_flag</em> (int)<br/>
+If <em>abs_flag</em> is 1, then <em>add_amt</em> will not be scaled (i.e. attack and defense multipliers will be ignored). Defaults to 0.  </p>
+</blockquote>
+<h2 id="redlifeset"><a name="new_redlifeset">RedLifeSet</a></h2>
+<p>Sets the amount of red life that the player has.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>set_amt</em> (int)<br/>
+<em>set_amt</em> is the new value to set the player's red life to.  </p>
+</blockquote>
+<h2 id="remapsprite"><a name="new_remapsprite">RemapSprite</a></h2>
+<p>Remaps one sprite with another (or does this for multiple sprites at once, based on character's CNS <a href="Character-features.html#cns_remappreset">RemapPreset</a> data)</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>reset = <em>reset_flag</em> (int)<br/>
+Set to 1 to reset all existing sprite remaps. Defaults to 0.  </p>
+<p>preset = "<em>preset_name</em>" (string)<br/>
+Name of the character's CNS <code>RemapPreset</code> data.  </p>
+<p>source = <em>src_spr_grp, src_spr_item</em> (int, int)<br/>
+See below.  </p>
+<p>dest = <em>dst_spr_grp, dst_spr_item</em> (int, int)<br/>
+Any animation that references source sprite will be drawn using the dest sprite instead. Note that the dest sprite group number and item refers to an unmapped sprite numbers.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = RemapSprite
+trigger1 = var(10)=1
+preset = "MyTransformation"
+reset = 1
+</code></pre>
+<h2 id="removetext"><a name="new_removetext">RemoveText</a></h2>
+<p>Removes all of a player's texts, or just the texts with a specified ID number.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = remove_id (int)<br/>
+remove_id is the ID number of the texts to remove. If omitted, removes all texts owned by the player.</p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = RemoveText
+trigger1 = time = 30
+ID = 10
+</code></pre>
+<h2 id="rootmapadd"><a name="new_rootmapadd">RootMapAdd</a></h2>
+<p>If the player is a helper, adds value to root's map. If the player is not a helper, this controller does nothing. Root refers to the main player.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we add value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to add to the map.  </p>
+</blockquote>
+<h2 id="rootmapset"><a name="new_rootmapset">RootMapSet</a></h2>
+<p>If the player is a helper, sets value root's map. If the player is not a helper, this controller does nothing. Root refers to the main player.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we assign value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to assign to the map.  </p>
+</blockquote>
+<h2 id="rootvaradd"><a name="new_rootvaradd">RootVarAdd</a></h2>
+<p>If the player is a helper, adds value to root's working variables. Either a float variable or an int variable can be added by this controller. If the player is not a helper, this controller does nothing. Root refers to the main player.</p>
+<blockquote>
+<p>Required parameters (int version):<br/>
+v = <em>var_no</em> (int)<br/>
+<em>var_no</em> should evaluate to an integer between 0 and 59.  </p>
+<p>value = <em>int_expr</em> (int)<br/>
+<em>int_expr</em> is the value to add to the int variable indicated by var_no.  </p>
+<p>Required parameters (float version):<br/>
+fv = <em>var_no</em> (int)<br/>
+<em>var_no</em> should evaluate to an integer between 0 and 39.  </p>
+<p>value = <em>float_expr</em> (float)<br/>
+<em>float_expr</em> is the value to add to the float variable indicated by var_no.  </p>
+<p>Alternate syntax:<br/>
+var(var_no) = <em>int_expr</em> (int version)<br/>
+fvar(var_no) = <em>float_expr</em> (float version)  </p>
+</blockquote>
+<h2 id="rootvarset"><a name="new_rootvarset">RootVarSet</a></h2>
+<p>If the player is a helper, sets value root's working variables. Either a float variable or an int variable can be set by this controller. If the player is not a helper, this controller does nothing. Root refers to the main player.</p>
+<blockquote>
+<p>Required parameters (int version):<br/>
+v = <em>var_no</em> (int)<br/>
+<em>var_no</em> should evaluate to an integer between 0 and 59.  </p>
+<p>value = <em>int_expr</em> (int)<br/>
+<em>int_expr</em> is the value to assign to the int variable indicated by var_no.  </p>
+<p>Required parameters (float version):<br/>
+fv = <em>var_no</em> (int)<br/>
+<em>var_no</em> should evaluate to an integer between 0 and 39.  </p>
+<p>value = <em>float_expr</em> (float)<br/>
+<em>float_expr</em> is the value to assign to the float variable indicated by var_no.  </p>
+<p>Alternate syntax:<br/>
+var(var_no) = <em>int_expr</em> (int version)<br/>
+fvar(var_no) = <em>float_expr</em> (float version)  </p>
+</blockquote>
+<h2 id="roundtimeadd"><a name="new_roundtimeadd">RoundTimeAdd</a></h2>
+<p>Add specified amount of ticks into round time.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_ticks</em> (int)<br/>
+add_ticks specifies the number of ticks that should be added to round time.  </p>
+</blockquote>
+<h2 id="roundtimeset"><a name="new_roundtimeset">RoundTimeSet</a></h2>
+<p>Set round time to specified amount of ticks.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>set_ticks</em> (int)<br/>
+set_ticks specifies the number of ticks that should be set as a current round time.  </p>
+</blockquote>
+<h2 id="savefile"><a name="new_savefile">SaveFile</a></h2>
+<p>Put specified data together and save it as binary. It uses gob, which is a serialized format for Go language, as the storage format. All characters specified by the character or helper who executed the function are stored at that time.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>savedata = <em>var_type</em> (string)<br/>
+Specifies the data type that should be saved. Valid values for var_type are "var", "fvar", and "map".  </p>
+<p>path = "<em>save_path</em>" (string)<br/>
+Specifies the save destination file path (relative to the character folder). Can use any extension (.gob is recommended)  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>maps = <em>map_1</em>, <em>map_2</em>, <em>map_3</em>... (string)<br/>
+A list of maps to load. Defaults to empty.  </p>
+<p>maps.include = <em>filter</em> (string)<br/>
+All maps containing this string in their names will be saved. Defaults to empty.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = SaveFile
+trigger1 = time = 10
+savedata = var
+path = "kfm.gob"
+</code></pre>
+<h2 id="shaderset"><a name="new_shaderset">ShaderSet</a></h2>
+<p>Sets the specified custom shader to the character. </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>shader = <em>"shader_name"</em> (string)<br/>
+Specify the name from the currently loaded custom shader.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>time = <em>time</em> (int)<br/>
+The custom shader is displayed for the specified number of ticks before being removed. The default is 1.<br/>
+Specifying -1 will prevent it from being removed until ShaderSet is applied again.  </p>
+<p>shaderparam.pX = <em>value</em> (float)<br/>
+Specifies the value to send to the custom shader. The value specified here can be used as a variable within the custom shader.<br/>
+X is limited to 0 to 15, and a maximum of 16 values ​​can be sent.  </p>
+</blockquote>
+<p>The shaderparam variable is defined within the custom shader, for example  </p>
+<p><strong>OpenGL:</strong></p>
+<pre><code>    uniform float p0, p1, p2, p3, p4, p5, p6, p7;
+    uniform float p8, p9, p10, p11, p12, p13, p14, p15;
+</code></pre>
+<p><strong>Vulkan:</strong></p>
+<pre><code>    layout(push_constant, std430) uniform u {
+        vec4 palUV;
+        float p0, p1, p2, p3, p4, p5, p6, p7;
+        float p8, p9, p10, p11, p12, p13, p14, p15;
+    };
+</code></pre>
+<blockquote>
+<p>shadertexX.spr = <em>group, image</em> (int, int)<br/>
+shadertexX.anim = <em>anim_no</em> (int)<br/>
+Specifies the texture to send to the custom shader. The sprites specified here can be used as textures within the custom shader.<br/>
+You can specify 1 or 2 for X, and send up to two sprites.<br/>
+Each tex can be assigned either a sprite number (spr) or an anim number. It is not possible to assign both sprite and anim numbers to the same tex number simultaneously.<br/>
+Note that since textures are loaded as raw data, images with palettes may not display correctly as is.  </p>
+</blockquote>
+<p>Shadertex textures are defined within custom shaders, for example  </p>
+<p><strong>OpenGL:</strong></p>
+<pre><code>    uniform sampler2D tex1;
+    uniform sampler2D tex2;
+</code></pre>
+<p><strong>Vulkan:</strong></p>
+<pre><code>    layout(binding = 5) uniform sampler2D tex1;
+    layout(binding = 6) uniform sampler2D tex2;
+</code></pre>
+<h2 id="shiftinput"><a name="new_shiftinput">ShiftInput</a></h2>
+<p>Allows temporarily changing the function of the player's keys. Resets every frame.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>input = <em>key</em> (string)<br/>
+The key to be changed  </p>
+<p>output = <em>key</em> (string)<br/>
+The new function for that key  </p>
+<p>Valid keys are:<br/>
+U, D, L, R, a, b, c, x, y, z, s, d, w, m, none  </p>
+</blockquote>
+<p>Setting <code>input</code> and <code>output</code> both to <code>none</code> resets all buttons to normal state immediately.  </p>
+<p><strong>Example:</strong></p>
+<pre><code># Invert all directions
+shiftInput{input: U; output: D}
+shiftInput{input: D; output: U}
+shiftInput{input: L; output: R}
+shiftInput{input: R; output: L}
+
+# Disable a button
+shiftInput{input: a; output: none}
+</code></pre>
+<h2 id="scoreadd"><a name="new_scoreadd">ScoreAdd</a></h2>
+<p>Adds the specified amount of points to P1 current score counter.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>expr</em> (float)<br/>
+<em>expr</em> is the the number of score points to add to the P1 current score counter.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State Test]
+type = ScoreAdd
+trigger1 = AnimElem = 21
+value = 100
+</code></pre>
+<h2 id="storyboard"><a name="new_storyboard">Storyboard</a></h2>
+<p>Plays the specified storyboard during a match.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>path = <em>storyboard_path</em> (string)<br/>
+Specifies the path to the storyboard file, relative to the Ikemen top-level directory.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State 0, Storyboard]
+type = Storyboard
+trigger1 = Time = 0
+path = "data/ikemen1/logo.def"
+</code></pre>
+<h2 id="tagin"><a name="new_tagin">TagIn</a></h2>
+<p>Makes the P1 and/or the specified partner exit <code>Standby</code> state. If no parameters are given it affects the player that called it. (Also affects helpers)</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<p><em>All <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_tagout">TagOut</a> parameters work with some extra ones specified bellow</em> </p>
+<blockquote>
+<p>ctrl = "<em>ctrl_flag</em>" (int)<br/>
+Sets the P1 control flag.  </p>
+<p>leader = <em>leader_playerno</em> (int)<br/>
+Sets the player who is considered a <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_teamleader">team leader</a> to the specified <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_playerno">playerno</a>.  </p>
+<p>partnerctrl = <em>partnerctrl_flag</em> (int)<br/>
+Sets the <em>partner_no</em> control flag.  </p>
+<p>memberno = <em>player_memberno</em> (int)<br/>
+Changes the player's position in the team.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State]
+type = TagIn
+trigger1 = Time = 0
+leader = PlayerNo
+stateno = 5600
+</code></pre>
+<h2 id="tagout"><a name="new_tagout">TagOut</a></h2>
+<p>Makes the the player and/or the specified partner enter <code>Standby</code> state. If no parameters are given it affects the player that called it.<br/>
+The main purpose of the <code>Standby</code> flag is to put a player away so it won't interfere in a Tag match. For that reason it carries several special properties:<br/>
+* The player becomes unhittable
+* The player cannot hit or push other players
+* The camera will not follow the player
+* <code>Enemy</code> and <code>P2</code> families of triggers will not pick up the player</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>self = <em>self_flag</em> (int)<br/>
+Set to 0 to not affect P1. Defaults to 1.  </p>
+<p>partner = <em>partner_no</em> (int)<br/>
+Specifies what teammate is afected.  </p>
+<p>stateno = <em>state_no</em> (int)<br/>
+The number of the state to change P1 to.  </p>
+<p>partnerstateno = <em>partnerstate_no</em> (int)<br/>
+The number of the state to change <em>partner_no</em> to.  </p>
+<p>memberno = <em>player_memberno</em> (int)<br/>
+Changes the player's position in the team.  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">[State]
+type = TagOut
+trigger1 = Time = 0
+memberNo = 3
+</code></pre>
+<h2 id="targetadd"><a name="new_targetadd">TargetAdd</a></h2>
+<p>Adds the player with the specified ID to the original player's target list.<br/>
+Do not confuse this player ID with a target ID. Target ID can be assigned with <code>chainID</code> parameter of <a href="State-controllers-%28new%29.html#new_gethitvarset">GetHitVarSet</a>.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>PlayerID = <em>ID</em> (int)<br/>
+ID of player to be added.</p>
+</blockquote>
+<h2 id="targetdizzypointsadd"><a name="new_targetdizzypointsadd">TargetDizzyPointsAdd</a></h2>
+<p>Adds the specified amount to all targets' dizzy points.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_amt</em> (int)<br/>
+<em>add_amt</em> is added to each target's dizzy points.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = <em>target_id</em> (int)<br/>
+Specifies the desired target ID to affect. Only targets with this target ID will be affected. Defaults to -1 (affects all targets.)  </p>
+</blockquote>
+<h2 id="targetguardpointsadd"><a name="new_targetguardpointsadd">TargetGuardPointsAdd</a></h2>
+<p>Adds the specified amount to all targets' guard points.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_amt</em> (int)<br/>
+<em>add_amt</em> is added to each target's guard points.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = <em>target_id</em> (int)<br/>
+Specifies the desired target ID to affect. Only targets with this target ID will be affected. Defaults to -1 (affects all targets.)  </p>
+</blockquote>
+<h2 id="targetredlifeadd"><a name="new_targetredlifeadd">TargetRedLifeAdd</a></h2>
+<p>Adds the specified amount to all targets' red life, scaled by the targets' defense multipliers if necessary.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>add_amt</em> (int)<br/>
+<em>add_amt</em> is added to each target's red life.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = <em>target_id</em> (int)<br/>
+Specifies the desired target ID to affect. Only targets with this target ID will be affected. Defaults to -1 (affects all targets.)  </p>
+<p>absolute = <em>abs_flag</em> (int)<br/>
+If <em>abs_flag</em> is 1, then <em>add_amt</em> will not be scaled (i.e. attack and defense multipliers will be ignored). Defaults to 0.  </p>
+</blockquote>
+<h2 id="targetscoreadd"><a name="new_targetscoreadd">TargetScoreAdd</a></h2>
+<p>Adds the specified amount of points to targets' current score counter.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>value = <em>expr</em> (float)<br/>
+<em>expr</em> is the the number of score points to add to the target's current score counter.  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>ID = <em>target_id</em> (int)<br/>
+Specifies the desired target ID to affect. Only targets with this target ID will be affected. Defaults to -1 (affects all targets.)  </p>
+</blockquote>
+<h2 id="teammapadd"><a name="new_teammapadd">TeamMapAdd</a></h2>
+<p>Adds value to all team members maps.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we add value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to add to the map.  </p>
+</blockquote>
+<h2 id="teammapset"><a name="new_teammapset">TeamMapSet</a></h2>
+<p>Sets value to all team members maps.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>map = "<em>map_name</em>" (string)<br/>
+Specifies a name of the map that we assign value to.  </p>
+<p>value = <em>expr</em> (int or float)<br/>
+<em>expr</em> is the value to assign to the map.  </p>
+</blockquote>
+<h2 id="text"><a name="new_textrender">Text</a></h2>
+<p>Text controller is used for displaying text on screen.</p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>removetime = <em>rem_time</em> (int)<br/>
+The text will be removed after having been displayed for <em>rem_time</em> number of game ticks. Defaults to 1.  </p>
+<p>layerno = <em>layer_no</em> (int)<br/>
+Sets the layer to which the text will be drawn on. 0 is in front of the background, but behind the players. 1 is in front of the players, but behind the foreground. 2 is in front of the foreground. Defaults to 1.  </p>
+<p>localcoord = <em>coord_x, coord_y</em> (int, int)  <br/>
+Sets custom localcoord. If omitted, lifebar font defaults to the lifebar localcoord, character font and debug font defaults to the screen localcoord.  </p>
+<p>text = <em>"format_string"</em> (string)<br/>
+Text to be rendered. Defaults to "%v" (rendering first <em>params</em> argument of any type). <em>format_string</em> must be encased in double-quotes. It is a <em>printf</em> format string. You can use \t to generate a tab character (tab width is equivalent to 4 characters) and \n to break lines. To display the value of an arithmetic expression, you can put a %d (for ints) or a %f (for floats) in the format string, then specify the expression in the params list. To display a % character, you must put %% in the format string. Accepted format specifiers: %v (any type), %d, %i, %f, %F, %e, %E, %g, or %G. Syntax such as %0.2f is also supported.  </p>
+<p>params = <em>exp_1, exp_2, (...)</em><br/>
+Unlimited amount of numeric arguments can be specified in the format string. These should be listed under the params item, in order. The type of each parameter must match its format specifier.</p>
+<p>font = <em>[F]font_no</em> (int)<br/>
+<em>font_no</em> specifies the number of the font to use for text rendering. The 'F' prefix is optional: if included, then the text is rendred using lifebar (fight.def) fonts. Otherwise font <a href="Character-features.html#def_files_font">declared</a> in character's DEF file is used. If specified font doesn't exist than the debug font is used. Defaults to debug font.  </p>
+<p>bank = <em>bank_no</em> (int)<br/>
+Color bank of the font to use. Refer to the font for what color banks it has. Defaults to 0.  </p>
+<p>align = <em>alignment</em> (int)<br/>
+<em>alignment</em> is a number representing the text alignment. 1 is left, 0 means center, and -1 is for right-alignment. Defaults to 1.  </p>
+<p>angle = <em>angle</em> (int)<br/>
+Specify the rotation, rotation point is based on the text's alignment. Defaults to 0.  </p>
+<p>pos = <em>off_x, off_y</em> (int, int)<br/>
+Specify the offset at which to create the text. Defaults to 0,0.  </p>
+<p>scale = <em>x_scale, y_scale</em> (float, float)<br/>
+Specify the scaling factors to apply to the text in the horizontal and vertical directions. Defaults to 1,1.  </p>
+<p>color = <em>r, g, b, a</em> (int, int, int, int)<br/>
+Color adjustment values for the font. Defaults to 256,256,256,256 (no color adjustment).  </p>
+<p>id = <em>id_no</em> (int)<br/>
+Specifies an ID number for this text. Used to identify particular text in numText trigger and removeText sctrl.  </p>
+<p>textspacing = <em>x_spacing, y_spacing</em><code>(float, float)  
+Specifies extra spacing between letters (*x_spacing*) and extra spacing between lines when</code>\n` is used to break lines (<em>y_spacing</em>). These values are added on top of the font’s DEF Spacing values.  </p>
+<p>textdelay = <em>time</em> (float)<br/>
+Adjusts the text typing time, the longer the time the longer the delay between each letter typed.  </p>
+<p>velocity = <em>vel_x, vel_y</em> (float, float)<br/>
+Applies speed to text on the defined axis.  </p>
+<p>accel = <em>accel_x, accel_y</em> (float, float)<br/>
+Applies acceleration to text on the defined axis.  </p>
+<p>friction = <em>friction_x, friction_y</em> (float, float)<br/>
+Applies friction to text on the defined axis (Friction value example: 0.95).   </p>
+<p>xshear = <em>xshear</em> (float)<br/>
+Specifies the amount of horizontal shearing to apply to the text. Defaults to 0.  </p>
+<p>maxdist = <em>maxdist</em> (float)<br/>
+Specifies the maximum velocity beyond which additional velocity will no longer be applied. Defaults to 0 (unlimited).  </p>
+<p>palfx.key = the text sctrl can accept all the same key values from <a href="http://www.elecbyte.com/mugendocs/sctrls.html#palfx">PalFX state controller</a></p>
+<p>hidewithbars = <em>bvalue</em> (bool)<br/>
+Enabling this parameter hides the text automatically when the fight screen is hidden.  </p>
+</blockquote>
+<h2 id="transformclsn"><a name="new_transformclsn">TransformClsn</a></h2>
+<p>Changes the geometry or certain properties of the player's collision boxes.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>At least one of the optional parameters  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>scale = <em>x_scale, y_scale</em> (float, float)<br/>
+Applies a scale multiplier to the boxes  </p>
+<p>angle = <em>angle</em> (float)<br/>
+Changes the angle of the boxes. In degrees  </p>
+</blockquote>
+<h2 id="transformsprite"><a name="new_transformsprite">TransformSprite</a></h2>
+<p>Apply certain deformations to the char's sprite.  </p>
+<p><strong>Required parameters:</strong> </p>
+<blockquote>
+<p>At least one of the optional parameters  </p>
+</blockquote>
+<p><strong>Optional parameters:</strong> </p>
+<blockquote>
+<p>window = <em>x1, y1, x2, y2</em> (float, float, float, float)<br/>
+The window parameter forms a rectangle (similar to clsn) relative to the char, outside of which pixels will not be drawn.  </p>
+<p>xshear = <em>xshear</em> (float)<br/>
+Specifies the amount of horizontal shearing to apply to the char. Defaults to 0.<br/>
+projection = <em>orthographic (default), perspective(distortion relative to the center of the screen), perspective2(distortion relative to the sprite)</em> <br/>
+Affect how the char sprite is drawn when <code>xangle</code> or <code>yangle</code> is not zero<br/>
+focallength = <em>focallength</em> (float) <br/>
+Focal Length of the projection. Does nothing when projection is not perspective or perspective2   </p>
+</blockquote></body></html>

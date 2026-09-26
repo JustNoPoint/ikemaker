@@ -1,0 +1,16 @@
+IKEMaker 0.64.12
+=================
+
+Deterministic character-session layout
+--------------------------------------
+- DEF, ZSS, CNS, CMD, and AIR text now stay together in the source-code editor group.
+- Character Essentials now opens every connected code file in addition to DEF, AIR, SFF, and SND assets.
+- The first visual workspace creates its group beside source only when needed; character opening no longer creates an unused empty editor group.
+- A remembered viewer-group column is rejected when it matches the current source-code column.
+- Closing the final tracked visual workspace clears its remembered column instead of leaking that placement into the next session.
+- AIR, SFF, and SND continue to share the resulting visual group, with one SFF/SND viewer per archive.
+
+Verification
+------------
+- Expanded shared-viewer routing coverage for stale-column rejection, disposal reset, connected-code inclusion, and empty-group prevention.
+- All 121 automated test files pass.

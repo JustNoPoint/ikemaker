@@ -1,0 +1,50 @@
+IKEMaker 0.77.0 — Reviewed Engine Update and Recovery
+
+- Weekly upstream checks now present the active game profile's current pinned
+  build and a newer immutable Nightly candidate as separate choices: Stay on
+  this build, Review migration, or Remind in seven days.
+- Decisions are scoped to project + current pin + exact candidate. A moving
+  Nightly or changed project fingerprint requires a new review.
+- Risk summaries separate removals, semantics/defaults, configuration, source
+  usage, online/rollback, runtime surface, shared roots, maturity, and unknown
+  evidence. They are guidance, never compatibility guarantees.
+- Exact Nightly review binds GitHub repository, release ID/tag, asset ID/name/
+  URL, upstream commit, published digest, and downloaded SHA-256. A candidate
+  that moves after review is rejected.
+- Before live writes, the ZIP is rejected for traversal, absolute paths,
+  links/reparse points, case-insensitive duplicate destinations, or paths
+  outside the explicit engine allowlist. Characters, stages, sounds, saves,
+  video, and unrelated project data are protected from archive replacement.
+- The official 1.0 package is used as an authenticated baseline. Unmodified
+  engine files may advance; local-only changes are preserved; files changed on
+  both sides require an explicit decision. Preserved files produce a custom,
+  Nightly-based target instead of falsely claiming a stock build.
+- The approved migration creates a full restorable snapshot of engine-owned
+  distribution folders, root engine files, active config, and project registry,
+  with hashes and explicit exclusions. Stable 1.0 remains registered at the
+  backup executable rather than at the overwritten live path.
+- A write-ahead journal persists each replacement/removal intent and its old and
+  intended identities before mutation. Rollback progress is itself resumable;
+  ambiguous partial files are retained before recovery, and later user changes
+  are never erased. An exclusive lock, fail-closed Windows process/ZIP helpers,
+  disk-space check, verified backup copies, format-aware INI migration, complete
+  shared-runtime profile disclosure, and startup interruption detection protect
+  the operation.
+- Immediately before rollback, every required backup file and registry copy is
+  revalidated against both the external manifest and the original journal hash.
+  Every restored destination is hashed again before recovery is marked complete;
+  a corrupt backup stops without changing the live engine.
+- Interrupted registry restoration follows the same write-ahead recovery rules
+  as engine files: unknown partial bytes are preserved, a missing or unexpected
+  registry blocks unsafe recovery, and the entire engine/config/registry state
+  is verified before the journal may be marked rolled back.
+- The registry, live files, and staged files are rechecked against the exact
+  bytes reviewed before the first live write. A changed source returns to review
+  instead of being silently overwritten.
+- Temporary download/extraction occurs only after visible operation approval,
+  is announced, uses OS temporary storage, and is removed after completion.
+- Opening Project & Team Manager no longer creates a project registry. Opening
+  a missing registry asks before creating it.
+- Extraction/artifact success records source and artifact identity only.
+  Parser, runtime, project, gameplay, online, and rollback confidence remain
+  separate until their own tests provide evidence.

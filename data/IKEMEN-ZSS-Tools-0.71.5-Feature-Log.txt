@@ -1,0 +1,10 @@
+IKEMaker 0.71.5
+
+- Adds an opt-in Windows file-opening setup to Quick Start and Personal Workspace and Preferences.
+- Lets users register ZSS, AIR, SFF, CNS, JNP, DEF, SND, ACT, ST, and Lua as Windows “Open with IKEMaker” choices.
+- Opens Windows Default Apps after registration so the user—not the extension—chooses double-click defaults.
+- Uses `.inp` as the neutral input-file extension for new IKEMEN and MUGEN character scaffolds.
+- Allows a project-specific input extension during character creation, such as HDBZ's `.mfg`, and can register custom input extensions with Windows and VS Code.
+- Adds “Open with IKEMaker” for legacy character CMD files without replacing Windows command-script execution.
+- Recommends migrating character command files from CMD to INP or a project-specific extension and updating their DEF reference.
+- Includes removal support for the Windows registration and a first-run offer that can be dismissed permanently.

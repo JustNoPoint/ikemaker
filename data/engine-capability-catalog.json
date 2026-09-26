@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "catalogRevision": 1,
+  "generatedAt": "2026-09-24T00:00:00.000Z",
+  "sources": [
+    {
+      "id": "ikemen-go-github",
+      "kind": "github",
+      "url": "https://github.com/ikemen-engine/Ikemen-GO",
+      "trust": "official"
+    }
+  ],
+  "builds": [
+    {
+      "id": "ikemen-go-1.0.0-windows-x64",
+      "engine": "IKEMEN GO",
+      "channel": "stable",
+      "version": "1.0.0",
+      "commit": "81c6da71d689625e20db79586815b695da00dd6d",
+      "platform": "windows-x64",
+      "publishedAt": "2026-09-12T00:00:00.000Z",
+      "artifactSha256": "9338eaeb68599ceb13b0867819a091ea3f92eba58077e800b4540b7a1f9c3731",
+      "executableSha256": "c869a7fb0112257a6a581fa2d66ca76a9860b5b6ec500be38f8e480f6bf79cf7",
+      "source": {
+        "sourceId": "ikemen-go-github",
+        "url": "https://github.com/ikemen-engine/Ikemen-GO/releases/tag/v1.0.0",
+        "revision": "v1.0.0",
+        "observedAt": "2026-09-12T00:00:00.000Z"
+      },
+      "verification": {
+        "source": "verified",
+        "artifact": "verified",
+        "parser": "unknown",
+        "runtime": "limited",
+        "rollback": "unknown",
+        "project": "limited"
+      }
+    },
+    {
+      "id": "ikemen-go-nightly-76dd472f1c38-windows-x64",
+      "engine": "IKEMEN GO",
+      "channel": "nightly",
+      "version": "nightly",
+      "commit": "76dd472f1c3876d64f52232e514bfaef9ada6aad",
+      "platform": "windows-x64",
+      "publishedAt": "2026-09-23T00:09:24.000Z",
+      "artifactSha256": null,
+      "executableSha256": null,
+      "releaseId": 394202643,
+      "releaseTag": "nightly",
+      "assetId": 582532638,
+      "artifactName": "Ikemen_GO-dev-windows.zip",
+      "artifactUrl": "https://github.com/ikemen-engine/Ikemen-GO/releases/download/nightly/Ikemen_GO-dev-windows.zip",
+      "artifactSize": 57066404,
+      "publishedArtifactSha256": "5ec5a9d1923bf84e7b7e0e44e949af2cbc1a78a345b4bc912106becae428fa75",
+      "monitorOnly": true,
+      "source": {
+        "sourceId": "ikemen-go-github",
+        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/76dd472f1c3876d64f52232e514bfaef9ada6aad",
+        "revision": "76dd472f1c3876d64f52232e514bfaef9ada6aad",
+        "observedAt": "2026-09-24T00:00:00.000Z"
+      },
+      "verification": {
+        "source": "observed",
+        "artifact": "unknown",
+        "parser": "unknown",
+        "runtime": "unknown",
+        "rollback": "unknown",
+        "project": "unknown"
+      }
+    }
+  ],
+  "capabilities": [],
+  "conflicts": [],
+  "consumerCoverage": {}
+}

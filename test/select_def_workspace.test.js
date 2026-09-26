@@ -1,0 +1,54 @@
+'use strict';
+
+const assert = require('assert');
+const Module = require('module');
+const original = Module._load;
+Module._load = function patched(request, parent, main) {
+  if (request === 'vscode') return { window: {}, workspace: {}, commands: {}, Uri: { file: (fsPath) => ({ fsPath }) }, ViewColumn: {}, TreeItemCollapsibleState: {} };
+  return original.call(this, request, parent, main);
+};
+const workspace = require('../src/select_def_workspace');
+Module._load = original;
+
+const document = { fileName: 'C:/game/data/select.def', uri: { toString: () => 'file:///select.def' }, getText: () => '[Characters]\nRyu\nKen\n' };
+const base = workspace.payload(document, { motif: { state: 'ready', detail: 'data/system.def', localCoord: [640, 360], grid: { rows: 2, columns: 2, position: [100, 100], cellSize: [24, 24], spacing: [2, 2] }, portraitSpec: { sprite: [9000, 0], offset: [0, 0], scale: [1, 1] }, elements: [], images: {}, spriteInfo: {} }, cells: [{ id: 'line-1', line: 1, name: 'Ryu', draggable: true }, { id: 'line-2', line: 2, name: 'Ken', draggable: true }], portraits: {} });
+const page = workspace.html(base);
+assert.match(page, /\['characters','Characters'\]/);
+assert.match(page, /Motif-backed select preview/);
+assert.match(page, /Review & apply roster order/);
+assert.match(page, /Add installed characters/);
+assert.match(page, /\['characters','Characters'\].*\['orders','Order'\]/s);
+assert.match(page, /data-bulk-act="bulkStages"/);
+assert.match(page, /assignStageDrop/);
+assert.match(page, /bulkOrderDirect/);
+assert.match(page, /screenViewport.*onwheel/s);
+assert.match(page, /id="toggleNames"/);
+assert.match(page, /id="toggleNumbers"/);
+assert.match(page, /hide-cell-names/);
+assert.match(page, /String\(item\.trans\|\|'none'\)/);
+assert.match(page, /transform:translate\(50%,50%\)/);
+assert.match(page, /Slot or hidden\/locked cell/);
+assert.match(page, /Open Motif/);
+assert.match(page, /Launch IKEMEN/);
+assert.match(page, /Infinite VS Mirror/);
+assert.match(page, /Training mirror match/);
+assert.match(page, /Add installed \/ zipped stages/);
+assert.match(page, /id="summary"><\/div><nav class="tabs">/);
+assert.match(page, /data-tab="roster">Roster &amp; Stages<\/button><button data-tab="options">Options<\/button><button data-tab="player">Player Tools<\/button><button data-tab="other">Creator \/ Raw Data/);
+assert.doesNotMatch(page, /data-tab="story"/);
+assert.match(page, /id="storyBuilder"/);
+assert.match(page, /Detailed .* list/);
+assert.match(page, /Add colors to a character/);
+assert.match(page, /'palettes','Palettes'/);
+assert.match(page, /Open ACT or indexed PNG/);
+assert.match(page, /paletteDrop/);
+assert.match(page, /Player Menu &amp; Mode Recipes/);
+assert.match(page, /stage-target/);
+assert.match(page, /data-stage-target/);
+assert.match(page, /drag the portrait selection from the select screen onto a stage/);
+assert.match(page, /save\/config\.ini/);
+assert.match(page, /openEngineConfig/);
+const script = page.match(/<script>([\s\S]*)<\/script>/)[1];
+assert.doesNotThrow(() => new Function(script));
+
+console.log('Roster Manager workspace tests passed');

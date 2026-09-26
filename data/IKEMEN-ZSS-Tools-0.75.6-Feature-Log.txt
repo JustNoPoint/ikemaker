@@ -1,0 +1,17 @@
+IKEMaker 0.75.6
+
+PROTECTED PALETTE BACKGROUND
+
+- JustNoPoint's provisional CS background/index-0 RGB is #00F5BA regardless of
+  the color used by incoming artwork.
+- Phase 1 exports rewrite the transparent entry RGB to the configured protected
+  color while keeping it transparent in the indexed contract.
+- Exact and near-matching visible sprite colors receive deterministic, distinct
+  provisional RGB replacements. Their original RGBA values and the collision
+  decision remain recorded for review and reversal.
+- The default similarity guard is RGB distance 24.
+- Other users may change the background color and threshold per workspace using
+  IKEMaker settings. This does not change JNP project policy.
+- Opaque artwork that cannot distinguish flat background pixels from same-color
+  visible sprite pixels requires a reviewed mask or transparent source; the
+  tool must not erase every occurrence by assumption.

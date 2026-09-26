@@ -1,0 +1,32 @@
+IKEMaker 0.64.10
+
+SFF VIEWER CORRECTION
+
+- Corrects an escaped-apostrophe defect that allowed native SFF parsing to
+  finish but stopped the webview script before its group and sprite lists were
+  rendered. A full generated-client-script syntax test now guards this path.
+- AIR's Open SFF bridge now calls the shared SFF viewer directly in the AIR
+  panel's editor group. It no longer delegates placement to VS Code's custom
+  editor routing.
+- Directly opened custom SFF editors are moved into the currently preferred
+  visual-viewer group before that group is tracked.
+- AIR, SFF, and SND prioritize the shared visual-viewer group over an older
+  same-kind panel location unless the caller deliberately supplies a column.
+
+CONSISTENT SPATIAL CANVAS CONTROLS
+
+- Move Constants now supports pointer-centered mouse-wheel zoom, a zoom slider,
+  Fit, 100%, drag-to-pan, and double-click centering.
+- Dragging directly over the optional darkened P2 continues to reposition P2;
+  dragging elsewhere pans the whole preview.
+- Throw Creator now uses the same wheel zoom, slider, Fit, 100%, empty-canvas
+  panning, and double-click centering contract while direct P2 dragging continues
+  to edit the selected bind in character-relative units.
+- Spatial viewer state is remembered by its webview. SND waveforms and code trees
+  are not assigned camera controls because they have no world-space canvas.
+
+VERIFICATION
+
+- All 120 automated test files pass.
+- SFF generated JavaScript, AIR-to-SFF routing, Move Constants navigation, Throw
+  Creator navigation, and shared viewer-group coverage have regression checks.

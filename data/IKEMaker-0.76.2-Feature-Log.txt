@@ -1,0 +1,7 @@
+IKEMaker 0.76.2 — Quick Start priority
+======================================
+
+- Removed the one-time Windows file-association setup from Quick Start so the
+  frequently used Open, Create, Author, Manage, and Launch actions appear first.
+- File-association setup remains available under Personal Workspace and
+  Preferences and through the command palette.

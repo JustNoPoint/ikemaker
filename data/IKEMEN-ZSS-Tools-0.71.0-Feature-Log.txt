@@ -1,0 +1,36 @@
+IKEMaker 0.71.0 — Artist intake and two-SFF assembly
+
+ARTIST INTAKE
+- Accepts animation GIFs, PNG sprite sheets, and folders of loose PNG frames.
+- Extracts into a temporary working area without changing artist originals.
+- Preserves source files, source labels, frame order, and available GIF delays as provenance.
+- Ignores GIF/source timing by default; the draft uses neutral one-tick browsing frames
+  labeled timing-unassigned. REFERENCE_ONLY timing requires explicit opt-in.
+- Detects exact duplicate frames and shows their first matching frame.
+- Supports visual multi-frame selection and editable category, name, group/index,
+  and axis assignment.
+- Suggests broad IKEMaker group families while leaving every assignment editable.
+- Writes manifest.csv, artist-intake.json, import-recipe.json, draft.air, working
+  PNGs, preserved sources, and a SprMaker2 package for a temporary review SFF.
+
+TWO-SFF ASSEMBLY
+- Opens one destination/template SFF and one source SFF in one visual workspace.
+- Supports whole-group drag and Ctrl/Shift-selected sprite drag.
+- Adds at the next free destination indexes or explicitly replaces matching IDs.
+- Can preserve destination axes during replacement.
+- Never silently overwrites an identity: unresolved collisions stop the package.
+- Extracts a complete destination build, records every operation and source
+  identity, preserves the destination palette table, and prepares SprMaker2 files.
+
+SAFETY AND SCOPE
+- This is asset intake and assembly, not an image editor.
+- Source files are preserved and archive mutation stays on the reviewed manifest,
+  transaction, palette, backup, and SprMaker2 authority path.
+- Browser hosts expose honest unavailable-command guidance; native extraction and
+  archive building remain desktop-only.
+
+VERIFICATION
+- New pure-model coverage validates sheet slicing, naming/group suggestions,
+  timing authority, selection, append behavior, replacement, axis retention, and
+  collision blocking.
+- The complete automated suite passes: 141 test files.

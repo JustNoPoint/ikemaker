@@ -1,0 +1,24 @@
+'use strict';
+const assert=require('assert'),path=require('path'),os=require('os'),setup=require('../src/workspace_setup'),modes=require('../src/interface_mode'),capabilities=require('../src/interface_capabilities'),pkg=require('../package.json');
+let root=path.join(os.tmpdir(),'ikemaker-workspace-setup-a'),choices=[],messages=[],executed=[],commands=new Map(),state={};
+const storage={get:(key,fallback)=>state[key]??fallback,update:async(key,value)=>{state[key]=value;}};
+const config={get:key=>key==='interfaceMode'?'workspace':undefined,inspect:()=>({globalValue:'workspace'}),async update(){}};
+const api={ConfigurationTarget:{Global:1,Workspace:2},ViewColumn:{Active:1},workspace:{workspaceFolders:[{uri:{fsPath:root}}],getWorkspaceFolder:()=>({uri:{fsPath:root}}),getConfiguration:()=>config},commands:{registerCommand(command,handler){commands.set(command,handler);return{dispose(){}};},async executeCommand(...args){executed.push(args);}},window:{activeTextEditor:null,visibleTextEditors:[],tabGroups:{all:[],activeTabGroup:null,onDidChangeTabs:()=>({dispose(){}})},onDidChangeActiveTextEditor:()=>({dispose(){}}),async showQuickPick(){return choices.shift();},showInformationMessage:message=>messages.push(message),showWarningMessage:message=>messages.push(message)}};
+const context={workspaceState:storage,globalState:{get:()=>({chosen:true}),keys:()=>[],update:async()=>{}},subscriptions:[]};
+(async()=>{
+ modes.configure(api,context);setup.register(api,context);
+ assert.equal(setup.current().configured,false,'existing project must remain unfiltered');
+ choices=[{value:'character'},{value:'team'}];await commands.get('ikemen.workspaceSetup.change')();
+ assert.deepEqual(setup.current(),{configured:true,scope:'character',collaboration:'team',showAll:false,pins:[]});
+ assert(capabilities.allows('ikemen.character.open','workspace'));assert(!capabilities.allows('ikemen.stage.openWorkspace','workspace'));assert(capabilities.allows('ikemen.stage.openWorkspace','simple'),'Player/Simple policy is not narrowed by Workspace Setup');
+ assert(!capabilities.commandStyle('workspace').includes('data-workspace-control="team-assignment"'),'team controls remain in Team setup');
+ root=path.join(os.tmpdir(),'ikemaker-workspace-setup-b');api.workspace.workspaceFolders[0].uri.fsPath=root;assert.equal(setup.current().configured,false,'another project does not inherit setup');
+ root=path.join(os.tmpdir(),'ikemaker-workspace-setup-a');api.workspace.workspaceFolders[0].uri.fsPath=root;assert.equal(setup.current().scope,'character','project setup restores by identity');
+ choices=[{value:'character'},{value:'solo'}];await commands.get('ikemen.workspaceSetup.change')();assert(capabilities.commandStyle('workspace').includes('data-workspace-control="team-assignment"'));
+ assert(modes.homeHtml().includes('Workspace Setup'));assert(modes.homeHtml().includes('Character · Solo'));assert(modes.homeHtml().includes('Pin Additional Tool'));
+ await commands.get('ikemen.workspaceSetup.showAll')();assert(setup.current().showAll);assert(capabilities.allows('ikemen.stage.openWorkspace','workspace'));
+ assert(pkg.contributes.commands.some(item=>item.command==='ikemen.workspaceSetup.change'));assert(commands.has('ikemen.workspaceSetup.pin'));
+ assert(!executed.some(([command])=>/close/i.test(command)),'changing setup must not close editors or viewers');
+ assert(messages.some(message=>message.includes('presentation')));
+ console.log('Workspace Setup runtime: project identity, choices, central filtering, Team/Solo controls, Show All, Home state and non-destructive updates passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});

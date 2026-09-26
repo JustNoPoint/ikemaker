@@ -1,0 +1,16 @@
+IKEMAKER 0.78.0 — FOCUSED TEST CHECKLIST
+
+Use a disposable copy. Test one familiar workflow at a time.
+
+[ ] Extract the ZIP, install, reload, and confirm version 0.78.0.
+[ ] Open Help & Learning Center and locate the guide for the chosen workflow.
+[ ] Open the intended character/project and confirm the displayed context.
+[ ] Reopen the same file and report duplicate, empty, or misplaced viewers.
+[ ] Make one small supported edit; inspect the exact saved source or asset.
+[ ] Exercise the documented Undo/Recovery path.
+[ ] Try the workflow at the usual width and at a narrower editor width.
+[ ] Open Project Maps, change scopes, select a parent group, and verify results.
+[ ] If testing updates, review the release details and decline once before install.
+[ ] Report confusing wording, clipped controls, missing previews, or wrong targets.
+
+Do not treat untested tools as certified. Keep private code/assets out of reports.

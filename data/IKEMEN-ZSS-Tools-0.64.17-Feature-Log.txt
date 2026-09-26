@@ -1,0 +1,29 @@
+IKEMaker 0.64.17
+=================
+
+Engine-aware character creation
+-------------------------------
+- Create New Character now begins with an explicit MUGEN 1.0/CNS or IKEMEN 1.0/ZSS choice.
+- MUGEN creation emits a MUGEN DEF, constants CNS, separate state CNS, CMD, AIR, empty SFF 2.0, empty SND, and review guide.
+- IKEMEN creation emits an IKEMEN DEF, constants CNS, ZSS, CMD, movelist starter, AIR, empty SFF 2.1, empty SND, and review guide.
+- Guided and clean scaffolds remain explicit choices after the engine target is selected.
+
+Commands and constants
+----------------------
+- Both targets receive recovery, forward/back double taps, X/Y/Z/A/B/C, Start, and held direction commands required by common states.
+- IKEMEN additionally receives D and W remaps and commands.
+- Newly generated IKEMEN constants document native dizzy/guard resources, sound channels, volume scale, size boxes, three-axis guard regions, depth, weight, push factor, KO velocities, three-axis movement, and custom constants.
+- Creation-time notes are never inserted into existing user-authored constants.
+
+Common-file contract
+--------------------
+- MUGEN creation checks data/common1.cns.
+- IKEMEN creation checks data/common1.cns.zss and data/common.cmd.
+- Missing commons produce a blocking, engine-specific error with an option to generate the missing project set from another matching engine installation.
+- Common installation is transactional and refuses to overwrite an existing common file.
+
+Verification
+------------
+- Added engine-target, SFF-version, command-contract, constants-guidance, and common-file resolution tests.
+- The clean-profile private-name inspection is recorded as passed.
+- All 125 automated test files pass.

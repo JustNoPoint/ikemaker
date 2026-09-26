@@ -1,0 +1,694 @@
+{
+  "capturedAt": "2026-09-13T20:11:53.380225+00:00",
+  "pages": [
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/3D-Model-features",
+      "file": "wiki/3D-Model-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Background-features",
+      "file": "wiki/Background-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Building%2C-Installing-and-Distributing",
+      "file": "wiki/Building,-Installing-and-Distributing.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Character-features",
+      "file": "wiki/Character-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Home",
+      "file": "wiki/Home.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Lifebar-features",
+      "file": "wiki/Lifebar-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Lua",
+      "file": "wiki/Lua.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-info",
+      "file": "wiki/Miscellaneous-info.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Screenpack-features",
+      "file": "wiki/Screenpack-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Stage-features",
+      "file": "wiki/Stage-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers-%28changed%29",
+      "file": "wiki/State-controllers-(changed).html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers-%28new%29",
+      "file": "wiki/State-controllers-(new).html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Storyboard-features",
+      "file": "wiki/Storyboard-features.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers-%28changed%29",
+      "file": "wiki/Triggers-(changed).html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers-%28new%29",
+      "file": "wiki/Triggers-(new).html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/Updating-to-1.0",
+      "file": "wiki/Updating-to-1.0.html"
+    },
+    {
+      "source": "https://github.com/ikemen-engine/Ikemen-GO/wiki/ZSS",
+      "file": "wiki/ZSS.html"
+    },
+    {
+      "source": "https://potsmugen.github.io/ikemen-merged-docs/",
+      "file": "merged/index.html"
+    },
+    {
+      "source": "https://potsmugen.github.io/ikemen-merged-docs/redirections",
+      "file": "merged/redirections.html"
+    },
+    {
+      "source": "https://potsmugen.github.io/ikemen-merged-docs/sctrl",
+      "file": "merged/sctrl.html"
+    },
+    {
+      "source": "https://potsmugen.github.io/ikemen-merged-docs/triggers",
+      "file": "merged/triggers.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/air.html",
+      "file": "mugen/air.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/bg-tut.html",
+      "file": "mugen/bg-tut.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/bgs.html",
+      "file": "mugen/bgs.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/cns.html",
+      "file": "mugen/cns.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/coordspace.html",
+      "file": "mugen/coordspace.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/fonts.html",
+      "file": "mugen/fonts.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/history.html",
+      "file": "mugen/history.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/localization.html",
+      "file": "mugen/localization.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/loopguide.html",
+      "file": "mugen/loopguide.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/mconsole.html",
+      "file": "mugen/mconsole.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/mugen.html",
+      "file": "mugen/mugen.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/sctrls.html",
+      "file": "mugen/sctrls.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/spr.html",
+      "file": "mugen/spr.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/sprmake2.html",
+      "file": "mugen/sprmake2.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/storyboard.html",
+      "file": "mugen/storyboard.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/trigger.html",
+      "file": "mugen/trigger.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial1.html",
+      "file": "mugen/tutorial1.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial2.html",
+      "file": "mugen/tutorial2.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial3.html",
+      "file": "mugen/tutorial3.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial4.html",
+      "file": "mugen/tutorial4.html"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/upgrading.html",
+      "file": "mugen/upgrading.html"
+    }
+  ],
+  "assets": [
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/readme.txt",
+      "file": "mugen/readme.txt"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/spr.png",
+      "file": "mugen/spr.png"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/airvw0.gif",
+      "file": "mugen/tutorial/airvw0.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/airvw1.gif",
+      "file": "mugen/tutorial/airvw1.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/airvw2.gif",
+      "file": "mugen/tutorial/airvw2.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/airvw3.gif",
+      "file": "mugen/tutorial/airvw3.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/airvw4.gif",
+      "file": "mugen/tutorial/airvw4.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkbox.gif",
+      "file": "mugen/tutorial/atkbox.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx-hih.gif",
+      "file": "mugen/tutorial/atkx-hih.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx-hil.gif",
+      "file": "mugen/tutorial/atkx-hil.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx-him.gif",
+      "file": "mugen/tutorial/atkx-him.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx-loh.gif",
+      "file": "mugen/tutorial/atkx-loh.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx-lol.gif",
+      "file": "mugen/tutorial/atkx-lol.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx-lom.gif",
+      "file": "mugen/tutorial/atkx-lom.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx0.gif",
+      "file": "mugen/tutorial/atkx0.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/atkx1.gif",
+      "file": "mugen/tutorial/atkx1.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/axis0.gif",
+      "file": "mugen/tutorial/axis0.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/axis1.gif",
+      "file": "mugen/tutorial/axis1.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/axis2.gif",
+      "file": "mugen/tutorial/axis2.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/axis3.gif",
+      "file": "mugen/tutorial/axis3.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/axis4.gif",
+      "file": "mugen/tutorial/axis4.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/color0.gif",
+      "file": "mugen/tutorial/color0.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/color0n.gif",
+      "file": "mugen/tutorial/color0n.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/color0y.gif",
+      "file": "mugen/tutorial/color0y.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/debug0.gif",
+      "file": "mugen/tutorial/debug0.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/pshop0.gif",
+      "file": "mugen/tutorial/pshop0.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/pshop1.gif",
+      "file": "mugen/tutorial/pshop1.gif"
+    },
+    {
+      "source": "https://www.elecbyte.com/mugendocs-11b1/tutorial/pshop2.png",
+      "file": "mugen/tutorial/pshop2.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/01588f79-e38d-42e6-b232-ac8d3d2587ea",
+      "file": "assets/4311ab2255041296.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/02914ff2-d994-4ae1-a0f7-642353e2777c",
+      "file": "assets/bc28608a846c31b4.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/1454574c-0d6b-4f6a-9ddf-e603156aaab0",
+      "file": "assets/702880a4ddccd9ec.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/14925b42-f92a-4ce0-80d6-ac2f9e87c712",
+      "file": "assets/eb16ffb324d6022d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/15853fd4-7f01-45af-a355-5a473a51e3d8",
+      "file": "assets/25be28c1820577f9.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/16a00d79-9b8e-48b3-adbc-d04ac5616b86",
+      "file": "assets/4c88c89c5be9b013.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/1e9b58f8-0f54-4406-9fc0-5a996f9ab2e1",
+      "file": "assets/9e267533b6a0978f.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/22b8b35d-f14f-4af5-89c8-9d2b6ae25d93",
+      "file": "assets/2317d020c159f8e2.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/22e62425-6d54-4298-8809-77245d6745a9",
+      "file": "assets/4d51f37f540c7db7.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/253a51be-6f2b-4e56-ad8c-591c4d37e5e4",
+      "file": "assets/9c018e2c8f7b4a7a.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/278162ef-27f0-4d40-8ba6-313c7d8d03ba",
+      "file": "assets/5406947ca9a56195.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/29ae8d6a-fea4-49fb-8b4f-944a9f55d3cb",
+      "file": "assets/ff610cc61e54892d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/306748d1-dfe9-449c-83e8-ff41c36f2eee",
+      "file": "assets/00649ee5a3fdffbc.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/30ca22d7-c112-4aac-8ff4-d6e49401b69c",
+      "file": "assets/4850691f98789e5f.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/329d2f38-ff8d-43a7-83d1-0e95f9806440",
+      "file": "assets/8993c49c0774a1ec.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/35d6ea4e-3097-48c7-973b-f42e1f95fe93",
+      "file": "assets/bfaf1a861abdef15.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/38608cdc-645b-418d-900b-2c01f2c7e907",
+      "file": "assets/6d0ac18343fa253f.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/3b61fdb8-1214-4b0b-800a-8f5fdd228fff",
+      "file": "assets/3e6edd3564546d43.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/3b73d8be-d633-412c-93a3-bd007ae6d96a",
+      "file": "assets/5957963cd5bd5d44.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/3fcfb38d-df55-4206-9569-3f488d5977e1",
+      "file": "assets/75fffc65ad5c170f.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/412d6bb7-6b81-4c93-a1d5-38ca50060e33",
+      "file": "assets/1bb7fc38479654a9.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/42b2a153-f780-48af-bfc5-ae91b793ab3a",
+      "file": "assets/58c1e1ca125689fa.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/43a95447-4ece-46e5-9191-81c7d8b829b9",
+      "file": "assets/146ebe68751af70b.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/4678cb76-9833-472e-9f51-f64bb92ba105",
+      "file": "assets/bc6933a624d0fe50.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/4a834212-b126-43b9-8be4-496bb579ab3f",
+      "file": "assets/da042c22dd8779e6.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/4b331dd6-6651-492c-a38d-c7e86a07d47c",
+      "file": "assets/886a3c2ed91804ef.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/4c67699c-aac1-4cad-951b-7ba2bfb434d5",
+      "file": "assets/c1afcbc2b09fefbf.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/516aca12-f546-4cee-b11d-05fa71ba913a",
+      "file": "assets/47acdce0f1be6dfb.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/54630c0b-eebd-4885-9582-441d67d773b1",
+      "file": "assets/dec84c78d0657c9f.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/59987cee-79df-460e-b6a4-8df11f8543b3",
+      "file": "assets/ba2b23f447ab42db.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/5de709af-612f-4c98-b911-034ee36a990c",
+      "file": "assets/404946ad91c4a2e7.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/60865d21-da29-46fb-b3b0-fc2429fb3a76",
+      "file": "assets/3bdc074bef7afce3.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/611dbcbe-4bdf-4f0a-89cb-e835563441af",
+      "file": "assets/163207f2e58eee2b.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/63a828bb-377a-4d6d-8921-23d91643c0ad",
+      "file": "assets/f4829584744a401d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/64f688cb-8f2c-435a-9291-076595919d50",
+      "file": "assets/16641944017134c4.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/6591a10c-e1d5-48ac-a01e-20d0b35c2fab",
+      "file": "assets/6a0b742700f719d5.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/6b309023-bb70-4dbf-90d5-a2e5e3f1d1e8",
+      "file": "assets/95e97f2d5c20a9f7.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/6f35a611-e4be-4ab3-a0c9-071d4569778d",
+      "file": "assets/69e25c318056e6bf.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/7040f963-0f07-47c8-b842-9c6710c1c5ee",
+      "file": "assets/fb4abacba8b06a2d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/7082df59-7028-49ed-a79a-1821e217047b",
+      "file": "assets/af23a1e9b2653ef5.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/7450056b-ffb8-43d7-b581-ea9135e24946",
+      "file": "assets/f63da76dcc88fdf1.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/84a674d4-deb2-455c-944d-c9b9b1f41c3f",
+      "file": "assets/79564d51cbde022d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/876e55e4-c875-4279-8bcd-48a928cd1bab",
+      "file": "assets/b67b05500f8020bf.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/89e39518-0846-4ccc-a79b-a113b0426d4f",
+      "file": "assets/61d3893a1a5ab50a.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/8b1d0f36-bb0d-4052-b503-6f163f8cc512",
+      "file": "assets/28db840372595d3a.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/8e504c6b-7c7d-4c4f-8382-65ceee954153",
+      "file": "assets/0d7055e1b39df33e.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/9109f87c-16ee-424b-b739-9ecff4bf3889",
+      "file": "assets/7376d6f61131ba92.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/97b2f217-7884-46b7-98a3-dd917191a005",
+      "file": "assets/3af23bcb22a8f3cc.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/98328f39-7399-4900-9ea1-fd9107d7cf40",
+      "file": "assets/c04e3a2590319a91.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/9e9efe40-5a31-4497-8897-72868464d51a",
+      "file": "assets/1cbe9cec26812958.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a10eb7e0-3ca2-4b89-a1aa-ef331c7612f0",
+      "file": "assets/bcbc137c27a81d1d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a16e28f4-754f-4ad9-b773-b9bab73938aa",
+      "file": "assets/3fba33f0ea11a358.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a40e94f4-5f1f-4134-abab-a584a31adb16",
+      "file": "assets/abadec236f627769.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a529ea1f-bd31-4a88-9fba-fc26a586675e",
+      "file": "assets/d39c1ca60d80f106.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a58cf017-681a-46db-93a8-5439b854e306",
+      "file": "assets/7475afebb78a8883.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a7791823-d864-4ac9-8ee4-a7dc7398f39f",
+      "file": "assets/79c2a2feecc23a2e.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/a8a54ba7-7552-44e0-8e73-e704372d3985",
+      "file": "assets/aa7eb2f73a65ab9a.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/ab7c13b3-7be8-4cb0-96d2-78d523c07da8",
+      "file": "assets/fcb2da73046f11a5.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/ad1d1e90-8dd3-42b4-87c6-0f5e901de78e",
+      "file": "assets/2c12b1c3a2dbc78a.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/ad55f8aa-84f9-4cd6-887a-60d45a7705de",
+      "file": "assets/5e9c0d30faf1c2b0.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/afb8e4b0-a623-4888-8ad3-df5a7be7aac9",
+      "file": "assets/27925100eb309f7b.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/affd673c-3be9-4b69-a33f-47e02900ebe5",
+      "file": "assets/18576fad3bf03f1c.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/b4312ce5-f5ff-442d-bc6d-00ce91924a97",
+      "file": "assets/3d0df670e5d953ee.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/b5803b1c-835f-4686-bc47-ce425d247b66",
+      "file": "assets/a56905c4dfe17f8b.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/b8ebe51a-14f7-4e88-bb07-726b3c66574b",
+      "file": "assets/dd7d04486bc16e2d.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/bf8da5e5-f440-4f03-87b4-273ec5d57fd9",
+      "file": "assets/5d80d8a70de5d8de.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/cee4eb11-e3f6-42ff-bc29-e958a57a39e0",
+      "file": "assets/539f1155cf84d5e4.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/d1761afa-5306-4c6d-b414-dd52290d2c40",
+      "file": "assets/b44fa82a83411261.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/d49bcdb9-a78a-4c1c-bf2b-221f20a05d5b",
+      "file": "assets/13e7c081ed6a8b8e.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/da0eb676-e8b2-49e7-9467-75370b421b1c",
+      "file": "assets/ffd44375ebf16286.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/da341a5f-ba9c-4431-8727-4efa6f15def5",
+      "file": "assets/978a9c0f7da92c38.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/de753df4-409e-40a7-a587-c70c61672e6e",
+      "file": "assets/87f8ada5313a33cf.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/e2fbf221-acc0-4265-b075-c44ae21db440",
+      "file": "assets/eeacd4d4d65aecfa.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/eaf915b9-4c35-45bd-a13a-3263cfc96c7b",
+      "file": "assets/b40723ef53ab2564.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/ed6ac292-bf7d-4329-9b6b-f1efc84fc4b1",
+      "file": "assets/10e56a0aada4674e.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/f0a47a88-8509-4700-b967-2a7f2c2e6d7f",
+      "file": "assets/cb3d1f699f7ac703.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/f1c779cd-4599-4d2e-97c7-5b7f8eb655be",
+      "file": "assets/a7c93081ffb27df9.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/f3d45ca2-0d4d-43c7-8c9e-d94dd52e392e",
+      "file": "assets/4258b261e327448f.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/fda715a0-3e71-4bc6-881c-9355a04f728f",
+      "file": "assets/965ee140a23144a9.png"
+    },
+    {
+      "source": "https://github.com/user-attachments/assets/fdd6c1bc-1c52-42f5-ac68-eabaa769df4a",
+      "file": "assets/fc7648e31811368b.png"
+    },
+    {
+      "source": "https://user-images.githubusercontent.com/8928195/97225259-b8724680-17d2-11eb-833d-0111c3bdce42.png",
+      "file": "assets/bd60a1eba7056bb2.png"
+    }
+  ],
+  "failures": [],
+  "upstreamLinkRepairs": [
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Character-features",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Character-features.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Character-features/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Character-features.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Lifebar-features/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Lifebar-features.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Miscellaneous-Info/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Miscellaneous-info.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Miscellaneous-info",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Miscellaneous-info.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Stage-features",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Stage-features.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Stage-features/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Stage-features.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/State-controllers-(changed)",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/State-controllers-(changed).html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/State-controllers-(changed)/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/State-controllers-(changed).html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/State-controllers-(new)/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/State-controllers-(new).html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/State-controllers/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "merged/sctrl.html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Triggers-(new)/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "wiki/Triggers-(new).html"
+    },
+    {
+      "url": "https://potsmugen.github.io/ikemen-merged-docs/Triggers/",
+      "error": "HTTP Error 404: Not Found",
+      "localReplacement": "merged/triggers.html"
+    },
+    {
+      "url": "https://www.elecbyte.com/mugendocs-11b1/docs/loopguide.html",
+      "error": "HTTP Error 403: Forbidden",
+      "localReplacement": "mugen/loopguide.html"
+    },
+    {
+      "url": "https://www.elecbyte.com/mugendocs-11b1/exp.html",
+      "error": "HTTP Error 403: Forbidden",
+      "localReplacement": "mugen/cns.html#expressions"
+    },
+    {
+      "url": "https://www.elecbyte.com/mugendocs-11b1/overview.html",
+      "error": "HTTP Error 403: Forbidden",
+      "localReplacement": "mugen/mugen.html"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+IKEMaker 0.75.7
+
+BETA READINESS AND HELP
+
+- Opening an SFF or SND directly now opens its visual IKEMaker workspace and
+  closes the redundant raw/text tab only after the visual editor succeeds.
+- AIR remains intentionally text plus synchronized visual workspace.
+- Help and Compatibility now begins with an offline-first Help & Learning
+  Center: Start Here, visual screen map, MUGEN to IKEMEN migration, bundled
+  documentation, and device/engine compatibility.
+- Major help cards open the actual workspace they explain. Existing compact
+  offline documentation and explicit upstream snapshot updates remain available.
+- Help uses clean built-in screen diagrams for the moving beta UI; curated
+  screenshots can replace or supplement them after layouts stabilize without
+  changing the navigation model.
+- The full-game compatibility scanner skips inaccessible editor/runtime folders
+  instead of aborting and accepts the stable engine's system.base.def motif.
+- Real combined-copy audit: 198 SFF, 53 AIR, 51 SND, 59 stages, 3 screenpacks,
+  and 34 character dependency sets parsed with zero parser errors or missing
+  references. All 21 roster cells resolved.
+- Ryu audit: every DEF-owned asset resolves, 612 sprites with no duplicate IDs,
+  and 490 nonempty AIR actions.
+- 154 automated test files and 161 desktop JavaScript syntax checks pass.
+- The packaged native-tool audit now launches SprMaker2 instead of checking
+  only that its EXE exists. This exposed and fixed missing Elecbyte/VC90 side-by-
+  side runtime files. SndMaker and SFF2PNG are included as well.

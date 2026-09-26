@@ -1,0 +1,29 @@
+IKEMEN ZSS Tools 0.62.0
+
+CHARACTER HEALTH & CLEANUP
+- Added a character-wide, audit-first health workspace reached from Characters, ZSS and CNS, Complete Project, saved Character Workbenches, editor context menus, and Related Work.
+- Follows the selected character DEF across assigned CNS, CMD, JNP, ZSS, and AIR files.
+- Allows additional unassigned source files to be added temporarily to the same audit and restored with the workspace tab.
+- Reports missing local dependencies while respecting engine-resolved stcommon files.
+- Finds exact duplicate and conflicting/shadowed legacy parameters without misclassifying repeated trigger lines.
+- Shows the first effective parameter value so edits to ignored later duplicates are understandable.
+- Validates controller options against bundled offline IKEMEN GO 1.0 documentation and suggests close spellings.
+- Includes an explicit compatibility layer for valid legacy parameters used by stock IKEMEN/MUGEN characters.
+- Supports project-defined allowed parameters, ignored rule codes, and a Custom / conservative profile that leaves unknown parameters unclassified.
+- Finds duplicate AIR actions, exact duplicate blocks, sprite-less actions, and malformed sprite rows.
+- Treats sprite-less AIR actions and conflicting duplicate actions as human-review cases; it never invents animation content.
+- Opens source findings directly and bridges AIR findings into the code-plus-visual AIR workspace.
+- Publishes the current character audit into VS Code Problems with file-and-line navigation.
+- Bundles controller explanations inside the extension so cleanup review does not require internet access.
+- Adds filtering by file, severity, controller, parameter, and text.
+- Adds Select safe, Clear selection, comment-preserving cleanup, deletion cleanup, report generation, and profile switching.
+- Adds exact pre-apply diff previews using a read-only virtual document.
+- Applies multi-file repairs transactionally with stale-file protection, optional backups, mutation history, and immediate undo.
+- Keeps dedicated SFF, SND, palette, runtime-test, and project-convention audits authoritative for their own formats.
+
+SAFETY POLICY
+- Scanning never writes files.
+- No finding is automatically applied.
+- Unknown parameters and conflicting AIR actions require explicit selection and review.
+- Behavior-preserving means the repair retains the behavior already chosen by the engine; it does not claim that the original author intended that behavior.
+- Project-specific conventions remain configurable and separate from native engine integrity.

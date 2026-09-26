@@ -1,0 +1,2532 @@
+<html><head><meta charset="utf-8"/><title>Triggers-(new)</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers-%28new%29">Original source (online)</a> · Snapshot 2026-09-13</div><p>The triggers listed in this page are completely new to Ikemen GO.  </p>
+<p>Refer to the sidebar for quicker navigation.</p>
+<h1 id="new-trigger-redirections"><a name="redirection">New trigger redirections</a></h1>
+<h2 id="helperindexn"><a name="redirection_helperindex">HelperIndex(n)</a></h2>
+<p>Redirects the trigger to the helper entity by index.</p>
+<p>Each helper is assigned an index according to their position among the total number of helpers a player has. These indexes begin at 1, with index 0 being a special case that represents the <code>root</code> player. A player with 5 helpers, for instance, will have helpers with indexes 1 through 5.  </p>
+<p>It takes redirections into account, allowing the return of a helper's helpers.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = NumHelper &gt;= 2
+trigger1 = HelperIndex(2), MoveType = A
+</code></pre>
+<h2 id="p2"><a name="redirection_p2">P2</a></h2>
+<p>Redirects the trigger to the same player as the "P2" family of triggers (P2StateNo, etc). So, for instance, <code>P2, StateNo</code> is equivalent to <code>P2StateNo</code>.  </p>
+<p>The "P2" enemy has some notable properties:<br/>
+- If it is in state 5150 (KO), it will be ignored<br/>
+- Is the one the character will always be facing automatically (<code>facep2</code>, etc)<br/>
+- Only changes when another enemy is at least 30 pixels closer to the player, making it less erratic during team modes  </p>
+<p>All of these properties make <code>P2</code> the optimal enemy redirection in most cases.  </p>
+<p>Note: This redirection should not be mistaken for "Player(2)", which is always player number 2.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = P2, DizzyPoints &lt;= 100
+</code></pre>
+<h2 id="playern"><a name="redirection_player">Player(n)</a></h2>
+<p>Redirects a trigger to the character with the specified PlayerNo.</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Player(1), AILevel
+trigger2 = Player(TeamLeader), MoveType = A
+</code></pre>
+<h2 id="playerindexn"><a name="redirection_playerindex">PlayerIndex(n)</a></h2>
+<p>Each player is assigned a specific index in the internal player list. <code>PlayerIndex</code> will redirect a trigger to the player (helpers included) with the specified index. The first index is 0. If there are 20 players on screen, valid indexes will be 0 through 19.  </p>
+<p>Like all "index" triggers, this is especially useful in <code>for</code> and <code>while</code> loops.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-go">trigger1 = PlayerIndexExist(1)
+trigger1 = PlayerIndex(1), id = 56
+
+# Count all explods on screen
+let totalExplod = 0;
+for i = 0; NumPlayer - 1; 1 {
+    if PlayerIndexExist($i) {
+        let totalExplod = $totalExplod + PlayerIndex($i), NumExplod;
+    }
+}
+</code></pre>
+<h2 id="stateowner"><a name="redirection_stateowner">StateOwner</a></h2>
+<p>Redirects a trigger to the owner of the current state the character is in. Useful when a custom stated target needs to redirect a trigger to the player.<br/>
+Note: states are owned by the root.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = StateOwner,AILevel
+</code></pre>
+<h1 id="new-triggers"><a name="new">New triggers</a></h1>
+<h2 id="ailevelf"><a name="new_ailevelf">AiLevelF</a></h2>
+<p>Returns the difficulty level of the player's AI as float value (unlike <em>AILevel</em> trigger, which is still floored for compatibility reasons). If AI is enabled on the player, the value ranges from 1 (easiest) to 8 (most difficult). If AI is not enabled on the player, the return value is 0. AI difficulty level with floating point is a result of AI Ramping system (refer to select.def distributed with engine for more information)</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>AILevelF  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Random &lt; (500 * (AILevelF ** 2 / 64.0))
+</code></pre>
+<h2 id="airjumpcount"><a name="new_airjumpcount">AirJumpCount</a></h2>
+<p>Returns the number of (conventional) air jumps the P1 has performed.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>AirJumpCount  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<h2 id="alpha"><a name="new_alpha">Alpha</a></h2>
+<p>Returns the value of the player's source/dest alpha applied with Trans sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Alpha argument</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>source, dest</p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Alpha source &gt;= 128 &amp;&amp; Alpha dest &gt;= 128
+</code></pre>
+<h2 id="analog"><a name="new_analog">Analog</a></h2>
+<p>Returns the value of the player's respective analog axis. Values are normalized from [-1,1] with the exception of analog triggers (<code>RightTrigger</code> and <code>LeftTrigger</code>) which are normalized to [0.0,1.0].</p>
+<p>Note: internally, 256 distinct analog steps exist per axis with the exception of the analog triggers which are halved (128 distinct steps).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Axis argument</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>LeftX, LeftY, RightX, RightY, LeftTrigger, RightTrigger</p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Analog(LeftX) &gt;= 0.5 &amp;&amp; Analog(RightTrigger) &gt; 0.75
+</code></pre>
+<h2 id="angle"><a name="new_angle">Angle</a></h2>
+<p>Returns the value of the player's angle applied with AngleDraw/AngleSet/AngleAdd/AngleMul sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Angle</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Angle &gt;= 90
+</code></pre>
+<h2 id="xangle"><a name="new_xangle">XAngle</a></h2>
+<p>Returns the value of the player's Xangle applied with AngleDraw/AngleSet/AngleAdd/AngleMul sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>XAngle</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = XAngle &gt;= 90
+</code></pre>
+<h2 id="yangle"><a name="new_yangle">YAngle</a></h2>
+<p>Returns the value of the player's yangle applied with AngleDraw/AngleSet/AngleAdd/AngleMul sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>YAngle</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = YAngle &gt;= 90
+</code></pre>
+<h2 id="animelemvar"><a name="new_animelemvar">AnimElemVar</a></h2>
+<p>Returns information about the player's current animation frame as defined in the AIR file. Refer to the AIR file documentation for what each parameter means.<br/>
+Note: This trigger was also called <code>AnimFrame</code> at one point during development.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>AnimElemVar(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the parameter to check. Valid values are:<br/>
+AlphaDest, AlphaSource, Angle, Group, HFlip, Image, NumClsn1, NumClsn2, Time, VFlip, XOffset, XScale, YOffset, YScale  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = AnimElemVar(Group) = 200
+trigger1 = AnimElemVar(NumClsn1) &gt; 0
+</code></pre>
+<h2 id="animplayerno"><a name="new_animplayerno">AnimPlayerNo</a></h2>
+<p>Returns the player number of the owner of the player's current animation.<br/>
+Normally returns the same number as the player's player number, but when for instance <code>ChangeAnim2</code> is used in a custom state, it will return the number of who owns that animation.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>AnimPlayerNo  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Player(AnimPlayerNo), SelfAnimExist(1234)
+</code></pre>
+<h2 id="animlength"><a name="new_animlength">AnimLength</a></h2>
+<p>Returns total length of the P1 current animation.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>AnimLength  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Time = AnimTime - AnimLength
+trigger1 = Time = GetHitVar(hittime) - AnimLength
+</code></pre>
+<h2 id="attack"><a name="new_attack">Attack</a></h2>
+<p>Returns P1 current attack value.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Attack  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Attack = 100
+</code></pre>
+<h2 id="attackmul"><a name="new_attackmul">AttackMul</a></h2>
+<p>Returns the player's current attackmul value.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>AttackMul  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = AttackMul &gt; 1.0
+</code></pre>
+<h2 id="atan2-math"><a name="new_atan2">Atan2 (Math)</a></h2>
+<p>Takes two arguments, and returns the arc tangent of the two specified arguments.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Atan2(exp1,exp2)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp1<br/>
+Expression 1  </p>
+<p>exp2<br/>
+Expression 2  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">fvar(10) = Atan2(enemy,pos y-pos y, enemy,pos x-pos x)
+</code></pre>
+<h2 id="bgmvar"><a name="new_bgmvar">BgmVar</a></h2>
+<p>Allows checking the filename, freqmul, length, loop, loopcount, loopend, loopstart, position, startposition, and volume of the currently playing BGM.</p>
+<p><strong>Warning: The results of this trigger are NOT network-safe due to user settings such as <code>Sound.BGMRAMSwap</code> causing variability in the asynchronicity of BGM operations. Usage of this trigger in production environments is discouraged.</strong></p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>BGMVar  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the variable to check. Valid values are:<br/>
+filename, freqmul, length, loop, loopcount, loopend, loopstart, position, startposition, volume.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>variable</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = BGMVar(position) = 32768
+trigger2 = BGMVar(startPosition) = 0
+trigger3 = BGMVar(loopstart) = 1741
+trigger4 = BGMVar(loopend) = 65536
+trigger5 = BGMVar(volume) = 98
+trigger6 = BGMVar(filename) = "sound/test.mp3"
+trigger7 = BGMVar(length) = 65536
+</code></pre>
+<h2 id="botboundbodydist"><a name="new_botboundbodydist">BotBoundBodyDist</a></h2>
+<p>Like <code>BotBoundDist</code>, except this trigger accounts for the player's bottom <code>edge</code> parameter, as defined by the <code>Depth</code> state controller.</p>
+<h2 id="botbounddist"><a name="new_botbounddist">BotBoundDist</a></h2>
+<p>BotBoundDist gives the distance between the player's z-axis and the <code>botbound</code> limit of the stage.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>BotBoundDist </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = BotBoundDist &lt; 40
+</code></pre>
+<h2 id="clamp-math"><a name="new_clamp">Clamp (Math)</a></h2>
+<p>Takes three arguments, returns a value clamped to an inclusive range of two specified arguments.
+<strong>Format:</strong> </p>
+<blockquote>
+<p>Clamp(value,min,max)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>value<br/>
+Expression 1  </p>
+<p>min<br/>
+Expression 2  </p>
+<p>max<br/>
+Expression 3  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">fvar(10) = Clamp(fvar(10),10 100)
+</code></pre>
+<h2 id="clsnoverlap"><a name="new_clsnoverlap">ClsnOverlap</a></h2>
+<p>Returns true if the player's specified collision box type is overlapping another player's collision boxes.<br/>
+This trigger uses Ikemen's internal collision detection, so it will work even with angled and rescaled boxes.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ClsnOverlap(box_type_1, playerID, box_type_2)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>box_type_1<br/>
+The player's collision box type. Valid values are clsn1, clsn2, and size  </p>
+<p>playerID<br/>
+The ID of the player against which to check the overlap  </p>
+<p>box_type_2<br/>
+The target's collision box type. Valid values are clsn1, clsn2, and size  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ClsnOverlap(clsn1, p2,ID, clsn2)
+</code></pre>
+<h2 id="clsnvar"><a name="new_clsnvar">ClsnVar</a></h2>
+<p>Returns the specified CLSN coordinate from the specified CLSN index. Back always returns the back coordinate, and front always returns the front coordinate, even if they are reversed in the .AIR file. All coordinates are in the same coordinate space as .AIR.
+<strong>Format:</strong> </p>
+<blockquote>
+<p>ClsnVar(value_type,index,elem)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>value_type<br/>
+Valid Values are clsn1, clsn2, and size  </p>
+<p>index<br/>
+Expression  </p>
+<p>elem<br/>
+Valid values are back, front, top, and bottom  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">fvar(0) = ClsnVar(Clsn2, 0, Back)
+</code></pre>
+<h2 id="combocount"><a name="new_combocount">ComboCount</a></h2>
+<p>Returns the total number of hits done by the player's side in the currently ongoing combo. This value is valid as long as the opposite team combo count stays above 0, otherwise it returns 0 too. Returned value always matches current combo counter tracked by lifebar.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ComboCount  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ComboCount &gt; 8
+</code></pre>
+<h2 id="consecutivewins"><a name="new_consecutivewins">ConsecutiveWins</a></h2>
+<p>Returns number of matches won consecutively by this team side. The counter increases for the winning team at the same time MatchOver trigger starts returning 1. Losing a round resets the counter to 0 and prevents increment for this match.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ConsecutiveWins  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ConsecutiveWins &gt; 0
+</code></pre>
+<h2 id="const1080p"><a name="new_const1080p">Const1080p</a></h2>
+<p>Converts a value from the 1080p coordinate space to the player's coordinate space. The conversion ratio between coordinate spaces is the ratio of their widths.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Const1080p(exprn)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exprn<br/>
+Expression containing the value to convert. (float)  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">value = Const1080p(12)
+; Sets value 2 if the player has a coordinate space of 320x240 (240p).
+; Sets value 4 if the player has a coordinate space of 640x480 (480p).
+; Sets value 8 if the player has a coordinate space of 1280x720 (720p).
+; Sets value 12 if the player has a coordinate space of 1920x1080 (1080p).
+</code></pre>
+<h2 id="debugmode"><a name="new_debugmode">DebugMode</a></h2>
+<p>Returns information related to the debug mode.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DebugMode(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the parameter to check. Valid values are:<br/>
+accel, clsndisplay, debugdisplay, lifebarhide, wireframedisplay, roundrestarted</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = DebugMode(accel) != 0
+trigger1 = DebugMode(clsndisplay)
+</code></pre>
+<h2 id="decisiveround"><a name="new_decisiveround">DecisiveRound</a></h2>
+<p>Returns 1 if the match will conclude if the player's team wins.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DecisiveRound  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = DecisiveRound
+</code></pre>
+<h2 id="deg-math"><a name="new_deg">Deg (Math)</a></h2>
+<p>Converts an argument value from radians to degrees.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Deg(exp)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp<br/>
+Expression  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Deg(pi/2) = 90
+</code></pre>
+<h2 id="defence"><a name="new_defence">Defence</a></h2>
+<p>Returns the player's current defence value. This value accounts for all defence multipliers.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Defence  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Defence = 100
+</code></pre>
+<h2 id="defencemul"><a name="new_defencemul">DefenceMul</a></h2>
+<p>Returns the player's current defencemul value.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DefenceMul</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = DefenceMul &gt; 1.0
+</code></pre>
+<h2 id="displayname"><a name="new_displayname">DisplayName</a></h2>
+<p>Returns the player's displayed name. Note that the lifebar name is not necessarily the same.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DisplayName [oper] "name"  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>"name" (string)<br/>
+Name to compare against. Must be in double quotes.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = EnemyNear, DisplayName = "Gopher"
+</code></pre>
+<h2 id="dizzy"><a name="new_dizzy">Dizzy</a></h2>
+<p>Returns 1 if character is under <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#dizzy">dizzy effect</a> (assigned by <a href="State-controllers-%28new%29.html#new_dizzyset">DizzySet</a> sctrl).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Dizzy  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = !Dizzy
+</code></pre>
+<h2 id="dizzypoints"><a name="new_dizzypoints">DizzyPoints</a></h2>
+<p>Returns the amount of <a href="Character-features.html#dizzypoints">dizzy points</a> the player has.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DizzyPoints  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = DizzyPoints = 0
+</code></pre>
+<h2 id="dizzypointsmax"><a name="new_dizzypointsmax">DizzyPointsMax</a></h2>
+<p>Returns the maximum amount of <a href="Character-features.html#dizzypoints">dizzy points</a> the player can have. This is normally the same value as LifeMax (adjustable in character's CNS <code>[Data]</code> section).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DizzyPointsMax  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = DizzyPoints &lt; DizzyPointsMax / 2
+</code></pre>
+<h2 id="drawpal"><a name="new_drawpal">DrawPal</a></h2>
+<p>returns the value of the group and index of the palette being used to draw the sprites at the moment, unlike PalNo, which returns the palette selected in the character select screen. </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>DrawPal </p>
+<p><strong>Arguments:</strong><br/>
+group, index  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">[State -2, PowerAdd]
+type = PowerAdd
+trigger1 = DrawPal(group) = 1 &amp;&amp; DrawPal(index) = 12
+value = 30
+</code></pre>
+<h2 id="envshakevar"><a name="new_envshakevar">EnvShakeVar</a></h2>
+<p>Allows checking the (remaining) time, frequency and amplitude of the current EnvShake.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>EnvShakeVar  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the constant to check. Valid values are: time, freq, ampl  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = EnvShakeVar(time) = 1
+trigger2 = EnvShakeVar(freq) = 60
+trigger3 = EnvShakeVar(ampl) = -4
+</code></pre>
+<h2 id="explodvar"><a name="new_explodvar">ExplodVar</a></h2>
+<p>Returns the specified explod parameter. Use -1 for ID to iterate over all explods.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ExplodVar(id, index, param)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>id<br/>
+Expression 1  </p>
+<p>index<br/>
+Expression 2  </p>
+<p>param<br/>
+Valid values are accel x, accel y, anim, animelem, animelemtime, angle, angle x, angle y, bindid, bindtime, facing, drawpal.group, drawpal.index, ID, layerno, pausemovetime, pos x, pos y, removetime, scale x, scale y, sprpriority, time, vel x, vel y  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int or float  </p>
+</blockquote>
+<h2 id="fightscreenstate"><a name="new_fightscreenstate">FightScreenState</a></h2>
+<p>Allows checking if the fight screen is displaying specific screens.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>FightScreenState(param)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param<br/>
+The parameter to check. See details   </p>
+</blockquote>
+<p>Details:
+* <code>fightdisplay</code>: Returns true if the fight call is being displayed. (bool)
+* <code>kodisplay</code>: Returns true if the KO screen is being displayed. (bool)
+* <code>rounddisplay</code>: Returns true if the round number screen is being displayed. (bool)
+* <code>windisplay</code>: Returns true if the winner announcement screen is being displayed. (bool)</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = FightScreenState(rounddisplay) = 1
+trigger2 = FightScreenState(fightdisplay) = 1
+</code></pre>
+<h2 id="fightscreenvar"><a name="new_fightscreenvar">FightScreenVar</a></h2>
+<p>Returns information about the fight screen (commonly referred to as "lifebars").</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>FightScreenVar(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the parameter to check. Valid values are:<br/>
+info.author, info.localcoord.x, info.localcoord.y, info.name, round.ctrl.time, round.over.hittime, round.over.time, round.over.waittime, round.over.wintime, round.slow.time, round.start.waittime, round.callfight.time, time.framespercount  </p>
+</blockquote>
+<p>Refer to lifebar documentation and examples for the function of each argument.</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = FightScreenVar(Info.Name) = "Some lifebar"
+trigger1 = FightScreenVar(Info.LocalCoord.X) = 1280
+trigger1 = Time &gt; FightScreenVar(Round.Ctrl.Time)
+</code></pre>
+<h2 id="fighttime"><a name="new_fighttime">FightTime</a></h2>
+<p>Returns the amount of ticks since the start of the actual fight.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>FightTime  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = FightTime &gt; 600
+</code></pre>
+<h2 id="firstattack"><a name="new_firstattack">FirstAttack</a></h2>
+<p>Returns 1 if this character has landed the first attack (before any of the opponents or team partners) in the current round. Otherwise returns 0.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>FirstAttack  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = FirstAttack
+</code></pre>
+<h2 id="float-math"><a name="new_float">Float (math)</a></h2>
+<p>Converts argument evaluating to int type into float type.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Float(exp)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp<br/>
+Expression  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">fvar(10) = Float(Life) / LifeMax
+</code></pre>
+<h2 id="gamemode"><a name="new_gamemode">GameMode</a></h2>
+<p>Returns the current game mode.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GameMode [oper] "name"  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>"name" (string)<br/>
+Name to compare against. Must be in double quotes.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GameMode = "arcade"
+</code></pre>
+<p>The following game modes are detectable by default:
+- arcade
+- bonus
+- bossrush
+- challenger
+- demo
+- freebattle
+- netplaysurvivalcoop
+- netplayteamcoop
+- netplayversus
+- randomtest
+- survival
+- survivalcoop
+- teamcoop
+- timeattack
+- training
+- versus
+- versuscoop
+- watch</p>
+<p>The trigger can be also used to detect <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#arcs">story mode arcs</a> and modes added via <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#lua_modules">external modules</a>.</p>
+<h2 id="gameoption"><a name="new_gameoption">GameOption</a></h2>
+<p>Allows checking the various game options as defined in config.ini (TBD)
+Keep in mind that until string support is added to the engine, only numeric values are useful to return.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GameOption  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the variable to check.</p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>variable</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GameOption(sound.wavchannels) = 32
+</code></pre>
+<h2 id="gamevar"><a name="new_gamevar">GameVar</a></h2>
+<p>Allows checking some system variables that generally don't justify having their own dedicated triggers.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GameVar(param)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param<br/>
+The parameter to check. See details   </p>
+</blockquote>
+<p>Details:
+* <code>introtime</code>: Returns the internal timer that controls pre-fight screens. (int)
+* <code>outrotime</code>: Returns the internal timer that controls post-fight screens. (int)
+* <code>pausetime</code>: Returns the time that the game is under the effect of <code>Pause</code>. (int)
+* <code>slowtime</code>: Returns the time that the game is under the effect of KO slowdown. (int)
+* <code>superpausetime</code>: Returns the time that the game is under the effect of <code>SuperPause</code>. (int)
+* <code>persistrounds</code>: Returns <code>1</code> if the round persist flag is active. (int)
+* <code>persistlife</code>: Returns <code>1</code> if the life persist flag is active. (int)
+* <code>persistmusic</code>: Returns <code>1</code> if the music persist flag is active. (int)
+* <code>hidebars</code>: Returns <code>1</code> if the hidebars flag is active. (int)</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GameVar(superpausetime) = 0
+trigger2 = GameVar(introtime) = FightScreenVar(round.ctrl.time)
+</code></pre>
+<h2 id="groundangle"><a name="new_groundangle">GroundAngle</a></h2>
+<p>TODO: ? Related to undocumented <a href="State-controllers-%28changed%29.html#changed_projectile_platformangle">PlatformAngle</a> projectile parameter.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GroundAngle  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GroundAngle != 0
+</code></pre>
+<h2 id="groundlevel"><a name="new_groundlevel">GroundLevel</a></h2>
+<p>Returns the character's ground level, which is normally 0 but can be changed via <a href="State-controllers-%28new%29.html#new_groundleveloffset">GroundLevelOffset</a>.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GroundLevel</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<h2 id="guardbreak"><a name="new_guardbreak">GuardBreak</a></h2>
+<p>Returns 1 if character is under <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#guardbreak">guard break</a> (assigned by <a href="State-controllers-%28new%29.html#new_guardbreakset">GuardBreakSet</a> sctrl).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GuardBreak  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = !GuardBreak
+</code></pre>
+<h2 id="guardcount"><a name="new_guardcount">GuardCount</a></h2>
+<p>Returns how many hits of the current attack were guarded. Similar to Hitcount.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GuardCount  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GuardCount &gt;= 2
+</code></pre>
+<h2 id="guardpoints"><a name="new_guardpoints">GuardPoints</a></h2>
+<p>Returns the amount of <a href="Character-features.html#guardpoints">guard points</a> the player has.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GuardPoints  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GuardPoints = 0
+</code></pre>
+<h2 id="guardpointsmax"><a name="new_guardpointsmax">GuardPointsMax</a></h2>
+<p>Returns the maximum amount of <a href="Character-features.html#guardpoints">guard points</a> the player can have. This is normally the same value as LifeMax (adjustable in character's CNS <code>[Data]</code> section).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>GuardPointsMax  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = GuardPoints &lt; GuardPointsMax / 2
+</code></pre>
+<h2 id="helperindexexistn"><a name="new_helperindexexist">HelperIndexExist(n)</a></h2>
+<p>Returns 1 if a player's helper with the specified index number exists, or 0 otherwise.</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = HelperIndexExist(5)
+trigger1 = HelperIndex(5),time &gt; 0
+</code></pre>
+<h2 id="helpername"><a name="new_helpername">HelperName</a></h2>
+<p>Returns the helper's name (assigned via helper's name parameter, which defaults to "\&lt;parent&gt;'s helper" if a unique name is not assigned).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>HelperName [oper] "name"  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>"name" (string)<br/>
+Name to compare against. Must be in double quotes.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = HelperName = "Fireball"
+</code></pre>
+<h2 id="helpervar"><a name="new_helpervar">HelperVar</a></h2>
+<p>Returns a helper's unique properties. If called from a root player, the return is always invalid.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>helpervar(param)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param<br/>
+The parameter to check. See details  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>Varies. See details  </p>
+</blockquote>
+<p>Details:
+* <code>clsnproxy</code>: Returns clsnproxy <code>ID</code> parameter (bool)
+* <code>helpertype</code>: Returns the <code>helpertype</code> parameter as an int. Returns 1 for <code>normal</code>, 2 for <code>player</code> and 3 for <code>projectile</code> (int)
+* <code>ID</code>: Returns the <code>ID</code> parameter (int)
+* <code>keyctrl</code>: Returns the <code>keyctrl</code> parameter (bool)
+* <code>ownclsnscale</code>: Returns the <code>ownclsnscale</code> parameter (bool)
+* <code>ownpal</code>: Returns the <code>ownpal</code> parameter (bool)
+* <code>preserve</code>: Returns the <code>preserve</code> parameter (bool)</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Helper(1000), HelperVar(keyctrl)
+</code></pre>
+<h2 id="hitbyattr"><a name="new_hitbyattr">HitByAttr</a></h2>
+<p>Checks if the player can be hit by an attack with the specified attribute.<br/>
+See also documentation for the <code>attr</code> parameter in <code>HitDef</code> as well as <code>HitDefAttr</code>.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>HitByAttr(flag1, flag2)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>flag1<br/>
+The state type flag.  </p>
+<p>flag2<br/>
+The attack type flag.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p>Note: Because <code>HitBy</code> and <code>NotHitBy</code> often last only one frame, player processing order can have a great influence in the return of this trigger.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = HitByAttr(S, NT); Returns true if the player can be hit by standing throws
+</code></pre>
+<h2 id="hitdefvar"><a name="new_hitdefvar">HitDefVar</a></h2>
+<p>Returns information about the player's currently active HitDef or ReversalDef. The parameter format is the same as in the <code>HitDef</code> state controller.<br/>
+Note: When the player has no active HitDef or ReversalDef, this trigger will return the default values of each parameter. It is generally advised to check if a HitDef or ReversalDef is active first with <code>HitDefAttr</code> or <code>ReversalDefAttr</code>.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>HitDefVar(param)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param  </p>
+<p>The parameter to check. Valid values:<br/>
+See details  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>Varies. See details  </p>
+</blockquote>
+<p>Details:
+* <code>guard.dist.depth.bottom</code>: Returns the guard distance in the z-axis, under the char
+* <code>guard.dist.depth.top</code>: Returns the guard distance in the z-axis, above the char
+* <code>guard.dist.height.bottom</code>: Returns the guard distance in the y-axis, under the char
+* <code>guard.dist.height.top</code>: Returns the guard distance in the y-axis, above the char
+* <code>guard.dist.width.back</code>: Returns the guard distance in the x-axis, behind the char
+* <code>guard.dist.width.front</code>: Returns the guard distance in the x-axis, in front of the char
+* <code>guard.pausetime</code>: Returns the first value of the Hitdef's <code>guard.pausetime</code> parameter (int)
+* <code>guard.sparkno</code>: The guard spark animation number (int)
+* <code>guard.shaketime</code>: Returns the second value of the Hitdef's <code>guard.pausetime</code> parameter (int)
+* <code>guarddamage</code>: Returns the second value of the Hitdef's <code>damage</code> parameter (int)
+* <code>guardflag</code>: Checks if the specified flags exist in the Hitdef's <code>guardflag</code>. Valid flags <code>HLMAFDP+-</code> (bool)
+* <code>guardsound.group</code>: Returns the guard sound's group (first value) (int)
+* <code>guardsound.number</code>: Returns the guard sound's number (second value) (int)
+* <code>hitdamage</code>: Returns the first value of the Hitdef's <code>damage</code> parameter (int)
+* <code>hitflag</code>: Checks if the specified flags exist in the Hitdef's <code>hitflag</code>. Valid flags <code>HLMAFDP+-</code> (bool)
+* <code>hitsound.group</code>: Returns the hit sound's group (first value) (int)
+* <code>hitsound.number</code>: Returns the hit sound's number (second value) (int)
+* <code>id</code>: Returns the Hitdef's <code>id</code> parameter (int)
+* <code>p1stateno</code>: Returns the Hitdef's <code>p1stateno</code> parameter (int)
+* <code>p2stateno</code>: Returns the Hitdef's <code>p2stateno</code> parameter (int)
+* <code>pausetime</code>: Returns the first value of the Hitdef's <code>pausetime</code> parameter (int)
+* <code>priority</code>: Returns the first value of the Hitdef's <code>priority</code> parameter (int)
+* <code>shaketime</code>: Returns the second value of the Hitdef's <code>pausetime</code> parameter (int)
+* <code>sparkno</code>: Returns the hit spark animation number (int)
+* <code>sparkx</code>: Returns the X component of the Hitdef's <code>sparkxy</code> parameter (float)
+* <code>sparky</code>: Returns the Y component of the Hitdef's <code>sparkxy</code> parameter (float)
+* <code>xaccel</code>: Returns the Hitdef's <code>xaccel</code> parameter (float)
+* <code>yaccel</code>: Returns the Hitdef's <code>yaccel</code> parameter (float)
+* <code>zaccel</code>: Returns the Hitdef's <code>zaccel</code> parameter (float)
+* <code>ground.velocity.x</code>: Returns the X component of the Hitdef's <code>ground.velocity</code> parameter (float)
+* <code>ground.velocity.y</code>: Returns the Y component of the Hitdef's <code>ground.velocity</code> parameter (float)
+* <code>ground.velocity.z</code>: Returns the Z component of the Hitdef's <code>ground.velocity</code> parameter (float)
+* <code>air.velocity.x</code>: Returns the X component of the Hitdef's <code>air.velocity</code> parameter (float)
+* <code>air.velocity.y</code>: Returns the Y component of the Hitdef's <code>air.velocity</code> parameter (float)
+* <code>air.velocity.z</code>: Returns the Z component of the Hitdef's <code>air.velocity</code> parameter (float)
+* <code>down.velocity.x</code>: Returns the X component of the Hitdef's <code>down.velocity</code> parameter (float)
+* <code>down.velocity.y</code>: Returns the Y component of the Hitdef's <code>down.velocity</code> parameter (float)
+* <code>down.velocity.z</code>: Returns the Z component of the Hitdef's <code>down.velocity</code> parameter (float)
+* <code>guard.velocity.x</code>: Returns the X component of the Hitdef's <code>guard.velocity</code> parameter (float)
+* <code>guard.velocity.y</code>: Returns the Y component of the Hitdef's <code>guard.velocity</code> parameter (float)
+* <code>guard.velocity.z</code>: Returns the Z component of the Hitdef's <code>guard.velocity</code> parameter (float)
+* <code>airguard.velocity.x</code>: Returns the X component of the Hitdef's <code>airguard.velocity</code> parameter (float)
+* <code>airguard.velocity.y</code>: Returns the Y component of the Hitdef's <code>airguard.velocity</code> parameter (float)
+* <code>airguard.velocity.z</code>: Returns the Z component of the Hitdef's <code>airguard.velocity</code> parameter (float)
+* <code>ground.cornerpush.veloff</code>: Returns the Hitdef's <code>ground.cornerpush.veloff</code> parameter (float)
+* <code>air.cornerpush.veloff</code>: Returns the Hitdef's <code>air.cornerpush.veloff</code> parameter (float)
+* <code>down.cornerpush.veloff</code>: Returns the Hitdef's <code>down.cornerpush.veloff</code> parameter (float)
+* <code>guard.cornerpush.veloff</code>: Returns the Hitdef's <code>guard.cornerpush.veloff</code> parameter (float)
+* <code>airguard.cornerpush.veloff</code>: Returns the Hitdef's <code>airguard.cornerpush.veloff</code> parameter (float)
+* <code>fall.velocity.x</code>: Returns the X component of the Hitdef's <code>fall.velocity</code> parameter (float)
+* <code>fall.velocity.y</code>: Returns the Y component of the Hitdef's <code>fall.velocity</code> parameter (float)
+* <code>fall.velocity.z</code>: Returns the Z component of the Hitdef's <code>fall.velocity</code> parameter (float)</p>
+<p>Notes:
+* <code>guardflag</code> and <code>hitflag</code> are not simply a direct reading of the Hitdef's parameter. That is to say <code>HitDefVar(guardflag) = L</code> returns true whether the Hitdef's guardflag is <code>L</code>, <code>M</code> or <code>MA</code> for example.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = HitDefVar(hitdamage) &gt;= 100
+trigger2 = P2, HitDefVar(guardflag) = L; attack can be blocked crouching
+trigger3 = P2, HitDefVar(guardflag) != H; attack cannot be blocked standing
+</code></pre>
+<h2 id="hitoverridden"><a name="new_hitoverridden">HitOverridden</a></h2>
+<p>Returns 1 during frame in which player has overridden default gethit behavior via HitOverride state controller. Otherwise returns 0.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>HitOverridden  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = HitOverridden
+</code></pre>
+<h2 id="ikemenversion"><a name="new_ikemenversion">IkemenVersion</a></h2>
+<p>Returns one component of the character's Ikemen version as an integer.</p>
+<p><strong>Format:</strong></p>
+<blockquote>
+<p>IkemenVersion(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong></p>
+<blockquote>
+<p>param_name<br/>
+The version component to return. Valid values are:<br/>
+Major, Minor, Patch  </p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">trigger1 = IkemenVersion(major) = 0 &amp;&amp; IkemenVersion(minor) = 98 &amp;&amp; IkemenVersion(patch) = 2
+````
+
+
+## &lt;a name="new_incustomanim"&gt;InCustomAnim&lt;/a&gt;
+
+Returns 1 if the character is in a custom animation, such as when `ChangeAnim2` is used in a custom state.  
+
+**Format:**  
+&gt;InCustomAnim  
+
+**Arguments:**  
+&gt;none  
+
+**Return type:**  
+&gt;boolean int (1 or 0)  
+
+**Example:**  
+```ini
+trigger1 = InCustomAnim
+</code></pre>
+<h2 id="incustomstate"><a name="new_incustomstate">InCustomState</a></h2>
+<p>Returns 1 if the character is in a custom state (sent into another player's state).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>InCustomState  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = InCustomState
+</code></pre>
+<h2 id="index"><a name="new_index">Index</a></h2>
+<p>Returns the player's index as an integer. See <a href="Triggers-%28new%29.html#redirection_playerindex">PlayerIndex</a>.</p>
+<h2 id="indialogue"><a name="new_indialogue">InDialogue</a></h2>
+<p>Returns 1 during ongoing dialogue initiated by <a href="State-controllers-%28new%29.html#new_dialogue">Dialogue</a> state controller.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>InDialogue  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = InDialogue
+</code></pre>
+<h2 id="inputtime"><a name="new_inputtime">InputTime</a></h2>
+<p>Returns number of frames since a given button was pressed or released. A positive number means the button is being held, while a negative number means it has been released. For players without <code>keyctrl</code>, it returns 0.  </p>
+<p>This time advances regardless of the player being paused.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>InputTime(button)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>button<br/>
+The button to check. Valid values are:<br/>
+B, F, D, U, a, b, c, x, y, z, s, d, w, m, L, R<br/>
+These are the four cardinal directional inputs (B, F, D, U); the six attack buttons (a, b, c, x, y, z); start (s); the two new attack/tag buttons (d, w); the select/back/menu button (m); and absolute left/right directional inputs (L, R).  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = InputTime(F) &gt; 0; forward is being held
+trigger2 = InputTime(U) &lt; 0; up is not being held
+trigger3 = InputTime(a) = 1; a was just pressed
+trigger4 = InputTime(b) = 30; b has been held for 30 frames
+trigger5 = InputTime(c) = -40; c was released 40 frames ago
+</code></pre>
+<h2 id="introstate"><a name="new_IntroState">IntroState</a></h2>
+<p>Returns the current intro state number:<br/>
+0: Not applicable, or players have gained ctrl after "fight!"<br/>
+1: Pre-intro (RoundState = 0)<br/>
+2: Player intros (RoundState = 1)<br/>
+3: Round announcement<br/>
+4: Fight called  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>IntroState  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = IntroState = 3
+</code></pre>
+<h2 id="isasserted"><a name="new_isasserted">IsAsserted</a></h2>
+<p>Returns 1 if the character has specified AssertSpecial state controller flag asserted. Flags that affect all characters at once don't have to be asserted directly by character to be detectable.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>IsAsserted(flag_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>flag_name<br/>
+The name of the AssertSpecial state controller flag to check (string).  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = IsAsserted(noBG)
+</code></pre>
+<h2 id="isclsnproxy"><a name="new_isclsnproxy">IsClsnProxy</a></h2>
+<p>Returns if the helper is a <a href="State-controllers-%28changed%29.html#clsnproxy">Clsn Proxy</a>.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>IsClsnProxy</p>
+</blockquote>
+<p><strong>Arguments:</strong></p>
+<blockquote>
+<p>none</p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>boolean int (1 or 0)</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = IsClsnProxy
+</code></pre>
+<h2 id="ishost"><a name="new_ishost">IsHost</a></h2>
+<p>Returns if the player is host in online match.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>IsHost  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = IsHost
+</code></pre>
+<h2 id="jugglepoints"><a name="new_jugglepoints">JugglePoints</a></h2>
+<p>Returns the remaining juggle points between the player and another player with the specified ID. If the specified ID is not yet a target of the first player, the trigger will simply return the maximum juggle points.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>JugglePoints(exprn)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exprn
+An expression evaluating to a player ID number (int).</p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = JugglePoints(EnemyNear, ID) &lt; 10
+</code></pre>
+<h2 id="lastplayerid"><a name="new_lastplayerid">LastPlayerID</a></h2>
+<p>Returns the ID number of the last spawned player or helper.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>LastPlayerID</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PlayerID(LastPlayerID), HitDefAttr = SCA, AP
+</code></pre>
+<h2 id="layerno"><a name="new_layerno">LayerNo</a></h2>
+<p>Returns the layer number on which the character is currently being drawn on.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>LayerNo</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = LayerNo = -1
+</code></pre>
+<h2 id="lerp-math"><a name="new_lerp">Lerp (Math)</a></h2>
+<p>Linear interpolation. Takes three arguments, and returns a number between two specified arguments at a specific increment. </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Lerp(a,b,amount)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>a<br/>
+Expression 1  </p>
+<p>b<br/>
+Expression 2  </p>
+<p>amount(Avaiable range 0-1)<br/>
+Expression 3  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Lerp(0, 100, 0.5) = 50
+</code></pre>
+<h2 id="localcoord"><a name="new_localcoord">LocalCoord</a></h2>
+<p>Returns the character's <code>localcoord</code> as a float. This trigger returns a constant value even when the player is in a custom state.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>LocalCoord [component]  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[component]<br/>
+X, Y  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = LocalCoord X &lt; Enemy, LocalCoord Y
+</code></pre>
+<h2 id="map"><a name="new_map">Map</a></h2>
+<p>Use the name of the map you want to recognize in parentheses. For example, a character with the below map will return Map(age) as a value set in character DEF file or via various state controllers that can modify character's map. If nothing is set, 0 is returned.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Map  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>name<br/>
+Name of the map  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Map(age) &gt;= 18
+</code></pre>
+<h2 id="max-math"><a name="new_max">Max (math)</a></h2>
+<p>Takes two arguments, and returns the highest-valued number.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Max(exp1,exp2)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp1<br/>
+Expression 1  </p>
+<p>exp2<br/>
+Expression 2  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Max(var(3), 10)
+</code></pre>
+<h2 id="memberno"><a name="new_memberno">MemberNo</a></h2>
+<p>Returns character's team member position. Team leader is 1, while partners receive successive numbers. In Tag mode this value is dynamic.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>MemberNo  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = MemberNo = 1
+</code></pre>
+<h2 id="min-math"><a name="new_min">Min (math)</a></h2>
+<p>Takes two arguments, and returns the lowest-valued number.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Min(exp1,exp2)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp1<br/>
+Expression 1  </p>
+<p>exp2<br/>
+Expression 2  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Min(var(3), 10)
+</code></pre>
+<h2 id="motifstate"><a name="new_motifstate">MotifState</a></h2>
+<p>Allows retrieval of whether the specified post-round sequence is active.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>MotifState(parameter)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>parameter<br/>
+The name of the motif state to check. Valid values are:<br/>
+challenger, continuescreen, continueyes, continueno, demo, dialogue, menu, victoryscreen, winscreen, hiscore   </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<h2 id="motifvar"><a name="new_motifvar">MotifVar</a></h2>
+<p>Allows checking the various screenpack options as defined in system.def (TBD)
+Keep in mind that until string support is added to the engine, only numeric values are useful to return.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>MotifVar  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the variable to check.</p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>variable</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = MotifVar(info.mugenversion) &gt;= 1
+</code></pre>
+<h2 id="movecountered"><a name="new_movecountered">MoveCountered</a></h2>
+<p>This trigger is valid only when the player is in an attack state. MoveCountered returns 1 on attack contact, at the exact frame that p1 interrupts p2 attack (true for 1 frame, even if both P1 and P2 countered each other's moves). After contact, MoveCountered's return value will increase by 1 for each game tick that P1 is not paused. It gives 0 otherwise. See Details section of Mugen's <code>MoveContact</code> trigger for more information.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>MoveCountered  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = MoveCountered = 1
+</code></pre>
+<h2 id="movehitvar"><a name="new_movehitvar">MoveHitVar</a></h2>
+<p>Similarly to <code>GetHitVar</code>, this trigger allows retrieving information about the last hit the player inflicted.<br/>
+This trigger works even if that hit acquired no <code>target</code>.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>MoveHitVar(parameter)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>parameter<br/>
+The name of the hit parameter to check. Valid values are:<br/>
+cornerpush.veloff, frame, overridden, playerid, playerno, sparkx, sparky, uniqhit  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>Varies. See details</p>
+</blockquote>
+<p>Details:
+* <code>cornerpush.veloff</code>: Returns the stored velocity offset used for cornerpush. (float)<br/>
+<em> <code>frame</code>: Returns true only during the same frame where the player connected an attack. (bool)<br/>
+</em> <code>overridden</code>: Returns true if the last hit encountered a HitOverride. (bool)<br/>
+<em> <code>playerid</code>: Returns ID of the last player hit by the HitDef. (int)<br/>
+</em> <code>playerno</code>: Returns the player number of the last player hit by the HitDef. (int)<br/>
+<em> <code>sparkx</code>: Returns the horizontal offset of the hitsparks created by the Hitdef. (float)<br/>
+</em> <code>sparky</code>: Returns the vertical offset of the hitsparks created by the Hitdef. (float)<br/>
+* <code>uniqhit</code>: Returns the number of players the last HitDef connected against. (int)  </p>
+<p><strong>Notes:</strong><br/>
+* Unlike <code>MoveHit</code>, <code>MoveHitVar(frame)</code> updates during a hitpause.
+* <code>MoveHitVar(sparkx)</code> and <code>MoveHitVar(sparky)</code> offsets are relative to the attacking player's position.</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">[State FX]
+type = explod
+trigger1 = MoveHit = 1
+trigger1 = MoveHitVar(Frame) = 1
+postype = p1
+pos = MoveHitVar(SparkX), MoveHitVar(SparkY)
+</code></pre>
+<h2 id="mugenversion"><a name="new_mugenversion">MugenVersion</a></h2>
+<p>Returns one component of the character's Mugen version as an integer.</p>
+<p>Characters with an Ikemen version are treated as Mugen 1.1, regardless of the value specified in the DEF file. WinMugen characters are treated as 0.5.</p>
+<p><strong>Format:</strong></p>
+<blockquote>
+<p>MugenVersion(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong></p>
+<blockquote>
+<p>param_name<br/>
+The version component to return. Valid values are:<br/>
+Major, Minor  </p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong></p>
+<pre><code class="language-ini">trigger1 = MugenVersion(major) = 1 &amp;&amp; MugenVersion(minor) = 1
+````
+
+
+## &lt;a name="new_numplayer"&gt;NumPlayer&lt;/a&gt;
+
+Returns total number of players (including helpers, attached chars, etc) existing ingame.
+
+**Example:**  
+```ini
+trigger1 = NumPlayer &gt; 5
+</code></pre>
+<h2 id="numstagebg"><a name="new_numstagebg">NumStageBG</a></h2>
+<p>Returns the number of BG elements in the stage that have the specified ID. If the ID argument is not used, or if ID is -1, it returns the total.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<ol>
+<li>NumStageBG  </li>
+<li>NumStageBG(ID)  </li>
+</ol>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>ID<br/>
+Expression evaluating to an ID number (int)  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-go">if numStageBG &gt; 0 {
+    for i = 0; numStageBG(-1) - 1; 1 {
+        modifyStageBG{
+            ID: -1;
+            index: $i;
+            pos.x: randomRange(-10, 10);
+            pos.y: randomRange(-10, 10);
+        }
+    }
+}
+</code></pre>
+<h2 id="numtext"><a name="new_numtext">NumText</a></h2>
+<p>This trigger takes an ID number as an optional argument. If the ID number is omitted, NumText returns the number of texts owned by the player. If the ID number is included, then NumText returns the number of texts with that ID number that are owned by the player. The ID number must be greater than -1. An ID number of -1 or less will give the same behavior as if the ID number is omitted.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>1.NumText<br/>
+2.NumText(exprn)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exprn<br/>
+Expression evaluating to an ID number (int)  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = NumText &gt;= 2
+trigger1 = NumText(1234) &gt;= 2
+</code></pre>
+<h2 id="offset"><a name="new_offset">Offset</a></h2>
+<p>Returns the value of the player's x,y offset applied with OffSet sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>OffSet argument</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>x, y</p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = OffSet x &gt; 100 &amp;&amp; OffSet y &gt; 50
+</code></pre>
+<h2 id="outrostate"><a name="new_OutroState">OutroState</a></h2>
+<p>Returns the current outro state number:<br/>
+0: Not applicable<br/>
+1: Payers can still act, allowing a possible double KO<br/>
+2: Players still have control, but the match outcome can no longer be changed<br/>
+3: Players lose control, but the round has not yet entered win states<br/>
+4: Player win states<br/>
+5: Round over (starting from the last frame of the RoundState sequence and continuing through the entire post-round sequence, individually detactable with <a href="Triggers-%28new%29.html#motifstate">MotifState</a> trigger)  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>OutroState  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = OutroState = 3
+</code></pre>
+<h2 id="p5name-p6name-p7name-p8name"><a name="new_pxname">P5Name, P6Name, P7Name, P8Name</a></h2>
+<p>Same as P1Name-P4Name, except that these return the name of other team members, if present. If there is no such opponent, then it returns 0 no matter what name is specified. Similarly, P5Name != "name" will return 1 no matter what name is specified.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PXName [oper] "name"  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>"name" (string)<br/>
+Name to compare against. Must be in double quotes.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = P5Name = "Kumquat"
+</code></pre>
+<h2 id="palfxvar"><a name="new_palfxvar">PalFXVar</a></h2>
+<p>[TODO] Returns information about the player, background or global ("all") PalFX. Accepted parameters:</p>
+<p>time<br/>
+add.r, add.g, add.b<br/>
+mul.r, mul.g, mul.b<br/>
+color, hue, invertall, invertblend<br/>
+bg.time<br/>
+bg.add.r, bg.add.g, bg.add.b<br/>
+bg.mul.r, bg.mul.g, bg.mul.b<br/>
+bg.color, bg.hue, bg.invertall<br/>
+all.time<br/>
+all.add.r, all.add.g, all.add.b<br/>
+all.mul.r, all.mul.g, all.mul.b<br/>
+all.color, all.hue, all.invertall, all.invertblend  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PalFXVar(add.r) != 0
+  ;triggers when red has been added to the player via PalFX
+</code></pre>
+<h2 id="parentexist"><a name="new_parentexist">ParentExist</a></h2>
+<p>Returns true if the helper's parent is still present in the game.</p>
+<p><strong>Example:</strong> </p>
+<pre><code>if parentExist {
+    bindToParent{}
+}
+</code></pre>
+<h2 id="pausetime"><a name="new_pausetime">PauseTime</a></h2>
+<p>Returns the time until the active Pause and/or SuperPause effect expires (whichever lasts longer). The non 0 value is returned only after movetime parameter of these sctrls expires (player can no longer move).</p>
+<p>Normally states are not running during Pause and SuperPause, so this trigger will only work when used in a special statedef -4, which ignores these state controllers.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PauseTime  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PauseTime = 0
+  ;triggers when the player's movement is not paused by Pause/SuperPause sctrls.
+</code></pre>
+<h2 id="physics"><a name="new_physics">Physics</a></h2>
+<p>Returns the player's physics-type. Refer to the section on StateDef in the CNS documentation for more details on physics.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Physics [oper] physics_type  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>physics_type (string)<br/>
+S, C, A, N <em>(stand, crouch, air, none)</em> </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Physics != A
+</code></pre>
+<h2 id="playerindexexistn"><a name="new_playerindexexist">PlayerIndexExist(n)</a></h2>
+<p>Returns 1 if a player with the specified index number exists, 0 otherwise. See <a href="Triggers-%28new%29.html#redirection_playerindex">PlayerIndex</a>.</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PlayerIndexExist(2)
+</code></pre>
+<h2 id="playerno"><a name="new_playerno">PlayerNo</a></h2>
+<p>Returns character's player number. Player 1 side uses odd numbers (1, 3, 5, 7), player 2 side even numbers (2, 4, 6, 8). Stage <a href="Stage-features.html#info_attachedchar">AttachedChar</a> uses number outside maximum player range (9).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PlayerNo  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PlayerNo &lt; 3
+</code></pre>
+<h2 id="playernoexist"><a name="new_playernoexist">PlayerNoExist</a></h2>
+<p>Evaluates if the specified player number is currently in use.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PlayerNoExist(player_number)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>player_number<br/>
+An expression that evaluates to the player number to check for (int)  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PlayerNoExist(3); Returns true if there's a player number 3
+trigger1 = Player(3), Alive
+</code></pre>
+<h2 id="prevanim"><a name="new_prevanim">PrevAnim</a></h2>
+<p>Returns the number of the anim that the player was last in.</p>
+<p>Example:</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PrevAnim  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PrevAnim = 200
+</code></pre>
+<h2 id="prevmovetype"><a name="new_prevmovetype">PrevMoveType</a></h2>
+<p>Returns the MoveType that the player was last in.</p>
+<p>Example:</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PrevMoveType  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>move_type (char)<br/>
+move_type to compare against: A, I, H (Attack, Idle and GetHit move-types respectively) </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PrevMoveType = H
+</code></pre>
+<h2 id="prevstatetype"><a name="new_prevstatetype">PrevStateType</a></h2>
+<p>Returns the StateType that the player was last in.</p>
+<p>Example:</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>PrevStateType  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, != (other operators not valid)  </p>
+<p>state_type (char)<br/>
+state_type to compare against: S, C, A, L (Stand, Crouch, Air and Liedown respectively)</p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = PrevStateType = C
+</code></pre>
+<h2 id="projclsnoverlap"><a name="new_projclsnoverlap">ProjClsnOverlap</a></h2>
+<p>Returns true if the projectile's collision box (either clsn1 or clsn2) overlaps with another player's collision boxes.<br/>
+This trigger uses Ikemen's internal collision detection, so it will work even with angled and rescaled boxes.<br/>
+If you want to specify a projectile with a specific projID, create a loop process that combines the projID with ProjVar.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ProjClsnOverlap(index, playerID, box_type)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>index<br/>
+An index number based on all projectiles owned by the player.<br/>
+The index is equivalent to the index when -1 is specified for the ID in ProjVar.  </p>
+<p>playerID<br/>
+The ID of the player against which to check the overlap  </p>
+<p>box_type<br/>
+The target's collision box type. Valid values are clsn1, clsn2, and size  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ProjClsnOverlap(var(3), p2,ID, clsn2)
+</code></pre>
+<h2 id="projvar"><a name="new_projvar">ProjVar</a></h2>
+<p>Returns the specified projectile parameter. Use -1 for ID to iterate over all projectiles.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ProjVar(id, index, param)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>id<br/>
+Expression 1  </p>
+<p>index<br/>
+Expression 2  </p>
+<p>param<br/>
+Valid values are accel x, accel y, anim, animelem, angle, angle x, angle y, attr, drawpal.group, drawpal.index, guardflag, highbound, hitflag, layerno, lowbound, pausemovetime, pos x, pos y, projcancelanim, projedgebound, projhitanim, projhits, projID, projmisstime, projpriority, projremove, projremovetime, projremanim, projstagebound, remvelocity x, remvelocity y, scale x, scale y, shadow r, shadow g, shadow b, sprpriority, teamside, vel x, vel y, velmul x, velmul y  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int or float  </p>
+</blockquote>
+<p>Note:<br/>
+<code>attr</code>, <code>guardflag</code> and <code>hitflag</code> require a comparison against known flags.  </p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ProjVar(1000, 0, vel Y) &gt; 0
+trigger2 = ProjVar(2000, 0, attr) = SCA, HP
+trigger3 = ProjVar(3000, 0, guardflag) = L
+</code></pre>
+<h2 id="rad-math"><a name="new_rad">Rad (Math)</a></h2>
+<p>Converts an argument value from degree to radians.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Rad(exp)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp<br/>
+Expression  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Rad(Angle) &gt; pi*0.5
+</code></pre>
+<h2 id="randomrangemath"><a name="new_rand">RandomRange(math)</a></h2>
+<p>Generates pseudo-random integer numbers uniformly distributed between the given range (both bounds inclusive).  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>RandomRange(lower,upper)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>lower<br/>
+Lower range (inclusive)  </p>
+<p>upper<br/>
+Upper range (inclusive)  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">type = Explod
+trigger1 = RandomRange(var(3), 666) &gt; 100
+pos = RandomRange(-300, 600), 0
+</code></pre>
+<h2 id="receiveddamage"><a name="new_receiveddamage">ReceivedDamage</a></h2>
+<p>Returns the total damage dealt by the opposite team to this character, in the currently ongoing combo. This value is valid as long as the opposite team combo count stays above 0, otherwise it returns 0 too.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ReceivedDamage  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ReceivedDamage &gt; (LifeMax / 10)
+</code></pre>
+<h2 id="receivedhits"><a name="new_receivedhits">ReceivedHits</a></h2>
+<p>Returns the total number of hits done by the opposite team to this character, in the currently ongoing combo. Unlike GetHitVar(hitcount), it takes into account all hits, including those applied by HitAdd. This value is valid as long as the opposite team combo count stays above 0, otherwise it returns 0 too.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ReceivedHits  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ReceivedHits &gt; 10
+</code></pre>
+<h2 id="redlife"><a name="new_redlife">RedLife</a></h2>
+<p>Returns the amount of <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#redlife">red life</a> the player has.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>RedLife  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = RedLife = 0
+</code></pre>
+<h2 id="reversaldefattr"><a name="new_reversaldefattr">ReversalDefAttr</a></h2>
+<p>Checks the attribute parameter of the player's currently-active ReversalDef. If the player does not currently have an active ReversalDef, then no parameters will match. Can be used for AI to detect a counter or to code something to happen if it exists.</p>
+<p>Note: ReversalDefAttr != value1, value2 is logically equivalent to !(ReversalDefAttr = value1, value2).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ReversalDefAttr [oper] value1, value2  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>[oper]<br/>
+=, !=  </p>
+<p>value1<br/>
+A string that has at least one of the letters "S", "C" and "A" for standing, crouching and aerial attacks respectively. For example, "SA" is for standing and aerial attacks.  </p>
+<p>value2<br/>
+A set of 2-character strings, separated by commas. Each 2-character string must be of the form described: The first character is either "N" for "normal", "S" for "special", or "H" for "hyper". The second character must be either "A" for "attack" (a normal hit attack) or "T" for "throw". For example, "NA, ST" is for normal attacks and special throws.  </p>
+<p>Assuming the attribute of the player's ReversalDefAttr is in the form:  </p>
+<p>arg1, arg2  </p>
+<p>then the trigger condition is determined to be true only if arg1 is a subset of value1, AND arg2 is a subset of value2.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+<p>Error conditions:<br/>
+none  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ReversalDefAttr = A, HA
+  Triggers when the player activates a ReversalDef with the following attributes:  
+    1. player will reverse an aerial attack
+    2. player will reverse a hyper (super) attack
+
+trigger1 = ReversalDefAttr = SC, NA, SA
+  Triggers when the player activates a ReversalDef with the following attributes:
+    1. player will reverse both standing and crouching attacks
+    2. player will reverse both normal and special attacks
+</code></pre>
+<h2 id="round-math"><a name="new_round">Round (math)</a></h2>
+<p>Returns the rounded value of <code>val</code> to specified <code>precision</code> (number of digits after the decimal point). <code>precision</code> can also be negative or zero.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Round(val,precision)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>val<br/>
+Expression evaluating to the value to round.  </p>
+<p>precision<br/>
+Expression evaluating to the number of decimal digits to round to. If the precision is positive, the rounding will occur after the decimal point. If the precision is negative, the rounding will occur before the decimal point. If the absolute value of the precision is greater than or equal to the number of digits, the result of the rounding is equal to 0.  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Round(var(3), -2) &gt; 100
+</code></pre>
+<pre><code class="language-ini">trigger1 = Round(1.0055, 3) ; returns 1.006
+</code></pre>
+<h2 id="roundswon"><a name="new_round">RoundsWon</a></h2>
+<p>Returns how many total rounds the teamside has won during the current match. Resets between matches.</p>
+<p>[TODO]</p>
+<h2 id="roundtime"><a name="new_roundtime">RoundTime</a></h2>
+<p>Returns the tick count since the start of the round.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>RoundTime  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = RoundTime &gt; 600
+</code></pre>
+<h2 id="runorder"><a name="new_runorder">RunOrder</a></h2>
+<p>At the start of each frame, players are sorted into a list for code processing based on their current actions (see <a href="Miscellaneous-info.html#character-processing-order">character processing order</a>). <code>RunOrder</code> returns their position in this list as an integer.</p>
+<h2 id="scale"><a name="new_scale">Scale</a></h2>
+<p>Returns the value of the player's drawing scale. <code>Scale X</code> and <code>Scale Y</code> refer to the scale applied by <code>AngleDraw</code>. <code>Scale Z</code> refers to the rescaling that affects the player when moving in the Z space.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Scale argument</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>x, y, z</p>
+</blockquote>
+<p><strong>Return type:</strong></p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Scale x &gt; 2 &amp;&amp; Scale y &gt; 1
+</code></pre>
+<h2 id="score"><a name="new_score">Score</a></h2>
+<p>Returns the score points gained in this round by all team members.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Score  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Score &gt; 10000
+</code></pre>
+<h2 id="scoretotal"><a name="new_scoretotal">ScoreTotal</a></h2>
+<p>Returns the total score points value. Takes into account all team members, previous rounds and previous matches since the start of this game mode.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ScoreTotal  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ScoreTotal &gt; 1000000
+</code></pre>
+<h2 id="selfcommand"><a name="new_selfcommand">SelfCommand</a></h2>
+<p>[TODO]</p>
+<h2 id="selfstatenoexist"><a name="new_selfstatenoexist">SelfStatenoExist</a></h2>
+<p>Checks for the existence of a state only within P1's state numbers, even when P1 is custom stated by a hit. Returns 1 if there is a statedef with the specified number. Otherwise it returns 0. Use the statedef number you want to recognize in parentheses.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>SelfStatenoExist(exprn)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exprn<br/>
+An expression evaluating to a state number (int).  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = !SelfStatenoExist(200)
+  ;Triggers if the player is missing state 200.
+</code></pre>
+<h2 id="shader"><a name="new_shader">Shader</a></h2>
+<p>Returns the name of the custom shader applied to the player. If no custom shader is applied, "" is returned.</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = shader != ""
+  ;Triggers if any shader is applied to the player.
+</code></pre>
+<h2 id="sign-math"><a name="new_sign">Sign (Math)</a></h2>
+<p>Returns the sign of a real number. If value &lt; 0 return -1. If value 0 return 0. if value &gt; 0 return 1.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Sign(exp)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>exp<br/>
+Expression  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">var(0) = var(0)*Sign(vel x)
+</code></pre>
+<h2 id="soundvar"><a name="new_soundvar">SoundVar</a></h2>
+<p>Returns the specified sound channel parameter. Use -1 for channelNo to find the first sound available.</p>
+<p><strong>Warning: The results of this trigger are NOT network-safe due to the asynchronous nature of sound playback. Usage of this trigger in production environments is discouraged.</strong></p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>SoundVar(channelNo, param)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>channelNo<br/>
+Expression  </p>
+<p>param<br/>
+Valid values are group, number, freqmul, isplaying, length, loopcount, loopstart, loopend, pan, position, priority, startposition, volumescale  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int or float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">var(0) = SoundVar(0, IsPlaying)
+fvar(1) = SoundVar(1, VolumeScale)
+</code></pre>
+<h2 id="spriteplayerno"><a name="new_spriteplayerno">SpritePlayerNo</a></h2>
+<p>Returns the player number of the owner of the player's current sprite.<br/>
+Normally returns the same number as the player's player number, but when for instance <code>ChangeAnim2</code> is used in a custom state, it will return the number of who owns that sprite.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>SpritePlayerNo  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = Player(SpritePlayerNo), SelfAnimExist(1234)
+</code></pre>
+<h2 id="spritevar"><a name="new_spritevar">SpriteVar</a></h2>
+<p>Returns information about the player's current sprite.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>SpriteVar(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the parameter to check. Valid values are:<br/>
+Group, Height, Image, Width, XOffset, YOffset</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">; top left corner of sprite
+pos = -SpriteVar(xoffset), -SpriteVar(yoffset)
+; lower right corner of sprite
+pos = -SpriteVar(xoffset) + SpriteVar(width), -SpriteVar(yoffset) + SpriteVar(height)
+</code></pre>
+<h2 id="sprpriority"><a name="new_sprpriority">SprPriority</a></h2>
+<p>Returns the player's/helper's current SprPriority value.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>SprPriority  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = SprPriority &gt; 0
+</code></pre>
+<h2 id="stagebackedgedist"><a name="new_stagebackedgedist">StageBackEdgeDist</a></h2>
+<p>Returns the distance to the stage edge (corner) behind the player.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>StageBackEdgeDist  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = StageBackEdgeDist &lt; 100
+</code></pre>
+<h2 id="stagebgvar"><a name="new_stagebgvar">StageBGVar</a></h2>
+<p>Returns information about the stage's BG elements.  </p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>stagebgvar(ID, index, param)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>ID<br/>
+The ID of the element to be checked  </p>
+<p>index<br/>
+The index of the element to be checked  </p>
+<p>param<br/>
+The parameter to check. See details  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>Varies. See details  </p>
+</blockquote>
+<p>Details:
+* <code>actionno</code>: Returns the animation number for <code>type = anim</code> elements (int)
+* <code>delta.x</code>: Returns the X delta (float)
+* <code>delta.y</code>: Returns the Y delta (float)
+* <code>id</code>: Returns the ID (int)
+* <code>layerno</code>: Returns the layer number (int)
+* <code>pos.x</code>: Returns the X position in relation to the starting position (float)
+* <code>pos.y</code>: Returns the Y position in relation to the starting position (float)
+* <code>start.x</code>: Returns the X starting position (float)
+* <code>start.y</code>: Returns the Y starting position (float)
+* <code>tile.x</code>: Returns the X tiling flag (bool)
+* <code>tile.y</code>: Returns the Y tiling flag (bool)
+* <code>velocity.x</code>: Returns the X velocity (float)
+* <code>velocity.y</code>: Returns the Y velocity (float)</p>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = StageBGVar(4, 1, actionno) = 40
+</code></pre>
+<h2 id="stageconst"><a name="new_stageconst">StageConst</a></h2>
+<p>Returns the value of one of the stage's constants. Stage constant variables can be set under stage's DEF <a href="Stage-features.html#constants">[Constants]</a> section.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>StageConst(param_name)  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the constant to check (string).  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = StageConst(WaterGround) = 1
+</code></pre>
+<h2 id="stagefrontedgedist"><a name="new_stagefrontedgedist">StageFrontEdgeDist</a></h2>
+<p>Returns the distance to the stage edge (corner) in front of the player.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>StageFrontEdgeDist  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = StageFrontEdgeDist &lt; 100
+</code></pre>
+<h2 id="stagetime"><a name="new_stagetime">StageTime</a></h2>
+<p>Returns the stage's internal time, or the amount of ticks since the last stage reset. The value returned by this trigger corresponds directly to the amount of times stage backgrounds have been updated (taking into account <code>pausebg</code>, <code>resetbg</code>, etc), allowing one to for instance reliably synchronize <a href="Stage-features.html#info_attachedchar">attachedchar</a> actions to what's currently displayed by the stage.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>StageTime  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = StageTime &gt; 600
+</code></pre>
+<h2 id="standby"><a name="new_standby">Standby</a></h2>
+<p>Returns 1 if character is under standby effect (assigned by <a href="State-controllers-%28new%29.html#new_tagout">TagOut</a> sctrl).</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>Standby  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = !Standby
+</code></pre>
+<h2 id="teamleader"><a name="new_teamleader">TeamLeader</a></h2>
+<p>Returns <a href="Triggers-%28new%29.html#playerno">playerno</a> of the character that is considered a team leader. In modes where only one player is controlled in particular round (<em>single</em>, <em>turns</em> and <em>ratio</em>) it will be either 1 or 2, depending on team side. In <em>simul</em> and <em>tag</em> modes, team leader is the first party member (again 1 or 2) by default, but who is considered a leader can be also dynamically adjusted via optional <a href="State-controllers-%28new%29.html#new_tagin">TagIn</a> sctrl <em>leader</em> parameter.</p>
+<p>Manually swapping leader changes lifebar elements assignment - leader always uses P1 (or P2, depending on team side) lifebar elements, remaining players positions are moved accordingly, in ascending players order.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>TeamLeader  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = TeamLeader = PlayerNo
+</code></pre>
+<h2 id="teamsize"><a name="new_teamsize">TeamSize</a></h2>
+<p>Returns character's team size (for <em>turns</em> mode it returns information that was previously not obtainable, for other team modes the returned value is equivalent to using <code>NumPartner + 1</code>)</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>TeamSize  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = TeamSize = 4
+</code></pre>
+<h2 id="timeelapsed"><a name="new_timeelapsed">TimeElapsed</a></h2>
+<p>Returns the amount of clock ticks since the battle began (0 if time is disabled). Value returned by this trigger corresponds to lifebar timer (only ticks during RoundState = 2)</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>TimeElapsed  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = TimeElapsed &gt; 600
+</code></pre>
+<h2 id="timeremaining"><a name="new_timeremaining">TimeRemaining</a></h2>
+<p>Returns the amount of clock ticks until time over (-1 if time is disabled). Value returned by this trigger corresponds to lifebar timer (only ticks during RoundState = 2)</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>TimeRemaining  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = TimeRemaining &gt; 600
+</code></pre>
+<h2 id="timetotal"><a name="new_timetotal">TimeTotal</a></h2>
+<p>Returns the total number of clock ticks that have elapsed so far. Takes into account previous rounds and matches since the start of this game mode.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>TimeTotal  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = TimeTotal &gt; 5940
+</code></pre>
+<h2 id="topboundbodydist"><a name="new_topboundbodydist">TopBoundBodyDist</a></h2>
+<p>Like <code>TopBoundDist</code>, except this trigger accounts for the player's top <code>edge</code> parameter, as defined by the <code>Depth</code> state controller.</p>
+<h2 id="topbounddist"><a name="new_topbounddist">TopBoundDist</a></h2>
+<p>TopBoundDist gives the distance between the player's z-axis and the <code>topbound</code> limit of the stage.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>TopBoundDist </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = TopBoundDist &lt; 40
+</code></pre>
+<h2 id="winclutch"><a name="new_winclutch">WinClutch</a></h2>
+<p>Returns true if the player (or the player's team, in team mode) has won the round with health below the limit set by <code>clutch.threshold</code> in fight.def. If the parameter isn't defined, the default is under 10%.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>WinClutch  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<h2 id="winhyper"><a name="new_winhyper">WinHyper</a></h2>
+<p>Returns true if the player (or the player's team, in team mode) has won the round with the finishing blow being a hyper attack.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>WinHyper  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = !WinHyper
+</code></pre>
+<h2 id="winspecial"><a name="new_winhyper">WinSpecial</a></h2>
+<p>Returns true if the player (or the player's team, in team mode) has won the round with the finishing blow being a special attack.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>WinSpecial  </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>boolean int (1 or 0)  </p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = !WinSpecial
+</code></pre>
+<h2 id="xshear"><a name="new_xshear">Xshear</a></h2>
+<p>Returns the value of the player's xshear applied with TransformSprite sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>xshear </p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>none  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = xshear &gt; 40
+</code></pre>
+<h2 id="zoomvar"><a name="new_zoomvar">ZoomVar</a></h2>
+<p>Allows checking the scale, pos x, pos y, lag, and remaining time of the currently Zoom sctrl.</p>
+<p><strong>Format:</strong> </p>
+<blockquote>
+<p>ZoomVar(param_name)</p>
+</blockquote>
+<p><strong>Arguments:</strong> </p>
+<blockquote>
+<p>param_name<br/>
+The name of the variable to check. Valid values are:<br/>
+scale, pos.x, pos.y, lag, time  </p>
+</blockquote>
+<p><strong>Return type:</strong> </p>
+<blockquote>
+<p>int or float</p>
+</blockquote>
+<p><strong>Example:</strong> </p>
+<pre><code class="language-ini">trigger1 = ZoomVar(scale) &lt; 0.9
+trigger2 = ZoomVar(pos.x) &gt;= 100
+
+</code></pre></body></html>

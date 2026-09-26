@@ -1,0 +1,23 @@
+IKEMaker 0.73.0
+
+PALETTE INDEX ORGANIZER
+
+- Creates a reusable semantic color-separation/index contract from one or more
+  PNG sources or an existing SFF palette.
+- Counts exact RGBA colors, alpha levels, fully transparent colors, and
+  semi-transparent colors. Different opacity values are correctly treated as
+  separate palette entries.
+- Explains when HD/true-color art cannot fit safely into 256 indexed colors.
+  IKEMaker does not silently quantize, flatten alpha, or pretend the conversion
+  is lossless.
+- Clicking source artwork selects the exact underlying RGBA color.
+- Colors can be classified as transparency, outline, skin, hair, eyes,
+  clothing, equipment, shared FX, semi-transparent FX, or a custom semantic
+  region, with an optional shade/usage label.
+- Exact conversions reserve transparency at index 0 and keep duplicate-looking
+  colors separate unless the source is deliberately changed by a person.
+- Exports JSON and CSV index contracts, indexed swatch PNG, ACT, Photoshop ACO,
+  Aseprite GPL, and exact indexed copies of every source PNG.
+- Original artwork and SFF archives are never overwritten.
+- Available from Create New, SFF and Sprites, and directly from the SFF palette
+  workspace and Artist Intake bridges.

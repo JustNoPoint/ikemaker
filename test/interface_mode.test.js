@@ -1,0 +1,23 @@
+'use strict';
+const assert=require('assert'),modes=require('../src/interface_mode');
+let settings={},state={},choice,prompts=0,options,shown=[],executed=[];
+const config={get:(key,fallback)=>settings[key]??(key==='interfaceMode'?'simple':fallback),inspect:key=>({globalValue:settings[key]}),async update(key,value){settings[key]=value;}};
+const panel={webview:{html:'',onDidReceiveMessage(fn){panel.receive=fn;}},onDidDispose(){},reveal(){}};
+const api={ConfigurationTarget:{Global:1,Workspace:2},ViewColumn:{Active:1},workspace:{getConfiguration:()=>config},commands:{executeCommand:async command=>{executed.push(command);}},window:{async showQuickPick(items,opts){prompts++;options=opts;assert.deepStrictEqual(items.map(x=>x.label),['Player','Simple','Workspace']);assert(items.every(x=>x.detail.length>35));return choice;},createWebviewPanel(){return panel;},showInformationMessage:message=>shown.push(message)}};
+const context={globalState:{get:key=>state[key],keys:()=>Object.keys(state),async update(key,value){state[key]=value;}}};
+(async()=>{
+ modes.configure(api,context);
+ assert.strictEqual(await modes.onboard(),false);assert.strictEqual(prompts,1);assert.deepStrictEqual(settings,{});assert.strictEqual(state['ikemaker.modeChoice.v1'].chosen,undefined);state['activation-cache']={};assert(options.placeHolder.includes('Change Mode'));
+ choice=modes.MODES[1];await modes.onboard();assert.strictEqual(settings.interfaceMode,'simple');assert(panel.webview.html.includes('Create Something'));assert(shown.at(-1).includes('Change mode'));
+ await modes.onboard();assert.strictEqual(prompts,2,'Chosen users must not be asked again');
+ await modes.apply('player');assert(!modes.homeHtml().includes('Create Something'));assert(modes.homeHtml().includes('Characters & Stages'));assert(modes.homeHtml().includes('Change mode'));
+ const controls=require('../src/launch_controls');assert(controls.launchControlsHtml('story_dialogue').includes('Stories'));assert(controls.launchControlsHtml('story_dialogue').includes('.launch-controls,[data-tab=other]'));assert(controls.launchControlsHtml('story_dialogue').includes('data-ikemen-mode-style'));assert.doesNotThrow(()=>new Function(controls.launchControlsClientScript()));
+ await modes.apply('workspace');assert(modes.homeHtml().includes('Production Workflow'));
+ settings={multipleAssetWorkspaces:true,simpleAssetInterface:false};state={};const count=prompts;await modes.onboard();assert.strictEqual(settings.interfaceMode,'workspace');assert.strictEqual(prompts,count,'Migrate existing flexible preference without interrupting');
+ settings={interfaceMode:'player'};state={};await modes.onboard();assert.strictEqual(prompts,count,'Explicit settings suppress onboarding');assert.strictEqual(modes.current(),'player');
+ settings={};state={'old-layout':{}};await modes.onboard();assert.strictEqual(prompts,count,'Existing users keep inferred setup');
+ const capabilities=require('../src/interface_capabilities'),originalAllows=capabilities.allows;
+ try{capabilities.allows=(command,mode)=>command!=='ikemen.launchGame'&&originalAllows(command,mode);assert(!modes.homeHtml().includes('data-command="ikemen.launchGame"'),'Home uses the shared presentation policy');const count=executed.length;await panel.receive({command:'ikemen.launchGame'});await panel.receive({command:'unlisted.command'});assert.equal(executed.length,count,'Home cannot dispatch hidden or unlisted actions');await panel.receive({command:'ikemen.changeMode'});assert.equal(executed.at(-1),'ikemen.changeMode');}finally{capabilities.allows=originalAllows;}
+ await assert.rejects(modes.apply('invalid'),/Unknown/);
+ console.log('Mode onboarding: three explained choices, cancel/retry, persistence, migration, home actions, Player navigation and mode switching passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});

@@ -1,0 +1,42 @@
+IKEMaker 0.70.0 — Two-wave cohesion and verification pass
+
+Wave 1: structure and usability
+
+- Adds Project & Team Manager as the primary visual home for games, work
+  projects, teams, members, and job classes.
+- Separates game profiles from work projects and team ownership. Work projects
+  may be unassigned or assigned to exactly one game and one team, and may be
+  reassigned later without moving files.
+- Makes Hobby / Commercial / Undecided and content-basis classifications
+  editable after game creation.
+- Makes team names, custom job classes, member names, handles, roles, and
+  active/inactive status editable while preserving inactive history.
+- Migrates project registries to schema 3 without discarding earlier metadata.
+- Opens the visual manager after creating a game instead of dropping a new user
+  into raw JSON. Advanced JSON remains available from the manager.
+- Renames the installed product and sidebar surface consistently to IKEMaker.
+- Adds a durable command/button/open/create contract audit to catch undeclared,
+  unregistered, unlabelled, or apparently unhandled controls.
+
+Wave 2: final verification
+
+- Verifies all 151 contributed command IDs are unique, declared, and registered.
+- Verifies every contributed menu reference resolves to a declared command.
+- Verifies the complete open/create matrix for characters, stages, screenpacks,
+  SFF, AIR, SND, ZSS, CNS, CMD, DEF, Lua, and text data.
+- Audits fixed webview buttons for client bindings, labels, and backend message
+  contracts; shared accessibility behavior adds keyboard focus, reduced-motion,
+  forced-color, field-label, canvas-label, and image-alt safeguards.
+- Connects the Production Workflow Team Directory to Project & Team Manager.
+  An assigned registry team can be imported or updated without deleting local
+  members, tickets, comments, notifications, or history.
+- Makes new public registries neutral: only Universal Template is seeded. This
+  development workspace's existing game profiles remain in its own registry.
+- Confirms every source JavaScript file parses and all 139 automated test files
+  pass after the changes.
+- Adds an installed-extension smoke runner for command discovery and the core
+  Project Manager, AIR, SFF, SND, stage, screenpack, roster, and code-structure
+  visual workspaces.
+- Installed-extension smoke pass completed successfully on 2026-09-12:
+  IKEMaker 0.70.0 activated, all 151 commands were discoverable, and all eight
+  core visual surfaces opened against the real Ryu/game files.

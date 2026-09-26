@@ -1,0 +1,8 @@
+IKEMaker 0.76.7 — Attack Workspace control-state polish
+
+- Enables Apply and Discard immediately after the first connected-code edit without rerendering the focused textarea.
+- Disables both controls again when typing returns exactly to the reviewed base text.
+- Keeps Apply disabled for source conflicts and protects Apply/Discard during an in-flight operation.
+- Continues retaining newer typing when an older Apply acknowledgement arrives.
+- Checks orphan drafts against every known move section for the character, avoiding false warnings when switching attacks.
+- Preserves all 0.76.6 recovery, conflict, layout and viewer-placement safeguards.

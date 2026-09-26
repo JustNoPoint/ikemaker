@@ -1,0 +1,18 @@
+IKEMEN ZSS Tools 0.56.1
+
+STABILIZATION COMPLETION PASS
+
+- Makes the versioned project registry discoverable from both the game root and chars/template layout.
+- Adds a checked-in authoritative registry for the shared JNP fan-project workspace.
+- Adds safe indexing of legacy alias, requirements, sound, palette-preview, and workflow metadata by reference; source files do not need to move.
+- Makes SFF alias/requirements and SND profile lookup consult the registry first.
+- Connects cached registry validation policy to live ZSS diagnostics.
+- Adds configurable Error, Warning, Project convention, and Suggestion levels.
+- Adds explicit per-path project and ownership overrides.
+- Adds a DEF ownership-dependency audit and verifies Ryu and the current SF6 template have no forbidden edges.
+- Adds cross-file preflight before SFF group rename/delete and SND manifest deletion.
+- Adds a structured reusable-lesson form and Lessons view to Production Workflow.
+- Expands tiny fixtures to cover SFF manifests, AIR, throws, palettes, SND profiles/manifests, costume layers, and online-safe map boundaries.
+- Retains all evidence, dependency, migration, transaction, backup, recovery, and manual JNP sign-off gates from 0.56.0.
+
+Ryu Baseline v1 remains deliberately open until visual repair, live IKEMEN/logger evidence, and JustNoPoint/JNP owner sign-off are complete.

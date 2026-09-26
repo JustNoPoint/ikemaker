@@ -1,0 +1,8 @@
+IKEMaker 0.75.4
+
+- SFF and SND custom editors now explicitly activate when Windows or VS Code
+  opens those file types directly.
+- A startup fallback detects SFF/SND files received before extension activation
+  and reopens them in the proper visual workspace.
+- AIR retains its intended editable-text plus synchronized-viewer behavior.
+- DEF, ZSS, CNS, INP/CMD, and Lua remain text-first by design.

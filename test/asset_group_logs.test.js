@@ -1,0 +1,14 @@
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'ikemaker-logs-test-'));let answer,afterPrompt,opened=[],prompts=0;
+const api={Uri:{file:fsPath=>({fsPath})},workspace:{textDocuments:[]},window:{showTextDocument:async uri=>opened.push(uri.fsPath),showWarningMessage:async()=>{prompts++;afterPrompt?.();return answer;}}};
+const original=Module._load;Module._load=function(name,...args){return name==='vscode'?api:original.call(this,name,...args);};const logs=require('../src/asset_group_logs');Module._load=original;
+(async()=>{const air=path.join(root,'test.air'),log=path.join(root,'test_AIR_Actions.txt');fs.writeFileSync(air,'[Begin Action 0]\n0,0,0,0,1\n');
+await logs.openLog({fsPath:air},'.air');assert(!fs.existsSync(log),'Cancelling create cannot write a project file');answer='Create Log';await logs.openLog({fsPath:air},'.air');assert(fs.existsSync(log));
+const custom='# My review comment\n0 | old | Custom idle | Important note\n20 | Walk | Unused walk | Keep this note\n';fs.writeFileSync(log,custom);const count=prompts;await logs.openLog({fsPath:air},'.air');assert.equal(fs.readFileSync(log,'utf8'),custom);assert.equal(prompts,count,'Opening an existing log must not regenerate it');
+api.workspace.textDocuments=[{fileName:log,isDirty:true}];await assert.rejects(logs.openLog({fsPath:air},'.air',true),/Unsaved notes/);api.workspace.textDocuments=[];
+answer='Refresh Log';await logs.openLog({fsPath:air},'.air',true);const refreshed=fs.readFileSync(log,'utf8');assert(refreshed.includes('Custom idle | Important note'));assert(refreshed.includes('No longer in the current archive'));assert(refreshed.includes('Unused walk | Keep this note'));assert(refreshed.includes('# My review comment'));
+const again=logs.renderLog(refreshed,'AIR ACTION',[{id:'0',name:'Idle'}]);assert.equal((again.content.match(/# My review comment/g)||[]).length,1,'Refresh must not duplicate retained comments');
+afterPrompt=()=>fs.writeFileSync(log,'External edit');await assert.rejects(logs.openLog({fsPath:air},'.air',true),/changed after/);assert.equal(fs.readFileSync(log,'utf8'),'External edit');
+afterPrompt=()=>api.workspace.textDocuments=[{fileName:log,isDirty:true}];await assert.rejects(logs.openLog({fsPath:air},'.air',true),/Unsaved notes/);assert.equal(fs.readFileSync(log,'utf8'),'External edit');
+console.log('Asset logs: open is read-only; creation/refresh reviewed; dirty/concurrent edits and orphan notes preserved');
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>{assert(path.resolve(root).startsWith(path.resolve(os.tmpdir())+path.sep+'ikemaker-logs-test-'));fs.rmSync(root,{recursive:true,force:true});});

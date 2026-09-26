@@ -1,0 +1,40 @@
+IKEMEN ZSS Tools 0.46.1
+=======================
+
+Motif-Backed Safe Roster Manager
+--------------------------------
+- The Roster page now includes a visual preview of the active character-select
+  screen instead of showing roster cards alone.
+- The preview reads the active motif from config.ini and follows its localcoord,
+  SelectBG artwork, rows, columns, cell size, spacing, cell background, random
+  icon, and portrait sprite/scale/offset.
+- Character portraits come from the sprite requested by the motif, normally
+  each character's 9000,0 sprite. Missing portraits are labeled honestly.
+- SFF 5-bit indexed sprites are now decoded for compatible stock portraits.
+
+Reviewed Drag-and-Drop Ordering
+-------------------------------
+- Normal character portraits can be dragged from one select cell to another.
+- The new order remains preview-only until Review & apply roster order is used.
+- A modal review lists the before and after character order.
+- Applying changes only the normal character lines occupying roster positions.
+  Parameters, inline comments, custom sections, stages, options, and other
+  select.def content remain untouched.
+- The change remains undoable and unsaved until the user presses Save.
+- Slot blocks are rendered as grouped, locked cells. Safe Mode does not flatten,
+  split, or move slot syntax without a dedicated reviewed workflow.
+- Multi-page controls use the active motif's actual grid capacity.
+
+Safety Boundary
+---------------
+- The Safe Roster Manager writes select.def only.
+- Motif grid and presentation edits remain in the separately labeled advanced
+  Character Select Layout Builder.
+- Refresh Portraits can re-resolve the active motif and character SFF files.
+
+Verification
+------------
+- All 66 automated test files pass.
+- Tests cover roster-cell modeling, protected slot grouping, safe line reorder,
+  CRLF preservation, character path resolution, motif-grid parsing, generated
+  workspace script syntax, and 5-bit SFF preview support.

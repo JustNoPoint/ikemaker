@@ -1,0 +1,11 @@
+IKEMaker 0.73.1
+
+Palette Index Organizer opacity diagnostics
+
+- Separately counts exact RGBA entries and underlying base RGB colors.
+- Reports how many palette entries exist only because a base color appears at multiple opacity levels.
+- Reports the number of base colors with varied alpha and the largest alpha-variant family.
+- Explains whether an over-256 source is primarily color-heavy or opacity-heavy.
+- Retains the 0.73.0 rule: no silent quantization, alpha flattening, or source overwrite.
+
+The additional diagnostics were prompted by an HD-art palette example where many visually related shades occupied separate slots because of opacity variation.

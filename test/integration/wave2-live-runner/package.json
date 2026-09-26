@@ -1,0 +1,10 @@
+{
+  "name": "ikemaker-wave2-live-runner",
+  "displayName": "IKEMaker Wave 2 Live Runner",
+  "version": "1.0.0",
+  "publisher": "justnopoint-test",
+  "engines": { "vscode": "^1.90.0" },
+  "main": "./extension.js",
+  "activationEvents": ["*"],
+  "extensionKind": ["ui"]
+}

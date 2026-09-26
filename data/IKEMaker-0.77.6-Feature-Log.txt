@@ -1,0 +1,18 @@
+IKEMaker 0.77.6
+
+CONSISTENT VIEWER CANVASES
+
+- Standardized AIR, JNP Move Constants, Universal HitDef, Universal Move Lab, Helper Lab, Throw Creator, Spatial Composer, and animation comparison on the preferred navy coordinate canvas.
+- The shared visual language is background #132033, grid #34475e, and axis or floor #5cb6ff.
+- Added full horizontal and vertical grids to coordinate viewers that previously showed only a floor line or only vertical divisions.
+- Kept stage, screenpack, SFF, and PalFX backgrounds specialized because they convey rendered scene content or transparency rather than a generic fighter coordinate plane.
+- Added a regression test covering every standardized coordinate viewer so future viewer work cannot silently introduce another palette variant.
+
+AUDIT NOTE
+
+- This inconsistency should have been caught during the earlier cross-viewer UI consistency review. The viewer audit now explicitly includes canvas visual language, not only tabs, window placement, and controls.
+
+VERIFICATION
+
+- Viewer theme consistency has dedicated automated coverage.
+- Full extension suite is required before packaging and installation.

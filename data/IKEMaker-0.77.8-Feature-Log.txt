@@ -1,0 +1,36 @@
+IKEMaker 0.77.8
+
+RESULTS-FIRST MAP BROWSER
+
+- Selecting any parent group immediately displays every exact map below it. A leaf is never required before maps become visible.
+- Fixed breadcrumbs, Back, Clear Filters, search, and next-group choices remain above an independently scrolling flat result list.
+- Every next-group choice reports the distinct maps that would remain and a readable reduction such as "1 map, 0 fewer."
+- An optional Skip unchanged chain action compresses long one-result paths while leaving every intermediate parent accessible.
+- Map details and insertion controls remain on the right, with the captured insertion destination always visible.
+
+EXPLICIT SOURCE SCOPES
+
+- Current File preserves the source captured when the browser opened.
+- Ryu Files means character-owned code physically under Ryu's folder.
+- Template Files combines direct universal shared code with the configured active-game template root without recursing into sibling games.
+- Assigned Runtime Files is the default and reflects exact CMD/CNS/ST/STCommon assignments from the selected character DEF. Missing assignments make the index visibly incomplete.
+- All Available is the deduplicated character, template, assigned, and current-file union for that character/project.
+- Reference-only maps are labeled and never represented as assigned dependencies.
+
+COLLECTION CORRECTION
+
+- A visual panel's small edited-file context now augments, rather than replaces, its owning character DEF and dependency identity.
+- Files are indexed once, then source scopes and counts are derived in memory.
+- Confirmed other-game namespaces and sibling project roots remain excluded.
+- Picker, completion, and hover remain conservative by using Assigned Runtime Files; the full browser can deliberately inspect broader reference scopes.
+- An explicitly selected character DEF now outranks any retained viewer context, preventing one character or game from redirecting another character's map index.
+- Archive, test, temporary, nested-project, and traversal-boundary folders are excluded from recursive discovery; skipped or unreadable areas visibly mark the index partial.
+- File totals now mean successfully indexed eligible files. Discovered totals, missing assignments, unsupported assignments, audit-limit truncation, and read failures remain separately disclosed.
+- Assigned runtime files and the captured current file receive priority when a user-configured audit limit truncates broader reference discovery.
+- Multiword search is generated with the correct whitespace tokenizer, and browser preferences are remembered separately for each selected character DEF.
+
+VERIFICATION
+
+- The real Ryu/SF6 fixture verifies 2 character files, 20 template files, 19 assigned files, and 22 unique available files.
+- Focused tests cover parent-result visibility, progressive count/reduction math, combined search/path/scope filtering, exact-name deduplication, scope-path fallback, retained-panel isolation, small-limit priority/counts, nested/archive exclusion, and generated webview search behavior.
+- All 296 automated test files pass. Packaging and installation remain blocked pending New Dev Chat source and exact-package review.

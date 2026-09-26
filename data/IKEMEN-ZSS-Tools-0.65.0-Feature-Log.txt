@@ -1,0 +1,37 @@
+IKEMAKER 0.65.0 — UNIVERSAL MOVE LAB
+
+This release begins the Universal Move Lab: one cohesive visual authoring shell
+that composes IKEMaker's existing specialist tools while keeping source code
+authoritative and independently editable.
+
+WAVE 1 — CONTEXT AND NAVIGATION
+- Resolves the current character DEF and every assigned AIR, SFF, SND, command,
+  constant, and state-code file.
+- Shows a persistent Project → Character → Move Lab context label.
+- Reads unsaved editor buffers for state, controller, and function outlines.
+- Shows live VS Code diagnostics and opens the exact source line selected.
+- Opens in the common visual-viewer tab group and registers with character close.
+
+WAVE 2 — SHARED VISUAL PREVIEW
+- P1/P2 AIR selection with the assigned default SFF palette.
+- Playback, tick stepping, timeline frame selection, CLSN1/CLSN2 overlays.
+- Mouse-wheel zoom, drag-to-pan, double-click centering, and Fit.
+- Reuses established AIR/SFF parsing and palette logic.
+
+WAVE 3 — THROW MODE
+- Throw Creator is a dedicated focused mode of the Move Lab workflow.
+- Detects saved throw plans and validates them against the current unsaved AIR.
+- Summarizes templates, P1/P2 actions, interaction events, parts, and review state.
+- Routes into the full timing, bind, layering, code-output, and live-preview editor.
+
+WAVE 4 — COHESION AND DISCOVERY
+- Quick Start, Character Authoring, ZSS/CNS/Lua, Related Work, editor context,
+  explorer context, and the Command Palette can all open the Move Lab.
+- Every mode routes to the established AIR, SFF, SND, palette, PalFX, controller,
+  code structure, dependency, test, health, impact, and recovery tools.
+- Game, Infinite VS, and Training shortcuts remain visible in the shared header.
+
+AUTOMATED VERIFICATION
+- All 130 test files pass.
+- Move Lab model, unsaved-buffer, throw-plan, HTML/script, accessibility,
+  visual-viewer routing, and control-hygiene coverage are included.

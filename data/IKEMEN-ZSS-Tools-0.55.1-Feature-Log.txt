@@ -1,0 +1,10 @@
+IKEMEN ZSS Tools 0.55.1
+Photoshop and Aseprite palette handoff
+
+- Adds Export Artist Palette Pack to the SFF Palettes panel.
+- Writes an exact 256-entry ACT color table for IKEMEN and Photoshop.
+- Writes a named Photoshop ACO file with Index 000 through Index 255 swatches.
+- Writes an ordered RGBA GPL palette for Aseprite, preserving alpha and the index-0 transparency contract.
+- Writes a 16 × 16 PNG reference grid and a plain-language artist README.
+- Warns before replacing any existing files in the selected output folder.
+- Never sorts, deduplicates, quantizes, or remaps palette entries during export.

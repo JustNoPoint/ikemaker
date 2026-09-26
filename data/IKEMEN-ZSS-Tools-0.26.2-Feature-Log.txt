@@ -1,0 +1,11 @@
+IKEMEN ZSS Tools 0.26.2
+=======================
+
+Visual code controller documentation
+------------------------------------
+- Kept the explicit Online Docs and Wiki header actions for optional web access.
+- Made controller documentation self-contained and usable offline.
+- Removed per-controller web links from the collapsed controller reference.
+- Added bundled value-format, required/optional, and IKEMEN 1.0 labels.
+- Kept used parameters highlighted in green and unknown used parameters yellow.
+- Renamed the header action to Online Docs so its network behavior is explicit.

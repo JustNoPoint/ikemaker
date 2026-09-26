@@ -1,0 +1,14 @@
+IKEMaker 0.74.0
+
+Simple Palette Construction
+
+- Adds a conversion path for transparent or HD artwork that was not originally authored for palette swapping.
+- Offers four target sizes: 32, 64, 128, or 256 colors.
+- Offers three transparency treatments: preserve closely, five opacity bands, or a hard transparent edge.
+- Uses a weighted deterministic color reduction and keeps transparent pixels in the transparent slot.
+- Shows the original source beside the conversion-draft review area.
+- Supports regenerate and revert without changing source artwork.
+- Requires the draft to pass the existing index preflight before export.
+- Keeps the feature intentionally narrow: no brushes, masks, painting, filters, or destructive source editing.
+
+The previous exact-color and opacity-pressure diagnostics remain authoritative. Palette construction is explicitly presented as an approximation requiring human visual approval.

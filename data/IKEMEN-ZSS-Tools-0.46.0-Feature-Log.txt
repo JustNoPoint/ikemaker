@@ -1,0 +1,42 @@
+IKEMEN ZSS Tools 0.46.0
+=======================
+
+Character Production Workflow
+-----------------------------
+- Adds a dedicated Production Workflow for each character.
+- The bundled JNP profile starts with Character Setup, SFF Foundation, Basic
+  Movement, Get-Hit Foundation, and Standing Light Punch.
+- My Next Tasks shows unfinished steps that are unassigned or assigned to the
+  configured team member; it does not surface another teammate's assigned work.
+- Full Workflow exposes every phase and its human-owned completion progress.
+- Team Board groups unfinished steps by production discipline.
+- Each step supports status, assignee, notes, evidence, and a contextual action
+  that opens the existing SFF, AIR, SND, code, requirement, report, or training
+  workflow rather than duplicating those tools.
+
+Extensible Profiles and Durable Progress
+----------------------------------------
+- Project profiles can inherit the bundled profile and override or add phases
+  and steps by stable ID.
+- Creating a project profile produces a small inherited override, so bundled
+  improvements remain available without copying the full profile.
+- Per-character progress is stored below .ikemen/workflows/characters.
+- Removed step IDs retain orphaned progress and recover it if they return.
+- Detection reports evidence only. It never marks a step passed.
+- The bundled offline guide explains profile structure, versioning, scope, and
+  safe extension rules.
+
+Workbench and Team Integration
+------------------------------
+- Every saved Character Workbench now exposes Production Workflow directly.
+- The IKEMEN Toolbox exposes the workflow, profile editor, and offline guide.
+- The actor name is configurable per resource/workspace and falls back to the
+  operating-system user name.
+- Profile and progress actions report failures without closing the workspace.
+
+Verification
+------------
+- All 64 automated test files pass.
+- Profile inheritance, stable override behavior, progress retention, evidence,
+  assignments, detection boundaries, and rendered workflow views are covered.
+- Current extension wording retains the IKEMEN 1.0 baseline.

@@ -1,0 +1,25 @@
+IKEMaker 0.64.3
+
+OPEN FILE OR FOLDER
+
+- Open Character now explicitly offers browsing for a DEF file or searching a
+  character/game folder.
+- SFF, AIR, SND, stage, screenpack/fight UI, visual DEF, roster, story, Menu and
+  Modes, Stage Rig, ownership audit, maker-text, manifest, and conversion openers
+  use the shared file-or-folder picker where applicable.
+- A chosen folder is scanned for compatible files. One match opens directly;
+  multiple matches produce a searchable selection list.
+
+UNCONVENTIONAL SOURCE FILENAMES
+
+- DEF-assigned command, constants, state, and options files are recognized by their
+  assignment role rather than only by .cmd, .cns, or .zss suffixes.
+- DEF-assigned .txt code remains visible as code and participates in cross-file
+  function/state tracing.
+- User/project settings may add source extensions and unassigned code extensions.
+- Text/source browsing provides an All Files choice. Binary viewers still validate
+  their real file format instead of trying to interpret arbitrary files.
+
+VERIFICATION
+
+- All 114 automated test files pass.

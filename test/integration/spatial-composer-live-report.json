@@ -1,0 +1,540 @@
+{
+  "startedAt": "2026-09-12T09:19:26.678Z",
+  "characterDef": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def",
+  "passed": true,
+  "checks": {
+    "extensionDiscovered": true,
+    "extensionActive": true,
+    "requiredCommands": [
+      {
+        "command": "ikemen.moveLab.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.moveLab.inspectCurrent",
+        "present": true
+      },
+      {
+        "command": "ikemen.hitDef.openEditor",
+        "present": true
+      },
+      {
+        "command": "ikemen.throwCreator.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.explodComposer.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.positionCamera.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.spatialComposer.inspectCurrent",
+        "present": true
+      },
+      {
+        "command": "air.openAnimationPreview",
+        "present": true
+      },
+      {
+        "command": "sff.openViewer",
+        "present": true
+      },
+      {
+        "command": "snd.openViewer",
+        "present": true
+      },
+      {
+        "command": "ikemen.helperLab.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.helperLab.inspectCurrent",
+        "present": true
+      },
+      {
+        "command": "ikemen.paletteImport.open",
+        "present": true
+      },
+      {
+        "command": "zss.openPalFxEditor",
+        "present": true
+      },
+      {
+        "command": "ikemen.codeStructure.openWorkspace",
+        "present": true
+      },
+      {
+        "command": "zss.openControllers",
+        "present": true
+      },
+      {
+        "command": "zssControllers.insert",
+        "present": true
+      },
+      {
+        "command": "ikemen.characterDependencies.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.testSessions.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.characterHealth.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.mutations.openHistory",
+        "present": true
+      }
+    ],
+    "moveLabTab": true,
+    "character": "Ryu",
+    "visualReady": true,
+    "requiredAssets": [
+      {
+        "kind": "DEF",
+        "ready": true
+      },
+      {
+        "kind": "AIR",
+        "ready": true
+      },
+      {
+        "kind": "SFF",
+        "ready": true
+      },
+      {
+        "kind": "SND",
+        "ready": true
+      }
+    ],
+    "modeCount": 9,
+    "spatialTab": true,
+    "spatialContext": {
+      "character": "Ryu",
+      "project": "SF6",
+      "ownership": "character",
+      "profile": "SF-character-production",
+      "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def"
+    },
+    "spatialVisualReady": true,
+    "spatialGeneratedCode": true,
+    "helperTab": true,
+    "helperContext": {
+      "character": "Ryu",
+      "project": "SF6",
+      "ownership": "character",
+      "profile": "SF-character-production",
+      "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def"
+    },
+    "helperSources": 18,
+    "helperGeneratedValid": true
+  },
+  "inspection": {
+    "title": "Move Lab",
+    "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def",
+    "context": {
+      "character": "Ryu",
+      "project": "SF6",
+      "ownership": "character",
+      "profile": "SF-character-production",
+      "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def"
+    },
+    "visualState": "ready",
+    "p1Action": 0,
+    "p2Action": 5000,
+    "files": [
+      {
+        "kind": "DEF",
+        "name": "Ryu.def",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "AIR",
+        "name": "Anim.air",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "SFF",
+        "name": "Ryu_Development.sff",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "SND",
+        "name": "Sound.snd",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "Commands",
+        "name": "template.jnp",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Constants",
+        "name": "Constants.cns",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "Code",
+        "name": "commonoptions.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "input.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "system_movement.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_armor.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_combo_scaling.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "normal_functions.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_hit_regions.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_normal_functions.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_cancel_system.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "damage_compatibility.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_game_options.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "normals.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "normals_extras.zss",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_debug_export_bridge.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sound_archive_bridge.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "JNP_training.zss",
+        "exists": true,
+        "ownership": "game"
+      }
+    ],
+    "totals": {
+      "states": 18,
+      "controllers": 152,
+      "functions": 50,
+      "diagnostics": 0
+    },
+    "throwPlans": 0,
+    "modes": [
+      "overview",
+      "attack",
+      "throw",
+      "animation",
+      "spatial",
+      "helpers",
+      "resources",
+      "code",
+      "tests"
+    ]
+  },
+  "spatialInspection": {
+    "title": "Ryu — Spatial Composer",
+    "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def",
+    "mode": "explod",
+    "context": {
+      "character": "Ryu",
+      "project": "SF6",
+      "ownership": "character",
+      "profile": "SF-character-production",
+      "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def"
+    },
+    "visualState": "ready",
+    "sources": [
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\commonoptions.zss",
+        "name": "commonoptions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\input.zss",
+        "name": "input.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\system_movement.zss",
+        "name": "system_movement.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_armor.zss",
+        "name": "sf6_armor.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_combo_scaling.zss",
+        "name": "sf6_combo_scaling.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\normal_functions.zss",
+        "name": "normal_functions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_hit_regions.zss",
+        "name": "sf6_hit_regions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_normal_functions.zss",
+        "name": "sf6_normal_functions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_cancel_system.zss",
+        "name": "sf6_cancel_system.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\damage_compatibility.zss",
+        "name": "damage_compatibility.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_game_options.zss",
+        "name": "sf6_game_options.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\normals.zss",
+        "name": "normals.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\normals_extras.zss",
+        "name": "normals_extras.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_debug_export_bridge.zss",
+        "name": "sf6_debug_export_bridge.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\sound_archive_bridge.zss",
+        "name": "sound_archive_bridge.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\JNP_training.zss",
+        "name": "JNP_training.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\template.jnp",
+        "name": "template.jnp",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\Constants.cns",
+        "name": "Constants.cns",
+        "language": "cns"
+      }
+    ],
+    "valid": true,
+    "code": "# Move effect\nif time = 0 { explod{id: 1000; anim: 1000; space: stage; postype: p1; pos: 0, 0; vel: 0, 0; accel: 0, 0; bindid: -1; bindtime: 1; removetime: -2; scale: 1, 1; angle: 0; facing: 1; sprpriority: 0; layerno: 0; ontop: 0; ownpal: 0; ignorehitpause: 0; removeongethit: 0} }"
+  },
+  "helperInspection": {
+    "title": "Ryu — Helper Lab",
+    "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def",
+    "context": {
+      "character": "Ryu",
+      "project": "SF6",
+      "ownership": "character",
+      "profile": "SF-character-production",
+      "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def"
+    },
+    "totals": {
+      "helpers": 2,
+      "nested": 0,
+      "mapInitializers": 0,
+      "flows": 578,
+      "cleanupSites": 2
+    },
+    "helpers": [
+      {
+        "id": 0,
+        "name": "JNP Training Attack Clone",
+        "stateNo": 990100,
+        "parentUid": "root",
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\JNP_training.zss",
+        "line": 395
+      },
+      {
+        "id": 0,
+        "name": "JNP Training Contact Projectile",
+        "stateNo": 990200,
+        "parentUid": "root",
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\JNP_training.zss",
+        "line": 431
+      }
+    ],
+    "sources": [
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\commonoptions.zss",
+        "name": "commonoptions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\input.zss",
+        "name": "input.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\system_movement.zss",
+        "name": "system_movement.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_armor.zss",
+        "name": "sf6_armor.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_combo_scaling.zss",
+        "name": "sf6_combo_scaling.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\normal_functions.zss",
+        "name": "normal_functions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_hit_regions.zss",
+        "name": "sf6_hit_regions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_normal_functions.zss",
+        "name": "sf6_normal_functions.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_cancel_system.zss",
+        "name": "sf6_cancel_system.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\damage_compatibility.zss",
+        "name": "damage_compatibility.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_game_options.zss",
+        "name": "sf6_game_options.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\normals.zss",
+        "name": "normals.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\normals_extras.zss",
+        "name": "normals_extras.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\sf6_debug_export_bridge.zss",
+        "name": "sf6_debug_export_bridge.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\sound_archive_bridge.zss",
+        "name": "sound_archive_bridge.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\SF6template\\JNP_training.zss",
+        "name": "JNP_training.zss",
+        "language": "zss"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\template\\template.jnp",
+        "name": "template.jnp",
+        "language": "cns"
+      },
+      {
+        "filename": "<IKEMEN_ROOT>\\chars\\Ryu\\Constants.cns",
+        "name": "Constants.cns",
+        "language": "cns"
+      }
+    ],
+    "generatedValid": true
+  },
+  "finishedAt": "2026-09-12T09:19:35.709Z"
+}

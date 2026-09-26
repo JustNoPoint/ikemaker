@@ -1,0 +1,25 @@
+<html><head><meta charset="utf-8"/><title>Storyboard-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Storyboard-features">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="scenedef"><a name="scenedef">[Scenedef]</a></h1>
+<h2 id="keys"><a name="scenedef_keys">keys</a></h2>
+<p><code>key.skip</code>: button that skips the currently rendered text and displays it in full. If the text is already fully rendered, the button skips to the next scene. (default: s)</p>
+<p><code>key.cancel</code>: button that cancels storyboard playback. (default: a, b, c, x, y, z, m)</p>
+<h2 id="stopmusic"><a name="scenedef_stopmusic">stopmusic</a></h2>
+<p><code>stopmusic</code>: controls if the storyboard should stop the music at the start and end of storyboard playback. (default: 1)</p>
+<h1 id="scene-x"><a name="scene">[Scene X]</a></h1>
+<h2 id="bgmvolume"><a name="scene_bgmvolume">bgm.volume</a></h2>
+<p><code>bgm.volume</code>: adjust the volume. 100 is for 100% (default: 100)</p>
+<h2 id="bgmloopstart"><a name="scene_bgmloopstart">bgm.loopstart</a></h2>
+<p><code>bgm.loopstart</code>: adjust the loop start sample number</p>
+<h2 id="bgmloopend"><a name="scene_bgmloopend">bgm.loopend</a></h2>
+<p><code>bgm.loopstart</code>: adjust the loop end sample number</p>
+<h2 id="layerxfontscale"><a name="scene_fontscale">layerX.font.scale</a></h2>
+<p><code>layerX.font.scale</code>: scale used by <code>layerX.font</code></p>
+<h2 id="layerxfontheight"><a name="scene_fontheight">layerX.font.height</a></h2>
+<p><code>layerX.font.height</code>: TTF font height overriding of <code>layerX.font</code></p>
+<h2 id="layerxpalfx"><a name="scene_palfx">layerX.palfx</a></h2>
+<p>Similarly to <a href="http://www.elecbyte.com/mugendocs/sctrls.html#palfx">PalFX state controller</a> storyboard <code>anim</code> and <code>spr</code> elements can have temporary or permanent effects applied to their palettes via <code>palfx</code> element types. Refer to <a href="Lifebar-features.html#existing_all_palfx">this section</a> for a list of PalFX suffixes and description what each optional parameter does.</p>
+<h2 id="layerxtextspacing"><a name="scene_textspacing">layerX.textspacing</a></h2>
+<p><code>layerX.textspacing</code>: x, y additional spacing between rendered letters (default: 0, 0)</p>
+<h2 id="layerxtextwindow"><a name="scene_textwindow">layerX.textwindow</a></h2>
+<p><code>layerX.textwindow</code>: x1, y1, x2, y2 dimensions of the text rendering area. If window is set, text will automatically wrap within it, just like in victory screen text field.</p>
+<h2 id="layerxvelocity"><a name="scene_velocity">layerX.velocity</a></h2>
+<p><code>layerX.velocity</code>: x, y velocity of the text layer, for scrolltexts and similar effects (default: 0, 0).</p></body></html>

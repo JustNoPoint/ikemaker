@@ -1,0 +1,663 @@
+<html><head><meta charset="utf-8"/><title>Lifebar-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Lifebar-features">Original source (online)</a> · Snapshot 2026-09-13</div><p>Note: This wiki may use "Lifebar" and "Fight Screen" interchangeably.</p>
+<h1 id="changes-to-existing-sections"><a name="existing">Changes to existing sections</a></h1>
+<h2 id="all-sections"><a name="existing_all"><em>(all sections)</em></a></h2>
+<p><code>layerno</code> is an element that allows you to set the layer on which the display element will be drawn. Layer 0 is in front of the background, but behind the players. Layer 1 is in front of the players, but behind the foreground. Layer 2 is in front of the foreground. The default is usually layer 0.</p>
+<p>Ikemen GO also supports an additional layer, -1, which works the same as layer 0, but is rendered before it. With the correct use of this layer, you can change the rendering order of various lifebar groups and elements (for example, rendering faces below the life gauge), without affecting how the lifebar is drawn in relation to the players.</p>
+<h3 id="palfx"><a name="existing_all_palfx">PalFX</a></h3>
+<p>Similarly to <a href="http://www.elecbyte.com/mugendocs/sctrls.html#palfx">PalFX state controller</a> lifebar <code>anim</code> and <code>spr</code> elements can have temporary or permanent effects applied to their palettes via <code>palfx</code> element types:
+* <code>palfx.time</code>: <em>duration</em>: specifies the number of ticks that the palette effects should last (default: -1 - infinite)
+* <code>palfx.add</code>: <em>add_r</em>, <em>add_g</em>, <em>add_b</em>: see below
+* <code>palfx.mul</code>: <em>mul_r</em>, <em>mul_g</em>, <em>mul_b</em>: each add component is added to the appropriate component of the palette, and the result is multiplied by the appropriate mul component divided by 256 (default: no change, i.e. add = 0,0,0 and mul = 256,256,256)
+* <code>palfx.sinadd</code>: <em>ampl_r</em>, <em>ampl_g</em>, <em>ampl_b</em>, <em>period</em>: creates an additional sine-wave palette addition effect (period specifies the period of the sine wave in game ticks, and the amplitude parameters control the amplitude of the sine wave for the respective components)
+* <code>palfx.sinmul</code>: <em>ampl_r</em>, <em>ampl_g</em>, <em>ampl_b</em>, <em>period</em>: Similliar to "sinadd" parameter but instead it creates effect related to "mul" parameter.
+* <code>palfx.sincolor</code>: <em>ampl</em>, <em>period</em>: Similliar to "sinadd" parameter but instead it creates effect related to "color" parameter.
+* <code>palfx.invertall</code>: if non-zero, then the colors in the palette will be inverted (applied before effects of add and mul), creating a "film negative" effect (default: 0)
+* <code>palfx.color</code>: this affects the color level of the palette (applied before invertall, add and mul) - if value is 0, the palette will be greyscale; if value is 256, there is no change in palette; values in between will have an intermediate effect (default: 256, range 0 to 256)</p>
+<p>Hint: When it comes to lifebars the main use case of palfx is adjusting palette without need to duplicate sprites to do so.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">p1.front90.palfx.mul = 250,224,120
+</code></pre>
+<h3 id="palfx-for-texts"><a name="existing_all_palfx">PalFX for texts </a></h3>
+<p>Starting from 1.0 RC1, text elements that use sprite fonts (sff or fnt) also support PalFX</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">round.default.palfx.mul = 256, 64, 64
+</code></pre>
+<h3 id="prefix-operators"><a name="existing_all_prefix_opperators">Prefix operators</a></h3>
+<p>Parameters starting with "pX" or "teamX" can now use <code>*</code> and <code>|</code> operators, allowing the same parameter to be used by multiple players.<br/>
+The <code>*</code> (any) operator will apply the parameter to all players/teams, while the <code>|</code> (or) operator will do it for the specified ones only. See examples.</p>
+<p><em>Example:</em></p>
+<pre><code>;p1.bg0.anim = 10
+;p3.bg0.anim = 10
+;p5.bg0.anim = 10
+;p7.bg0.anim = 10
+p1|p3|p5|p7.bg0.anim = 10
+
+;team1.text.layerno = 2
+;team2.text.layerno = 2
+team*.text.layerno = 2
+</code></pre>
+<h3 id="text-angle"><a name="existing_all_text_angle">Text angle</a></h3>
+<p>Text elements now also support angle parameters.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">p1.name.angle = 30
+</code></pre>
+<h3 id="top-layer"><a name="existing_all_top">Top layer</a></h3>
+<p>All sections that have access to background elements rendering (<code>bg</code>, <code>bg0</code> etc.) also support an additional layer, called <code>top</code>, which is rendered on top of the other elements from the same layer.</p>
+<h3 id="window-setting"><a name="existing_all_window">window setting</a></h3>
+<p>Additional layout settings can be used with display element types such as spr, anim, and text. The <code>window</code> setting specifies a rectangular box with (x1, y1) and (x2, y2) at opposite corners, with the upper left corner of the screen as (0, 0). Only the part of the display element type that comes within this box (the "window") will be drawn. If you do not need the windowing effect, you can omit this line.</p>
+<h3 id="xshear"><a name="xshear">xshear</a></h3>
+<p>Specifies the amount of horizontal shearing to apply to the element, text elements that use sprite fonts (sff or fnt) also support xshear. Defaults to 0.</p>
+<pre><code class="language-ini">p1.front.xshear = -.4
+</code></pre>
+<h2 id="combo"><a name="existing_combo">[Combo]</a></h2>
+<h3 id="autoalign"><a name="combo_autoalign">Autoalign</a></h3>
+<ul>
+<li><code>teamX.autoalign</code>: When set to 0, it disables automatic spacing adjustment. Defaults to 1</li>
+</ul>
+<h3 id="damage-and-percentage-value"><a name="existing_combo_value">Damage and percentage value</a></h3>
+<p><code>teamX.text.text</code> can display the following data:
+* <code>%i</code>: combo count (already existing in MUGEN)
+* <code>%d</code>: combo damage (integer value returning the total combo damage up to this point)
+* <code>%p</code>: combo damage percentage in relation to the maximum life</p>
+<p>The combo percentage value can be formatted using the following new parameters:
+* <code>format.decimal.places</code>: how many decimal places should the percentage damage be rounded to (0 means no decimal point will be shown)
+* <code>format.decimal.separator</code>: what symbol should be used to separate the decimal points of the value</p>
+<h3 id="countershake"><a name="existing_combo_shake_counter">Counter.shake</a></h3>
+<p>The shaking effect of the combo counter number is now configurable. The parameters are similar to the <code>EnvShake</code> state controller.  </p>
+<ul>
+<li><code>counter.shake.time</code>: total duration of the shake.</li>
+<li><code>counter.shake.freq</code>: oscillation frequency (degrees per frame). (default: 60)</li>
+<li><code>counter.shake.phase</code>: initial phase offset (degrees).</li>
+<li><code>counter.shake.ampl</code>: amplitude of position offset shake.</li>
+<li><code>counter.shake.scale</code>: amplitude of scale shake. The scale multiplier oscillates between <code>scale</code> and <code>1/scale</code>.</li>
+<li><code>counter.shake.dir</code>: initial angle of the offset shake (degrees).</li>
+<li><code>counter.shake.diradd</code>: amount added to <code>dir</code> each frame (degrees).</li>
+<li><code>counter.shake.decay</code>: decay exponent: <code>1</code> = linear, <code>0</code> = constant, <code>&gt;1</code> = faster falloff, <code>&lt;1</code> = slower falloff.</li>
+</ul>
+<p>Note: Older parameters <code>counter.shake</code>, <code>counter.time</code> and <code>counter.mult</code> are deprecated but still supported.  </p>
+<p>Example:</p>
+<pre><code class="language-ini">[Combo]
+team*.counter.shake.time = 10
+team*.counter.shake.freq = 90
+team*.counter.shake.ampl = 2
+team*.counter.shake.scale = 1.5
+team*.counter.shake.decay = 2
+</code></pre>
+<h3 id="textshake"><a name="existing_combo_shake_text">Text.shake</a></h3>
+<p>The combo display text group also supports the same parameters as <code>counter.shake</code>.  </p>
+<p>Example:</p>
+<pre><code class="language-ini">[Combo]
+team*.text.shake.time = 8
+team*.text.shake.freq = 120
+team*.text.shake.ampl = 3
+team*.text.shake.dir = 90
+team*.text.shake.diradd = 15
+team*.text.shake.decay = 1.5
+</code></pre>
+<h3 id="unhardcoded-showhide-speed"><a name="existing_combo_speed">Unhardcoded show/hide speed</a></h3>
+<ul>
+<li><code>teamX.showspeed</code>: text showing up speed (1 = instant; default = 8)</li>
+<li><code>teamX.hidespeed</code>: text hiding speed (the larger value, the faster speed; default = 4)</li>
+</ul>
+<h3 id="multiple-fonts"><a name="existing_combo_fonts">Multiple fonts</a></h3>
+<p><em>counter.font</em> and <em>text.font</em> elements can store additional value in its name, using following format:</p>
+<p><code>counter&lt;hits_count&gt;.font</code> <br/>
+<code>text&lt;hits_count&gt;.font</code></p>
+<p>font assigned like this replaces default <em>counter.font</em> or <em>text.font</em> element, if hit count is higher or equals the <em>\&lt;hit_count&gt;</em>. For example <em>counter10.font</em> means that counter element will use this font if hit count is equal or greater than 10 hits, otherwise default <em>counter.font</em> element is used. There can be multiple font assignments with extra value (no hard limits).</p>
+<h2 id="face-all-variants"><a name="existing_face">[Face] <em>(all variants)</em></a></h2>
+<h3 id="darken-share"><a name="existing_face_darkenshare">Darken share</a></h3>
+<p><code>pX.face.darkenshare</code>: set to 1 to make the portrait darken or not like the character during the effect of SuperPause <code>darken</code> parameter. If 0, the portrait will darken always. Defaults to 0 (Mugen 1.1 behavior).</p>
+<h3 id="ko-overlay"><a name="existing_face_ko">KO overlay</a></h3>
+<p><code>pX.ko</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</p>
+<p>Works just like turns mode pX.teammate.ko, with an overlay rendered on top of the defeated party member.</p>
+<h3 id="leaderontop"><a name="existing_face_leaderontop">leaderOnTop</a></h3>
+<p>Enabling this parameter inverts the drawing order of the members of the team, thus drawing players 1 and 2 on top of their partners.</p>
+<h3 id="palette-share"><a name="existing_face_palshare">Palette share</a></h3>
+<p><code>pX.face.palshare</code>: set to 0 to disable face portrait palette sharing with character sprites (default: 1, WinMugen and MUGEN 1.0 behavior)</p>
+<h3 id="palfx-share"><a name="existing_face_palfxshare">PalFX share</a></h3>
+<p><code>pX.face.palfxshare</code>: set to 1 to allow PalFX affecting character to also affect face portrait (default: 0, Mugen 1.1 behavior)</p>
+<h2 id="files"><a name="existing_files">[Files]</a></h2>
+<h3 id="commonfx"><a name="existing_files_commonfx">CommonFx</a></h3>
+<p><code>fx1 / fx2 / fx3</code>: common fx file declaration. These parameters work like <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#CommonFX">CommonFX from config.json</a>.</p>
+<h2 id="info"><a name="existing_info">[Info]</a></h2>
+<h3 id="author"><a name="existing_info_name">author</a></h3>
+<p>Lifebars now accept an author name parameter like characters and stages. It allows characters to identify them with the <code>FightScreenVar</code> trigger.</p>
+<h3 id="doubleres"><a name="existing_info_doubleres">doubleres</a></h3>
+<p>Some "D4" (high-resolution) lifebars made for the 2002 version of MUGEN require the Doubleres = 4 parameter in mugen.cfg. Mugen 1.0 replaced the Doubleres functionality with coordinate spaces. Setting this option to 1 replicates the Doubleres = 4 lifebar behavior (all fonts are scaled down by 50%). The default setting is 0.</p>
+<h3 id="ikemenversion"><a name="existing_info_ikemenversion">ikemenversion</a></h3>
+<p>An <code>ikemenversion</code> parameter can now be added to the section. It may affect the behavior of certain parameters.<br/>
+At the moment, defining any <code>ikemenversion</code> will disable the hardcoded delay on KO, Double KO and Time Over screens.  </p>
+<h3 id="localcoord"><a name="existing_info_localcoord">localcoord</a></h3>
+<p><code>localcoord</code> sets the width and height of the local coordinate space, which is the same as the screenpack's localcoord by default. In MUGEN, lifebars always use the same localcoord as the screenpack. This parameter allows you to set a coordinate space for the lifebar that is independent of the screenpack.</p>
+<h3 id="mugenversion"><a name="existing_info_mugenversion">mugenversion</a></h3>
+<p>For completeness sake, a <code>mugenversion</code> entry will also be parsed.  </p>
+<h3 id="name"><a name="existing_info_name">name</a></h3>
+<p>Lifebars now accept a name parameter like characters and stages. It allows characters to identify them with the <code>FightScreenVar</code> trigger.</p>
+<h2 id="lifebar-all-variants"><a name="existing_lifebar">[Lifebar] <em>(all variants)</em></a></h2>
+<h3 id="front-mid-element-shifting"><a name="existing_lifebar_shift">Front / mid element shifting</a></h3>
+<p>Parameters are used to shift from one sprite/animation (front and mid elements) to another sprite/animation (shift element) depending on the amount of life. This is done by automatically adjusting the trans addalpha values of the shift element rendered on top of the front and mid elements.</p>
+<ul>
+<li><code>pX.shift</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>mid.shift</code>: set to 1 to make the shift element also affect mid element (default: 0)</li>
+</ul>
+<h3 id="leaderontop_1"><a name="existing_lifebar_leaderontop">leaderOnTop</a></h3>
+<p>Enabling this parameter inverts the drawing order of the members of the team, thus drawing players 1 and 2 on top of their partners.</p>
+<h3 id="lifebar-warning-range-and-element"><a name="existing_lifebar_warn">Lifebar warning range and element</a></h3>
+<p>Specifying a warning percentage range and an element will draw a sprite or animation when life values are within range (<em>pX.warn.range</em> and <em>pX.warn</em>, respectively). Displays the 'warn' layer once the life, guard points or stun points are within <code>pX.warn.range</code>.  </p>
+<ul>
+<li><code>pX.warn.range</code>: integer pair interpreted as percentages of the bar, for example <code>pX.warn.range = 20,1</code> will trigger the <code>pX.warn</code> element when lifebar percentage is between 20% and 1% (nearly depleted for lifebar).</li>
+<li><code>pX.warn</code>: sprite or animation layer with all the standard elements such as <em>offset, layerno, facing, vfacing,</em> and <em>spr</em> or <em>anim</em>.</li>
+</ul>
+<p>For example, for p1 to display animation 6 when the bar is between 20% and 1% (i.e. nearly depleted for lifebar):</p>
+<pre><code class="language-ini">p1.warn.range = 20,1
+p1.warn.anim = 6
+p1.warn.offset = 0,0
+p1.warn.layerno = 0
+p1.warn.facing = 1
+p1.warn.vfacing = 1
+</code></pre>
+<h3 id="life-value"><a name="existing_lifebar_value">Life value</a></h3>
+<ul>
+<li><code>pX.value</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)</li>
+<li><code>pX.value.text</code>: element that adjusts the displayed string, accepts following variables:
+<code>%d</code> = life value, <code>%p</code> = percentage life value</li>
+</ul>
+<h3 id="red-life-value"><a name="existing_lifebar_red_value">Red Life value</a></h3>
+<ul>
+<li><code>pX.red.value</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)</li>
+<li><code>pX.red.value.text</code>: element that adjusts the displayed string, accepts following variables:
+<code>%d</code> = red life value, <code>%p</code> = percentage life value</li>
+</ul>
+<p><em>red.value</em> element can store additional value in its name, using following format:</p>
+<p><code>red.value&lt;redlife_value&gt;</code></p>
+<p>fonts added like this replaces default <em>red.value</em> element, if red life value is higher or equals the <em>\&lt;redlife_value&gt;</em>. For example <em>pX.red.value100.font</em> means that red life will use the font assigned by this element if player's red life reaches 100, otherwise default <em>pX.red.value</em> element is used. There can be multiple fonts/texts assignments with extra value (no hard limits).</p>
+<h3 id="multiple-front-elements"><a name="existing_lifebar_front">Multiple front elements</a></h3>
+<p><em>front</em> element can store additional value in its name, using following format:</p>
+<p><code>front&lt;life_percentage&gt;</code></p>
+<p>spr / anim added like this replaces default <em>front</em> element, if life percentage is higher or equals the <em>\&lt;life_percentage&gt;</em>. For example <em>pX.front90.spr</em> means that lifebar will use sprite/animation assigned by this element if player's health ratio is between 90-100%, otherwise default <em>pX.front</em> element is used. There can be multiple spr/anim assignments with extra value (no hard limits).</p>
+<h3 id="multiple-value-elements"><a name="existing_lifebar_value">Multiple value elements</a></h3>
+<p><em>value</em> element can store additional value in its name, using following format:</p>
+<p><code>value&lt;life_percentage&gt;</code></p>
+<p>fonts added like this replaces default <em>value</em> element, if life percentage is higher or equals the <em>\&lt;life_percentage&gt;</em>. For example <em>pX.value</em> means that lifebar will use font/text assigned by this element if player's health ratio is between 90-100%, otherwise default <em>pX.value</em> element is used. There can be multiple fonts assignments with extra value (no hard limits).</p>
+<h3 id="red-life"><a name="existing_lifebar_redlife">Red Life</a></h3>
+<p><code>pX.red</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</p>
+<p>Controls Red Life bar visuals. If enabled, the bar is rendered at the bottom (below <code>mid</code> and <code>front</code> elements)</p>
+<p><em>red</em> element can store additional value in its name, using following format:</p>
+<p><code>red&lt;redlife_value&gt;</code></p>
+<p>spr / anim added like this replaces default <em>red</em> element, if red life value is higher or equals the <em>\&lt;redlife_value&gt;</em>. For example <em>pX.red100.spr</em> means that red life will use sprite/animation assigned by this element if player's red life reaches 100, otherwise default <em>pX.red</em> element is used. There can be multiple spr/anim assignments with extra value (no hard limits).</p>
+<h3 id="unhardcoded-life-depleting-behavior"><a name="existing_lifebar_depleting">Unhardcoded Life depleting behavior</a></h3>
+<ul>
+<li><code>mid.freeze</code>: 0 disables mid element wait during gethit/combo (default: 1)</li>
+<li><code>mid.delay</code>: frames before mid element starts decreasing (default: 30)</li>
+<li><code>mid.mult</code>: moving relation between mid value and life (default: 1.0)</li>
+<li><code>mid.steps</code>: mid value decreasing steps (default: 8)</li>
+<li><code>pX.scalefill</code>: allows bars to deplete by scaling the sprite itself instead of cropping it (default: 0) </li>
+<li><code>px.range.y</code>: defines a vertical range for the bar, allowing it to deplete vertically when used instead of range.x </li>
+</ul>
+<h2 id="name-all-variants"><a name="existing_name">[Name] <em>(all variants)</em></a></h2>
+<h3 id="leaderontop_2"><a name="existing_name_leaderontop">leaderOnTop</a></h3>
+<p>Enabling this parameter inverts the drawing order of the members of the team, thus drawing players 1 and 2 on top of their partners.</p>
+<h2 id="powerbar-all-variants"><a name="existing_powerbar">[Powerbar] <em>(all variants)</em></a></h2>
+<h3 id="counter-text"><a name="existing_powerbar_counter">Counter text</a></h3>
+<p>In mugen <code>counter</code> element is used for printing current powerbar level. Ikemen GO unhardcodes string used by this element.</p>
+<p><code>pX.counter.text</code>: element that adjusts the displayed string, accepts <code>%i</code> variable (replaced with power level)</p>
+<h3 id="leaderontop_3"><a name="existing_powerbar_leaderontop">leaderOnTop</a></h3>
+<p>Enabling this parameter inverts the drawing order of the members of the team, thus drawing players 1 and 2 on top of their partners.</p>
+<h3 id="front-mid-element-shifting_1"><a name="existing_powerbar_shift">Front / mid element shifting</a></h3>
+<p>Parameters used for shifting from one spr/anim (<em>front</em> and <em>mid</em> element) into another spr/anim (<em>shift</em> element), depending on amount of power (done by automatically adjusting trans addalpha values of <em>shift</em> element rendered on top of <em>front</em> and <em>mid</em> element)</p>
+<ul>
+<li><code>pX.shift</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>mid.shift</code>: set to 1 to make the shift element also affect mid element (default: 0)</li>
+</ul>
+<h3 id="level-sound-assignment-for-each-player"><a name="existing_powerbar_levelsnd">Level sound assignment for each player</a></h3>
+<p><code>levelX.snd</code> parameter from now supports <code>pX.</code> prefix in order to optionally differentiate sounds among players (or to disable them for particular player by assigning dummy sound entry).</p>
+<h3 id="multiple-front-elements_1"><a name="existing_powerbar_front">Multiple front elements</a></h3>
+<p><em>front</em> element can store additional value in its name, using following format:</p>
+<p><code>front&lt;power_value&gt;</code></p>
+<p>spr / anim added like this replaces default <em>front</em> element, if power value is higher or equals the <em>\&lt;power_value&gt;</em>. For example <em>pX.front3000.spr</em> means that powerbar will use sprite/animation assigned by this element if player's power reaches level 3 (3000), otherwise default <em>pX.front</em> element is used. There can be multiple spr/anim assignments with extra value (no hard limits).</p>
+<h3 id="power-value"><a name="existing_powerbar_value">Power value</a></h3>
+<ul>
+<li><code>pX.value</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)</li>
+<li><code>pX.value.text</code>: element that adjusts the displayed string, accepts following variables:
+<code>%d</code> = power value, <code>%p</code> = percentage power value</li>
+</ul>
+<h3 id="configurable-lifebar-power-value-rounding">Configurable lifebar power value rounding</h3>
+<ul>
+<li>
+<p><code>p#.counter.format.rounding</code> <code>int</code> <code>defaults: 1000</code><br/>
+Changes the rounding of <code>p#.counter.text</code>.</p>
+</li>
+<li>
+<p><code>p#.value.format.power.rounding</code> <code>int</code> <code>defaults: 1</code><br/>
+Changes the rounding of <code>p#.value.text</code>.</p>
+</li>
+</ul>
+<h3 id="separate-bar-for-each-power-level"><a name="existing_powerbar_levelbars">Separate bar for each power level</a></h3>
+<ul>
+<li><code>pX.levelbars</code>: 1 changes single bar design into separate bars for each power level (default: 0)~</li>
+</ul>
+<h3 id="multiple-fonts_1"><a name="existing_powerbar_count">Multiple fonts</a></h3>
+<p><em>counter.font</em> element can store additional value in its name, using following format:</p>
+<p><code>counter.font&lt;power_value&gt;</code></p>
+<p>font assigned like this replaces default <em>counter.font</em> element, if power value is higher or equals the <em>\&lt;power_value&gt;</em>. For example <em>pX.counter3000.font</em> means that powerbar will use this font if player's power reaches level 3 (3000), otherwise default <em>pX.counter.font</em> is used. There can be multiple font assignments with extra value (no hard limits).</p>
+<h3 id="max-params-for-elements"><a name="existing_powerbar_front">Max Params for elements </a></h3>
+<p><code>&lt;elem&gt;Max.</code></p>
+<p>Elements assigned like this replaces default element, if power value is at the <em>\&lt;power_max&gt;</em>. For example
+<em>pX.frontMax.anim</em> means that powerbar will use this front.anim if player's power reaches max level, otherwise default <em>pX.front.anim</em> is used.</p>
+<h2 id="round"><a name="existing_round">[Round]</a></h2>
+<h3 id="default-sound-for-round-start"><a name="existing_round_defaultsound">Default sound for round start</a></h3>
+<p>In Mugen <code>round.default.snd</code> assignment didn't work at all. In Ikemen GO it will trigger once there are no more valid 'roundX.snd' sound assignments that match the current round number.</p>
+<h3 id="dkoshowdraw"><a name="existing_round_dko_showdraw">DKO.showdraw</a></h3>
+<p>Enabling this parameter will also display the draw game announcement for a double KO.  </p>
+<h3 id="fadeinfadeout-anim-and-snd"><a name="existing_round_defaultsound">Fadein/Fadeout anim and snd</a></h3>
+<ul>
+<li><code>fadein.anim</code>: Animation that should play instead of the default fadein effect.</li>
+<li><code>fadeout.anim</code>: Animation that should play instead of the default fadeout effect.</li>
+<li><code>fadein.snd</code>: Sound that should play at the beginning of the fadein.</li>
+<li><code>fadeout.snd</code>: Sound that should play at the beginning of the fadeout.</li>
+</ul>
+<h3 id="single-round-elements"><a name="existing_round_single">Single round elements</a></h3>
+<p>If it exists, the <code>round.single.</code> group will be used when the match consists of only 1 round.</p>
+<pre><code class="language-ini">round.single.offset = 640, 480
+round.single.font = 1, 0, 0
+round.single.text = "Get ready!"
+round.single.displaytime = 60
+round.single.scale = 1, 1
+round.single.snd = 0, 11
+</code></pre>
+<h3 id="final-round-elements"><a name="existing_round_final">Final round elements</a></h3>
+<p>If it exists, the <code>round.final.</code> assignment will trigger in the final round instead of 'roundX.' assignment.<br/>
+Note: A round is considered "final" when even a draw game will end the match. So it may vary with the maximum draw games setting.  </p>
+<h3 id="background-and-top-layers-for-all-round-animations"><a name="existing_bg_top_layers_roundanims">Background and top layers for all round animations</a></h3>
+<p>Optional background and top layer functionality was added to the <code>round_default, round_final, fight, ko, dko, to, draw, win, win2, win3</code> and <code>win4</code> elements:</p>
+<ul>
+<li><code>.top</code>: top layer feature; allows sprite or animation displayed on top of all other layers. layerno is enabled for this layer but is always rendered last in its respective stack.</li>
+<li><code>.bgX</code>: where X is a number 0-32. Allows a sprite or animation layer to be displayed under the parent layers (see list of supported parent layers below). Additionally, layerno is enabled for these layers, enabling rendering of animations/sprites in the background or foreground to achieve complex effects (i.e. wrapping around characters).</li>
+</ul>
+<p>These layers do not support the <code>displaytime</code> argument: for example, the <code>round.default.bgX</code> layers are erased when <code>round.default</code> and <code>roundX</code> (as applicable) have reached their <code>displaytime</code>, or when <code>callfight</code> is triggered.</p>
+<p>Background and top layer functionality is available for these parent elements:</p>
+<pre><code class="language-ini">round.default.bgX
+round.default.top
+round.final.bgX
+round.final.top
+fight.bgX
+fight.top
+ko.bgX
+ko.top
+dko.bgX
+dko.top
+to.bgX
+to.top
+draw.bgX
+draw.top
+win.bgX
+win.top
+win2.bgX
+win2.top
+win3.bgX
+win3.top
+win4.bgX
+win4.top
+</code></pre>
+<p>The rendering order for <code>round.default</code> is now as follows:</p>
+<pre><code class="language-ini">round.default.bg0
+...
+round.default.bg32
+round.default
+roundX
+round.default.top
+</code></pre>
+<p>The rendering order for parent elements other than <code>round.default</code> are as follows (example granted with <code>fight</code> element):</p>
+<pre><code class="language-ini">fight.bg0
+...
+fight.bg32
+fight
+fight.top
+</code></pre>
+<h3 id="unhardcoded-ko-slowdown"><a name="existing_round_slowdown">Unhardcoded KO slowdown</a></h3>
+<ul>
+<li><code>slow.fadetime</code>: KO slowdown fade length (default: 75% of <code>slow.time</code>)</li>
+<li><code>slow.speed</code>: KO slowdown game speed adjustment (default: 0.25)</li>
+</ul>
+<p>Example:</p>
+<pre><code class="language-ini">slow.time = 60
+slow.speed = 0.25
+slow.fadetime = 45
+</code></pre>
+<p>It works as follows: KO slowdown starts as soon as the opponent team is defeated. Total KO slowdown duation is equal <em>slow.time</em> amount of frames (60). The game speed is multiplied by <em>slow.speed</em> value (25%), which in this example lasts for 15 frames (with default speed affected by <em>slow.speed</em> it ends up being 1s), and than is linearly restored to 100% of the original speed in the duration of <em>slow.fadetime</em> (45 frames).</p>
+<h3 id="unhardcoded-match-fade"><a name="existing_round_fade">Unhardcoded match fade</a></h3>
+<ul>
+<li><code>fadein.time</code>: round start fade time (default: 30)</li>
+<li><code>fadein.col</code>: round start fade color (default: 0,0,0)</li>
+<li><code>fadeout.time</code>: round end fade time (default: 30, extends <code>over.time</code> if <code>fadeout.time</code> is longer)</li>
+<li><code>fadeout.col</code>: round end fade color (default: 0,0,0)</li>
+<li><code>shutter.time</code>: skip intro fade time (default: 15, whole anim is twice as long)</li>
+<li><code>shutter.col</code>: skip intro fade color (default: 0,0,0)</li>
+</ul>
+<h3 id="unhardcoded-time-before-fight-is-called"><a name="existing_round_callfight">Unhardcoded time before fight is called</a></h3>
+<p>In mugen time between <code>round</code> element is triggered and the <code>fight</code> is called is hardcoded to 60 frames. In Ikemen GO this value can be adjusted via following parameter:
+* <code>callfight.time</code>: time to wait before starting fight (default: 60)</p>
+<h3 id="unhardcoded-win-pose-safety-timeout"><a name="existing_round_forcewintime">Unhardcoded win pose safety timeout</a></h3>
+<p>When a round ends, Mugen has a hidden timer of 900 frames after which players will be forcibly sent to their win/lose states even if they are somehow frozen. In Ikemen this timer can be adjusted with the <code>over.forcewintime</code> parameter.</p>
+<h3 id="unique-timing-for-time-over-and-double-ko"><a name="existing_round_dko_time">Unique timing for Time Over and Double KO</a></h3>
+<p>These announcements no longer necessarily share <code>KO.time</code> and <code>KO.sndtime</code>. Unique timing can be specified with <code>DKO.time</code>, <code>DKO.sndtime</code>, <code>TO.time</code> and <code>TO.sndtime</code>.</p>
+<h3 id="win-and-drawn-elements-sound-support"><a name="existing_round_winsound">Win and drawn elements sound support</a></h3>
+<p>If parameter with <code>.snd</code> suffix is specified, <code>win</code> elements (<code>win</code>, <code>win2</code>, <code>win3</code>, <code>win4</code>) and/or <code>drawn</code> element also trigger sound.</p>
+<h3 id="win-element-team-side-variants"><a name="existing_round_winside">Win element team side variants</a></h3>
+<p><code>win</code> elements (<code>win</code>, <code>win2</code>, <code>win3</code>, <code>win4</code>) can be prefixed with <code>p1.</code> and/or <code>p2.</code>, allowing lifebar to render different win text/spr/anim for team 1 and team 2.</p>
+<h3 id="win-element-team-size-variants"><a name="existing_round_winsize">Win element team size variants</a></h3>
+<p>Ikemen GO supports 2 more team size dependant <code>win</code> elements:
+* <code>win3</code>: for matches with 3 players
+* <code>win4</code>: for matches with 4 and more players</p>
+<p>If not specified lifebar uses <code>win2</code> element.</p>
+<h3 id="win-type-events"><a name="existing_round_wintype">Win type events</a></h3>
+<p>Following win type events are supported:
+* <code>n</code>: win by normal attack
+* <code>s</code>: win by special attack
+* <code>h</code>: win by hyper attack
+* <code>c</code>: win by cheese (defeated when blocking)
+* <code>t</code>: win by time over
+* <code>throw</code>: win by normal throw
+* <code>suicide</code>: win by suicide
+* <code>teammate</code>: being defeated by your own teammate
+* <code>perfect</code>: perfect round
+* <code>clutch</code>: clutch round</p>
+<p><code>perfect</code> win type always happens upon round won without taking any damage. Remaining win types are mutually exclusive.<br/>
+<code>clutch</code> win type always happens upon round won with health below the <code>clutch.threshold</code>. If the parameter isn't defined, the default is under 10% </p>
+<p>Use p1 or p2 prefix, depending on winning team, followed by win type event name, followed by usual parameters:
+* <code>pos</code>
+* <code>bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)
+* <code>text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)
+* <code>time</code>: how many ticks since KO until text/bg should be rendered
+* <code>displaytime</code>: how long to render text/bg
+* <code>snd</code>: sound to play
+* <code>sndtime</code>: how many ticks since KO until snd should play</p>
+<p><em>Example assignments:</em></p>
+<pre><code class="language-ini">p1.perfect.pos = 0, 0
+p1.perfect.bg.offset = 60, 170
+p1.perfect.bg.anim = 80
+p1.perfect.text.offset = 60, 170
+p1.perfect.text.font = 1,0
+p1.perfect.text.text = Perfect!
+p1.perfect.time = 100
+p1.perfect.displaytime = 200
+p1.perfect.snd = 1,0
+p1.perfect.sndtime = 100
+</code></pre>
+<h3 id="clutch-win-type-threshold"><a name="new_clutch_threshold">Clutch Win Type Threshold</a></h3>
+<p>The threshold required to trigger the clutch win type can be changed using the <code>clutch.threshold</code> parameter. If the parameter isn't defined, the default is 10%.</p>
+<p><em>Example assignment:</em></p>
+<pre><code class="language-ini">clutch.threshold = 5 ;Threshold at 5% health
+</code></pre>
+<h3 id="ai-win-elements"><a name="ai.win">AI win elements</a></h3>
+<p>If it exists, the <code>ai.single</code> group will be used when match is won by a AI controlled opponent.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">ai.win.time = 60
+ai.win.offset = 160, 70
+ai.win.font = 4,0
+ai.win.scale = 0.8, 0.8
+ai.win.text = "You Lose!"
+ai.win.palfx.time = 50
+ai.win.displaytime = 540
+ai.win.snd = 3, 1
+</code></pre>
+<h3 id="ai-lose-elements"><a name="ai.lose">AI lose elements</a></h3>
+<p>If it exists, the <code>ai.lose</code> group will be used when match is won by a Player against a AI controlled opponent.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">ai.lose.time = 60
+ai.lose.offset = 160, 70
+ai.lose.font = 4,0
+ai.lose.scale = 0.8, 0.8
+ai.lose.text = "You Win!"
+ai.lose.displaytime = 540
+ai.lose.snd = 3, 0
+</code></pre>
+<h2 id="simul-face"><a name="existing_simulface">[Simul Face]</a></h2>
+<h3 id="up-to-8-faces-for-simul-mode"><a name="existing_simulface_8">Up to 8 faces for simul mode</a></h3>
+<p>Support for <code>p5</code>, <code>p6</code>, <code>p7</code>, <code>p8</code> parameters assignment in existing [Simul Face] section.</p>
+<h2 id="simul-name"><a name="existing_simulname">[Simul Name]</a></h2>
+<h3 id="up-to-8-names-for-simul-mode"><a name="existing_simulname_8">Up to 8 names for simul mode</a></h3>
+<p>Support for <code>p5</code>, <code>p6</code>, <code>p7</code>, <code>p8</code> parameters assignment in existing [Simul Name] section.</p>
+<h2 id="time"><a name="existing_time">[Time]</a></h2>
+<h3 id="multiple-fonts_2"><a name="existing_time_fonts">Multiple fonts</a></h3>
+<p><em>counter.font</em> element can store additional value in its name, using following format:</p>
+<p><code>counter&lt;time_value&gt;.font</code></p>
+<p>font assigned like this replaces default <em>counter.font</em> element, if round time is higher or equals the <em>\&lt;time_value&gt;</em>. For example <em>counter10.font</em> means that counter element will use this font if round time is equal or greater than 10s, otherwise default <em>counter.font</em> element is used. There can be multiple font assignments with extra value (no hard limits).</p>
+<h2 id="turns-face"><a name="existing_turnsface">[Turns Face]</a></h2>
+<h3 id="teammates-faces"><a name="existing_turnsface_teammates">Teammates faces</a></h3>
+<ul>
+<li><code>pX.teammate.ko.hide</code>: if set to 1, hide the portrait of a defeated teammate. Defaults to 0.</li>
+</ul>
+<h3 id="teammates-palette-share"><a name="existing_turnsface_palshare">Teammates palette share</a></h3>
+<p><code>pX.teammate.face.palshare</code>: Enables displaying the teammate portraits with their respective selected colors. Defaults to 1.</p>
+<h2 id="turns-name"><a name="existing_turnsname">[Turns Name]</a></h2>
+<h3 id="teammates-names"><a name="existing_turnsname_teammates">Teammates names</a></h3>
+<p>Additional parameters for displaying turns mode teammates names. Defeated teammates names are not rendered.</p>
+<ul>
+<li><code>pX.teammate.pos</code></li>
+<li><code>pX.teammate.bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>pX.teammate.ko.hide</code>: if set to 1, hide the name of a defeated teammate. Defaults to 0. </li>
+<li><code>pX.teammate.name</code>: followed by usual suffixes to control font and text layout settings (offset, facing, layerno, scale, window)</li>
+<li><code>pX.teammate.spacing</code>: x, y spacing between teammate names</li>
+</ul>
+<h2 id="winicon"><a name="existing_winicon">[WinIcon]</a></h2>
+<h3 id="counter-text_1"><a name="existing_winicon_counter">Counter text</a></h3>
+<p>In mugen <code>counter</code> element is used for printing how many matches have been won (once internal counter exceeds <code>useiconupto</code> parameter value). Ikemen GO unhardcodes string used by this element.</p>
+<p><code>pX.counter.text</code>: element that adjusts the displayed string, accepts <code>%i</code> variable (replaced with win count)</p>
+<h3 id="clutch-win-icon"><a name="new_winicon_clutch">Clutch Win Icon</a></h3>
+<p>This group defines an overlay icon for the clutch win type</p>
+<p><em>Example</em>:</p>
+<pre><code class="language-ini">; Win by clutch (overlay icon)
+p1.clutch.spr = 108,0
+p1.clutch.scale = 0.5,0.5
+p2.clutch.spr = 108,0
+p2.clutch.scale = 0.5,0.5
+</code></pre>
+<h1 id="new-lifebar-def-file-sections"><a name="new">New lifebar DEF file sections</a></h1>
+<h2 id="action"><a name="new_action">[Action]</a></h2>
+<p>Definition parameters for displaying text/sprites/anims messages called by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_lifebaraction">LifebarAction</a> state controller.</p>
+<p>Supported parameters: (in all cases <em>teamX</em> refers to team side - <em>team1</em> / <em>team2</em>)
+* <code>teamX.pos</code>: coords to show
+* <code>teamX.max</code>: maximum number of simultaneous messages 
+* <code>teamX.spacing</code>: x, y spacing between messages
+* <code>teamX.start.x</code>: starting x-coords
+* <code>teamX.bg</code>: message background element spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)
+* <code>teamX.front.offset</code>: offset used by spr/anim called via sctrl
+* <code>teamX.front.scale</code>: scale used  by spr/anim called via sctrl
+* <code>teamX.text</code>: followed by usual suffixes to control font and text layout settings (offset, facing, layerno, scale, window)
+* <code>teamX.displaytime</code>: time to show text
+* <code>teamX.showspeed</code>: message showing up speed (1 = instant)
+* <code>teamX.hidespeed</code>: message hiding speed (the larger value, the faster speed)</p>
+<p>Refer to <em>data/fight.def</em> (240p) and <em>data/mugen1/fight.def</em> (720p) files for a working example.</p>
+<h2 id="ailevel"><a name="new_ailevel">[AILevel]</a></h2>
+<p>Displays the difficulty level when the player is controlled by the CPU. Supported parameters:  </p>
+<ul>
+<li><code>pX.pos</code></li>
+<li><code>pX.bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>pX.text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)
+  <code>pX.text.text</code> element that adjusts the displayed string, accepts following variables:
+  <code>%s</code> = AI level value (from 1 to 8), <code>%p</code>= AI level displayed as percentage of the max value</li>
+<li><code>format.decimal.places</code>: to how many decimal places should the AI level be rounded to (0 means no decimal point will be shown at all)</li>
+<li><code>format.decimal.separator</code>: what symbol should be used to separate decimal points of the value</li>
+<li><code>pX.enabled.modeName</code>: set to 1 to enable rendering this element in particular game mode (default: 0)</li>
+</ul>
+<p>Where <code>pX</code> is p1 and/or p2, depending on team side. <code>modeName</code> should be changed to one of the strings returned by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_gamemode">GameMode</a> trigger.</p>
+<h2 id="guardbar"><a name="new_guardbar">[Guardbar]</a></h2>
+<p>Controls guard bar rendering if <code>Guard Break</code> is enabled in the ingame options. The supported parameters are mostly the same as <code>[Lifebar]</code>. In addition it supports the following parameter:  </p>
+<ul>
+<li><code>pX.invertfill</code>: a value of 1 will reverse how the bar works, making it empty when the player's points are full, and full when the points are 0. </li>
+</ul>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">[Guardbar]
+p1.pos = 266, 61
+p1.range.x = -6, -120
+p1.invertfill = 0
+p1.bg0.anim = 90
+p1.bg0.offset = -6, 5
+p1.bg0.layerno = 0
+p1.bg1.spr = 91, 0
+p1.bg1.layerno = 0
+p1.front.spr = 92, 0
+p1.front.offset = -6, 5
+p1.front.layerno = 0
+p1.warn.range = 0, 0
+p1.warn.spr = 95, 0
+p1.warn.palfx.sinadd = 128, 128, 128, 10
+p1.warn.palfx.mul = 256, 128, 128
+p1.warn.palfx.sinmul = 0, 128, 128, 10
+p1.warn.offset = -63, 2
+p1.warn.layerno = 0
+</code></pre>
+<h2 id="match"><a name="new_match">[Match]</a></h2>
+<p>Controls match number element rendering (used by default in modes like Survival, VS 100 Kumite, Boss Rush). Supported parameters:
+* <code>pos</code>: x, y coordinates
+* <code>bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)
+* <code>text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)
+<code>text.text</code> element that adjusts the displayed string, accepts following variables:
+  <code>%s</code> = match number
+* <code>enabled.modeName</code>: set to 1 to enable rendering this element in particular game mode (default: 0)</p>
+<p>Where <code>modeName</code> should be changed to one of the strings returned by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_gamemode">GameMode</a> trigger.</p>
+<h2 id="mode"><a name="new_mode">[Mode]</a></h2>
+<p>Allows to render lifebar element that should be unique for particular game mode. Supported parameters:
+* <code>modeName.pos</code>: x, y coordinates
+* <code>modeName.bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)
+* <code>modeName.text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)</p>
+<p>Where <code>modeName</code> prefix should be changed to one of the strings returned by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_gamemode">GameMode</a> trigger.</p>
+<h2 id="score"><a name="new_score">[Score]</a></h2>
+<p>Controls score counter element rendering (used by default in modes like Arcade, Score Challenge). Supported parameters:</p>
+<ul>
+<li><code>pX.pos</code>: x, y coordinates</li>
+<li><code>pX.bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>pX.text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)
+  <code>pX.text.text</code> element that adjusts the displayed string, accepts following variables:
+  <code>%s</code> = score value</li>
+<li><code>pX.enabled.modeName</code>: set to 1 to enable rendering this element in particular game mode (default: 0)</li>
+</ul>
+<p>Where <code>pX</code> is p1 and/or p2, depending on team side. <code>modeName</code> should be changed to one of the strings returned by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_gamemode">GameMode</a> trigger.</p>
+<ul>
+<li><code>format.integer.pad</code>: integer left padding (leading zeros)</li>
+<li><code>format.integer.separator</code>: what symbol should be used as thousands separator (none by default)</li>
+<li><code>format.decimal.places</code>: to how many decimal places should the score be rounded to (0 means no decimal point will be shown at all, even if score is added with floating point)</li>
+<li><code>format.decimal.separator</code>: what symbol should be used to separate decimal points of the value</li>
+</ul>
+<h2 id="simul_3p-face"><a name="new_simul3pface">[Simul_3P Face]</a></h2>
+<p>Face layout for simul team mode consisting of 3 players, replacing [Simul Face], if present.</p>
+<h2 id="simul_4p-face"><a name="new_simul4pface">[Simul_4P Face]</a></h2>
+<p>Face layout for simul team mode consisting of at least 4 players, replacing [Simul Face], if present.</p>
+<h2 id="simul_3p-lifebar"><a name="new_simul3plifebar">[Simul_3P Lifebar]</a></h2>
+<p>Lifebar layout for simul team mode consisting of 3 players, replacing [Simul Lifebar], if present.</p>
+<h2 id="simul_4p-lifebar"><a name="new_simul4plifebar">[Simul_4P Lifebar]</a></h2>
+<p>Lifebar layout for simul team mode consisting of at least 4 players, replacing [Simul Lifebar], if present.</p>
+<h2 id="simul_3p-name"><a name="new_simul3pname">[Simul_3P Name]</a></h2>
+<p>Name layout for simul team mode consisting of 3 players, replacing [Simul Name], if present.</p>
+<h2 id="simul_4p-name"><a name="new_simul4pname">[Simul_4P Name]</a></h2>
+<p>Name layout for simul team mode consisting of at least 4 players, replacing [Simul Name], if present.</p>
+<h2 id="simul-powerbar"><a name="new_simulpowerbar">[Simul Powerbar]</a></h2>
+<p>Powerbar layout for simul team mode, replacing [Powerbar], if present.</p>
+<h2 id="simul_3p-powerbar"><a name="new_simul3ppowerbar">[Simul_3P Powerbar]</a></h2>
+<p>Powerbar layout for simul team mode consisting of 3 players, replacing [Simul Powerbar], if present.</p>
+<h2 id="simul_4p-powerbar"><a name="new_simul4ppowerbar">[Simul_4P Powerbar]</a></h2>
+<p>Powerbar layout for simul team mode consisting of at least 4 players, replacing [Simul Powerbar], if present.</p>
+<h2 id="simul-guardbar"><a name="new_simulguardbar">[Simul Guardbar]</a></h2>
+<p>Guardbar layout for simul team mode, replacing [Guardbar], if present.</p>
+<h2 id="simul_3p-guardbar"><a name="new_simul3pguardbar">[Simul_3P Guardbar]</a></h2>
+<p>Guardbar layout for simul team mode consisting of 3 players, replacing [Simul Guardbar], if present.</p>
+<h2 id="simul_4p-guardbar"><a name="new_simul4pguardbar">[Simul_4P Guardbar]</a></h2>
+<p>Guardbar layout for simul team mode consisting of at least 4 players, replacing [Simul Guardbar], if present.</p>
+<h2 id="simul-stunbar"><a name="new_simulstunbar">[Simul Stunbar]</a></h2>
+<p>Stunbar layout for simul team mode, replacing [Stunbar], if present.</p>
+<h2 id="simul_3p-stunbar"><a name="new_simul3pstunbar">[Simul_3P Stunbar]</a></h2>
+<p>Stunbar layout for simul team mode consisting of 3 players, replacing [Simul Stunbar], if present.</p>
+<h2 id="simul_4p-stunbar"><a name="new_simul4pstunbar">[Simul_4P Stunbar]</a></h2>
+<p>Stunbar layout for simul team mode consisting of at least 4 players, replacing [Simul Stunbar], if present.</p>
+<h2 id="stunbar"><a name="new_stunbar">[Stunbar]</a></h2>
+<p>Controls stun (dizzy) bar rendering if <code>Dizzy</code> is enabled in the ingame options. The supported parameters are mostly the same as <code>[Lifebar]</code>. In addition it supports the following parameters:  </p>
+<ul>
+<li><code>pX.invertfill</code>: a value of 1 will reverse how the bar works, making it empty when the player's points are full, and full when the points are 0. </li>
+</ul>
+<p>Note: Up until Ikemen GO 0.99 the equivalent of <code>pX.invertfill = 1</code> was hardcoded.  </p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">[Stunbar]
+p1.pos = 390, 61
+p1.range.x = -6, -120
+p1.invertfill = 0
+p1.bg0.anim = 90
+p1.bg0.offset = -6, 5
+p1.bg0.layerno = 0
+p1.bg1.spr = 91, 0
+p1.bg1.layerno = 0
+p1.front.spr = 93, 0
+p1.front.offset = -6, 5
+p1.front.layerno = 0
+p1.warn.range = 0, 0
+p1.warn.spr = 96, 0
+p1.warn.palfx.sinadd = 128, 128, 128, 10
+p1.warn.palfx.mul = 256, 128, 128
+p1.warn.palfx.sinmul = 0, 128, 128, 10
+p1.warn.offset = -63, 2
+p1.warn.layerno = 0
+</code></pre>
+<h2 id="tag-face"><a name="new_tagface">[Tag Face]</a></h2>
+<p>Face layout for tag team mode, replacing [Simul Face], if present.</p>
+<h2 id="tag_3p-face"><a name="new_tag3pface">[Tag_3P Face]</a></h2>
+<p>Face layout for tag team mode consisting of 3 players, replacing [Simul Face], if present.</p>
+<h2 id="tag_4p-face"><a name="new_tag4pface">[Tag_4P Face]</a></h2>
+<p>Face layout for tag team mode consisting of at least 4 players, replacing [Simul Face], if present.</p>
+<h2 id="tag-lifebar"><a name="new_taglifebar">[Tag Lifebar]</a></h2>
+<p>Lifebar layout for tag team mode, replacing [Simul Lifebar], if present.</p>
+<h2 id="tag_3p-lifebar"><a name="new_tag3plifebar">[Tag_3P Lifebar]</a></h2>
+<p>Lifebar layout for tag team mode consisting of 3 players, replacing [Tag Lifebar], if present.</p>
+<h2 id="tag_4p-lifebar"><a name="new_tag4plifebar">[Tag_4P Lifebar]</a></h2>
+<p>Lifebar layout for tag team mode consisting of at least 4 players, replacing [Tag Lifebar], if present.</p>
+<h2 id="tag-name"><a name="new_tagname">[Tag Name]</a></h2>
+<p>Name layout for tag team mode, replacing [Simul Name], if present.</p>
+<h2 id="tag_3p-name"><a name="new_tag3pname">[Tag_3P Name]</a></h2>
+<p>Name layout for tag team mode consisting of 3 players, replacing [Tag Name], if present.</p>
+<h2 id="tag_4p-name"><a name="new_tag4pname">[Tag_4P Name]</a></h2>
+<p>Name layout for tag team mode consisting of at least 4 players, replacing [Tag Name], if present.</p>
+<h2 id="tag-powerbar"><a name="new_tagpowerbar">[Tag Powerbar]</a></h2>
+<p>Powerbar layout for tag team mode, replacing [Powerbar], if present.</p>
+<h2 id="tag_3p-powerbar"><a name="new_tag3ppowerbar">[Tag_3P Powerbar]</a></h2>
+<p>Powerbar layout for tag team mode consisting of 3 players, replacing [Tag Powerbar], if present.</p>
+<h2 id="tag_4p-powerbar"><a name="new_tag4ppowerbar">[Tag_4P Powerbar]</a></h2>
+<p>Powerbar layout for tag team mode consisting of at least 4 players, replacing [Tag Powerbar], if present.</p>
+<h2 id="tag-guardbar"><a name="new_tagguardbar">[Tag Guardbar]</a></h2>
+<p>Guardbar layout for tag team mode, replacing [Guardbar], if present.</p>
+<h2 id="tag_3p-guardbar"><a name="new_tag3pguardbar">[Tag_3P Guardbar]</a></h2>
+<p>Guardbar layout for tag team mode consisting of 3 players, replacing [Tag Guardbar], if present.</p>
+<h2 id="tag_4p-guardbar"><a name="new_tag4pguardbar">[Tag_4P Guardbar]</a></h2>
+<p>Guardbar layout for tag team mode consisting of at least 4 players, replacing [Tag Guardbar], if present.</p>
+<h2 id="tag-stunbar"><a name="new_tagstunbar">[Tag Stunbar]</a></h2>
+<p>Stunbar layout for tag team mode, replacing [Stunbar], if present.</p>
+<h2 id="tag_3p-stunbar"><a name="new_tag3pstunbar">[Tag_3P Stunbar]</a></h2>
+<p>Stunbar layout for tag team mode consisting of 3 players, replacing [Tag Stunbar], if present.</p>
+<h2 id="tag_4p-stunbar"><a name="new_tag4pstunbar">[Tag_4P Stunbar]</a></h2>
+<p>Stunbar layout for tag team mode consisting of at least 4 players, replacing [Tag Stunbar], if present.</p>
+<h2 id="turns-powerbar"><a name="new_turnspowerbar">[Turns Powerbar]</a></h2>
+<p>Powerbar layout for turns team mode, replacing [Powerbar], if present.</p>
+<h2 id="turns-guardbar"><a name="new_turnsguardbar">[Turns Guardbar]</a></h2>
+<p>Guardbar layout for turns team mode, replacing [Guardbar], if present.</p>
+<h2 id="turns-stunbar"><a name="new_turnsstunbar">[Turns Stunbar]</a></h2>
+<p>Stunbar layout for turns team mode, replacing [Stunbar], if present.</p>
+<h2 id="timer"><a name="new_timer">[Timer]</a></h2>
+<p>Controls timer element rendering (used by default in modes like Time Attack and Time Challenge). Supported parameters:</p>
+<ul>
+<li><code>pos</code>: x, y coordinates</li>
+<li><code>bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)
+  <code>text.text</code> element that adjusts the displayed string, accepts following variables:
+   <code>%m</code> = minutes, <code>%s</code> = seconds, <code>%x</code> = milliseconds</li>
+<li><code>enabled.modeName</code>: set to 1 to enable rendering this element in particular game mode (default: 0)</li>
+</ul>
+<p>where <code>modeName</code> should be changed to one of the strings returned by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_gamemode">GameMode</a> trigger.</p>
+<h2 id="wincount"><a name="new_wincount">[WinCount]</a></h2>
+<p>Controls win counter element rendering (used by default in Versus type modes). Supported parameters:</p>
+<ul>
+<li><code>pX.pos</code>: x, y coordinates</li>
+<li><code>pX.bg</code>: spr/anim assignment, layout settings (offset, facing, vfacing, layerno, scale, angle, window)</li>
+<li><code>pX.text</code>: followed by usual suffixes to control font, displayed string, and text layout settings (offset, facing, layerno, scale, window)
+  <code>pX.text.text</code> element that adjusts the displayed string, accepts following variables:
+  <code>%s</code> = win value</li>
+<li><code>pX.enabled.modeName</code>: set to 1 to enable rendering this element in particular game mode (default: 0)</li>
+</ul>
+<p>Where <code>pX</code> is p1 and/or p2, depending on team side. <code>modeName</code> should be changed to one of the strings returned by <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_gamemode">GameMode</a> trigger.</p></body></html>

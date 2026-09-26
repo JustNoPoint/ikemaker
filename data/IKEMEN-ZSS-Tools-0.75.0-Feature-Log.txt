@@ -1,0 +1,14 @@
+IKEMaker 0.75.0
+
+Insert palette and shift later slots
+
+- Adds “Insert + Shift Later…” beside the SFF Project Palette Library staging controls.
+- Allows a new ACT or indexed PNG palette to take an occupied coordinate.
+- Previews every palette coordinate that will move before staging the operation.
+- Shifts the occupied coordinate and every later palette number in that group upward by one.
+- Applies shifts only during the next palette-preserving SprMaker2 rebuild; the current SFF is not edited in place.
+- Carries indexed sprite palette assignments to the shifted coordinates.
+- Shifts staged palette entries, linked-alias targets, and child-variant parent coordinates consistently.
+- Records pending shift operations in the palette build plan and shows them in staged-palette status.
+- Removing the newest staged insertion safely reverses its shift. Nested insertions must be removed newest-first.
+- Warns before staging that authored RemapPal, PalNo, pal.defaults, Lua, and other references are not guessed and require Cross-File Change Impact review.

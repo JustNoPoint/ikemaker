@@ -1,0 +1,2860 @@
+{
+  "schema": 1,
+  "root": "<disposable HDBZ test copy>",
+  "generatedAt": "2026-09-03T18:31:28.249Z",
+  "files": 7139,
+  "roster": {
+    "entries": 33,
+    "cells": 31,
+    "stages": 46,
+    "grid": {
+      "sectionLine": 630,
+      "rows": 9,
+      "columns": 3,
+      "position": [
+        119,
+        20
+      ],
+      "cellSize": [
+        27,
+        27
+      ],
+      "spacing": [
+        2,
+        0
+      ],
+      "wrapping": true,
+      "showEmptyBoxes": false,
+      "moveOverEmptyBoxes": false
+    },
+    "motifState": "ready",
+    "portraits": {
+      "ready": 30,
+      "special": 1
+    },
+    "problems": []
+  },
+  "sff": {
+    "total": 127,
+    "parsed": 127,
+    "rendered": 155,
+    "sprites": 91209,
+    "versions": {
+      "2.0.0.0": 76,
+      "1.0.1.0": 47,
+      "2.0.1.0": 4
+    },
+    "errors": []
+  },
+  "air": {
+    "total": 32,
+    "parsed": 32,
+    "actions": 17614,
+    "frames": 137741,
+    "errors": []
+  },
+  "snd": {
+    "total": 37,
+    "parsed": 37,
+    "sounds": 8951,
+    "issues": [
+      {
+        "file": "chars/BlackZ2/files/black.snd",
+        "issue": "Duplicate sound 2350,0 at archive index 193; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/BlackZ2/files/black.snd",
+        "issue": "Duplicate sound 2350,1 at archive index 195; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/BlackZ2/files/black.snd",
+        "issue": "Duplicate sound 18102,0 at archive index 361; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/BlackZ2/files/black.snd",
+        "issue": "Duplicate sound 18102,0 at archive index 362; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/FreezaZ2/files/freeza.snd",
+        "issue": "Duplicate sound 5000,2 at archive index 273; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/FreezaZ2/files/freeza.snd",
+        "issue": "Duplicate sound 5000,102 at archive index 286; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/GokuZ2/files/goku-jap-en-bl.snd",
+        "issue": "Duplicate sound 0,51 at archive index 9; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/GotenksZ2/files/gotenks.snd",
+        "issue": "Duplicate sound 3,22 at archive index 37; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 800,1 at archive index 166; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 2350,0 at archive index 244; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 2350,1 at archive index 246; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 5000,0 at archive index 315; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 15000,0 at archive index 355; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 15000,1 at archive index 357; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/JirenZ2/files/sound.snd",
+        "issue": "Duplicate sound 15000,2 at archive index 359; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/KrillinZ2/files/sound.snd",
+        "issue": "Duplicate sound 5,8 at archive index 20; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/KrillinZ2/files/sound.snd",
+        "issue": "Duplicate sound 18,2 at archive index 46; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/KrillinZ2/files/sound.snd",
+        "issue": "Duplicate sound 18,2 at archive index 47; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/KrillinZ2/files/sound.snd",
+        "issue": "Duplicate sound 1034,1 at archive index 180; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/PilafMachineZ2/files/sound.snd",
+        "issue": "Duplicate sound 32107,0 at archive index 422; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/SatanZ2/files/satan.snd",
+        "issue": "Duplicate sound 191,9 at archive index 87; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/SatanZ2/files/satan.snd",
+        "issue": "Duplicate sound 1600,0 at archive index 172; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 5,6 at archive index 68; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 40,0 at archive index 91; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 194,6 at archive index 130; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 2500,0 at archive index 281; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 2500,1 at archive index 283; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 5000,102 at archive index 431; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ShinGoldenFreezaZ2/files/sound.snd",
+        "issue": "Duplicate sound 10714,0 at archive index 463; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 228; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 229; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 230; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 231; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 232; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 233; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 234; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 235; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 236; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 237; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 238; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/TenShinHanZ2/files/TenShinHan.snd",
+        "issue": "Duplicate sound 85,30026 at archive index 239; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ZBonus/DrBriefsZ2/files/sound.snd",
+        "issue": "Duplicate sound 800,1 at archive index 52; IKEMEN keeps the first entry."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.snd",
+        "issue": "Duplicate sound 5002,2 at archive index 580; IKEMEN keeps the first entry."
+      }
+    ],
+    "errors": []
+  },
+  "stages": {
+    "total": 50,
+    "parsed": 50,
+    "issues": [
+      {
+        "file": "stages/hdbz_artic.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 1 is shared by 4 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_artic.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 3 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_artic.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 4 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_enma.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 10 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_grav.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 27 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_grav_basic.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 22 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_hangar.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 111 is shared by 2 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_hangar.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 112 is shared by 2 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_husk.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 9 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_husk.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_husk.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 20 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_husk2.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 9 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_husk2.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_husk2.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 20 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_road.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 12 is shared by 2 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_road.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 3 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_tenshinhan.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 7 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_top.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 5 is shared by 4 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_top.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 10 is shared by 41 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_top.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 105 is shared by 2 elements. This is valid, but edits may affect all matching elements."
+      },
+      {
+        "file": "stages/hdbz_zoon.def",
+        "severity": "info",
+        "code": "shared-bg-id",
+        "message": "Background ID 50 is shared by 11 elements. This is valid, but edits may affect all matching elements."
+      }
+    ],
+    "errors": []
+  },
+  "screenpacks": {
+    "total": 1,
+    "parsed": 1,
+    "issues": [
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Pause Menu: menu.arrow.up references missing sprite 400,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Pause Menu: menu.arrow.down references missing sprite 401,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Replay Info: menu.arrow.up references missing sprite 400,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Replay Info: menu.arrow.down references missing sprite 401,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.gauge.tech references missing sprite 600,11."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.gauge.attack references missing sprite 600,12."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.gauge.guard references missing sprite 600,13."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.gauge.life references missing sprite 600,14."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.1 references missing sprite 601,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.2 references missing sprite 602,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.3 references missing sprite 603,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.4 references missing sprite 604,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.5 references missing sprite 605,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.6 references missing sprite 606,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.7 references missing sprite 607,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.8 references missing sprite 608,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.9 references missing sprite 609,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.10 references missing sprite 610,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.11 references missing sprite 611,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.12 references missing sprite 612,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.13 references missing sprite 613,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p1.rank.14 references missing sprite 614,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.gauge.tech references missing sprite 600,11."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.gauge.attack references missing sprite 600,12."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.gauge.guard references missing sprite 600,13."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.gauge.life references missing sprite 600,14."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.1 references missing sprite 601,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.2 references missing sprite 602,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.3 references missing sprite 603,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.4 references missing sprite 604,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.5 references missing sprite 605,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.6 references missing sprite 606,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.7 references missing sprite 607,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.8 references missing sprite 608,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.9 references missing sprite 609,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.10 references missing sprite 610,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.11 references missing sprite 611,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.12 references missing sprite 612,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.13 references missing sprite 613,0."
+      },
+      {
+        "file": "data/system.def",
+        "severity": "error",
+        "code": "missing-sprite",
+        "message": "Rank Info: p2.rank.14 references missing sprite 614,0."
+      }
+    ],
+    "errors": []
+  },
+  "characters": {
+    "total": 34,
+    "missingFiles": [],
+    "errors": []
+  },
+  "commands": {
+    "files": 3,
+    "commands": 438,
+    "diagnostics": [
+      {
+        "file": "chars/ZBonus/HerculeZ2/files/satan.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/HerculeZ2/files/satan.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/HerculeZ2/files/satan.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/HerculeZ2/files/satan.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/HerculeZ2/files/satan.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/HerculeZ2/files/satan.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "hcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201chcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "hcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201chcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "hcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201chcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "hcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201chcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "hcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201chcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "hcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201chcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "2qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcb2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcb2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcb2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcb2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcb2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcb2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dp2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dp2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dp2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "dpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "rdpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "f2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "f2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "f2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "f2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "f2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "f2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_GokuZ2/files/goku.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbhcf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbhcf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbhcf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbhcf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbhcf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbhcf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbhcf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbhcf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbhcf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbhcf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbhcf_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbhcf_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_K",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_K\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfhcb_P",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfhcb_P\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "2qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201c2qcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcf2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcf2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcb2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcb2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcb2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcb2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcb2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcb2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcb2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dp2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdp2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "fbfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cfbfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "fbfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cfbfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "fbfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cfbfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "fbfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cfbfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "fbfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cfbfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "fbfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cfbfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcfc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcfc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcby",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcby\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcba",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcba\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "qcbc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cqcbc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "dpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpx",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpx\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpy",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpy\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpz",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpz\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpa",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpa\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpb",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpb\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "rdpc",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crdpc\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "f2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "f2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "f2p",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2p\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "f2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "f2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "f2k",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201cf2k\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      },
+      {
+        "file": "chars/ZBonus/SSJGod_VegetaZ2/files/vegeta.cmd",
+        "command": "recovery",
+        "severity": "warning",
+        "code": "duplicate-name",
+        "message": "Another command uses the name \u201crecovery\u201d."
+      }
+    ]
+  },
+  "zss": {
+    "files": 9,
+    "issues": [
+      {
+        "file": "data/action.zss",
+        "line": 31,
+        "start": 61,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/functions.zss",
+        "line": 183,
+        "start": 20,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/info.zss",
+        "line": 59,
+        "start": 15,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/info.zss",
+        "line": 308,
+        "start": 24,
+        "length": 2,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/info.zss",
+        "line": 309,
+        "start": 55,
+        "length": 6,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/info.zss",
+        "line": 504,
+        "start": 16,
+        "length": 2,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/score.zss",
+        "line": 12,
+        "start": 46,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/score.zss",
+        "line": 14,
+        "start": 77,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/score.zss",
+        "line": 21,
+        "start": 6,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/score.zss",
+        "line": 22,
+        "start": 19,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/system.zss",
+        "line": 48,
+        "start": 27,
+        "length": 6,
+        "severity": "warning",
+        "code": "redirect-guard",
+        "message": "enemy redirect has no nearby numEnemy validity guard.",
+        "help": "Guard the redirect in the same condition/block; enemy may not exist in every Simul, Tag, Turns, or lifecycle frame."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 214,
+        "start": 24,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 220,
+        "start": 24,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 376,
+        "start": 9,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 379,
+        "start": 16,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 385,
+        "start": 9,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 388,
+        "start": 16,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 394,
+        "start": 9,
+        "length": 10,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      },
+      {
+        "file": "data/training.zss",
+        "line": 404,
+        "start": 17,
+        "length": 2,
+        "severity": "warning",
+        "code": "opponent-guard",
+        "message": "Opponent-dependent expression has no nearby numEnemy guard.",
+        "help": "Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent."
+      }
+    ]
+  },
+  "ok": true
+}

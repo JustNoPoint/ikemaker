@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('assert');
+const vm=require('vm');
+const Module=require('module');
+const original=Module._load;
+Module._load=function patched(request,parent,main){if(request==='vscode')return{window:{},workspace:{},commands:{},Uri:{},ViewColumn:{Active:1}};return original.call(this,request,parent,main)};
+const workspace=require('../src/palette_index_organizer_workspace');
+Module._load=original;
+const page=workspace.withDropTarget(workspace.enhancedHtml({entries:[{id:'0,0,0,0',rgba:[0,0,0,0],count:4,files:['source.png'],category:'Transparency',label:''}],uniqueColors:1,uniqueRgb:1,alphaLevels:1,semiTransparent:0,transparent:1,opacityExpandedColors:0,rgbWithMultipleAlpha:0,maxAlphaVariants:1,safeExact:true,recommendation:'Exact conversion available.',files:['source.png'],preview:'',originalPreview:'data:image/png;base64,AA==',canConstruct:true,construction:{targetColors:64,alphaMode:'bands'},categories:['Transparency','Unassigned']}));
+assert.match(page,/Simple palette construction/);assert.match(page,/Create conversion draft|Regenerate draft/);assert.match(page,/Revert to original/);assert.match(page,/Target colors/);assert.match(page,/5 opacity bands/);assert.match(page,/Original/);assert.match(page,/Extra opacity entries/);assert.match(page,/no brushes, masks, painting tools/i);
+assert.match(page,/Drop PNG sprite artwork here/);
+assert.match(page,/Discard semantic draft/);assert.match(page,/stageSemanticDraft/);assert.match(page,/ikemenCanKeepDraft/);
+assert.doesNotThrow(()=>new vm.Script(page.match(/<script>([\s\S]*)<\/script>/)[1],{filename:'palette-index-organizer-webview.js'}));
+const {paletteSwatchPng}=require('../src/palette_editor'),session={files:[],model:null,sourceKind:'',originalFiles:null,construction:null},colors=Array.from({length:256},(_,index)=>index?[255,0,0,255]:[0,0,0,0]);workspace.acceptDroppedPngs(session,[{name:'sample.png',base64:paletteSwatchPng(colors).toString('base64')}]);assert.strictEqual(session.files[0].name,'sample.png');assert.strictEqual(session.sourceKind,'png');assert.ok(session.model.uniqueColors>=1);assert.throws(()=>workspace.acceptDroppedPngs(session,[{name:'bad.txt',base64:''}]),/not a PNG/);
+console.log('Palette Index Organizer workspace tests passed');

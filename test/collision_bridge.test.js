@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('assert');
+const { generateCollisionCode } = require('../src/collision_bridge');
+assert.strictEqual(generateCollisionCode('animelemcount', { group: 'Clsn1' }), 'animElemVar(NumClsn1)');
+assert.strictEqual(generateCollisionCode('clsnvar', { group: 'Clsn2', index: 1, edge: 'Top' }), 'clsnVar(Clsn2, 1, Top)');
+assert.strictEqual(generateCollisionCode('clsnoverlap', { group: 'Clsn1', player: 'p2, ID', target: 'Clsn2' }), 'clsnOverlap(Clsn1, p2, ID, Clsn2)');
+assert.strictEqual(generateCollisionCode('projclsnoverlap', { index: 2, player: 'p2, ID', target: 'Size' }), 'projClsnOverlap(2, p2, ID, Size)');
+assert.strictEqual(generateCollisionCode('p2clsncheck', { target: 'Size' }), 'p2clsncheck = Size');
+assert.strictEqual(generateCollisionCode('playerpush', { value: false, priority: 2, affectTeam: 'E' }), 'playerPush{value: 0; priority: 2; affectTeam: E}');
+assert.match(generateCollisionCode('helpercollision', { clsnProxy: true, ownClsnScale: true }), /clsnProxy: 1; ownClsnScale: 1/);
+assert.match(generateCollisionCode('projectilecollision', { scaleX: 1.2, scaleY: 0.8, angle: 25 }), /projClsnScale: 1.2, 0.8; projClsnAngle: 25/);
+assert.throws(() => generateCollisionCode('animelemcount', { group: 'Size' }), /NumSize/);
+console.log('Collision bridge tests passed');

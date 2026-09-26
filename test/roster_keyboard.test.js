@@ -1,0 +1,13 @@
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
+const source=fs.readFileSync(path.join(__dirname,'../src/select_def_workspace.js'),'utf8');const functions=source.split('\n').map(line=>line.trim()).filter(line=>/^function (shiftRosterSelection|rosterKeyboard)\(/.test(line)).join('\n');
+let saved=0,rendered=0,focused='',announced={textContent:''},selections=0;
+const env={orderConflict:false,workingLines:[1,2,3,4,5],selectedLines:new Set([2,3]),dirty:false,persistOrder:()=>saved++,render:()=>rendered++,selectInventoryLine:()=>selections++,document:{querySelector:selector=>({focus:()=>focused=selector})},$:()=>announced};vm.createContext(env);vm.runInContext(functions,env);
+assert(env.shiftRosterSelection(-1));assert.deepEqual(Array.from(env.workingLines),[2,3,1,4,5]);assert(env.shiftRosterSelection(1));assert.deepEqual(Array.from(env.workingLines),[1,2,3,4,5]);assert.equal(saved,2);env.orderConflict=true;assert.equal(env.shiftRosterSelection(-1),false);assert.equal(saved,2);
+env.orderConflict=false;const node={},event={key:'ArrowDown',altKey:true,target:node,currentTarget:node,preventDefault(){this.prevented=true;}};env.rosterKeyboard(2,event,true);assert(event.prevented);assert.equal(focused,'[data-inventory-char="2"]');assert(announced.textContent.includes('Review and apply'));assert.deepEqual(Array.from(env.workingLines),[1,4,2,3,5]);
+event.key=' ';event.altKey=false;env.rosterKeyboard(2,event);assert.equal(selections,1);assert.equal(focused,'.cell[data-line="2"]');event.target={};env.rosterKeyboard(2,event);assert.equal(selections,1,'Nested interactive controls retain their own key handling');
+env.workingLines=[1,2];env.selectedLines=new Set([1,2]);assert.equal(env.shiftRosterSelection(1),false);assert(source.includes("node.setAttribute('aria-pressed'"));
+console.log('Roster keyboard selection, stable group reordering, focus return, conflict veto and boundary handling passed');
+
+env.workingLines=[];assert.equal(env.shiftRosterSelection(-1),false);env.workingLines=[1];assert.equal(env.shiftRosterSelection(1),false);
+
+env.workingLines=[1,2,3,4];env.selectedLines=new Set([3]);env.model={preview:{motif:{grid:{rows:1,columns:2}}}};env.page=0;env.orderedCells=()=>env.workingLines.map(line=>({line}));let queried=0,storedPage;env.saveState=value=>storedPage=value.page;env.document.querySelector=selector=>++queried===1?null:{focus:()=>focused=selector};event.target=node;event.key='ArrowDown';event.altKey=true;env.rosterKeyboard(3,event);assert.equal(env.page,1);assert.equal(storedPage,1);assert.equal(focused,'.cell[data-line="3"]');

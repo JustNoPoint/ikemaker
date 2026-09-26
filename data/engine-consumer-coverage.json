@@ -1,0 +1,14 @@
+{
+  "schemaVersion": 1,
+  "consumers": {
+    "project-manager": { "status": "integrated", "note": "Shows and explicitly adopts the bound game's exact engine target." },
+    "upstream-update-monitor": { "status": "integrated", "note": "Refreshes versioned knowledge without installing or adopting builds." },
+    "game-launch": { "status": "integrated", "note": "Resolves the bound project target and refuses global-path substitution for non-stable targets." },
+    "stage-rig-launch": { "status": "integrated", "note": "Uses the stage document's bound project target." },
+    "test-session-launch": { "status": "integrated", "note": "Uses the test project's bound engine target." },
+    "editor-visibility": { "status": "framework", "note": "Capability decisions are available; each editor must declare requirements before being called integrated." },
+    "completion-and-snippets": { "status": "not-declared", "note": "No capability-specific completion requirements are declared yet." },
+    "generators": { "status": "not-declared", "note": "Existing stable generators remain unchanged; future syntax requires explicit consumer declarations." },
+    "screenpack-config": { "status": "not-declared", "note": "Existing stable fields remain unchanged; discovered future fields are informational only." }
+  }
+}

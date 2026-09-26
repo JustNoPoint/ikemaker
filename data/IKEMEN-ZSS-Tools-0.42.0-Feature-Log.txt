@@ -1,0 +1,39 @@
+IKEMEN ZSS Tools 0.42.0
+=======================
+
+Honest browser/mobile capability contract
+-----------------------------------------
+- Browser archiveParsing is now false until real SFF/SND virtual-filesystem
+  adapters exist.
+- Capability reporting explicitly identifies SFF/SND archive parsing as
+  unavailable in the browser build.
+- SFF and SND custom editors remain unchanged-archive placeholders.
+- The Markdown and printable mobile matrices now separate verified current
+  behavior from target features.
+
+Portable browser language tools
+-------------------------------
+- Loads the bundled controller, trigger, and Lua API catalogs through
+  vscode.workspace.fs without Node filesystem or process modules.
+- Adds a searchable controller tree and bundled controller option reference.
+- Adds reviewed ZSS controller insertion with required and selected optional
+  values through the ordinary undoable editor path.
+- Adds required-field ZSS controller completion.
+- Adds ZSS trigger, CNS controller, and Lua API completion.
+- Adds bundled controller/trigger/Lua hover descriptions.
+- Adds independent per-domain Learning/Advanced customization.
+
+Portable browser review substitutes
+-----------------------------------
+- Adds a read-only ZSS/CNS/Lua structure report.
+- Adds a lightweight, read-only current-file ZSS review for brace balance,
+  time = 0 review, and opponent-availability review.
+- The portable audit states that it is smaller than the desktop analyzer and
+  never presents itself as equivalent.
+
+Safety and compatibility
+------------------------
+- Native SprMaker2/SndMaker, external applications, and IKEMEN launch remain
+  unavailable and are never invoked or emulated in browser hosts.
+- The browser entry still imports only the VS Code API.
+- All active terminology targets IKEMEN 1.0 only.

@@ -1,0 +1,15 @@
+IKEMaker 0.64.16
+=================
+
+Atomic Close Character
+----------------------
+- Close Character now guards the selected character context against automatic AIR reopening and code/viewer synchronization.
+- All registered visual workspaces are disposed before their source tabs are closed.
+- Character-owned tabs are drained in repeated passes so delayed VS Code activation events cannot leave nested AIR sources or viewers behind.
+- The guard is always released even if VS Code reports a close failure.
+
+Regression protection
+---------------------
+- Added direct coverage for close-context ownership and the atomic close ordering.
+- AIR automatic-open and source-synchronization paths must honor the close guard.
+- All 124 automated test files pass.

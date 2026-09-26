@@ -1,0 +1,15 @@
+IKEMaker 0.64.11
+=================
+
+Asset viewer-group correction
+-----------------------------
+- Character sessions no longer pass their source-code editor column to SFF or SND workspaces.
+- The first visual workspace opens beside source code; subsequent AIR, SFF, and SND workspaces share that visual editor group.
+- Directly opening an SFF or SND file moves its custom workspace to the established visual group.
+- SFF and SND maintain one live workspace per archive path. Reopening an already-loaded archive reveals the existing tab instead of creating a duplicate.
+- SND custom-editor tabs now participate in the same viewer tracking used by AIR and SFF.
+
+Verification
+------------
+- Added a regression test covering character-session routing, first-viewer placement, direct custom-editor placement, and duplicate suppression.
+- All 121 automated test files pass.

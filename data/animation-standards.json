@@ -1,0 +1,53 @@
+{
+  "version": 1,
+  "sets": [
+    {
+      "id": "ikemen-1.0-character-core",
+      "label": "IKEMEN 1.0 character baseline",
+      "scope": "engine",
+      "requiredAnimations": [
+        { "action": 0, "label": "Standing idle" },
+        { "action": 5, "label": "Turn while standing" },
+        { "action": 6, "label": "Turn while crouching" },
+        { "action": 10, "label": "Stand to crouch" },
+        { "action": 11, "label": "Crouching idle" },
+        { "action": 12, "label": "Crouch to stand" },
+        { "action": 20, "label": "Walk forward" },
+        { "action": 21, "label": "Walk backward" },
+        { "action": 40, "label": "Jump start" },
+        { "action": 41, "label": "Neutral jump" },
+        { "action": 42, "label": "Forward jump" },
+        { "action": 43, "label": "Backward jump" },
+        { "action": 100, "label": "Run or forward dash" },
+        { "action": 105, "label": "Back dash" },
+        { "action": 130, "label": "Standing guard start" },
+        { "action": 131, "label": "Standing guard" },
+        { "action": 132, "label": "Standing guard end" },
+        { "action": 5000, "label": "High get-hit" },
+        { "action": 5010, "label": "Mid or low get-hit" },
+        { "action": 5020, "label": "Crouching get-hit" },
+        { "action": 5030, "label": "Hit-back or KO transition" },
+        { "action": 5050, "label": "Aerial fall" },
+        { "action": 5070, "label": "Trip" },
+        { "action": 5080, "label": "OTG or liedown" },
+        { "action": 5120, "label": "Get up" }
+      ],
+      "recommendedAnimations": [
+        { "action": 180, "label": "Win pose" },
+        { "action": 190, "label": "Intro" },
+        { "action": 195, "label": "Taunt" },
+        { "action": 5300, "label": "Dizzy" }
+      ]
+    },
+    {
+      "id": "jnp-shared-gethit-axis-references",
+      "label": "JNP shared get-hit axis references",
+      "scope": "project",
+      "requiredAxisRoles": [
+        { "role": "feet", "label": "Get-hit feet-axis reference" },
+        { "role": "middle", "label": "Get-hit middle-axis reference" },
+        { "role": "head", "label": "Get-hit head-axis reference" }
+      ]
+    }
+  ]
+}

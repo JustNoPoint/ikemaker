@@ -1,0 +1,10 @@
+IKEMEN ZSS Tools 0.57.1
+=======================
+
+- Restored a visible Browse and Insert State Controllers entry under IKEMEN
+  Tools > ZSS and CNS.
+- Added a direct Insert State Controller with Options entry beside it.
+- State-controller items now insert native ZSS blocks when a ZSS editor is
+  active and classic [State] controller blocks when a CNS editor is active.
+- Learning and Advanced presentation settings remain independent for ZSS and
+  CNS output.

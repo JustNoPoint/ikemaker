@@ -1,0 +1,34 @@
+IKEMaker 0.75.2
+
+Multi-reference palette tray
+- Load as many as 256 ACT palettes or indexed PNG palette images into one temporary SFF palette workspace session.
+- Focus one palette for a full 256-index reference grid while retaining multi-selection for batch work.
+- Click a reference swatch to copy its RGB into the currently selected embedded-palette index as a non-destructive preview.
+- Preview a complete focused reference palette without changing the SFF.
+
+Reusable palette index macros
+- Define old-to-new index adaptation with destination=source mappings.
+- Explicitly flip the complete 256-color table when an application stores it opposite Photoshop.
+- Combine table flipping with optional index mappings in one preview or batch conversion.
+- Save and load reusable IKEMaker palette conversion JSON files, including the flip-order choice.
+- Preview the macro against the focused palette before export.
+- Batch-export selected references as new ACT files.
+- Originals and existing destination files are never overwritten; conflicting output names receive numeric suffixes.
+
+Safety and scope
+- This remains palette/index assistance, not a general image editor.
+- Invalid, non-indexed, or malformed reference files are skipped with an explanation.
+- Reference palettes remain session-only unless explicitly exported.
+- Bulk sprite palette assignment is constrained to sprites sharing the active sprite's source palette; character, projectile, and FX sprites using other palettes are reported and skipped.
+
+Selected-index operations
+- Ctrl-click selects individual target or reference indexes; Shift-click selects a range.
+- Adjust selected colors through RGB deltas, HSL deltas, lighter/darker, grayscale, invert, and two hue-shift presets.
+- Create gradients, swap two indexes, or reverse only the selected index order while preserving alpha at each SFF index.
+- Drag selected reference colors onto a target starting index or copy equally sized reference and target selections.
+- Report exact duplicate RGB entries without merging them or destroying intentional CS index identities.
+- Every selected-index operation remains a preview until Save Color Edits is separately confirmed.
+
+Player-safe roster palette tools
+- Safe Palette Placement exposes only the simplest table flip and whole-palette color presets.
+- The preview states how many sprites use the selected stored palette and confirms that sprites using every other palette remain untouched.

@@ -1,0 +1,12 @@
+'use strict';
+const assert = require('assert');
+const { parseSelectDef } = require('../src/select_def_model');
+const { storyArcs, linearStoryLua, dialogueController } = require('../src/story_dialogue_model');
+const model = parseSelectDef('[StoryMode]\nname = ryu\ndisplayname = Ryu Story\npath = data/story/ryu.lua\nunlock = true\nname = ken\npath = data/story/ken.lua\n');
+assert.deepStrictEqual(storyArcs(model).map((x) => [x.name, x.displayname, x.path]), [['ryu','Ryu Story','data/story/ryu.lua'],['ken','ken','data/story/ken.lua']]);
+const lua = linearStoryLua({ p1char: 'Ryu/Ryu.def', fights: [{ p2char: 'Ken/Ken.def', stage: 'stages/grid.def' }] });
+assert.match(lua, /p1char = \{"Ryu\/Ryu\.def"\}/); assert.match(lua, /p2char = \{"Ken\/Ken\.def"\}/); assert.match(lua, /setMatchNo\(-1\)/);
+const zss = dialogueController({ enemy: 'Ken', lines: [{ side: 'p1', portrait: 2, text: 'You ready?', wait: 30 }, { side: 'p2', portrait: 1, text: 'Always.' }] });
+assert.match(zss, /text1 = "<p1><p1face=self,9100,2>You ready\?<wait=30>"/); assert.match(zss, /text2 = "<p2><p2face=enemy,9100,1>Always\."/);
+assert.throws(() => dialogueController({ lines: [] }), /At least one/);
+console.log('Story and dialogue model tests passed');

@@ -1,0 +1,13 @@
+IKEMEN ZSS Tools 0.57.0
+
+CHARACTER NAVIGATION AND CONNECTION TREE
+
+- Adds a plainly named Open Character action under IKEMEN Tools > Characters.
+- Opening a character registers or refreshes its saved workbench and opens its core authoring files.
+- Adds the explicit right-click action Open Referenced Definition for ZSS functions, states, and maps.
+- Definition lookup now includes live ZSS documents opened outside the saved workspace folder.
+- Adds a read-only Character Connection Tree from the main character DEF to assigned assets and nested profile DEFs.
+- Adds cross-file branches for authored function calls and state transitions, with direct source-line navigation.
+- Exposes the connection tree from IKEMEN Tools, the editor context menu, and each saved Character Workbench.
+- Ryu verification currently resolves 24 linked files, 23 file assignments, 17 cross-file code relationships, and no missing references.
+- All 85 regression-test files pass.

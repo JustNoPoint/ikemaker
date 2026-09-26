@@ -1,0 +1,10 @@
+{
+  "name": "ikemaker-move-lab-live-runner",
+  "displayName": "IKEMaker Move Lab Live Runner",
+  "version": "1.0.0",
+  "publisher": "justnopoint-test",
+  "engines": { "vscode": "^1.90.0" },
+  "main": "./extension.js",
+  "activationEvents": ["*"],
+  "extensionKind": ["ui"]
+}

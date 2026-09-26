@@ -1,0 +1,58 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "IKEMEN Constants",
+  "scopeName": "source.ikemen-cns",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#sections" },
+    { "include": "#assignments" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon.ikemen-cns",
+          "match": ";.*$"
+        }
+      ]
+    },
+    "sections": {
+      "patterns": [
+        {
+          "name": "meta.section.ikemen-cns",
+          "match": "^\\s*(\\[)([^\\]\\r\\n]+)(\\])",
+          "captures": {
+            "1": { "name": "punctuation.definition.section.ikemen-cns" },
+            "2": { "name": "entity.name.section.ikemen-cns" },
+            "3": { "name": "punctuation.definition.section.ikemen-cns" }
+          }
+        }
+      ]
+    },
+    "assignments": {
+      "patterns": [
+        {
+          "name": "meta.assignment.ikemen-cns",
+          "begin": "^\\s*([A-Za-z_][A-Za-z0-9_.]*)(\\s*=\\s*)",
+          "beginCaptures": {
+            "1": { "name": "variable.other.constant.ikemen-cns" },
+            "2": { "name": "keyword.operator.assignment.ikemen-cns" }
+          },
+          "end": "$",
+          "patterns": [
+            { "include": "#comments" },
+            {
+              "name": "string.quoted.double.ikemen-cns",
+              "begin": "\"",
+              "end": "\""
+            },
+            {
+              "name": "constant.numeric.ikemen-cns",
+              "match": "(?<![A-Za-z0-9_.])[-+]?(?:0[xX][0-9A-Fa-f]+|(?:\\d+\\.?(?:\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?)(?![A-Za-z0-9_.])"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

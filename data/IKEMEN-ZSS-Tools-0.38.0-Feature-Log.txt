@@ -1,0 +1,24 @@
+IKEMEN ZSS Tools 0.38.0
+=======================
+
+Advanced shortcuts and bulk access
+----------------------------------
+- Added compact Advanced-only shortcut bars to SFF, AIR, SND, stage,
+  screenpack/fight UI, and command/movelist workspaces.
+- SFF exposes next-unresolved review, batch axis offset, palettes, and save.
+- AIR exposes batch Clsn2, collision, runtime geometry, and source inspection.
+- SND exposes marked export, split-contract audit, build manifest, and rebuild.
+- Stage and screenpack expose their common navigation, diagnostics, preview,
+  mirroring, and reviewed position operations.
+- Commands expose add, search/filter, reviewed apply, and movelist access.
+- Every shortcut activates an existing control; no alternate mutation or save
+  path was introduced.
+- Learning mode omits the compact bar and retains the guided checklist order.
+
+Verification
+------------
+- Added shared Advanced action-model tests.
+- Added Learning-hidden and Advanced-visible assertions for every workspace.
+- Verified every advertised shortcut target is emitted by its workspace.
+- All 54 extension test files pass.
+- Current extension wording uses only the IKEMEN 1.0 baseline.

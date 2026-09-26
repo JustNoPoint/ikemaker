@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('assert'); const Module = require('module');
+const vscode = { window: {}, workspace: { textDocuments: [] }, commands: {}, ViewColumn: { Active: 1 } };
+const original = Module._load; Module._load = function(request, parent, main) { if (request === 'vscode') return vscode; return original.call(this, request, parent, main); };
+const workspace = require('../src/helper_workspace'); Module._load = original;
+const helper = require('../src/helper_authoring_model'), plan = helper.newHelper(), generated = helper.generateHelper(plan);
+const model = { context: { project: 'Test', character: 'Hero' }, graph: { nodes: [{ uid: 'root', type: 'root', name: 'Root character', children: [] }], flows: [], totals: { helpers: 0, nested: 0, mapInitializers: 0, flows: 0, cleanupSites: 0 } }, plan, generated, flow: helper.normalizeFlow({}), flowCode: helper.flowCode({}), sources: [], roles: helper.ROLES, postypes: helper.POSTYPES, flowScopes: helper.FLOW_SCOPES, flowOperations: helper.FLOW_OPERATIONS, suggestion: { id: 1000, stateNo: 1000, source: 'unused scan' }, defaultsSource: 'Generic IKEMaker starting values', readiness: { status: 'not-applicable', checks: [] }, assets: { air: '', sff: '' } };
+model.dataDomains = helper.DATA_DOMAINS;
+model.builtinScaffolds = helper.BUILTIN_SCAFFOLDS; model.recipes = []; model.editing = null;
+const html = workspace.page(model); assert.match(html, /Create Helper/); assert.match(html, /Helper Tree/); assert.match(html, /Map & Data Flow/); assert.match(html, /Creation maps/); assert.match(html, /LastPlayerID/); assert.match(html, /Insert all at cursor/); assert.match(html, /Insert spawn \+ state/); assert.match(html, /Quick create:/); assert.match(html, />Fireball</); assert.match(html, />Super Fireball</); assert.match(html, />Basic</); assert.match(html, />Advanced</); assert.match(html, /Projectile readiness/); assert.match(html, /Position & Camera/); assert.match(html, /Explod Composer/); assert.match(html, /data-ikemen-launch="training"/); assert.match(html, /Reusable helper starting points/); assert.match(html, /Visual \/ part follower/); assert.match(html, /Update existing controller/); assert.match(html, /Load into editor/);
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map((match) => match[1]); assert(scripts.length); for (const script of scripts) assert.doesNotThrow(() => new Function(script));
+assert.match(html, /amber spawn marker/); assert.match(html, /overSpawn/); assert.match(html, /mode:position\?'position':'pan'/);
+assert.match(html, /Discard recovered work/); assert.match(html, /ikemenNavigationSelection/); assert.match(html, /ikemenPresetCapture/);
+console.log('Helper Lab workspace tests passed');

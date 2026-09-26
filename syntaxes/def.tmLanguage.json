@@ -1,0 +1,17 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "IKEMEN DEF",
+  "scopeName": "source.ikemen-def",
+  "patterns": [
+    { "name": "comment.line.semicolon.ikemen-def", "match": ";.*$" },
+    { "name": "meta.section.ikemen-def", "match": "^(\\s*)(\\[)([^\\]]+)(\\])", "captures": { "2": { "name": "punctuation.definition.section.begin.ikemen-def" }, "3": { "name": "entity.name.section.ikemen-def" }, "4": { "name": "punctuation.definition.section.end.ikemen-def" } } },
+    { "name": "meta.assignment.ikemen-def", "begin": "^(\\s*)([A-Za-z_][A-Za-z0-9_.-]*)(\\s*)(=)", "beginCaptures": { "2": { "name": "variable.other.property.ikemen-def" }, "4": { "name": "keyword.operator.assignment.ikemen-def" } }, "end": "(?=;|$)", "patterns": [
+      { "name": "string.quoted.double.ikemen-def", "begin": "\"", "end": "\"" },
+      { "name": "string.quoted.single.ikemen-def", "begin": "'", "end": "'" },
+      { "name": "constant.numeric.ikemen-def", "match": "(?<![A-Za-z_])[-+]?\\d+(?:\\.\\d+)?" },
+      { "name": "constant.language.boolean.ikemen-def", "match": "(?i)\\b(?:true|false|yes|no)\\b" },
+      { "name": "string.unquoted.path.common.ikemen-def", "match": "(?i)(?:\\.\\.[\\/])?[^;,]*[\\/](?:common|shared|template|universal|external)[\\/][^;,]+" },
+      { "name": "string.unquoted.path.character.ikemen-def", "match": "(?i)[^;,=]+\\.(?:sff|snd|air|cns|zss|cmd|def|lua|ogg|mp3|wav|flac|fnt|ttf|otf|png|pcx|spr)" }
+    ] }
+  ]
+}

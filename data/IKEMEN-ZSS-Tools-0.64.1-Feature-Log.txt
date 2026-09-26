@@ -1,0 +1,14 @@
+IKEMEN ZSS Tools 0.64.1
+Final cohesion and accessibility pass
+
+- Applies a common keyboard-focus treatment to every primary visual workspace.
+- Honors reduced-motion preferences and Windows forced-color/high-contrast mode.
+- Gives unlabeled buttons, fields, canvases, and decorative images safe accessible defaults.
+- Clarifies the screenpack layer toggles, preview selectors, position fields, canvas, and live status text.
+- Adds Throw Creator to the permanent cross-screen cohesion regression gate.
+- Revalidates the combined disposable HDBZ + SF6/Ryu workspace.
+- Full combined scan: 63,501 files; 198 SFF, 53 AIR, 51 SND, and 59 stage files parsed without archive/parser errors.
+- HDBZ/Goku and nested SF6/Ryu game roots both launched responsive infinite mirror sessions.
+- All 113 automated test files pass.
+
+This is a usability stabilization build. It does not alter authored game behavior or silently rewrite project content.

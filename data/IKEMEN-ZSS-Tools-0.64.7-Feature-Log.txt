@@ -1,0 +1,20 @@
+IKEMaker 0.64.7
+
+CHARACTER-SCOPED CODE SYNCHRONIZATION
+
+- Character-owned DEF, ZSS, CNS, CMD, JNP, TXT, Lua, and AIR editors remember
+  the last file displayed for each character in each editor pane.
+- Activating a character visual tab restores that character's remembered code
+  files in neighboring panes.
+- Activating a character code tab brings already-open SFF, AIR, and SND tabs for
+  that same character forward in their viewer panes.
+- When no remembered file exists for a pane, IKEMaker uses the character's DEF as
+  a safe context anchor instead of leaving another character's code visible.
+- Engine data files and shared/template files remain neutral. They are not hidden
+  or replaced merely because a character tab becomes active.
+
+VERIFICATION
+
+- Character ownership, shared-file exemptions, and per-pane memory rules have
+  automated regression coverage.
+- All 115 automated test files pass.

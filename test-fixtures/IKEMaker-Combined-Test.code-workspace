@@ -1,0 +1,31 @@
+{
+  "folders": [
+    {
+      "name": "IKEMaker Combined HDBZ + SF6 Test",
+      "path": "."
+    }
+  ],
+  "settings": {
+    "ikemenZss.sffNamingProfile": "jnp",
+    "ikemenZss.sffNumberingWarnings": false,
+    "ikemenZss.sffAutoSave": false,
+    "ikemenZss.sffCreateBackups": true,
+    "ikemenZss.mutationBackups": true,
+    "ikemenZss.mutationHistory": true,
+    "files.exclude": {
+      "**/.pnpm-store": true,
+      "**/System.Management.Automation.Internal.Host.InternalHost": true,
+      "**/.ikemaker-accidental-copy-quarantine-*": true
+    },
+    "search.exclude": {
+      "**/.pnpm-store/**": true,
+      "**/System.Management.Automation.Internal.Host.InternalHost/**": true,
+      "**/.ikemaker-accidental-copy-quarantine-*/**": true
+    },
+    "files.watcherExclude": {
+      "**/.pnpm-store/**": true,
+      "**/System.Management.Automation.Internal.Host.InternalHost/**": true,
+      "**/.ikemaker-accidental-copy-quarantine-*/**": true
+    }
+  }
+}

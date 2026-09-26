@@ -1,0 +1,187 @@
+<html><head><meta charset="utf-8"/><title>Triggers-(changed)</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers-%28changed%29">Original source (online)</a> · Snapshot 2026-09-13</div><p>The triggers in this page already existed in Mugen, but were adjusted or received new features in Ikemen GO.  </p>
+<p>Refer to the sidebar for quicker navigation.</p>
+<h1 id="changed-trigger-redirections"><a name="redirection">Changed trigger redirections</a></h1>
+<h2 id="helper"><a name="redirection_helper">Helper</a></h2>
+<p>The <code>Helper</code> redirection now also accepts an optional index argument, through the new format <code>Helper(ID, index)</code>. Defaults to 0 (first one).<br/>
+The old formats still work exactly the same.  </p>
+<p>Example:</p>
+<pre><code class="language-ini">trigger1 = NumHelper(1005) &gt;= 2
+trigger1 = Helper(1005, 1), MoveType = A; The second helper with ID 1005
+</code></pre>
+<h2 id="target"><a name="redirection_target">Target</a></h2>
+<p>The <code>Target</code> redirection now also accepts an optional index argument, through the new format <code>Target(ID, index)</code>. Defaults to 0 (first one).<br/>
+The old format still works exactly the same.  </p>
+<p>Example:</p>
+<pre><code class="language-ini">trigger1 = NumTarget &gt;= 2
+trigger1 = Target(-1, 1), Alive; The second target with any ID
+</code></pre>
+<h1 id="changed-triggers"><a name="changed_trigger">Changed triggers</a></h1>
+<h2 id="command"><a name="changed_command">Command</a></h2>
+<p>If a character has <code>ikemenversion</code>, when the <code>Command</code> trigger is redirected to another player, the engine will first check if the other player is performing its own command with the same name. If not, it'll check if it's performing the command from our own command list. Otherwise it will work like Mugen.  </p>
+<h2 id="const"><a name="changed_const">Const</a></h2>
+<p>The Const trigger can now also read Ikemen GO's <a href="https://github.com/ikemen-engine/Ikemen-GO/Character-features/#cns_constants">new constants</a>.</p>
+<h3 id="constconstants"><a name="changed_const_constants">Const(constants)</a></h3>
+<p>Returns the value of one of the player's constants from the <a href="Character-features.html#cns_constants">[Constants]</a> section.</p>
+<pre><code class="language-ini">[Constants]
+FireballState = 1000
+
+[State -1, Fireball]
+triggerall = NumHelper(Const(FireballState)) = 0
+</code></pre>
+<h3 id="datadizzypoints"><a name="changed_const_datadizzypoints">data.dizzypoints</a></h3>
+<p>Returns the value of the player's [Data] <a href="Character-features.html#cns_data_dizzypoints">dizzypoints</a> constant.</p>
+<h3 id="datafalldefence_up"><a name="changed_const_datafalldefenceup">data.fall.defence_up</a></h3>
+<p>Returns the value of the player's [Data] fall.defence_up constant.</p>
+<h3 id="dataguardpoints"><a name="changed_const_dataguardpoints">data.guardpoints</a></h3>
+<p>Returns the value of the player's [Data] <a href="Character-features.html#cns_data_guardpoints">guardpoints</a> constant.</p>
+<h3 id="dataguardsoundchannel"><a name="changed_const_dataguardsoundchannel">data.guardsound.channel</a></h3>
+<p>Returns the value of the player's [Data] <a href="Character-features.html#cns_data_guardsoundchannel">guardsound.channel</a> constant.</p>
+<h3 id="datahitsoundchannel"><a name="changed_const_datahitsoundchannel">data.hitsound.channel</a></h3>
+<p>Returns the value of the player's [Data] <a href="Character-features.html#cns_data_hitsoundchannel">hitsound.channel</a> constant.</p>
+<h3 id="sizeheightcrouch"><a name="changed_const_size_height_crouch">size.height.crouch</a></h3>
+<p>Returns the value of the player's [Size] <a href="Character-features.html#cns_size_height_crouch">height.crouch</a> constant.</p>
+<h3 id="sizeheightairtop"><a name="changed_const_size_height_air_top">size.height.air.top</a></h3>
+<p>Returns the first value of the player's [Size] <a href="Character-features.html#cns_size_height_air">height.air</a> constant.</p>
+<h3 id="sizeheightairbottom"><a name="changed_const_size_height_air_bottom">size.height.air.bottom</a></h3>
+<p>Returns the second value of the player's [Size] <a href="Character-features.html#cns_size_height_air">height.air</a> constant.</p>
+<h3 id="sizeheightdown"><a name="changed_const_size_height_down">size.height.down</a></h3>
+<p>Returns the value of the player's [Size] <a href="Character-features.html#cns_size_height_down">height.down</a> constant.</p>
+<h3 id="velocityairgethitkoadd"><a name="changed_const_velocityairgethitkoadd">velocity.air.gethit.ko.add</a></h3>
+<p>Returns the value of the player's [Velocity] <a href="Character-features.html#cns_velocity_airgethitkoadd">air.gethit.ko.add</a> constant.
+* <code>velocity.air.gethit.ko.add.x</code>
+* <code>velocity.air.gethit.ko.add.y</code>
+* <code>velocity.air.gethit.ko.add.z</code></p>
+<h3 id="velocityairgethitkoymin"><a name="changed_const_velocityairgethitkoymin">velocity.air.gethit.ko.ymin</a></h3>
+<p>Returns the value of the player's [Velocity] <a href="Character-features.html#cns_velocity_airgethitkoymin">air.gethit.ko.ymin</a> constant.</p>
+<h3 id="velocitygroundgethitkoxmul"><a name="changed_const_velocitygroundgethitkoxmul">velocity.ground.gethit.ko.xmul</a></h3>
+<p>Returns the value of the player's [Velocity] <a href="Character-features.html#cns_velocity_groundgethitkoxmul">ground.gethit.ko.xmul</a> constant.</p>
+<h3 id="velocitygroundgethitkoadd"><a name="changed_const_velocitygroundgethitkoadd">velocity.ground.gethit.ko.add</a></h3>
+<p>Returns the value of the player's [Velocity] <a href="Character-features.html#cns_velocity_groundgethitkoadd">ground.gethit.ko.add</a> constant.
+* <code>velocity.ground.gethit.ko.add.x</code>
+* <code>velocity.ground.gethit.ko.add.y</code>
+* <code>velocity.ground.gethit.ko.add.z</code></p>
+<h3 id="velocitygroundgethitkoymin"><a name="changed_const_velocitygroundgethitkoymin">velocity.ground.gethit.ko.ymin</a></h3>
+<p>Returns the value of the player's [Velocity] <a href="Character-features.html#cns_velocity_groundgethitkoymin">ground.gethit.ko.ymin</a> constant.</p>
+<h2 id="gameheight"><a name="changed_gameheight">GameHeight</a></h2>
+<p>If mugenVersion is specified as 1.0 in character's <a href="Character-features.html#def_info">[Info]</a> section, GameHeight returns the same value as ScreenHeight.</p>
+<h2 id="gamewidth"><a name="changed_gamewidth">GameWidth</a></h2>
+<p>If mugenVersion is specified as 1.0 in character's <a href="Character-features.html#def_info">[Info]</a> section, GameWidth returns the same value as ScreenWidth.</p>
+<h2 id="gethitvar"><a name="changed_gethitvar">GetHitVar</a></h2>
+<h3 id="airvelocityx-y-z"><a name="changed_gethitvar_air_velocity_x">air.velocity.x (y, z)</a></h3>
+<p>Returns the X, Y or Z component of the last HitDef's <code>air.velocity</code> parameter, even if the player was not hit in the air. (float)</p>
+<h3 id="airguardvelocityx-y-z"><a name="changed_gethitvar_airguard_velocity_x">airguard.velocity.x (y, z)</a></h3>
+<p>Returns the X, Y or Z component of the last HitDef's <code>airguard.velocity</code> parameter, even if the player did not guard in the air. (float)</p>
+<h3 id="airanimtype-fallanimtype-groundanimtype"><a name="changed_gethitvar_animtype">air.animtype, fall.animtype, ground.animtype</a></h3>
+<p>Returns the literal value specified in the HitDef.</p>
+<h3 id="attr"><a name="changed_gethitvar_attr">attr</a></h3>
+<p>Returns the last HitDef <code>attr</code> assignment. Requires a comparison to known flags. (string)  </p>
+<pre><code class="language-ini">trigger1 = getHitVar(attr) = SCA, HA
+</code></pre>
+<h3 id="dizzypoints"><a name="changed_gethitvar_dizzypoints">dizzypoints</a></h3>
+<p>Returns last HitDef <code>dizzypoints</code> value. (int)</p>
+<h3 id="downvelocityx-y-z"><a name="changed_gethitvar_down_velocity_x">down.velocity.x (y, z)</a></h3>
+<p>Returns the X, Y or Z component of the last HitDef's <code>down.velocity</code> parameter, even if the player was not hit while down. (float)</p>
+<h3 id="facing"><a name="changed_gethitvar_facing">facing</a></h3>
+<p>Returns last HitDef <code>p2facing</code> value. (int)</p>
+<h3 id="fallenvshakemul"><a name="changed_gethitvar_fallenvshakemul">fall.envshake.mul</a></h3>
+<p>Returns last HitDef <code>fall.envshake.mul</code> value. (float)</p>
+<h3 id="fallzvel"><a name="changed_gethitvar_fall_zvel">fall.zvel</a></h3>
+<p>Returns z velocity after bouncing off ground (float)</p>
+<h3 id="frame"><a name="changed_gethitvar_frame">frame</a></h3>
+<p>Returns true only during the same frame where the player got hit by an attack. (bool)</p>
+<h3 id="groundvelocityx-y-z"><a name="changed_gethitvar_ground_velocity_x">ground.velocity.x (y, z)</a></h3>
+<p>Returns the X, Y or Z component of the last HitDef's <code>ground.velocity</code> parameter, even if the player was not hit on the ground. (float)</p>
+<h3 id="guardvelocityx-y-z"><a name="changed_gethitvar_guard_velocity_x">guard.velocity.x (y, z)</a></h3>
+<p>Returns the X, Y or Z component of the last HitDef's <code>guard.velocity</code> parameter, even if the player did not guard on the ground. (float)  </p>
+<h3 id="guardpoints"><a name="changed_gethitvar_guardpoints">guardpoints</a></h3>
+<p>Returns last HitDef <code>guardpoints</code> value. (int)</p>
+<h3 id="guardcount"><a name="changed_gethitvar_guardcount">guardcount</a></h3>
+<p>Returns how many hits the player has guarded without a chance to fight back. (int)</p>
+<h3 id="guarddamage"><a name="changed_gethitvar_guarddamage">guarddamage</a></h3>
+<p>Returns the second value of the last HitDef's <code>damage</code> parameter. (int)</p>
+<h3 id="guardflag"><a name="changed_gethitvar_guardflag">guardflag</a></h3>
+<p>Returns the <code>guardflag</code> parameter of the last HitDef that hit the player. Requires a comparison to known flags. (string)  </p>
+<pre><code class="language-ini">trigger1 = getHitVar(guardflag) = L
+</code></pre>
+<h3 id="guardko"><a name="changed_gethitvar_guardko">guardko</a></h3>
+<p>Returns 1 if the player was KO'd by guard damage. (bool)</p>
+<h3 id="guardpower"><a name="changed_gethitvar_guardpower">guardpower</a></h3>
+<p>Returns the second value of the last HitDef's <code>givepower</code> parameter. In other words, the power received when guarding. (int)</p>
+<h3 id="hitflag"><a name="changed_gethitvar_hitflag">hitflag</a></h3>
+<p>Returns the <code>hitflag</code> parameter of the last HitDef that hit the player. Requires a comparison to known flags. (string)  </p>
+<pre><code class="language-ini">trigger1 = getHitVar(hitflag) = MA
+</code></pre>
+<h3 id="hitpower"><a name="changed_gethitvar_hitpower">hitpower</a></h3>
+<p>Returns the first value of the last HitDef's <code>givepower</code> parameter. In other words, the power received when getting hit. (int)</p>
+<h3 id="hitdamage"><a name="changed_gethitvar_hitdamage">hitdamage</a></h3>
+<p>Returns the first value of the last HitDef's <code>damage</code> parameter. (int)</p>
+<h3 id="kill"><a name="changed_gethitvar_kill">kill</a></h3>
+<p>Returns the kill flag of the last hit or LifeAdd the character suffered. (int)</p>
+<h3 id="playerid"><a name="changed_gethitvar_playerid">playerid</a></h3>
+<p>Returns the ID of the last character that hit the player. (int)<br/>
+Note: Up until Ikemen GO version 0.99, this trigger used <code>ID</code> syntax instead of <code>playerID</code>. That syntax is still valid, but it's deprecated.  </p>
+<h3 id="playerno"><a name="changed_gethitvar_playerno">playerno</a></h3>
+<p>Returns the <a href="Triggers-%28new%29.html#new_playerno">PlayerNo</a> of the last character that hit the player. (int)</p>
+<h3 id="power"><a name="changed_gethitvar_power">power</a></h3>
+<p>Returns how much power the player received from the last hit, regardless of getting hit or guarding. (int)</p>
+<h3 id="priority"><a name="changed_gethitvar_priority">priority</a></h3>
+<p>Returns the numerical value of the attack priority of the last HitDef. (int)</p>
+<h3 id="projid"><a name="changed_gethitvar_projid">projid</a></h3>
+<p>Returns the <code>projID</code> of the last projectile that hit the player. Returns -1 if not hit by a projectile. (int)</p>
+<h3 id="redlife"><a name="changed_gethitvar_redlife">redlife</a></h3>
+<p>Returns last HitDef <code>redlife</code> value. (int)</p>
+<h3 id="score"><a name="changed_gethitvar_score">score</a></h3>
+<p>Returns last HitDef <code>score</code> value. (float)</p>
+<h3 id="teamside"><a name="changed_gethitvar_teamside">teamside</a></h3>
+<p>Returns the <code>teamside</code> of the last HitDef that hit the player. (int)</p>
+<h3 id="type"><a name="changed_gethitvar_type">type</a></h3>
+<p>Returns the value of either groundtype or airtype, depending on the character's StateType upon being hit. Such a trigger was documented in Mugen but did not work.</p>
+<h3 id="xaccel"><a name="changed_gethitvar_xaccel">xaccel</a></h3>
+<p>Returns the X acceleration set by the hit. (float)<br/>
+NOTE: Currently, this parameter will only work if the character does not override the <code>common1.cns.zss</code> states that use it.  </p>
+<h3 id="xveladd"><a name="changed_gethitvar_xveladd">xveladd</a></h3>
+<p>This trigger was dummied out in Mugen, always returning 0. In Ikemen, it works as documented.</p>
+<h3 id="yveladd"><a name="changed_gethitvar_yveladd">yveladd</a></h3>
+<p>This trigger was dummied out in Mugen, always returning 0. In Ikemen, it works as documented.</p>
+<h3 id="zaccel"><a name="changed_gethitvar_zaccel">zaccel</a></h3>
+<p>Returns the Z acceleration set by the hit. (float)<br/>
+NOTE: Currently, this parameter will only work if the character does not override the <code>common1.cns.zss</code> states that use it.  </p>
+<h3 id="zvel"><a name="changed_gethitvar_zvel">zvel</a></h3>
+<p>Returns the fixed z-velocity imparted by hit. (float)</p>
+<h3 id="zoff"><a name="changed_gethitvar_zoff">zoff</a></h3>
+<p>"Snap" z offset when hit.</p>
+<h2 id="ishelper"><a name="changed_ishelper">IsHelper</a></h2>
+<p>The <code>IsHelper</code> trigger now also accepts an optional index argument, through the new format <code>IsHelper(ID, index)</code>. Defaults to -1 (any index).<br/>
+The old formats still work exactly the same.  </p>
+<p>Example:</p>
+<pre><code class="language-ini">trigger1 = IsHelper(123, 2); Is the third helper with ID 123
+</code></pre>
+<h2 id="p2bodydist"><a name="changed_p2bodydist">P2BodyDist</a></h2>
+<h3 id="y"><a name="changed_p2bodydist_y">Y</a></h3>
+<p>In Mugen, this trigger merely does the same as <code>P2Dist Y</code>. If a character has <code>ikemenversion</code>, it will instead return the distance between the size boxes of the two players.</p>
+<h3 id="z"><a name="changed_p2bodydist_y">Z</a></h3>
+<p>P2BodyDist now also accepts a Z argument. When there is overlap between the players' Z width, it returns 0, otherwise returns the distance between their theoretical width boxes.  </p>
+<h2 id="p2dist-z"><a name="changed_p2dist_z">P2Dist Z</a></h2>
+<p>The <code>P2Dist</code> trigger now also accepts a <code>Z</code> argument. Returns the distance between the players in the Z axis.</p>
+<h2 id="parentdist-z"><a name="changed_parentdist_z">ParentDist Z</a></h2>
+<p>The <code>ParentDist</code> trigger now also accepts a <code>Z</code> argument. Returns the distance between the helper and its parent in the Z axis.</p>
+<h2 id="rootdist-z"><a name="changed_rootdist_z">RootDist Z</a></h2>
+<p>The <code>RootDist</code> trigger now also accepts a <code>Z</code> argument. Returns the distance between the helper and its root in the Z axis.</p>
+<h2 id="roundstate"><a name="changed_roundstate">RoundState</a></h2>
+<p>The <code>RoundState</code> trigger no longer returns 2 during the "Fight!" screen, before players have control, returning 1 instead.<br/>
+<code>RoundState = 2</code> is generally understood and documented as the main part of the fight, so this oddity only caused trouble in Mugen.  </p>
+<h2 id="stagevar"><a name="changed_stagevar">StageVar</a></h2>
+<p>StageVar now accepts all stage parameters that <a href="State-controllers-%28new%29.html#new_modifystagevar">ModifyStageVar</a> state controller can change. In addition it accepts the following parameters:</p>
+<blockquote>
+<p>info.ikemenversion.major = <em>major version component</em> (int)<br/>
+info.ikemenversion.minor = <em>minor version component</em> (int)<br/>
+info.ikemenversion.patch = <em>patch version component</em> (int)<br/>
+info.mugenversion.major = <em>major version component</em> (int)<br/>
+info.mugenversion.minor = <em>minor version component</em> (int)<br/>
+stageinfo.localcoord.x = <em>width</em> (int)<br/>
+stageinfo.localcoord.y = <em>height</em> (int)  </p>
+</blockquote>
+<h2 id="teammode"><a name="changed_teammode">TeamMode</a></h2>
+<p>TeamMode can now also return <code>Tag</code> when that mode is selected.</p>
+<pre><code class="language-ini">trigger1 = TeamMode = Tag
+</code></pre></body></html>

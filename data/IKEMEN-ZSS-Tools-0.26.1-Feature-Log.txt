@@ -1,0 +1,18 @@
+IKEMEN ZSS Tools 0.26.1
+=======================
+
+Visual code documentation
+- Replaced the visual structure workspace's Offline Docs button with separate
+  online Docs and official IKEMEN Wiki buttons.
+- Added a controller-specific documentation panel beneath What Is This?.
+- Controller documentation is collapsed by default.
+- Documented controller options used by the selected source block are
+  highlighted in green and marked with a check.
+- Used options not found in the current catalog are highlighted for review.
+- Added a controller-specific link to its merged documentation section.
+- External links use a fixed allowlist; webview messages cannot open arbitrary
+  URLs.
+
+Validation
+- Added visual workspace tests for HitDef option recognition, controller docs,
+  online buttons, and removal of the old Offline Docs button.

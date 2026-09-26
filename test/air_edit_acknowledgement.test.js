@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');const {createTracker}=require('../src/edit_request_tracker');
+const source=fs.readFileSync(path.join(__dirname,'../src/air_viewer.js'),'utf8'),handler=source.split(/\r?\n/).find(line=>line.includes("window.addEventListener('message',e=>{const m=e.data;"));let receive,renders=0;
+const status={},error={},tracker=createTracker(),box={kind:'clsn1',boxes:[[0,0,10,10]],dirty:true};
+const env={window:{addEventListener:(type,fn)=>receive=fn},document:{getElementById:id=>id==='error'?error:status},canvas:{classList:{remove(){}}},edit:box,editDrag:null,editRequests:tracker,boxEditMessage:()=>env.edit?{kind:env.edit.kind,boxes:env.edit.boxes}:null,renderBoxEditor:()=>renders++,draw(){}};vm.createContext(env);vm.runInContext(handler.trim(),env);
+let id=tracker.begin(env.edit,env.boxEditMessage());assert.equal(tracker.begin(env.edit,env.boxEditMessage()),null,'duplicate Apply is blocked');env.edit.boxes[0][2]=20;receive({data:{type:'collisionApplied',editRequestId:id}});assert.equal(env.edit,box);assert(status.textContent.includes('Newer'));assert(!tracker.busy());
+id=tracker.begin(env.edit,env.boxEditMessage());receive({data:{type:'collisionApplied',editRequestId:id-1}});assert(tracker.busy(),'stale response cannot finish the current request');receive({data:{type:'collisionApplied',editRequestId:id}});assert.equal(env.edit,null,'unchanged submitted edit clears');
+env.edit={kind:'size',boxes:[[0,0,5,5]],dirty:true};id=tracker.begin(env.edit,env.boxEditMessage());receive({data:{type:'error',editRequestId:id,message:'Rejected'}});assert(env.edit);assert(!tracker.busy());assert.equal(error.textContent,'Rejected');
+id=tracker.begin(env.edit,env.boxEditMessage());receive({data:{type:'editCancelled',editRequestId:id}});assert(env.edit);assert(!tracker.busy());
+id=tracker.begin(env.edit,env.boxEditMessage());const replacement={...env.edit,boxes:[[0,0,5,5]]};env.edit=replacement;receive({data:{type:'pushApplied',editRequestId:id}});assert.equal(env.edit,replacement,'a replacement draft with matching values must remain');
+assert(renders>=5);console.log('Actual AIR response handler preserves newer/replacement edits, rejects stale responses, blocks duplicate Apply, and retains cancelled/failed drafts');

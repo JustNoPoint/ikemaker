@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('assert'),model=require('../src/workspace_setup'),pkg=require('../package.json');
+const stored={},storage={get:(key,fallback)=>stored[key]??fallback,update:async(key,value)=>{stored[key]=value;}};
+(async()=>{const setups=new model.WorkspaceSetups(storage);assert.deepEqual(setups.read('game'),{configured:false,scope:'full-game',collaboration:'solo',showAll:false,pins:[]},'existing projects remain unfiltered until explicitly configured');
+ await setups.set('game',{scope:'character',collaboration:'solo'});const character=setups.read('game');assert(model.visible('ikemen.character.open',character));assert(!model.visible('ikemen.stage.openWorkspace',character));assert(model.visible('ikemen.help.open',character));assert(!model.controlVisible('team-assignment',character));assert(model.controlVisible('issue-reporting',character));assert(model.controlVisible('personal-tasks',character));
+ await setups.pin('game','ikemen.stage.openWorkspace');assert(model.visible('ikemen.stage.openWorkspace',setups.read('game')));await setups.showAll('game');assert(model.visible('ikemen.ui.openWorkspace',setups.read('game')));assert(model.controlVisible('team-handoff',setups.read('game')));
+ await setups.set('other',{scope:'ui',collaboration:'team'});assert.equal(setups.read('game').scope,'character','setup is isolated per project');assert(model.visible('ikemen.ui.openWorkspace',setups.read('other')));assert(model.controlVisible('team-review',setups.read('other')));
+ for(const item of model.mapping.screenMap){assert(item.scopes.length&&item.collaboration.length,item.screen+' is not classified');}
+ for(const scope of model.SCOPES)for(const collaboration of model.COLLABORATION){const setup={configured:true,scope,collaboration};assert(model.visible('ikemen.help.open',setup));assert.equal(model.controlVisible('team-assignment',setup),collaboration==='team');assert(model.controlVisible('personal-tasks',setup));}
+ for(const command of pkg.contributes.commands.map(item=>item.command)){assert(['shared','full-game','character','stage','ui'].includes(model.classify(command)),command+' lacks a deterministic workspace classification');}
+ console.log('Workspace setup model preserves legacy projects, isolates projects, supports scope/collaboration, Show All Tools and pins');})().catch(error=>{console.error(error);process.exitCode=1;});

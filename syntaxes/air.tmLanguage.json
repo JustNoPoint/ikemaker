@@ -1,0 +1,54 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "IKEMEN AIR",
+  "scopeName": "source.ikemen-air",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#actions" },
+    { "include": "#collision-boxes" },
+    { "include": "#numbers" }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon.ikemen-air",
+          "match": ";.*$"
+        }
+      ]
+    },
+    "actions": {
+      "patterns": [
+        {
+          "name": "meta.action.ikemen-air",
+          "match": "(?i)(\\[\\s*Begin\\s+Action\\s+)(-?\\d+)(\\s*\\])",
+          "captures": {
+            "1": { "name": "keyword.control.action.begin.ikemen-air" },
+            "2": { "name": "entity.name.section.action.ikemen-air" },
+            "3": { "name": "keyword.control.action.end.ikemen-air" }
+          }
+        }
+      ]
+    },
+    "collision-boxes": {
+      "patterns": [
+        {
+          "name": "support.type.hitbox.clsn1.ikemen-air",
+          "match": "(?i)\\bClsn1(?:Default|\\s*\\[\\s*\\d+\\s*\\])?"
+        },
+        {
+          "name": "support.type.hurtbox.clsn2.ikemen-air",
+          "match": "(?i)\\bClsn2(?:Default|\\s*\\[\\s*\\d+\\s*\\])?"
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [
+        {
+          "name": "constant.numeric.ikemen-air",
+          "match": "(?<![A-Za-z_])[-+]?(?:\\d+\\.?(?:\\d*)?|\\.\\d+)(?![A-Za-z_])"
+        }
+      ]
+    }
+  }
+}

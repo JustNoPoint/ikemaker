@@ -1,0 +1,24 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'ikemaker-save-controls-'));
+const settings={'files.autoSave':'onFocusChange'},messages=[],updates=[];let destination,change,dispose;
+const vscode={Uri:{file:fsPath=>({fsPath,scheme:'file'})},ConfigurationTarget:{Global:1,Workspace:2,WorkspaceFolder:3},workspace:{getConfiguration(section){return {get:(key,fallback)=>settings[section+'.'+key]??fallback,inspect:()=>({}),async update(key,value,target){updates.push({section,key,value,target});settings[section+'.'+key]=value;}};},onDidChangeConfiguration(fn){change=fn;return {dispose(){}};}},window:{showSaveDialog:async()=>destination,showOpenDialog:async()=>undefined,showInformationMessage:async text=>messages.push(text),showErrorMessage:async text=>messages.push(text)},commands:{registerCommand:()=>({dispose(){}})}};
+const original=Module._load;Module._load=function(name,...args){return name==='vscode'?vscode:original.call(this,name,...args);};
+(async()=>{try{
+ const controls=require('../src/save_controls');assert.strictEqual(controls.enabled(),false);
+ controls.register({subscriptions:[]});
+ const panel={webview:{postMessage:async m=>messages.push(m)},onDidDispose(fn){dispose=fn;}};
+ await controls.handle({type:'viewerToolbarReady'},null,panel);
+ await controls.toggle();assert.strictEqual(settings['ikemenZss.autoSave'],true);assert.strictEqual(settings['files.autoSave'],'onFocusChange');assert.strictEqual(messages.at(-1).enabled,true);
+ await controls.toggle();assert.strictEqual(settings['files.autoSave'],'onFocusChange');assert(!updates.some(update=>update.section==='files'),'Asset autosave must not change text-editor autosave');assert.strictEqual(messages.at(-1).textAutoSave,'onFocusChange');assert.strictEqual(messages.at(-1).enabled,false);
+ settings['files.autoSave']='off';change({affectsConfiguration:name=>name==='files.autoSave'});await Promise.resolve();assert.strictEqual(messages.at(-1).textAutoSave,'off','Native setting changes must update the displayed effective state');
+ const file=path.join(root,'asset.sff');fs.writeFileSync(file,Buffer.from([0,1,255,128]));
+ await controls.makeBackup(file);assert.deepStrictEqual(fs.readdirSync(root),['asset.sff'],'Cancellation creates nothing');
+ destination=vscode.Uri.file(file+'.bak');await controls.makeBackup(file);assert.deepStrictEqual(fs.readFileSync(destination.fsPath),fs.readFileSync(file));
+ fs.writeFileSync(file,'changed');await assert.rejects(controls.makeBackup(file),/exist/i);assert.deepStrictEqual(fs.readFileSync(destination.fsPath),Buffer.from([0,1,255,128]));
+ destination=vscode.Uri.file(file);await assert.rejects(controls.makeBackup(file),/different filename/);assert.strictEqual(fs.readFileSync(file,'utf8'),'changed');
+ dispose();let before=messages.length;await controls.toggle();assert.strictEqual(messages.length,before,'Disposed panels receive no updates');
+ const policy=require('../src/mutation_safety');policy.transactionalWrite(fs,file,'next',{backup:true});assert(!fs.existsSync(path.join(root,'.ikemen-tools')),'Legacy backup requests create neither backups nor default history');
+ const shared=require('../src/launch_controls');assert(shared.launchControlsHtml('sff').includes('Make Backup'));assert.doesNotThrow(()=>new Function(shared.launchControlsClientScript()));
+ console.log('Save controls: defaults, live toggle, cancellation, byte-exact backup, collision protection, disposal and no automatic backup passed');
+}finally{Module._load=original;fs.rmSync(root,{recursive:true,force:true});}})().catch(error=>{console.error(error);process.exitCode=1;});

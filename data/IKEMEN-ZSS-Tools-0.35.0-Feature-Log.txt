@@ -1,0 +1,25 @@
+IKEMEN ZSS Tools 0.35.0
+=======================
+
+Learning and Advanced workspaces
+--------------------------------
+- Added one tested workspace-experience model for SFF, AIR, SND, palettes,
+  stages, screenpacks/fight UI, and command/movelist authoring.
+- Major visual workspaces now show the active domain experience.
+- Learning mode opens contextual `What am I editing?` guidance by default.
+- Advanced mode keeps the same guidance available but collapsed.
+- The two modes use the same files, operations, validation, and save safety.
+- Palette guidance follows the asset experience inside the SFF workspace.
+
+Documentation
+-------------
+- Added the domain-by-domain Learning and Advanced coverage audit.
+- Documented product rules, current gaps, implementation order, and the final
+  acceptance standard.
+- Current extension wording uses the single IKEMEN 1.0 baseline.
+
+Verification
+------------
+- Added rendering checks for Learning and Advanced AIR, SFF, SND, stage,
+  screenpack/fight UI, and command/movelist workspaces.
+- All 53 extension test files pass.

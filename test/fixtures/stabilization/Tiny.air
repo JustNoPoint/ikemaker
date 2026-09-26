@@ -1,0 +1,7 @@
+[Begin Action 0]
+0,0, 0,0, 1
+
+[Begin Action 200]
+200,0, 0,0, 2
+Clsn1: 1
+  Clsn1[0] = -2,-2,2,2

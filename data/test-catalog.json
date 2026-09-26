@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "profiles": [
+    { "id": "default", "name": "Default / Universal", "description": "Portable IKEMEN tests only." },
+    { "id": "sf6", "name": "SF6", "description": "Universal tests plus explicitly authored SF6 tests." },
+    { "id": "dsvssf", "name": "Darkstalkers vs Street Fighter", "description": "Universal tests plus DSvsSF tests." },
+    { "id": "ds4", "name": "Darkstalkers 4", "description": "Universal tests plus DS4 tests." },
+    { "id": "hdbz", "name": "Hyper Dragon Ball Z", "description": "Universal tests plus HDBZ tests." }
+  ],
+  "suites": [
+    {
+      "id": "universal-contact-baseline",
+      "name": "Universal Contact Baseline",
+      "scope": { "kind": "universal-engine", "value": "ikemen-1.0" },
+      "tests": [
+        { "id": "normal-hit", "name": "Normal hit", "instruction": "Land the move once on a standing opponent and let the move finish.", "evidenceMask": 1 },
+        { "id": "guard", "name": "Guard", "instruction": "Have the opponent block the move once and let the move finish.", "evidenceMask": 2 },
+        { "id": "air-hit", "name": "Air hit", "instruction": "Hit an airborne opponent and review the reaction, spark, velocity, and recovery.", "evidenceMask": 32 },
+        { "id": "corner", "name": "Corner interaction", "instruction": "Hit or guard the move with the opponent fully against the stage wall.", "evidenceMask": 16 }
+      ]
+    },
+    {
+      "id": "sf6-slp-baseline",
+      "name": "SF6 sLP Baseline",
+      "scope": { "kind": "game-profile", "value": "sf6" },
+      "tags": ["Ryu", "sLP", "baseline-v1"],
+      "tests": [
+        { "id": "raw-standing", "name": "Raw standing hit", "instruction": "Hit a standing P2 once with a raw sLP, then let the move finish.", "evidenceMask": 769 },
+        { "id": "standing-guard", "name": "Standing guard", "instruction": "Have standing P2 block one sLP, then let the move finish.", "evidenceMask": 1026 },
+        { "id": "counter-hit", "name": "Counter Hit", "instruction": "Choose Counter Hit in player-facing Hit & Counter Settings, then hit interruptible startup.", "evidenceMask": 4 },
+        { "id": "punish-counter", "name": "Punish Counter", "instruction": "Choose Punish Counter in player-facing Hit & Counter Settings, then hit punishable recovery.", "evidenceMask": 8 },
+        { "id": "corner-recoil", "name": "Corner recoil", "instruction": "Hit or guard sLP with P2 fully against the stage wall.", "evidenceMask": 16 },
+        { "id": "air-hit", "name": "Air hit", "instruction": "Hit an airborne P2 with sLP.", "evidenceMask": 32 },
+        { "id": "armor-absorb", "name": "Armor absorption", "instruction": "Enable one-hit armor on P2 and let it absorb sLP.", "evidenceMask": 2048 },
+        { "id": "armor-break", "name": "Armor Break", "instruction": "Enable armor on P2 and hit it with sLP armor-break enabled.", "evidenceMask": 4096 }
+      ]
+    }
+  ],
+  "diagnostics": [
+    { "id": "clsn", "name": "Toggle collision boxes", "function": "toggleClsnDisplay", "help": "Shows or hides collision boxes for all visible actors." },
+    { "id": "debug-next", "name": "Next player or helper debug", "function": "toggleDebugDisplay", "args": [null, false], "help": "Cycles the selected root/helper native debug readout." },
+    { "id": "debug-clsn", "name": "Next debug target + CLSN", "function": "toggleDebugDisplay", "args": [null, true], "help": "Cycles the native debug target and includes its collision boxes." },
+    { "id": "debug-all", "name": "Toggle all-player debug", "function": "toggleDebugDisplay", "args": [true, null], "help": "Shows or hides native debug information for all players." },
+    { "id": "wireframe", "name": "Toggle wireframe", "function": "toggleWireframeDisplay", "help": "Shows the engine wireframe display." },
+    { "id": "lifebar", "name": "Toggle lifebar", "function": "toggleLifebarDisplay", "help": "Shows or hides the fight UI without changing the motif files." },
+    { "id": "vsync", "name": "Toggle VSync", "function": "toggleVSync", "help": "Changes the native VSync debug state for this run." },
+    { "id": "speed-cycle", "name": "Cycle game speed", "function": "changeSpeed", "help": "Cycles the native debug speed presets." },
+    { "id": "speed-up", "name": "Increase speed by 0.01", "function": "changeSpeed", "args": [0.01], "help": "Fine speed adjustment." },
+    { "id": "speed-down", "name": "Decrease speed by 0.01", "function": "changeSpeed", "args": [-0.01], "help": "Fine speed adjustment." },
+    { "id": "pause", "name": "Pause / resume", "function": "togglePause", "help": "Uses IKEMEN's native pause authority." },
+    { "id": "step", "name": "Advance one frame", "function": "frameStep", "help": "Advances one frame while paused." },
+    { "id": "kill-p2", "name": "KO P2 team", "function": "killP2", "help": "Sets the active P2 team to KO through IKEMEN's native debug authority." },
+    { "id": "kill-p1", "name": "KO P1 team", "function": "killP1", "help": "Sets the active P1 team to KO through IKEMEN's native debug authority." },
+    { "id": "life-one-all", "name": "Set all life to 1", "function": "lifeOneAll", "help": "Sets every active player to one life for KO-flow testing." },
+    { "id": "power-max", "name": "Fill P1 and P2 power", "function": "powerMax", "help": "Fills both teams' native power meters." },
+    { "id": "max-power-mode", "name": "Toggle maximum-power mode", "function": "toggleMaxPowerMode", "help": "Toggles the engine's continuous maximum-power debug mode." },
+    { "id": "reset", "name": "Reset training", "function": "trainingReset", "help": "Resets the current training situation." },
+    { "id": "reload", "name": "Reload files", "function": "reload", "help": "Reloads game content for rapid iteration." },
+    { "id": "time-zero", "name": "Set timer to zero", "function": "timeZero", "help": "Triggers native time-over flow for round and UI testing." },
+    { "id": "save-state", "name": "Save state", "function": "saveState", "help": "Stores the engine-owned battle snapshot." },
+    { "id": "load-state", "name": "Load state", "function": "loadState", "help": "Restores the engine-owned battle snapshot." },
+    { "id": "clear-console", "name": "Clear console", "function": "clearConsole", "help": "Clears the native console output." },
+    { "id": "force-standing", "name": "Force all standing", "function": "standAll", "help": "Forces active roots into standing state for setup. This is not hit classification." },
+    { "id": "full-restore", "name": "Full restore", "function": "fullRestore", "help": "Restores life and power for active players and resets the timer." },
+    { "id": "ai-1", "name": "Toggle P1 AI", "function": "toggleAI", "args": [1], "help": "Toggles native AI control for player 1." },
+    { "id": "ai-2", "name": "Toggle P2 AI", "function": "toggleAI", "args": [2], "help": "Toggles native AI control for player 2." },
+    { "id": "ai-3", "name": "Toggle P3 AI", "function": "toggleAI", "args": [3], "help": "Toggles native AI control for player 3." },
+    { "id": "ai-4", "name": "Toggle P4 AI", "function": "toggleAI", "args": [4], "help": "Toggles native AI control for player 4." },
+    { "id": "ai-5", "name": "Toggle P5 AI", "function": "toggleAI", "args": [5], "help": "Toggles native AI control for player 5." },
+    { "id": "ai-6", "name": "Toggle P6 AI", "function": "toggleAI", "args": [6], "help": "Toggles native AI control for player 6." },
+    { "id": "ai-7", "name": "Toggle P7 AI", "function": "toggleAI", "args": [7], "help": "Toggles native AI control for player 7." },
+    { "id": "ai-8", "name": "Toggle P8 AI", "function": "toggleAI", "args": [8], "help": "Toggles native AI control for player 8." },
+    { "id": "player-1", "name": "Toggle P1 player display", "function": "togglePlayer", "args": [1], "help": "Toggles native player rendering for player 1." },
+    { "id": "player-2", "name": "Toggle P2 player display", "function": "togglePlayer", "args": [2], "help": "Toggles native player rendering for player 2." },
+    { "id": "player-3", "name": "Toggle P3 player display", "function": "togglePlayer", "args": [3], "help": "Toggles native player rendering for player 3." },
+    { "id": "player-4", "name": "Toggle P4 player display", "function": "togglePlayer", "args": [4], "help": "Toggles native player rendering for player 4." },
+    { "id": "player-5", "name": "Toggle P5 player display", "function": "togglePlayer", "args": [5], "help": "Toggles native player rendering for player 5." },
+    { "id": "player-6", "name": "Toggle P6 player display", "function": "togglePlayer", "args": [6], "help": "Toggles native player rendering for player 6." },
+    { "id": "player-7", "name": "Toggle P7 player display", "function": "togglePlayer", "args": [7], "help": "Toggles native player rendering for player 7." },
+    { "id": "player-8", "name": "Toggle P8 player display", "function": "togglePlayer", "args": [8], "help": "Toggles native player rendering for player 8." },
+    { "id": "player-9", "name": "Toggle P9 player display", "function": "togglePlayer", "args": [9], "help": "Toggles native player rendering for player 9 when present." }
+  ]
+}

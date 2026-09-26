@@ -1,0 +1,15 @@
+IKEMaker 0.64.14
+=================
+
+Viewer control cleanup
+----------------------
+- Removed the obsolete AIR Legacy background toggle and its dead Grid BG / Solid BG handler.
+- The active Grid control remains responsible for grid visibility.
+- The Proof selector remains the single background-color and transparency-inspection control.
+- Reviewed visual-workspace buttons for hidden legacy controls and same-screen duplication. Other repeated labels belong to generated markup transforms or intentional navigation in separate sections.
+
+Regression protection
+---------------------
+- Added a viewer control-hygiene test that rejects hidden test buttons and obsolete/deprecated viewer buttons.
+- AIR-specific tests verify that the removed control and handler are absent.
+- All 122 automated test files pass.

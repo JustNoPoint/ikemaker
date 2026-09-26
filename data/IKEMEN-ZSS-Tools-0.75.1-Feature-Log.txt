@@ -1,0 +1,13 @@
+IKEMaker 0.75.1
+
+HTML/hex palette-index editing
+
+- Adds a six-digit HTML/Hex field to the existing SFF palette index editor.
+- Accepts values with or without the leading #, such as #ff00ff or ff00ff.
+- Updates red, green, and blue together while retaining the selected index's existing alpha.
+- Double-clicking a palette swatch selects the index and focuses the HTML/Hex field.
+- F2 provides the same action for keyboard users.
+- Invalid or incomplete hex values are rejected with an inline validation message.
+- Changes remain preview-only until Save Color Edits is confirmed.
+- Existing backup, recovery history, protected palette 1,0, and master-index safeguards remain unchanged.
+- This is strictly an index-color convenience; no painting or general image-editing functionality was added.

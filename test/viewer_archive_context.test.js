@@ -1,0 +1,21 @@
+'use strict';
+const assert=require('assert');
+const {createStore}=require('../src/viewer_archive_context');
+(async()=>{
+  let data={},configured=true,fail=false;
+  const storage={get:()=>JSON.parse(JSON.stringify(data)),update:async(key,value)=>{await new Promise(resolve=>setTimeout(resolve,1));if(fail)throw Error('unavailable');data=JSON.parse(JSON.stringify(value));}};
+  const resolve=(owner,prefix,kind)=>configured?[{air:'C:/shared/a.air',sff:'C:/shared/a.sff',source:'Character DEF fx'}]:[];
+  const context={ownerDef:'C:/char/char.def',prefix:'testfx',record:{source:'Character DEF fx'}};
+  let store=createStore(storage,resolve);
+  await Promise.all([store.remember('C:/shared/a.air',context),store.remember('C:/shared/a.sff',context)]);
+  store=createStore(storage,resolve);
+  assert.strictEqual(store.restore('C:/SHARED/A.AIR').prefix,'testfx');
+  assert.strictEqual(store.restore('C:/shared/a.sff').record.air,'C:/shared/a.air','restoration rebuilds connected assets from current configuration');
+  configured=false;
+  const invalid=store.restore('C:/shared/a.air');assert(invalid.invalid);assert.strictEqual(invalid.record.air,undefined,'changed configuration must not reuse stale archive routes');
+  await store.remember('C:/manual/a.snd',{...context,record:{source:'Archive selected manually'}});
+  store=createStore(storage,resolve);assert.strictEqual(store.restore('C:/manual/a.snd').record.snd,'C:/manual/a.snd');assert.strictEqual(store.restore('C:/manual/a.snd').record.air,undefined);
+  fail=true;await assert.rejects(store.remember('C:/shared/a.air',undefined),/unavailable/);assert(store.restore('C:/shared/a.air'));
+  fail=false;await store.remember('C:/shared/a.air',undefined);assert.strictEqual(createStore(storage,resolve).restore('C:/shared/a.air'),undefined);
+  console.log('Shared archive reload persistence, configuration revalidation, manual scope, concurrent saves and failure recovery passed');
+})().catch(error=>{console.error(error);process.exitCode=1;});

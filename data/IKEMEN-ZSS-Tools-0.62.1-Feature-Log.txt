@@ -1,0 +1,10 @@
+IKEMEN ZSS Tools 0.62.1
+
+- Added a Quick Start group for the most-used character, workflow, roster, and launch actions.
+- Consolidated character, code, asset, stage, and screenpack authoring into predictable homes.
+- Moved the diagnostic suite, character health, code audits, required-asset audit, unassigned-sprite review, Stage Rig, and Recovery Center into Debug and Testing.
+- Separated Universal Standards, Game and Project Profiles, and Personal Workspace and Preferences.
+- Reorganized Related Work so debugging and testing no longer appear as character or production tasks.
+- Standardized every visual workspace on a responsive Related Work / Game / Infinite VS / Training strip.
+- Made the full Ctrl+Alt+F5, Ctrl+Alt+F6, and Ctrl+Alt+F7 shortcuts visible on wide layouts.
+- Added automated information-architecture and screen-cohesion checks.

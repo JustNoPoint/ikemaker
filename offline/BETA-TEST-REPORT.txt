@@ -1,0 +1,25 @@
+IKEMAKER 0.75.92 — TESTER FEEDBACK
+Title:
+What happened:
+What should happen / suggested improvement:
+Optional new use case:
+Optional screenshot or reference:
+
+Project:
+Affected item type and name:
+Content version (or Unknown):
+IKEMaker version: 0.75.92
+Game/engine version:
+Tool/screen:
+Windows / VS Code version:
+Display resolution / scaling:
+Steps to reproduce:
+Expected result:
+Actual result:
+Severity (Low / Medium / High / Critical / Unsure):
+Did opening or viewing change a file?
+Did the action affect the wrong item/project?
+Could Undo or Recovery restore it?
+
+You can also use the project's Kanban feedback form. Review its automatic
+version/item context, and correct unknown or incorrect details before sending.

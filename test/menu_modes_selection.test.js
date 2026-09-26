@@ -1,0 +1,33 @@
+'use strict';
+const assert = require('assert'), fs = require('fs'), os = require('os'), path = require('path'), Module = require('module');
+const original = Module._load, root = fs.mkdtempSync(path.join(os.tmpdir(), 'menu-modes-selection-'));
+const makeGame = name => { const folder = path.join(root, name), data = path.join(folder, 'data'), system = path.join(data, 'system.def'), select = path.join(data, 'select.def'); fs.mkdirSync(data, { recursive: true }); fs.writeFileSync(system, '[Files]\nspr = system.sff\n[Title Info]\nmenu.itemname.arcade = ARCADE\n'); fs.writeFileSync(select, '[Characters]\nRyu/Ryu.def, order=1\n[Options]\narcade.maxmatches = 1\n'); return { folder, system, select }; };
+const firstGame = makeGame('one'), secondGame = makeGame('two'), records = new Map(); let created = 0, revealed = 0;
+const key = value => path.resolve(value).toLowerCase(), sessions = { register: (panel, file, kind) => records.set(`${key(file)}|${kind}`, panel) };
+const document = filename => ({ fileName: filename, uri: { fsPath: filename, toString: () => key(filename) }, getText: () => fs.readFileSync(filename, 'utf8'), lineCount: 1, lineAt: () => ({ lineNumber: 0, text: '' }) });
+const panel = () => ({ title: '', reveal: () => { revealed++; }, onDidDispose() {}, webview: { cspSource: 'test:', options: {}, html: '', onDidReceiveMessage: () => ({ dispose() {} }) } });
+const vscode = { ViewColumn: { Active: 1 }, Uri: { file: fsPath => ({ fsPath }) }, window: { createWebviewPanel: () => { created++; return panel(); } }, workspace: { openTextDocument: async uri => document(uri.fsPath) } };
+Module._load = function(request, parent, main) {
+  if (request === 'vscode') return vscode;
+  if (request === './viewer_sessions') return sessions;
+  if (request === './viewer_group') return { preferredViewerColumn: () => 2, trackViewerPanel: value => value, revealInViewerGroup: value => value.reveal() };
+  if (request === './select_roster_preview') return { gameRoot: filename => path.dirname(path.dirname(filename)) };
+  if (request === './screenpack_workspace') return { locateCharacterSelectMotif: async uri => uri?.fsPath || '' };
+  if (request === './launch_controls') return { launchControlsHtml: () => '', launchControlsClientScript: () => '', handleLaunchMessage: async () => false };
+  if (request === './webview_policy') return { protect: value => value };
+  return original.call(this, request, parent, main);
+};
+(async () => {
+  const workspace = require('../src/menu_modes_workspace');
+  const one = await workspace.openMenuModesWorkspace({ fsPath: firstGame.system }, 'player');
+  const two = await workspace.openMenuModesWorkspace({ fsPath: secondGame.system }, 'creator');
+  const oneAgain = await workspace.openMenuModesWorkspace({ fsPath: firstGame.system }, 'creator');
+  assert.strictEqual(oneAgain, one, 'the same screenpack reuses its exact Menu & Modes panel');
+  assert.notStrictEqual(two, one, 'different screenpacks keep independently bound panels');
+  assert.equal(created, 2, 'two screenpacks create two panels, not a rebound singleton or duplicate third panel');
+  assert.equal(revealed, 1, 'only the reused screenpack is revealed');
+  assert.match(one.webview.html, /let view=vscode\.getState\(\)\?\.view\|\|'creator'/, 'reopening can select the requested saved view');
+  assert.strictEqual(records.get(`${key(firstGame.system)}|menu_modes`), one);
+  assert.strictEqual(records.get(`${key(secondGame.system)}|menu_modes`), two);
+  console.log('Menu & Modes presets reuse one screenpack, keep different screenpacks separate, and restore the requested view');
+})().catch(error => { console.error(error); process.exitCode = 1; }).finally(() => { Module._load = original; fs.rmSync(root, { recursive: true, force: true }); });

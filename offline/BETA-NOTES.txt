@@ -1,0 +1,49 @@
+IKEMAKER 0.78.0 — TESTER BETA NOTES
+
+IKEMaker is designed and directed by JustNoPoint (JNP), with OpenAI
+Codex used extensively for coding, review, testing assistance, and documentation.
+AI assistance does not mean every feature is verified. This file distinguishes
+current work from known limits and future plans.
+
+CURRENT HIGHLIGHTS
+- Project Maps now has visible entry points and a results-first browser with
+  current-file, character, template, assigned-runtime, and combined scopes.
+- AIR timeline frames can be edited directly, with missing-sprite issue navigation.
+- Major fighter/coordinate viewers share a consistent navy grid and safer drag,
+  zoom, off-screen-object, and nested source behavior.
+- Project-aware IKEMEN build tracking, Nightly review, backup, migration, and
+  rollback tools are available for explicitly reviewed engine changes.
+- IKEMaker has a separate beta updater. It checks an explicit manifest and only
+  downloads or installs after the user reviews the exact release.
+
+KNOWN LIMITS / PLANNED FIXES
+- In JNP Move Constants, the Player 2 reaction-preview axis may shift visually
+  when zoom changes. Authored coordinates should not be changed by zoom.
+- Help, accessibility, unusual layouts, clean-machine installation, and specialist
+  editor workflows still need broader human verification.
+- The online bootstrap path downloads VS Code only from Microsoft's official
+  endpoint and verifies its Windows signature, but still needs wider clean-machine testing.
+- This is beta software. Keep independent backups and stop if a tool selects or
+  writes the wrong project, character, or file.
+
+PLANNED — NOT YET IMPLEMENTED
+- Results-first Project Data browsers for variables, functions/calls, states,
+  Helpers, Explods, and projectiles.
+- Additional expert-recognition workflow refinements, including searchable next-
+  group choices and clearer before/after narrowing summaries in Project Maps.
+- Continued verification and help coverage across all visual workspaces.
+
+INSTALL / UPDATE
+- Existing VS Code user: extract the Offline ZIP and run
+  "Install IKEMEN Creator Tools.cmd".
+- First-time user: extract the Online Bootstrap ZIP and run
+  "Install IKEMaker Online.cmd". VS Code is downloaded only if absent.
+- Restart or reload VS Code, then confirm IKEMaker 0.78.0.
+- Future beta updates appear under IKEMaker > Personal Workspace and Preferences.
+  Review the version, notes, size, and SHA-256 before choosing install.
+- Downloaded update packages are retained outside game/project folders in VS Code's
+  IKEMaker extension storage. The current download and one earlier cached VSIX are
+  retained; this cache is not a promise of automatic rollback.
+
+Neither package includes IKEMEN GO, MUGEN, a game, character, stage, private
+workspace, or publishing credentials.

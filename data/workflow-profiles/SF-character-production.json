@@ -1,0 +1,137 @@
+{
+  "schemaVersion": 2,
+  "id": "sf-character-production",
+  "version": 4,
+  "name": "SF6 Character Production",
+  "description": "SF6-specific character creation using source evidence, explicit project deviations, connected asset/code/system workspaces, fast transactional drafts, evidence-backed QA, reusable lessons, and JNP signoff.",
+  "sourceAuthority": "Street Fighter 6 behavior and research, with every intentional system or character deviation recorded explicitly.",
+  "completionModel": "Source reproduction, deviation review, evidence-backed QA, reusable lesson capture, and JustNoPoint/JNP owner sign-off.",
+  "ownershipScope": "SF6 game policy and character implementations. Reusable mechanisms belong to the Universal Template.",
+  "reopenTriggers": [
+    "An upstream engine update changes verified behavior.",
+    "A shared mechanism or game policy used by the baseline changes.",
+    "New source evidence disproves a frozen rule.",
+    "A port uncovers an undocumented dependency or exception."
+  ],
+  "extends": "bundled:jnp-character-production",
+  "blocks": ["bundled-block:first-grounded-light-normal"],
+  "phases": [
+    {
+      "id": "sf6-source-authority",
+      "name": "1. SF6 Source and Character Definition",
+      "summary": "Establish source identity, complete move/system inventory, controls, options, deviations, and unresolved design decisions before implementation is treated as authoritative.",
+      "steps": [
+        {"id": "sf6-source.reference-intake", "label": "Import and review SF6 character, move, mechanic, and author-decision knowledge", "discipline": "Design / Research", "action": "open-requirements"},
+        {"id": "sf6-source.identity", "label": "Record gameplay identity, strengths, weaknesses, range, and intended project role", "discipline": "Design", "action": "open-requirements"},
+        {"id": "sf6-source.move-inventory", "label": "Inventory normals, command normals, throws, specials, Supers, system actions, and added or removed material", "discipline": "Production", "action": "open-requirements"},
+        {"id": "sf6-source.controls-options", "label": "Record Classic/Modern routes, alternate modes, costumes, colors, variants, FX colors, and Character Options", "discipline": "Design", "action": "open-requirements"},
+        {"id": "sf6-source.deviation-ledger", "label": "Separate SF6 source behavior, normalized equivalents, project deviations, implemented values, and signed-off values", "discipline": "Review", "action": "open-requirements"},
+        {"id": "sf6-source.dependencies", "label": "Map shared SF6 systems, unique helpers/projectiles/effects, and connected character files", "discipline": "Code", "action": "open-code"}
+      ]
+    },
+    {
+      "id": "sf6-assets-presentation",
+      "name": "2. SF6 Assets and Presentation Foundation",
+      "summary": "Build and validate SFF, AIR, palettes, sounds, layers, companions, effects, and presentation while keeping asset and gameplay completion separate.",
+      "steps": [
+        {"id": "sf6-assets.sff", "label": "Classify, build, and validate SFF groups, indices, axes, layers, transformations, aliases, archives, and required sprites", "discipline": "SFF", "action": "open-sff"},
+        {"id": "sf6-assets.air", "label": "Author AIR actions, timing, offsets, collision, push/width/depth overlays, and missing-sprite review", "discipline": "AIR", "action": "open-air"},
+        {"id": "sf6-assets.palette", "label": "Configure true-color PalFX, indexed compatibility where needed, costumes, base colors, variants, and FX color ownership", "discipline": "Palette", "action": "open-sff-palettes"},
+        {"id": "sf6-assets.sound", "label": "Map split character, voice, common-FX, project sounds, commands, timing, and ownership", "discipline": "Sound", "action": "open-snd"},
+        {"id": "sf6-assets.entities", "label": "Record layers, parts, companions, projectiles, helpers, effects, and their deterministic lifecycle", "discipline": "Code / Art", "action": "open-code"},
+        {"id": "sf6-assets.presentation", "label": "Review intros, win poses, taunts, get hits, KOs, sparks, voices, effects, and UI presentation", "discipline": "Art", "action": "open-air"},
+        {"id": "sf6-assets.cross-view", "label": "Confirm palette, layer, axis, sprite-name, and frame results agree across SFF, AIR, move, throw, and live-game views", "discipline": "Review", "action": "open-air"},
+        {"id": "sf6-assets.readiness", "label": "Classify asset groups as Placeholder, Gameplay Ready, Presentation Ready, or Final without confusing asset and behavior completion", "discipline": "Production", "action": "open-requirements"},
+        {"id": "sf6-assets.reproducible-build", "label": "Rebuild from saved manifests and verify groups, indices, axes, palettes, layers, and sound assignments reproduce the reviewed result", "discipline": "SFF / Sound", "action": "open-sff"}
+      ]
+    },
+    {
+      "id": "sf6-movement-controls",
+      "name": "3. SF6 Movement, Controls, and Commands",
+      "summary": "Normalize and author movement trajectories, Classic/Modern commands, route priority, character options, and online-safe input ownership.",
+      "steps": [
+        {"id": "sf6-movement.foundation", "label": "Author and compare walking, crouching, jumping, turning, dashes, landing, and unique movement trajectories", "discipline": "Code", "action": "open-code"},
+        {"id": "sf6-movement.commands", "label": "Validate motions, charge, timing, step buffers, facing, negative edge, simultaneous buttons, and priority", "discipline": "Code", "action": "open-code"},
+        {"id": "sf6-movement.routes", "label": "Validate Classic commands, Modern shortcuts/modifiers, Special/Drive/Super routes, and collisions", "discipline": "Testing", "action": "launch-training"},
+        {"id": "sf6-movement.options", "label": "Confirm enabled Character Options resolve deterministically and hide disabled or fixed Quick Select choices", "discipline": "Testing", "action": "launch-training"}
+      ]
+    },
+    {
+      "id": "sf6-attacks-systems",
+      "name": "4. SF6 Attack and System Authoring",
+      "summary": "Author connected attack data and integrate every applicable SF6 offense, Drive, Super, armor, collision-region, reaction, resource, and communication mechanism.",
+      "steps": [
+        {"id": "sf6-attacks.timeline", "label": "Author startup, active, recovery, animation, movement, collision, reach, vulnerability, sparks, and sounds", "discipline": "Code / AIR", "action": "open-air"},
+        {"id": "sf6-attacks.results", "label": "Author hit/guard pause, stun, reactions, velocities, knockdown, Counter Hit, Punish Counter, and same-tick behavior", "discipline": "Code", "action": "open-constants"},
+        {"id": "sf6-attacks.scaling-resources", "label": "Author damage, chip, scaling, life/red life, Super, Drive, stun, score, and Modern modifiers", "discipline": "Code", "action": "open-constants"},
+        {"id": "sf6-attacks.cancels", "label": "Author links, target combos, chains, Drive Rush, special/OD/Super, whiff, conditional, and destination-state cancels", "discipline": "Code", "action": "open-code"},
+        {"id": "sf6-attacks.drive", "label": "Integrate applicable Drive Impact, Parry/Perfect Parry, Drive Rush, Drive Reversal, OD, Burnout, cooldown, gain, and spending behavior", "discipline": "Code", "action": "open-code"},
+        {"id": "sf6-attacks.super-armor-region", "label": "Integrate applicable Supers/Critical Art, armor/Armor Break, recoverable life, hit regions, throws, and character exceptions", "discipline": "Code", "action": "open-code"},
+        {"id": "sf6-attacks.entities", "label": "Validate projectile/helper/companion spawn, movement, clash, contact, cleanup, ownership, and presentation", "discipline": "Testing", "action": "launch-training"}
+      ]
+    },
+    {
+      "id": "sf6-drafts-qa",
+      "name": "5. SF6 Fast Drafts, QA, and Signoff Preparation",
+      "summary": "Optionally apply high-confidence source drafts transactionally, review exceptions in batches, run applicable behavior matrices, and preserve evidence without granting automatic completion.",
+      "steps": [
+        {"id": "sf6-drafts.checkpoint", "label": "Create a character checkpoint and configure optional Auto-Apply Source Draft categories/confidence", "discipline": "Production", "action": "open-requirements"},
+        {"id": "sf6-drafts.apply", "label": "Apply qualifying drafts while automatically preserving source, previous, formula, applied, dependency, validation, and undo records", "discipline": "Code", "action": "open-code"},
+        {"id": "sf6-drafts.exceptions", "label": "Review ambiguous, unsupported, destructive, dependency-incomplete, and manually diverged cases", "discipline": "Review", "action": "open-requirements"},
+        {"id": "sf6-drafts.batch-review", "label": "Compare, revise, accept, or revert applied moves and properties in a batch review", "discipline": "Review", "action": "open-requirements"},
+        {"id": "sf6-drafts.test-matrix", "label": "Run applicable whiff, hit, guard, Counter, Punish, air, corner, armor, Parry, Drive, cancel, resource, and entity tests", "discipline": "Testing", "action": "launch-training"},
+        {"id": "sf6-drafts.evidence", "label": "Record evidence, intentional deviations, accepted limitations, failures, and linked tickets", "discipline": "QA", "action": "open-reports"},
+        {"id": "sf6-drafts.signoff-ready", "label": "Confirm assets, behavior, systems, presentation, options, dependencies, tests, and lessons are ready for JNP signoff", "discipline": "Review", "action": "open-requirements"}
+      ]
+    },
+    {
+      "id": "baseline-freeze",
+      "name": "6. Ryu Baseline v1 Freeze",
+      "summary": "Rehearse the complete workflow, capture what was learned, and freeze the first reusable SF6 foundation without claiming unfinished art or moves are complete.",
+      "steps": [
+        {
+          "id": "baseline.source-ledger",
+          "label": "Freeze the source and deviation ledger",
+          "discipline": "Design / Research",
+          "acceptance": "Every foundational behavior identifies SF6 source evidence, an approved project deviation, or a known limitation.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "baseline.asset-repair",
+          "label": "Resolve and sign off the current SFF/AIR repair list",
+          "discipline": "SFF / AIR",
+          "acceptance": "Known rebuild omissions, palette defaults, axes, visibility, required sprites, and required animations are corrected or ticketed.",
+          "evidenceRequired": true,
+          "dependsOn": ["light-normal.assets"]
+        },
+        {
+          "id": "baseline.workflow-rehearsal",
+          "label": "Run the full asset-to-signoff workflow rehearsal",
+          "discipline": "QA",
+          "acceptance": "The Ryu path is performed from source assets through SFF, AIR, constants, state code, sounds, live tests, logger evidence, and review; every friction point becomes a ticket.",
+          "evidenceRequired": true,
+          "dependsOn": ["light-normal.signoff"]
+        },
+        {
+          "id": "baseline.lesson-packet",
+          "label": "Capture the reusable Ryu lesson packet",
+          "discipline": "Learning",
+          "learning": "A reusable lesson records the proven rule, game-specific exception, test procedure, evidence, known limitation, and owner sign-off.",
+          "acceptance": "The lesson is useful to the next implementer without silently turning Ryu-specific policy into a universal rule.",
+          "evidenceRequired": true,
+          "lessonCapture": true,
+          "dependsOn": ["baseline.workflow-rehearsal"]
+        },
+        {
+          "id": "baseline.freeze-v1",
+          "label": "Record Ryu Baseline v1 and owner sign-off",
+          "discipline": "Review",
+          "acceptance": "JustNoPoint or JNP names the frozen version, reviews evidence and limitations, and authorizes Demitri to inherit the hardened process.",
+          "evidenceRequired": true,
+          "signoffRequired": true,
+          "dependsOn": ["baseline.source-ledger", "baseline.asset-repair", "baseline.lesson-packet"]
+        }
+      ]
+    }
+  ]
+}

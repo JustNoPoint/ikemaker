@@ -1,0 +1,31 @@
+IKEMEN ZSS Tools 0.33.0
+=======================
+
+SFF mutation authority and safety
+---------------------------------
+- Classified SFF actions as direct archive edits, SprMaker2 manifest edits,
+  rebuild outputs, or non-destructive exports.
+- Migrated direct axis edits, batch axis offsets, group-header renaming,
+  palette assignments, palette color edits, palette reversal, palette ACT
+  replacement, and Save As to transactional binary replacement.
+- Direct SFF edits reject stale loaded archives and do not decode or re-encode
+  sprite image data.
+- Migrated SprMaker2 manifest axis, group, add, remove, duplicate, replacement,
+  classification, axis-copy, layer, part, and dismissal edits.
+- Manifest saves remember the version that was read and reject later external
+  changes instead of silently replacing them.
+- Import from another SFF commits extracted PNGs and the destination manifest
+  as one aggregate transaction.
+- Layer-source backup moves are validated first and reversed when the manifest
+  update fails.
+- Migrated SFF review metadata, requirement profiles, and alias-registry
+  creation to the shared mutation service.
+- SFF headers now distinguish direct archive/manifest saving from the separate
+  SprMaker2 rebuild authority and show backup/history policy.
+- Export-only PNG, aligned image, channel, and ACT outputs remain exports and
+  do not claim archive mutation authority.
+
+Verification
+------------
+- Added a real-file stale-manifest preservation test.
+- All 50 extension test files pass.

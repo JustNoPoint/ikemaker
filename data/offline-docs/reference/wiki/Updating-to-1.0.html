@@ -1,0 +1,152 @@
+<html><head><meta charset="utf-8"/><title>Updating-to-1.0</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Updating-to-1.0">Original source (online)</a> · Snapshot 2026-09-13</div><p>Some features may change during development of Ikemen GO, making content created for older versions of the engine sometimes become incompatible with newer versions. This page explains how to update the deprecated code.  </p>
+<h1 id="character-changes"><a name="char">Character Changes</a></h1>
+<h2 id="state-controllers"><a name="char_sctrl">State Controllers</a></h2>
+<h3 id="hitscaleset"><a name="char_sctrl_hitscaleset">HitScaleSet</a></h3>
+<p>This state controller was dropped altogether in Ikemen GO 1.0. Numerous other methods are available to build your own scaling systems.</p>
+<h2 id="triggers"><a name="char_triggers">Triggers</a></h2>
+<h3 id="animelemlength"><a name="char_triggers_animelemlength">AnimElemLength</a></h3>
+<p>As a property of the current animation frame, <code>AnimElemLength</code> is now included in the <code>AnimElemVar</code> trigger, as <code>AnimElemVar(time)</code>.</p>
+<h3 id="bgmlength"><a name="char_triggers_bgmlength">BgmLength</a></h3>
+<p>As a property of the current bgm, <code>BgmLength</code> is now included in the <code>BgmVar</code> trigger, as <code>BgmVar(length)</code>.</p>
+<h3 id="bgmposition"><a name="char_triggers_bgmposition">BgmPosition</a></h3>
+<p>As a property of the current bgm, <code>BgmPosition</code> is now included in the <code>BgmVar</code> trigger, as <code>BgmVar(position)</code>.</p>
+<h3 id="framespercount"><a name="char_triggers_framespercount">FramesPerCount</a></h3>
+<p>As a fight screen parameter, <code>FramesPerCount</code> is now included in the <code>FightScreenVar</code> trigger, as <code>FightScreenVar(time.framespercount)</code>.</p>
+<h3 id="gethitvarattr"><a name="char_triggers_gethitvar_attr">GetHitVar(attr)</a></h3>
+<p>The attribute parameter is now of type string instead of int, aligning it with the HitDef <code>attr</code> assignment as well as the <code>HitDefAttr</code> trigger.  </p>
+<pre><code class="language-ini">;trigger1 = GetHitVar(attr) = const(AttrAerialSpecialProjectile); old syntax
+trigger1 = GetHitVar(attr) = A, SP; new syntax
+</code></pre>
+<h3 id="gethitvarid"><a name="char_triggers_gethitvar_id">GetHitVar(ID)</a></h3>
+<p>The <code>ID</code> syntax for this trigger has been deprecated in favor of <code>playerID</code>, for the sake of clarity.  </p>
+<pre><code class="language-ini">;trigger1 = GetHitVar(ID) = 100; old syntax
+trigger1 = GetHitVar(playerID) = 100; new syntax
+</code></pre>
+<h3 id="getplayerid"><a name="char_triggers_getplayerid">GetPlayerID</a></h3>
+<p><code>GetPlayerID</code> was removed in Ikemen GO 1.0. It can be replaced with a cleaner <code>Player</code> redirection.</p>
+<pre><code class="language-ini">;trigger1 = GetPlayerID(5); old syntax
+trigger1 = Player(5), ID; new syntax
+;trigger2 = PlayerID(GetPlayerID(5)), Life; old syntax
+trigger2 = Player(5), Life; new syntax
+</code></pre>
+<h3 id="indialogue"><a name="char_triggers_indialogue">InDialogue</a></h3>
+<p>As a motif related parameter, <code>InDialogue</code> is now included in the <code>MotifState</code> trigger, as <code>MotifState(dialogue)</code>.</p>
+<h3 id="localscale"><a name="char_triggers_localscale">LocalScale</a></h3>
+<p>While not direct replacements, <code>LocalCoord</code> or <code>Const240p</code> (or another appropriate scale) can be used instead in your calculations.</p>
+<h3 id="majorversion"><a name="char_triggers_majorversion">MajorVersion</a></h3>
+<p><code>MajorVersion</code> was removed in Ikemen GO 1.0. It is equivalent to <code>MugenVersion &gt;= 1.0</code>. You may also be interested in the <code>IkemenVersion</code> trigger.</p>
+<h3 id="rand"><a name="char_triggers_rand">Rand</a></h3>
+<p>The <code>Rand</code> trigger name, which was previously deprecated in version 0.98, has been completely removed in favor of the existing <code>RandomRange</code> trigger name.</p>
+<h3 id="roundstate-1"><a name="char_triggers_roundstate">RoundState = -1</a></h3>
+<p>For better compatibility with Mugen content, the vanilla Mugen <code>RoundState</code> now returns 0 instead of -1 during the post-round sequence, just like Mugen. Dedicated triggers, <code>ContinueScreen</code>, <code>VictoryScreen</code>, and <code>WinScreen</code>, have been added to reliably detect the post-round sequence of a match.</p>
+<h3 id="roundtype"><a name="char_triggers_roundtype">RoundType</a></h3>
+<p><code>RoundType</code> was removed in Ikemen GO 1.0 in favor of the new <code>DecisiveRound</code> trigger. Values returned by <code>RoundType</code> are equivalent to:</p>
+<blockquote>
+<p>DecisiveRound: match ends if player win<br/>
+p2,DecisiveRound: match ends if the player's opponent wins<br/>
+DecisiveRound || p2,DecisiveRound: match ends if either of players wins (final round)  </p>
+</blockquote>
+<h3 id="timeleft"><a name="char_triggers_timeleft">TimeLeft</a></h3>
+<p>The <code>TimeLeft</code> trigger name, which was previously deprecated in version 0.98, has been completely removed in favor of the existing <code>TimeRemaining</code> trigger name.</p>
+<h1 id="lifebar-changes"><a name="lifebar">Lifebar Changes</a></h1>
+<h2 id="action"><a name="lifebar_action">[Action]</a></h2>
+<h3 id="spacing"><a name="lifebar_action_spacing">Spacing</a></h3>
+<p>The spacing parameter was changed to be absolute instead of being measured from the end of the message sprite (which caused miscalculations). For this reason, a lifebar made for an older Ikemen version will need an increase in <code>team1.spacing</code> and <code>team2.spacing</code>.</p>
+<h2 id="stunbar"><a name="lifebar_action">[Stunbar]</a></h2>
+<p>By default the stun bar will now work as the other bars, starting from full and emptying as the player loses points. To maintain the previous behavior, the <code>pX.invertfill = 1</code> parameter can be added.</p>
+<h1 id="stage-changes"><a name="char">Stage Changes</a></h1>
+<p>[TODO]
+- Notes about stage camera changing entirely
+- Others</p>
+<h1 id="other-changes"><a name="other">Other Changes</a></h1>
+<h2 id="deprecated-functions"><a name="other_scripts">Deprecated functions</a></h2>
+<p>Deprecated script.go functions have been removed. Direct equivalents are available, and they don't require providing playerno. Like other trigger functions that operate on players during a match, they can be redirected, making them more powerful than the old deprecated functions.</p>
+<ul>
+<li><code>charChangeAnim</code> → <code>changeAnim</code></li>
+<li><code>charChangeState</code> → <code>changeState</code></li>
+<li><code>charMapSet</code> → <code>mapSet</code></li>
+<li><code>charSndPlay</code> → <code>sndPlay</code></li>
+<li><code>charSndStop</code> → <code>sndStop</code></li>
+</ul>
+<h2 id="lua-scripts"><a name="other_scripts">Lua scripts</a></h2>
+<p>Many Lua functions now take fewer/different parameters; some have been removed entirely (e.g., text wrapping is handled natively in font.go). We will not maintain unused Lua utilities. If your module relied on legacy helpers, vendor them inside your module. All embedded Lua functions are documented here: https://github.com/ikemen-engine/Ikemen-GO/wiki/Lua</p>
+<p>Here, we'll cover only a practical example of creating a font and text, since the previous helper functions are missing.</p>
+<pre><code class="language-lua">-- Font userdata creation (can be skipped if you're using one of the already loaded fonts, e.g., motif.Fnt[1])
+local fnt = fontNew(path)
+
+-- TextSprite userdata creation (can be skipped if you're using one of the existing TextSpriteData entries in the motif table.)
+local ts = textImgNew()
+
+-- Assign font userdata to ts
+textImgSetFont(ts, fnt)
+
+-- This should be done before calling scaling and positioning functions (defaults to 240p).
+textImgSetLocalcoord(ts, width, height)
+
+-- Without assigning text, there is nothing to render.
+textImgSetText(ts, text)
+
+-- Other functions are optional - use them only if you want to change the default values.
+textImgAddPos(ts, dx, dy)
+textImgAddText(ts, text)
+textImgApplyFontTuple(ts, fontTuple)
+textImgApplyVel(ts, source)
+textImgSetAccel(ts, ax, ay)
+textImgSetAlign(ts, align)
+textImgSetBank(ts, bank)
+textImgSetColor(ts, r, g, b, a)
+textImgSetPos(ts, x, y)
+textImgSetFriction(ts, fx, fy)
+textImgSetLayerno(ts, layer)
+textImgSetMaxDist(ts, xDist, yDist)
+textImgSetScale(ts, sx, sy)
+textImgSetTextDelay(ts, delay)
+textImgSetTextSpacing(ts, spacing)
+textImgSetTextWrap(ts, wrap)
+textImgSetVelocity(ts, vx, vy)
+textImgSetWindow(ts, x1, y1, x2, y2)
+textImgSetXShear(ts, xshear)
+textImgSetAngle(ts, angle)
+textImgSetXAngle(ts, xangle)
+textImgSetYAngle(ts, yangle)
+textImgSetProjection(ts, projection)
+textImgSetFocalLength(ts, fLength)
+
+-- Update advances the ts timers responsible for things like applying velocity.
+-- It can be skipped if you are only rendering normal text.
+textImgUpdate(ts)
+
+-- Actual drawing call; should be called each frame.
+-- The layer argument can be omitted (it will use whatever layer value is currently assigned).
+textImgDraw(ts, layer)
+
+-- Dumps the struct data for debugging purposes.
+textImgDebug(ts, prefix)
+
+-- In default scripts, we often reset only position or text so that changes made by
+-- textImgAddPos and textImgAddText in the current frame are not cumulative.
+textImgReset(ts, parts)
+</code></pre>
+<h2 id="lua-hooks"><a name="other_hooks">Lua Hooks</a></h2>
+<p>Modules that edited these screens may break or need updates. Old Lua hooks are still available but renamed:
+* <code>start.f_result</code> → <code>game.result</code>
+* <code>start.f_victory</code> → <code>game.victory</code>
+* <code>start.f_continue</code> → <code>game.continue</code>
+* <code>start.f_hiscore</code> → <code>game.hiscore</code>
+* <code>start.f_challenger</code> → <code>game.challenger</code></p>
+<h2 id="modules"><a name="other_modules">Modules</a></h2>
+<p>Some modules are now obsolete. New native features (e.g., random music selection, layerno draw-order support) supersede prior module-based workarounds. Remove or update such modules accordingly.</p>
+<h2 id="screenpack"><a name="other_screenpack">Screenpack</a></h2>
+<p>The new parser aligns closer with mugen conventions and shares structs across sections. As a result of this some Ikemen-only params were renamed. A conversion tool is provided for screenpacks released before 1.0:
+https://github.com/ikemen-engine/screenpack-updater/releases
+Vanilla mugen screenpacks without ikemen only features do not require any changes.
+The screenpack parser now warns on any unrecognized field. If your module needs DEF-style config, it's recommended to keep it outside system.def and use:
+* loadIni - read DEF/INI into Lua tables
+* jsonDecode - load JSON</p>
+<h2 id="music"><a name="other_music">Music</a></h2>
+<p>Unified music parsing: naming convention changes.
+In select.def: music, round.music, final.music, life.music, victory.music. volume, loopstart, loopend are optional and can be defined right after the parameter (separated by spacebar). Multiple entries of the same key are allowed; one is chosen at random.
+In stage .def files: suffixes become prefixes. Examples:
+* bgmusic.final -&gt; final.bgmusic
+* bgmloopstart.victory -&gt; victory.bgmloopstart</p>
+<p>When defining multiple BGMs in stages, per-parameter values accept comma-separated lists, one value per track (e.g., bgmloopstart = 12345, 45678).</p></body></html>

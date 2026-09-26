@@ -1,0 +1,2897 @@
+{
+  "name": "ikemen-zss-tools",
+  "displayName": "IKEMaker",
+  "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
+  "version": "0.78.0",
+  "publisher": "justnopoint",
+  "license": "MIT",
+  "extensionPack": [
+    "sumneko.lua"
+  ],
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "capabilities": {
+    "virtualWorkspaces": {
+      "supported": true,
+      "description": "Browser and virtual workspaces receive portable text-language tools, documentation, capability reporting, and honest SFF/SND placeholders. Archive parsing and native executables remain disabled until separately implemented and verified."
+    },
+    "untrustedWorkspaces": {
+      "supported": "limited",
+      "description": "Text navigation and inspection remain available; native builders, launchers, and external applications require a trusted local workspace."
+    }
+  },
+  "categories": [
+    "Programming Languages",
+    "Other"
+  ],
+  "keywords": [
+    "ikemen",
+    "mugen",
+    "zss",
+    "fighter"
+  ],
+  "activationEvents": [
+    "onWebviewPanel:ikemenComparison",
+    "onWebviewPanel:ikemenMoveConstants",
+    "onStartupFinished",
+    "onCustomEditor:ikemen.sffWorkspace",
+    "onCustomEditor:ikemen.sndWorkspace",
+    "onLanguage:zss",
+    "onLanguage:ikemen-air",
+    "onLanguage:ikemen-cns",
+    "onLanguage:ikemen-def",
+    "onLanguage:lua",
+    "onView:zssNavigator",
+    "onView:ikemen.characterWorkbenches",
+    "onView:zssStateControllers",
+    "onView:zssRegistry",
+    "onCommand:air.batchApplyClsn2",
+    "onCommand:air.generateGuardProximityHelper",
+    "onCommand:air.assignClsn2HitReactionRegion",
+    "onCommand:air.openAnimationPreview",
+    "onCommand:cns.scaleSelectedSizebox",
+    "onCommand:sff.generateBuildFiles",
+    "onCommand:sff.applyProjectIndexing",
+    "onCommand:sff.openProjectBuildProfile",
+    "onCommand:sff.createProjectBuildProfile",
+    "onCommand:sff.openGroupLog",
+    "onCommand:air.openActionLog",
+    "onCommand:sff.openSprMakerText",
+    "onCommand:snd.openMakerText",
+    "onCommand:sff.openViewer",
+    "onCommand:sff.openAssembly",
+    "onCommand:ikemen.artistIntake.open",
+    "onCommand:sff.createNew",
+    "onCommand:air.createNew",
+    "onCommand:snd.createNew",
+    "onCommand:snd.openViewer",
+    "onCommand:sff.buildApprovedManifest",
+    "onCommand:sff.cropArchive",
+    "onCommand:sff.importLayerFolder",
+    "onCommand:sff.reviewLayerParts",
+    "onCommand:sff.reviewRedundantLayers",
+    "onCommand:sff.reviewDismissedLayerWarnings",
+    "onCommand:sff.showNamingStandard",
+    "onCommand:sff.showArtistHandoffGuide",
+    "onCommand:sff.openAliasRegistry",
+    "onView:ikemen.tools",
+    "onCommand:ikemen.openTools",
+    "onCommand:ikemen.showVersion",
+    "onCommand:ikemen.windowsFileAssociations.configure",
+    "onCommand:ikemen.chooseOpeningSidebar",
+    "onCommand:inp.createNew",
+    "onCommand:ikemen.openLauncherSettings",
+    "onCommand:ikemen.openExtensionSettings",
+    "onCommand:ikemen.extensionUpdates.check",
+    "onCommand:ikemen.extensionUpdates.settings",
+    "onCommand:ikemen.showPlatformCapabilities",
+    "onCommand:ikemen.showBundledToolchain",
+    "onCommand:ikemen.luaSupport.status",
+    "onCommand:ikemen.luaSupport.installDefinitions",
+    "onCommand:ikemen.openMobileFeatureMatrix",
+    "onCommand:ikemen.openStageScreenpackSpec",
+    "onCommand:ikemen.authoringBridge.install",
+    "onCommand:ikemen.animationStandards.open",
+    "onCommand:ikemen.authoringBridge.openGuide",
+    "onCommand:ikemen.codeStructure.openWorkspace",
+    "onCommand:ikemen.selectDef.openWorkspace",
+    "onCommand:ikemen.selectDef.openLayoutBuilder",
+    "onCommand:ikemen.menuModes.openPlayer",
+    "onCommand:ikemen.menuModes.openCreator",
+    "onCommand:ikemen.storyDialogue.openPlayer",
+    "onCommand:ikemen.storyDialogue.openCreator",
+    "onCommand:ikemen.storyboard.create",
+    "onCommand:ikemen.storyboard.createOpening",
+    "onCommand:ikemen.storyboard.createEnding",
+    "onCommand:ikemen.storyboard.open",
+    "onCommand:ikemen.paletteOrganizer.open",
+    "onCommand:ikemen.moveConstants.open",
+    "onCommand:ikemen.moveLab.open",
+    "onCommand:ikemen.hitDef.openEditor",
+    "onCommand:ikemen.throwCreator.open",
+    "onCommand:ikemen.throwCreator.openGuide",
+    "onCommand:ikemen.explodComposer.open",
+    "onCommand:ikemen.positionCamera.open",
+    "onCommand:ikemen.helperLab.open",
+    "onCommand:ikemen.paletteImport.open",
+    "onCommand:ikemen.productionWorkflow.open",
+    "onCommand:ikemen.productionWorkflow.editProfile",
+    "onCommand:ikemen.productionWorkflow.openGuide",
+    "onCommand:ikemen.testSessions.open",
+    "onCommand:ikemen.release.captureDefaults",
+    "onCommand:ikemen.release.openProfile",
+    "onCommand:ikemen.release.audit",
+    "onCommand:ikemen.release.complete",
+    "onCommand:ikemen.docs.openOffline",
+    "onCommand:ikemen.docs.updateOffline",
+    "onCommand:ikemen.help.open",
+    "onCommand:ikemen.experience.configure",
+    "onCommand:ikemen.character.createNew",
+    "onCommand:ikemen.character.open",
+    "onCommand:ikemen.character.close",
+    "onCommand:ikemen.stage.close",
+    "onCommand:ikemen.context.closeCurrent",
+    "onCommand:ikemen.characterDependencies.open",
+    "onCommand:ikemen.characterHealth.open",
+    "onCommand:ikemen.cnsConverter.open",
+    "onCommand:ikemen.cnsConverter.character",
+    "onCommand:ikemen.navigation.openDefinition",
+    "onCommand:ikemen.context.show",
+    "onCommand:ikemen.context.openRegistry",
+    "onCommand:ikemen.context.migrateRegistry",
+    "onCommand:ikemen.context.indexMetadata",
+    "onCommand:ikemen.projectProfile.create",
+    "onCommand:ikemen.projectManager.open",
+    "onCommand:ikemen.engineRegistry.open",
+    "onCommand:ikemen.engineMigration.review",
+    "onCommand:ikemen.engineMigration.installRetained",
+    "onCommand:ikemen.workspacePreset.save",
+    "onCommand:ikemen.workspacePreset.restore",
+    "onCommand:ikemen.workspacePreset.delete",
+    "onCommand:ikemen.impact.preview",
+    "onCommand:ikemen.ownership.auditDef",
+    "onCommand:ikemen.mutations.openHistory",
+    "onCommand:ikemen.stage.openWorkspace",
+    "onCommand:ikemen.stage.launchRig",
+    "onCommand:ikemen.stage.createNew",
+    "onCommand:ikemen.def.openVisualWorkspace",
+    "onCommand:ikemen.stage.createInteraction",
+    "onCommand:ikemen.ui.openWorkspace",
+    "onCommand:ikemen.ui.openLuaModule",
+    "onCommand:ikemen.ui.createNew",
+    "onCommand:ikemen.ui.generateCharacterBridge",
+    "onCommand:ikemen.ui.createPreviewProfile",
+    "onCommand:ikemen.launchTrainingCurrent",
+    "onCommand:ikemen.launchTrainingConfigured",
+    "onCommand:ikemen.launchGame",
+    "onCommand:ikemen.launchMirrorCurrent",
+    "workspaceContains:**/*.air",
+    "onCommand:zss.audit.workspace",
+    "onCommand:zss.updates.checkNow",
+    "onCommand:zss.updates.checkDefNow",
+    "onCommand:zss.updates.showLastReport"
+  ],
+  "main": "./src/extension.js",
+  "browser": "./src/web_extension.js",
+  "contributes": {
+    "customEditors": [
+      {
+        "viewType": "ikemen.sffWorkspace",
+        "displayName": "IKEMEN SFF Workspace",
+        "selector": [
+          {
+            "filenamePattern": "*.sff"
+          }
+        ],
+        "priority": "default"
+      },
+      {
+        "viewType": "ikemen.sndWorkspace",
+        "displayName": "IKEMEN SND Workspace",
+        "selector": [
+          {
+            "filenamePattern": "*.snd"
+          }
+        ],
+        "priority": "default"
+      }
+    ],
+    "languages": [
+      {
+        "id": "zss",
+        "aliases": [
+          "IKEMEN ZSS",
+          "ZSS"
+        ],
+        "extensions": [
+          ".zss"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "ikemen-air",
+        "aliases": [
+          "IKEMEN AIR",
+          "AIR"
+        ],
+        "extensions": [
+          ".air"
+        ],
+        "configuration": "./language-configuration.json"
+      },
+      {
+        "id": "ikemen-cns",
+        "aliases": [
+          "IKEMEN Constants",
+          "MUGEN Constants",
+          "CNS"
+        ],
+        "extensions": [
+          ".cns"
+        ],
+        "configuration": "./cns-language-configuration.json"
+      },
+      {
+        "id": "ikemen-def",
+        "aliases": [
+          "IKEMEN DEF",
+          "MUGEN DEF",
+          "DEF"
+        ],
+        "extensions": [
+          ".def"
+        ],
+        "configuration": "./def-language-configuration.json"
+      }
+    ],
+    "grammars": [
+      {
+        "language": "zss",
+        "scopeName": "source.zss",
+        "path": "./syntaxes/zss.tmLanguage.json"
+      },
+      {
+        "language": "ikemen-air",
+        "scopeName": "source.ikemen-air",
+        "path": "./syntaxes/air.tmLanguage.json"
+      },
+      {
+        "language": "ikemen-cns",
+        "scopeName": "source.ikemen-cns",
+        "path": "./syntaxes/cns.tmLanguage.json"
+      },
+      {
+        "language": "ikemen-def",
+        "scopeName": "source.ikemen-def",
+        "path": "./syntaxes/def.tmLanguage.json"
+      }
+    ],
+    "semanticTokenScopes": [
+      {
+        "scopes": {
+          "ikemenCharacterReference": [
+            "string.unquoted.path.character.ikemen-def"
+          ],
+          "ikemenCommonReference": [
+            "string.unquoted.path.common.ikemen-def"
+          ]
+        }
+      }
+    ],
+    "configurationDefaults": {
+      "files.associations": {
+        "*.zss": "zss",
+        "*.air": "ikemen-air",
+        "*.cns": "ikemen-cns",
+        "*.inp": "ikemen-cns",
+        "*.cmd": "ikemen-cns",
+        "*.st": "ikemen-cns",
+        "*.jnp": "ikemen-cns",
+        "*.def": "ikemen-def"
+      },
+      "editor.tokenColorCustomizations": {
+        "textMateRules": [
+          {
+            "scope": "support.type.hitbox.clsn1.ikemen-air",
+            "settings": {
+              "foreground": "#FF4040"
+            }
+          },
+          {
+            "scope": "support.type.hurtbox.clsn2.ikemen-air",
+            "settings": {
+              "foreground": "#4080FF"
+            }
+          },
+          {
+            "scope": "entity.name.section.ikemen-def",
+            "settings": {
+              "foreground": "#7EE787",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "variable.other.property.ikemen-def",
+            "settings": {
+              "foreground": "#C9D1D9"
+            }
+          },
+          {
+            "scope": "string.unquoted.path.character.ikemen-def",
+            "settings": {
+              "foreground": "#58A6FF"
+            }
+          },
+          {
+            "scope": "string.unquoted.path.common.ikemen-def",
+            "settings": {
+              "foreground": "#E3B341",
+              "fontStyle": "italic"
+            }
+          },
+          {
+            "scope": "entity.name.section.ikemen-cns, punctuation.definition.section.ikemen-cns",
+            "settings": {
+              "foreground": "#00FF00",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "comment.line.semicolon.ikemen-cns",
+            "settings": {
+              "foreground": "#808080",
+              "fontStyle": "italic"
+            }
+          },
+          {
+            "scope": "variable.other.constant.ikemen-cns, keyword.operator.assignment.ikemen-cns",
+            "settings": {
+              "foreground": "#F0F0F0",
+              "fontStyle": "bold"
+            }
+          },
+          {
+            "scope": "constant.numeric.ikemen-cns",
+            "settings": {
+              "foreground": "#FF2020"
+            }
+          }
+        ]
+      }
+    },
+    "snippets": [
+      {
+        "language": "zss",
+        "path": "./snippets/zss.json"
+      }
+    ],
+    "commands": [
+      {
+        "command": "ikemen.relatedWork.open",
+        "title": "IKEMEN: Open Related Work"
+      },
+      {
+        "command": "air.deleteSelectedFromViewer",
+        "title": "Delete Selected Animations"
+      },
+      {
+        "command": "sff.deleteSelectedFromViewer",
+        "title": "Delete Selected Sprites"
+      },
+      {
+        "command": "snd.deleteSelectedFromViewer",
+        "title": "Delete Selected Sounds"
+      },
+      {
+        "command": "ikemen.ownership.auditDef",
+        "title": "IKEMEN: Audit DEF Ownership Dependencies",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "ikemen.impact.preview",
+        "title": "IKEMEN: Preview Cross-File Change Impact",
+        "icon": "$(references)"
+      },
+      {
+        "command": "ikemen.projectProfile.create",
+        "title": "IKEMEN: Create New Game Profile\u2026",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "ikemen.projectManager.open",
+        "title": "IKEMEN: Open Project & Team Manager\u2026",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "ikemen.engineRegistry.open",
+        "title": "IKEMEN: Manage Engine Targets & Compatibility\u2026",
+        "icon": "$(versions)"
+      },
+      {
+        "command": "ikemen.engineMigration.review",
+        "title": "IKEMEN: Review & Safely Install Exact Nightly\u2026",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "ikemen.engineMigration.installRetained",
+        "title": "IKEMEN: Install Retained or Custom Exact Build\u2026",
+        "icon": "$(file-zip)"
+      },
+      {
+        "command": "ikemen.context.show",
+        "title": "IKEMEN: Show Current Project Context",
+        "icon": "$(layers-active)"
+      },
+      {
+        "command": "ikemen.context.openRegistry",
+        "title": "IKEMEN: Open Complete Game / Project Registry",
+        "icon": "$(json)"
+      },
+      {
+        "command": "ikemen.context.migrateRegistry",
+        "title": "IKEMEN: Validate / Migrate Project Metadata",
+        "icon": "$(sync)"
+      },
+      {
+        "command": "ikemen.context.indexMetadata",
+        "title": "IKEMEN: Index Existing Metadata Sources",
+        "icon": "$(references)"
+      },
+      {
+        "command": "ikemen.workspacePreset.save",
+        "title": "IKEMEN: Save Workspace Preset",
+        "icon": "$(save)"
+      },
+      {
+        "command": "ikemen.workspacePreset.restore",
+        "title": "IKEMEN: Restore Workspace Preset",
+        "icon": "$(multiple-windows)"
+      },
+      {
+        "command": "ikemen.workspacePreset.delete",
+        "title": "IKEMEN: Delete Workspace Preset",
+        "icon": "$(trash)"
+      },
+      {
+        "command": "ikemen.moveConstants.open",
+        "title": "IKEMEN: Open JNP Move Constants Editor",
+        "icon": "$(graph)"
+      },
+      {
+        "command": "ikemen.moveLab.open",
+        "title": "IKEMEN: Open Universal Move Lab",
+        "icon": "$(dashboard)"
+      },
+      {
+        "command": "ikemen.hitDef.openEditor",
+        "title": "IKEMEN: Open Universal HitDef Editor",
+        "icon": "$(symbol-method)"
+      },
+      {
+        "command": "ikemen.throwCreator.open",
+        "title": "IKEMEN: Open Throw Creator",
+        "icon": "$(combine)"
+      },
+      {
+        "command": "ikemen.throwCreator.openGuide",
+        "title": "IKEMEN: Open Throw Creator Guide",
+        "icon": "$(book)"
+      },
+      {
+        "command": "ikemen.explodComposer.open",
+        "title": "IKEMEN: Open Explod Composer",
+        "icon": "$(sparkle)"
+      },
+      {
+        "command": "ikemen.positionCamera.open",
+        "title": "IKEMEN: Open Position & Camera Editor",
+        "icon": "$(move)"
+      },
+      {
+        "command": "ikemen.helperLab.open",
+        "title": "IKEMEN: Open Helper Lab",
+        "icon": "$(type-hierarchy-sub)"
+      },
+      {
+        "command": "ikemen.showVersion",
+        "title": "IKEMaker: Show Installed Version",
+        "icon": "$(versions)"
+      },
+      {
+        "command": "ikemen.windowsFileAssociations.configure",
+        "title": "IKEMaker: Set .SFF, .AIR, .SND, and Code File Opening",
+        "icon": "$(file-symlink-file)"
+      },
+      {
+        "command": "ikemen.chooseOpeningSidebar",
+        "title": "IKEMaker: Choose Opening Sidebar",
+        "icon": "$(layout-sidebar-left)"
+      },
+      {
+        "command": "ikemen.paletteImport.open",
+        "title": "IKEMEN: Open Sprite & Palette Import Assistant",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "ikemen.artistIntake.open",
+        "title": "IKEMEN: Open Artist Intake / Temporary SFF",
+        "icon": "$(file-media)"
+      },
+      {
+        "command": "sff.openAssembly",
+        "title": "SFF: Assemble or Replace Between Two SFFs",
+        "icon": "$(combine)"
+      },
+      {
+        "command": "ikemen.mutations.openHistory",
+        "title": "IKEMEN: Open Recovery Center",
+        "icon": "$(history)"
+      },
+      {
+        "command": "ikemen.character.createNew",
+        "title": "IKEMEN: Create New Character\u2026",
+        "icon": "$(new-folder)"
+      },
+      {
+        "command": "sff.createNew",
+        "title": "SFF: Create New SFF 2.1\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "air.createNew",
+        "title": "AIR: Create New Animation File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "snd.createNew",
+        "title": "SND: Create New Sound Archive\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ikemen.file.createNew",
+        "title": "IKEMEN: Create an Individual File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "zss.createNew",
+        "title": "ZSS: Create New Source File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "cns.createNew",
+        "title": "CNS: Create New Source File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "inp.createNew",
+        "title": "IKEMEN: Create New Input File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "cmd.createNew",
+        "title": "CMD: Create Legacy Command File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ikemen.def.createNew",
+        "title": "IKEMEN: Create New DEF File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ikemen.lua.createNew",
+        "title": "IKEMEN: Create New Lua File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ikemen.text.createNew",
+        "title": "IKEMEN: Create New Text Data File\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "zss.goToLine",
+        "title": "ZSS: Go to Line",
+        "icon": "$(go-to-file)"
+      },
+      {
+        "command": "zss.toggleLineComment",
+        "title": "ZSS: Comment / Uncomment",
+        "icon": "$(comment)"
+      },
+      {
+        "command": "zss.openProjectData",
+        "title": "ZSS: Show Project Data",
+        "icon": "$(symbol-namespace)"
+      },
+      {
+        "command": "zss.openControllers",
+        "title": "IKEMEN: Browse and Insert State Controllers",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "zss.openPalFxEditor",
+        "title": "ZSS: Open PalFX Editor",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "sff.openViewer",
+        "title": "SFF: Open Sprite Browser"
+      },
+      {
+        "command": "sff.chooseImageEditor",
+        "title": "SFF: Choose Image Editor\u2026",
+        "enablement": "ikemen.capability.externalEditors"
+      },
+      {
+        "command": "snd.openViewer",
+        "title": "SND: Open Sound Archive Workspace"
+      },
+      {
+        "command": "snd.chooseAudioEditor",
+        "title": "SND: Choose Audio Editor\u2026",
+        "enablement": "ikemen.capability.externalEditors"
+      },
+      {
+        "command": "ikemen.character.open",
+        "title": "IKEMEN: Open Character\u2026",
+        "icon": "$(folder-opened)"
+      },
+      {
+        "command": "ikemen.character.close",
+        "title": "IKEMEN: Close Character\u2026",
+        "icon": "$(close)"
+      },
+      {
+        "command": "ikemen.stage.close",
+        "title": "IKEMEN: Close Stage Workspace\u2026",
+        "icon": "$(close)"
+      },
+      {
+        "command": "ikemen.context.closeCurrent",
+        "title": "IKEMEN: Close Current Authoring Context\u2026",
+        "icon": "$(close-all)"
+      },
+      {
+        "command": "ikemen.workbench.create",
+        "title": "IKEMEN: Create Character Workbench\u2026",
+        "icon": "$(add)"
+      },
+      {
+        "command": "ikemen.characterDependencies.open",
+        "title": "IKEMEN: Open Character Connection Tree\u2026",
+        "icon": "$(type-hierarchy)"
+      },
+      {
+        "command": "ikemen.characterHealth.open",
+        "title": "IKEMEN: Open Character Health & Cleanup\u2026",
+        "icon": "$(shield)"
+      },
+      {
+        "command": "ikemen.cnsConverter.open",
+        "title": "IKEMEN: Convert CNS State Code to ZSS\u2026",
+        "icon": "$(replace-all)"
+      },
+      {
+        "command": "ikemen.cnsConverter.character",
+        "title": "IKEMEN: Convert a Character\u2019s CNS State Files to ZSS\u2026",
+        "icon": "$(files)"
+      },
+      {
+        "command": "ikemen.navigation.openDefinition",
+        "title": "IKEMEN: Open Referenced Definition"
+      },
+      {
+        "command": "ikemen.workbench.open",
+        "title": "Open Character Workbench",
+        "icon": "$(window)"
+      },
+      {
+        "command": "ikemen.workbench.openAllCode",
+        "title": "Open All Character Code"
+      },
+      {
+        "command": "ikemen.workbench.refresh",
+        "title": "Refresh Character Workbench",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "ikemen.workbench.addCurrentFile",
+        "title": "Add Current File to Workbench"
+      },
+      {
+        "command": "ikemen.workbench.remove",
+        "title": "Remove Character Workbench"
+      },
+      {
+        "command": "sff.auditCharacterRequirements",
+        "title": "SFF: Audit Character Requirements"
+      },
+      {
+        "command": "sff.reviewUnassignedSprites",
+        "title": "SFF: Review Unassigned Sprites"
+      },
+      {
+        "command": "sff.createMissingAxisCopies",
+        "title": "SFF: Create Missing Axis Copies"
+      },
+      {
+        "command": "sff.addCharacterRequirement",
+        "title": "SFF: Add Required Sprite or Animation"
+      },
+      {
+        "command": "sff.openRequirementsProfile",
+        "title": "SFF: Open Character Requirements Rules"
+      },
+      {
+        "command": "ikemen.authoringBridge.install",
+        "title": "IKEMEN: Install Authoring Bridge into Character\u2026",
+        "icon": "$(plug)"
+      },
+      {
+        "command": "ikemen.animationStandards.open",
+        "title": "IKEMEN: Open Animation Standards Registry",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "ikemen.authoringBridge.openGuide",
+        "title": "IKEMEN: Open Authoring Bridge Guide",
+        "icon": "$(book)"
+      },
+      {
+        "command": "zssNavigator.refresh",
+        "title": "ZSS Navigator: Refresh"
+      },
+      {
+        "command": "zssNavigator.reveal",
+        "title": "ZSS Navigator: Reveal Symbol"
+      },
+      {
+        "command": "zssControllers.search",
+        "title": "ZSS Controllers: Filter"
+      },
+      {
+        "command": "zssControllers.clearFilter",
+        "title": "ZSS Controllers: Clear Filter"
+      },
+      {
+        "command": "zssControllers.insert",
+        "title": "IKEMEN: Insert State Controller with Options\u2026"
+      },
+      {
+        "command": "zssControllers.openDocs",
+        "title": "ZSS Controllers: Open Documentation"
+      },
+      {
+        "command": "zss.wrap.ignoreHitPause",
+        "title": "ZSS: Wrap with ignoreHitPause"
+      },
+      {
+        "command": "zss.wrap.persistent",
+        "title": "ZSS: Wrap with persistent\u2026"
+      },
+      {
+        "command": "zss.wrap.ignoreHitPausePersistent",
+        "title": "ZSS: Wrap with ignoreHitPause + persistent\u2026"
+      },
+      {
+        "command": "zss.audit.currentFile",
+        "title": "ZSS: Audit Current File"
+      },
+      {
+        "command": "zss.audit.workspace",
+        "title": "ZSS: Audit Workspace for Frame and Entity Safety"
+      },
+      {
+        "command": "zssRegistry.refresh",
+        "title": "ZSS Registry: Refresh"
+      },
+      {
+        "command": "ikemen.maps.openBrowser",
+        "title": "IKEMaker: Browse Project Maps…",
+        "icon": "$(symbol-variable)"
+      },
+      {
+        "command": "ikemen.maps.insert",
+        "title": "IKEMaker: Insert Project Map…",
+        "icon": "$(insert)"
+      },
+      {
+        "command": "ikemen.maps.configureTextGrammar",
+        "title": "IKEMaker: Configure Map Coding Grammar for .txt…"
+      },
+      {
+        "command": "zss.updates.checkNow",
+        "title": "IKEMEN: Check Release and Documentation Changes"
+      },
+      {
+        "command": "zss.updates.checkDefNow",
+        "title": "IKEMEN: Check Changes for This DEF"
+      },
+      {
+        "command": "zss.updates.showLastReport",
+        "title": "IKEMEN: Show Last Upstream Update Report"
+      },
+      {
+        "command": "air.batchApplyClsn2",
+        "title": "AIR: Batch Apply Selected Clsn2\u2026"
+      },
+      {
+        "command": "air.generateGuardProximityHelper",
+        "title": "AIR: Generate Guard-Proximity Helper\u2026"
+      },
+      {
+        "command": "air.assignClsn2HitReactionRegion",
+        "title": "AIR: Assign Selected Clsn2 Hit Reaction"
+      },
+      {
+        "command": "air.openAnimationPreview",
+        "title": "AIR: Open Animation Viewer"
+      },
+      {
+        "command": "cns.scaleSelectedSizebox",
+        "title": "CNS: Scale Selected Sizebox to Character"
+      },
+      {
+        "command": "sff.generateBuildFiles",
+        "title": "SFF: Generate SprMaker2 Build Files"
+      },
+      {
+        "command": "sff.applyProjectIndexing",
+        "title": "SFF: Apply Project Get-Hit Indexing"
+      },
+      {
+        "command": "sff.openProjectBuildProfile",
+        "title": "SFF: Open Project Build and Animation Rules"
+      },
+      {
+        "command": "sff.createProjectBuildProfile",
+        "title": "SFF: Create Custom Build and Animation Rules"
+      },
+      {
+        "command": "sff.openGroupLog",
+        "title": "SFF: Open Group Log"
+      },
+      {
+        "command": "air.openActionLog",
+        "title": "AIR: Open Action Log"
+      },
+      {
+        "command": "sff.openSprMakerText",
+        "title": "SFF: Open SprMaker2 Build Text"
+      },
+      {
+        "command": "snd.openMakerText",
+        "title": "SND: Open SndMaker Build Text"
+      },
+      {
+        "command": "sff.buildApprovedManifest",
+        "title": "SFF: Build Approved Manifest",
+        "enablement": "ikemen.capability.nativeBuilders"
+      },
+      {
+        "command": "sff.cropArchive",
+        "title": "SFF: Crop Current Sprite, Group, or Archive\u2026",
+        "enablement": "ikemen.capability.nativeBuilders"
+      },
+      {
+        "command": "ikemen.release.captureDefaults",
+        "title": "IKEMEN: Capture Public Release Defaults\u2026",
+        "icon": "$(save-as)"
+      },
+      {
+        "command": "ikemen.release.openProfile",
+        "title": "IKEMEN: Open Public Release Profile",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "ikemen.release.audit",
+        "title": "IKEMEN: Audit Public Release",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "ikemen.release.complete",
+        "title": "IKEMEN: Complete Project into Public Copy\u2026",
+        "icon": "$(package)",
+        "enablement": "ikemen.capability.nativeBuilders"
+      },
+      {
+        "command": "sff.importLayerFolder",
+        "title": "SFF: Import Folder as Layer"
+      },
+      {
+        "command": "sff.reviewLayerParts",
+        "title": "SFF: Review Interaction Part Ordering"
+      },
+      {
+        "command": "sff.reviewRedundantLayers",
+        "title": "SFF: Review Redundant Layer Frames"
+      },
+      {
+        "command": "sff.reviewDismissedLayerWarnings",
+        "title": "SFF: Review Dismissed Layer Warnings"
+      },
+      {
+        "command": "sff.showNamingStandard",
+        "title": "SFF: Open Coder Build & Numbering Standard"
+      },
+      {
+        "command": "sff.showArtistHandoffGuide",
+        "title": "SFF: Open Artist Handoff Guide"
+      },
+      {
+        "command": "sff.openAliasRegistry",
+        "title": "SFF: Open or Create Project Naming and Alias Rules"
+      },
+      {
+        "command": "ikemen.openTools",
+        "title": "IKEMEN: Open Tools Sidebar"
+      },
+      {
+        "command": "ikemen.showPlatformCapabilities",
+        "title": "IKEMEN: Show Platform Capabilities"
+      },
+      {
+        "command": "ikemen.showBundledToolchain",
+        "title": "IKEMEN: Show Bundled Build Toolchain"
+      },
+      {
+        "command": "ikemen.luaSupport.status",
+        "title": "IKEMEN: Check Lua Authoring Support"
+      },
+      {
+        "command": "ikemen.luaSupport.installDefinitions",
+        "title": "IKEMEN: Install LuaLS Definitions into Project"
+      },
+      {
+        "command": "ikemen.openMobileFeatureMatrix",
+        "title": "IKEMEN: Open Android / iPhone Feature Matrix"
+      },
+      {
+        "command": "ikemen.def.openVisualWorkspace",
+        "title": "IKEMEN: Open Visual DEF Workspace",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "ikemen.stage.createNew",
+        "title": "IKEMEN: Create New Stage and Visual Workspace"
+      },
+      {
+        "command": "ikemen.stage.openWorkspace",
+        "title": "IKEMEN: Open Stage Visual Workspace",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "ikemen.stage.launchRig",
+        "title": "IKEMEN: Launch Current Stage with Stage Rig",
+        "icon": "$(run-all)",
+        "enablement": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.stage.createInteraction",
+        "title": "IKEMEN: Create Project-Owned Stage Interaction Helper"
+      },
+      {
+        "command": "ikemen.ui.createNew",
+        "title": "IKEMEN: Create New Screenpack / Fight UI Workspace"
+      },
+      {
+        "command": "ikemen.ui.openWorkspace",
+        "title": "IKEMEN: Open Screenpack / Fight UI Workspace",
+        "icon": "$(layout)"
+      },
+      {
+        "command": "ikemen.ui.openLuaModule",
+        "title": "IKEMEN: Open or Create Screenpack Lua Module",
+        "icon": "$(code)"
+      },
+      {
+        "command": "ikemen.ui.generateCharacterBridge",
+        "title": "IKEMEN: Generate Optional Character UI Bridge"
+      },
+      {
+        "command": "ikemen.ui.createPreviewProfile",
+        "title": "IKEMEN: Create Optional UI Preview Profile"
+      },
+      {
+        "command": "ikemen.openStageScreenpackSpec",
+        "title": "IKEMEN: Open Stage and Screenpack Workspace Specification"
+      },
+      {
+        "command": "ikemen.commandMovelist.openEditor",
+        "title": "IKEMEN: Open Command & Movelist Editor",
+        "icon": "$(list-selection)"
+      },
+      {
+        "command": "ikemen.codeStructure.openWorkspace",
+        "title": "IKEMEN: Open Visual Code Structure",
+        "icon": "$(type-hierarchy-sub)"
+      },
+      {
+        "command": "ikemen.selectDef.openWorkspace",
+        "title": "IKEMEN: Open Visual select.def Editor",
+        "icon": "$(organization)"
+      },
+      {
+        "command": "ikemen.selectDef.openLayoutBuilder",
+        "title": "IKEMEN: Open Character Select Layout Builder",
+        "icon": "$(layout)"
+      },
+      {
+        "command": "ikemen.menuModes.openPlayer",
+        "title": "IKEMEN: Open Player Menu & Mode Recipes",
+        "icon": "$(play-circle)"
+      },
+      {
+        "command": "ikemen.menuModes.openCreator",
+        "title": "IKEMEN: Open Complete Menu & Modes Editor",
+        "icon": "$(list-tree)"
+      },
+      {
+        "command": "ikemen.storyDialogue.openPlayer",
+        "title": "IKEMEN: Open Story & Dialogue Builder",
+        "icon": "$(book)"
+      },
+      {
+        "command": "ikemen.storyDialogue.openCreator",
+        "title": "IKEMEN: Open Advanced Story & Dialogue Builder",
+        "icon": "$(git-branch)"
+      },
+      {
+        "command": "ikemen.storyboard.create",
+        "title": "IKEMEN: Create New Storyboard\u2026",
+        "icon": "$(new-file)"
+      },
+      {
+        "command": "ikemen.storyboard.createOpening",
+        "title": "IKEMEN: Create Character Opening Storyboard\u2026"
+      },
+      {
+        "command": "ikemen.storyboard.createEnding",
+        "title": "IKEMEN: Create Character Ending Storyboard\u2026"
+      },
+      {
+        "command": "ikemen.storyboard.open",
+        "title": "IKEMEN: Open Storyboard Visual Editor\u2026",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "ikemen.paletteOrganizer.open",
+        "title": "IKEMEN: Open Palette Index Organizer\u2026",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "ikemen.productionWorkflow.open",
+        "title": "IKEMEN: Open Production Workflow",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "ikemen.productionWorkflow.editProfile",
+        "title": "IKEMEN: Create or Edit Production Workflow Subprofile",
+        "icon": "$(edit)"
+      },
+      {
+        "command": "ikemen.productionWorkflow.openGuide",
+        "title": "IKEMEN: Open Production Workflow Guide",
+        "icon": "$(book)"
+      },
+      {
+        "command": "ikemen.help.open",
+        "title": "IKEMaker: Open Help & Learning Center",
+        "icon": "$(book)"
+      },
+      {
+        "command": "ikemen.docs.openOffline",
+        "title": "IKEMEN: Open Offline Documentation Library",
+        "icon": "$(book)"
+      },
+      {
+        "command": "ikemen.docs.updateOffline",
+        "title": "IKEMEN: Update Offline Documentation Library",
+        "icon": "$(cloud-download)"
+      },
+      {
+        "command": "ikemen.experience.configure",
+        "title": "IKEMEN: Configure Learning / Advanced Experience",
+        "icon": "$(settings-gear)"
+      },
+      {
+        "command": "ikemen.launchGame",
+        "title": "IKEMEN: Launch IKEMEN (Ctrl+Alt+F5)",
+        "icon": "$(play)",
+        "enablement": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.launchMirrorCurrent",
+        "title": "IKEMEN: Launch Infinite VS Mirror (Ctrl+Alt+F6)",
+        "icon": "$(run-all)",
+        "enablement": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.launchTrainingCurrent",
+        "title": "IKEMEN: Launch Training Mirror Match (Ctrl+Alt+F7)",
+        "icon": "$(debug-start)",
+        "enablement": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.launchTrainingConfigured",
+        "title": "IKEMEN: Configure and Launch Training Match",
+        "enablement": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.setDefaultTrainingCharacter",
+        "title": "IKEMEN: Set Default Training Character"
+      },
+      {
+        "command": "ikemen.setDefaultTrainingStage",
+        "title": "IKEMEN: Set Default Training Stage"
+      },
+      {
+        "command": "ikemen.openControls",
+        "title": "IKEMEN: Open Controls Configuration"
+      },
+      {
+        "command": "ikemen.openLauncherSettings",
+        "title": "IKEMEN: Open Launcher Settings"
+      },
+      {
+        "command": "ikemen.openExtensionSettings",
+        "title": "IKEMEN: Open Extension Settings"
+      },
+      {
+        "command": "ikemen.extensionUpdates.check",
+        "title": "IKEMaker: Check for Updates"
+      },
+      {
+        "command": "ikemen.extensionUpdates.settings",
+        "title": "IKEMaker: Configure Update Channel"
+      },
+      {
+        "command": "ikemen.testSessions.open",
+        "title": "IKEMEN: Open Test & Diagnostic Suite",
+        "icon": "$(beaker)"
+      },
+      {
+        "command": "ikemen.openPaletteFolder",
+        "title": "IKEMEN: Open Current Character Palette Folder"
+      },
+      {
+        "command": "ikemen.viewer.openReference",
+        "title": "IKEMEN: Open Referenced Animation / FX / Sound / Sprite"
+      },
+      {
+        "command": "ikemen.viewer.back",
+        "title": "IKEMaker: Viewer History Back"
+      },
+      {
+        "command": "ikemen.viewer.forward",
+        "title": "IKEMaker: Viewer History Forward"
+      },
+      {
+        "command": "ikemen.makeBackup",
+        "title": "Make Backup\u2026",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.toggleAutoSave",
+        "title": "Toggle Auto Save",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.configureAssetWorkspace",
+        "title": "Change Mode (Player / Simple / Workspace)",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.changeMode",
+        "title": "Change Mode",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.openHome",
+        "title": "Open IKEMaker Home",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.workspaceSetup.change",
+        "title": "Change Workspace Setup",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.workspaceSetup.showAll",
+        "title": "Show All Tools / Use Saved Focus",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.workspaceSetup.pin",
+        "title": "Pin an Additional Tool",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "sff.refreshGroupLog",
+        "title": "SFF: Refresh Group Log\u2026"
+      },
+      {
+        "command": "air.refreshActionLog",
+        "title": "AIR: Refresh Action Log\u2026"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "ikemen",
+          "title": "IKEMEN",
+          "icon": "media/ikemen.svg"
+        }
+      ]
+    },
+    "views": {
+      "ikemen": [
+        {
+          "id": "ikemen.characterWorkbenches",
+          "name": "Character Workbenches",
+          "visibility": "visible",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "id": "ikemen.tools",
+          "name": "IKEMaker Tools",
+          "visibility": "visible"
+        },
+        {
+          "id": "zssNavigator",
+          "name": "Code Navigator",
+          "visibility": "visible",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "id": "zssRegistry",
+          "name": "Project Data: Maps, Helpers, IDs & More",
+          "visibility": "visible",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "id": "zssStateControllers",
+          "name": "State Controllers",
+          "visibility": "visible",
+          "when": "ikemen.interfaceMode == workspace"
+        }
+      ]
+    },
+    "keybindings": [
+      {
+        "command": "ikemen.launchGame",
+        "key": "ctrl+alt+f5",
+        "when": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.launchMirrorCurrent",
+        "key": "ctrl+alt+f6",
+        "when": "ikemen.capability.ikemenLaunch"
+      },
+      {
+        "command": "ikemen.launchTrainingCurrent",
+        "key": "ctrl+alt+f7",
+        "when": "ikemen.capability.ikemenLaunch"
+      }
+    ],
+    "menus": {
+      "webview/title": [
+        {
+          "command": "ikemen.launchGame",
+          "when": "webviewId =~ /^ikemen/ && ikemen.capability.ikemenLaunch",
+          "group": "navigation@90"
+        },
+        {
+          "command": "ikemen.launchMirrorCurrent",
+          "when": "webviewId =~ /^ikemen/ && ikemen.capability.ikemenLaunch",
+          "group": "navigation@91"
+        },
+        {
+          "command": "ikemen.launchTrainingCurrent",
+          "when": "webviewId =~ /^ikemen/ && ikemen.capability.ikemenLaunch",
+          "group": "navigation@92"
+        }
+      ],
+      "webview/context": [
+        {
+          "command": "ikemen.launchGame",
+          "when": "webviewId =~ /^ikemen/ && ikemen.capability.ikemenLaunch",
+          "group": "9_launch@1"
+        },
+        {
+          "command": "ikemen.launchMirrorCurrent",
+          "when": "webviewId =~ /^ikemen/ && ikemen.capability.ikemenLaunch",
+          "group": "9_launch@2"
+        },
+        {
+          "command": "ikemen.launchTrainingCurrent",
+          "when": "webviewId =~ /^ikemen/ && ikemen.capability.ikemenLaunch",
+          "group": "9_launch@3"
+        },
+        {
+          "command": "air.deleteSelectedFromViewer",
+          "when": "(webviewSection == airActions) && ikemen.interfaceMode != player",
+          "group": "1_modification@10"
+        },
+        {
+          "command": "sff.deleteSelectedFromViewer",
+          "when": "(webviewSection == sffSprites) && ikemen.interfaceMode != player",
+          "group": "1_modification@10"
+        },
+        {
+          "command": "snd.deleteSelectedFromViewer",
+          "when": "(webviewSection == sndEntries) && ikemen.interfaceMode != player",
+          "group": "1_modification@10"
+        }
+      ],
+      "editor/title": [
+        {
+          "command": "ikemen.launchGame",
+          "when": "(activeCustomEditorId == ikemen.sffWorkspace || activeCustomEditorId == ikemen.sndWorkspace) && ikemen.capability.ikemenLaunch",
+          "group": "navigation@90"
+        },
+        {
+          "command": "ikemen.launchMirrorCurrent",
+          "when": "(activeCustomEditorId == ikemen.sffWorkspace || activeCustomEditorId == ikemen.sndWorkspace) && ikemen.capability.ikemenLaunch",
+          "group": "navigation@91"
+        },
+        {
+          "command": "ikemen.launchTrainingCurrent",
+          "when": "(activeCustomEditorId == ikemen.sffWorkspace || activeCustomEditorId == ikemen.sndWorkspace) && ikemen.capability.ikemenLaunch",
+          "group": "navigation@92"
+        },
+        {
+          "command": "ikemen.menuModes.openCreator",
+          "when": "(resourceFilename == system.def || resourceFilename == select.def) && ikemen.interfaceMode != player",
+          "group": "navigation@0"
+        },
+        {
+          "command": "ikemen.productionWorkflow.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0"
+        },
+        {
+          "command": "ikemen.selectDef.openWorkspace",
+          "when": "resourceFilename == select.def",
+          "group": "navigation@0"
+        },
+        {
+          "command": "ikemen.codeStructure.openWorkspace",
+          "when": "(editorLangId == zss || editorLangId == lua || resourceExtname == .cns) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0"
+        },
+        {
+          "command": "ikemen.commandMovelist.openEditor",
+          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .dat) && ikemen.interfaceMode != player",
+          "group": "navigation@0"
+        },
+        {
+          "command": "zss.goToLine",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "navigation@1"
+        },
+        {
+          "command": "zss.toggleLineComment",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "navigation@2"
+        },
+        {
+          "command": "zss.openProjectData",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "navigation@3"
+        },
+        {
+          "command": "zss.openControllers",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "navigation@4"
+        },
+        {
+          "command": "zss.openPalFxEditor",
+          "when": "(editorLangId == zss || resourceExtname == .air) && ikemen.interfaceMode != player",
+          "group": "navigation@5"
+        },
+        {
+          "command": "air.openAnimationPreview",
+          "when": "(resourceExtname == .air) && ikemen.interfaceMode != player",
+          "group": "navigation@6"
+        }
+      ],
+      "explorer/context": [
+        {
+          "command": "ikemen.helperLab.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .txt) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.4"
+        },
+        {
+          "command": "ikemen.explodComposer.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.3"
+        },
+        {
+          "command": "ikemen.positionCamera.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.35"
+        },
+        {
+          "command": "ikemen.moveLab.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.25"
+        },
+        {
+          "command": "ikemen.hitDef.openEditor",
+          "when": "(resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .txt) && ikemen.interfaceMode == workspace",
+          "group": "navigation@12.5"
+        },
+        {
+          "command": "ikemen.productionWorkflow.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .air || resourceExtname == .sff || resourceExtname == .snd) && ikemen.interfaceMode == workspace",
+          "group": "navigation@14"
+        },
+        {
+          "command": "ikemen.selectDef.openWorkspace",
+          "when": "resourceFilename == select.def",
+          "group": "navigation@15"
+        },
+        {
+          "command": "ikemen.codeStructure.openWorkspace",
+          "when": "(resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .lua) && ikemen.interfaceMode == workspace",
+          "group": "navigation@16"
+        },
+        {
+          "command": "ikemen.cnsConverter.open",
+          "when": "(resourceExtname == .cns || resourceExtname == .def) && ikemen.interfaceMode == workspace",
+          "group": "navigation@16.5"
+        },
+        {
+          "command": "ikemen.commandMovelist.openEditor",
+          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .dat) && ikemen.interfaceMode != player",
+          "group": "navigation@17"
+        },
+        {
+          "command": "ikemen.def.openVisualWorkspace",
+          "when": "(resourceExtname == .def) && ikemen.interfaceMode != player",
+          "group": "navigation@18"
+        },
+        {
+          "command": "sff.openViewer",
+          "when": "(resourceExtname == .sff) && ikemen.interfaceMode != player",
+          "group": "navigation@20"
+        },
+        {
+          "command": "air.openAnimationPreview",
+          "when": "(resourceExtname == .air) && ikemen.interfaceMode != player",
+          "group": "navigation@20"
+        },
+        {
+          "command": "snd.openViewer",
+          "when": "(resourceExtname == .snd) && ikemen.interfaceMode != player",
+          "group": "navigation@20"
+        }
+      ],
+      "view/title": [
+        {
+          "command": "ikemen.workbench.create",
+          "when": "(view == ikemen.characterWorkbenches) && ikemen.interfaceMode != player",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ikemen.workbench.refresh",
+          "when": "(view == ikemen.characterWorkbenches) && ikemen.interfaceMode != player",
+          "group": "navigation@2"
+        },
+        {
+          "command": "zssNavigator.refresh",
+          "when": "(view == zssNavigator) && ikemen.interfaceMode == workspace",
+          "group": "navigation"
+        },
+        {
+          "command": "zssControllers.search",
+          "when": "(view == zssStateControllers) && ikemen.interfaceMode == workspace",
+          "group": "navigation@1"
+        },
+        {
+          "command": "zssRegistry.refresh",
+          "when": "(view == zssRegistry) && ikemen.interfaceMode == workspace",
+          "group": "navigation"
+        },
+        {
+          "command": "zssControllers.clearFilter",
+          "when": "(view == zssStateControllers) && ikemen.interfaceMode == workspace",
+          "group": "navigation@2"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "ikemen.workbench.open",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode != player",
+          "group": "inline@1"
+        },
+        {
+          "command": "ikemen.workbench.openAllCode",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode == workspace",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ikemen.workbench.refresh",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode != player",
+          "group": "navigation@2"
+        },
+        {
+          "command": "ikemen.workbench.addCurrentFile",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode != player",
+          "group": "navigation@3"
+        },
+        {
+          "command": "ikemen.character.close",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode != player",
+          "group": "inline@2"
+        },
+        {
+          "command": "ikemen.workbench.remove",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode != player",
+          "group": "navigation@9"
+        },
+        {
+          "command": "zssControllers.openDocs",
+          "when": "(view == zssStateControllers && viewItem == zssController) && ikemen.interfaceMode == workspace",
+          "group": "inline"
+        }
+      ],
+      "editor/context": [
+        {
+          "command": "ikemen.maps.insert",
+          "when": "(editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .st || resourceExtname == .inp || resourceExtname == .jnp || resourceExtname == .txt) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.1"
+        },
+        {
+          "command": "ikemen.maps.openBrowser",
+          "when": "(editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .st || resourceExtname == .inp || resourceExtname == .jnp || resourceExtname == .txt) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.11"
+        },
+        {
+          "command": "ikemen.maps.configureTextGrammar",
+          "when": "resourceExtname == .txt && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.12"
+        },
+        {
+          "command": "ikemen.helperLab.open",
+          "when": "(resourceExtname == .def || editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .cmd || resourceExtname == .txt) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.4"
+        },
+        {
+          "command": "ikemen.explodComposer.open",
+          "when": "(resourceExtname == .def || editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .cmd || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.3"
+        },
+        {
+          "command": "ikemen.positionCamera.open",
+          "when": "(resourceExtname == .def || editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .cmd || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.35"
+        },
+        {
+          "command": "ikemen.moveLab.open",
+          "when": "(resourceExtname == .def || editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .cmd || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.25"
+        },
+        {
+          "command": "ikemen.hitDef.openEditor",
+          "when": "(editorLangId == zss || editorLangId == ikemen-cns || resourceExtname == .cmd || resourceExtname == .txt) && ikemen.interfaceMode == workspace",
+          "group": "navigation@0.5"
+        },
+        {
+          "command": "ikemen.navigation.openDefinition",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "navigation@1"
+        },
+        {
+          "command": "ikemen.characterDependencies.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .jnp) && ikemen.interfaceMode == workspace",
+          "group": "navigation@13"
+        },
+        {
+          "command": "ikemen.characterHealth.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@13.5"
+        },
+        {
+          "command": "ikemen.cnsConverter.open",
+          "when": "(resourceExtname == .cns || resourceExtname == .def) && ikemen.interfaceMode == workspace",
+          "group": "navigation@15.5"
+        },
+        {
+          "command": "ikemen.productionWorkflow.open",
+          "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "navigation@14"
+        },
+        {
+          "command": "ikemen.selectDef.openWorkspace",
+          "when": "resourceFilename == select.def",
+          "group": "navigation@15"
+        },
+        {
+          "command": "ikemen.codeStructure.openWorkspace",
+          "when": "(editorLangId == zss || editorLangId == lua || resourceExtname == .cns) && ikemen.interfaceMode == workspace",
+          "group": "navigation@16"
+        },
+        {
+          "command": "ikemen.commandMovelist.openEditor",
+          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .dat || editorLangId == zss) && ikemen.interfaceMode != player",
+          "group": "navigation@17"
+        },
+        {
+          "command": "ikemen.ui.openWorkspace",
+          "when": "(resourceExtname == .def) && ikemen.interfaceMode != player",
+          "group": "navigation@18"
+        },
+        {
+          "command": "ikemen.stage.openWorkspace",
+          "when": "(resourceExtname == .def) && ikemen.interfaceMode != player",
+          "group": "navigation@19"
+        },
+        {
+          "command": "zss.updates.checkDefNow",
+          "when": "(resourceExtname == .def) && ikemen.interfaceMode == workspace",
+          "group": "navigation@1"
+        },
+        {
+          "command": "zss.wrap.ignoreHitPause",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@10"
+        },
+        {
+          "command": "zss.wrap.persistent",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@11"
+        },
+        {
+          "command": "zss.wrap.ignoreHitPausePersistent",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@12"
+        },
+        {
+          "command": "zss.audit.currentFile",
+          "when": "(editorLangId == zss) && ikemen.interfaceMode == workspace",
+          "group": "navigation@1"
+        },
+        {
+          "command": "air.batchApplyClsn2",
+          "when": "(resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@20"
+        },
+        {
+          "command": "air.generateGuardProximityHelper",
+          "when": "(resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@21"
+        },
+        {
+          "command": "air.assignClsn2HitReactionRegion",
+          "when": "(resourceExtname == .air) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@22"
+        },
+        {
+          "command": "air.openAnimationPreview",
+          "when": "(resourceExtname == .air) && ikemen.interfaceMode != player",
+          "group": "navigation@20"
+        },
+        {
+          "command": "cns.scaleSelectedSizebox",
+          "when": "(resourceExtname == .cns && editorTextFocus) && ikemen.interfaceMode == workspace",
+          "group": "1_modification@20"
+        },
+        {
+          "command": "ikemen.viewer.openReference",
+          "when": "(resourceExtname =~ /\\.(zss|cns|cmd|air|def)$/i) && ikemen.interfaceMode != player",
+          "group": "navigation@20"
+        }
+      ],
+      "commandPalette": [
+        {
+          "command": "ikemen.maps.openBrowser",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.maps.insert",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.maps.configureTextGrammar",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "air.assignClsn2HitReactionRegion",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "air.batchApplyClsn2",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "air.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "air.deleteSelectedFromViewer",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "air.generateGuardProximityHelper",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "air.openActionLog",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "air.openAnimationPreview",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "cmd.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "cns.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "cns.scaleSelectedSizebox",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.animationStandards.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.artistIntake.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.authoringBridge.install",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.authoringBridge.openGuide",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.character.close",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.character.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.character.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.characterDependencies.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.characterHealth.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.cnsConverter.character",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.cnsConverter.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.codeStructure.openWorkspace",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.commandMovelist.openEditor",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.context.closeCurrent",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.context.indexMetadata",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.context.migrateRegistry",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.context.openRegistry",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.context.show",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.def.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.def.openVisualWorkspace",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.experience.configure",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.explodComposer.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.file.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.helperLab.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.hitDef.openEditor",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.impact.preview",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.lua.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.luaSupport.installDefinitions",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.luaSupport.status",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.menuModes.openCreator",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.moveConstants.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.moveLab.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.mutations.openHistory",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.navigation.openDefinition",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.openStageScreenpackSpec",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.ownership.auditDef",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.paletteImport.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.paletteOrganizer.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.positionCamera.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.productionWorkflow.editProfile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.productionWorkflow.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.productionWorkflow.openGuide",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.projectManager.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.engineRegistry.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.engineMigration.review",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.engineMigration.installRetained",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.projectProfile.create",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.relatedWork.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.release.audit",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.release.captureDefaults",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.release.complete",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.release.openProfile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.selectDef.openLayoutBuilder",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.showBundledToolchain",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.stage.close",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.stage.createInteraction",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.stage.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.stage.launchRig",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.stage.openWorkspace",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.storyDialogue.openCreator",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.storyboard.create",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.storyboard.createEnding",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.storyboard.createOpening",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.storyboard.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.testSessions.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.text.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.throwCreator.open",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.throwCreator.openGuide",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.ui.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.ui.createPreviewProfile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.ui.generateCharacterBridge",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.ui.openLuaModule",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.ui.openWorkspace",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.viewer.back",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.viewer.forward",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.viewer.openReference",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.windowsFileAssociations.configure",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workbench.addCurrentFile",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.workbench.create",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.workbench.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.workbench.openAllCode",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workbench.refresh",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.workbench.remove",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.workspacePreset.delete",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workspacePreset.restore",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workspacePreset.save",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "inp.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "sff.addCharacterRequirement",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.applyProjectIndexing",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.auditCharacterRequirements",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.buildApprovedManifest",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.chooseImageEditor",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "sff.createMissingAxisCopies",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "sff.createProjectBuildProfile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.cropArchive",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.deleteSelectedFromViewer",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "sff.generateBuildFiles",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.importLayerFolder",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openAliasRegistry",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openAssembly",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openGroupLog",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openProjectBuildProfile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openRequirementsProfile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openSprMakerText",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.openViewer",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "sff.reviewDismissedLayerWarnings",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.reviewLayerParts",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.reviewRedundantLayers",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.reviewUnassignedSprites",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.showArtistHandoffGuide",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.showNamingStandard",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "snd.chooseAudioEditor",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "snd.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "snd.deleteSelectedFromViewer",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "snd.openMakerText",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "snd.openViewer",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "zss.audit.currentFile",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.audit.workspace",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.createNew",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "zss.goToLine",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.openControllers",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.openPalFxEditor",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "zss.openProjectData",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.toggleLineComment",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.updates.checkDefNow",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.updates.checkNow",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.updates.showLastReport",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.wrap.ignoreHitPause",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.wrap.ignoreHitPausePersistent",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zss.wrap.persistent",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssControllers.clearFilter",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssControllers.insert",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssControllers.openDocs",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssControllers.search",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssNavigator.refresh",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssNavigator.reveal",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "zssRegistry.refresh",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "sff.refreshGroupLog",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "air.refreshActionLog",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workspaceSetup.change",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workspaceSetup.showAll",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.workspaceSetup.pin",
+          "when": "ikemen.interfaceMode == workspace"
+        }
+      ]
+    },
+    "configuration": {
+      "title": "IKEMaker",
+      "properties": {
+        "ikemenZss.paletteBackgroundColor": {
+          "type": "string",
+          "default": "#00F5BA",
+          "pattern": "^#[0-9A-Fa-f]{6}$",
+          "scope": "resource",
+          "description": "Protected RGB color used for palette index 0 during provisional CS preparation. #00F5BA is the JNP standard; other projects may configure their own."
+        },
+        "ikemenZss.paletteBackgroundSimilarityThreshold": {
+          "type": "number",
+          "default": 24,
+          "minimum": 0,
+          "maximum": 255,
+          "scope": "resource",
+          "description": "RGB-distance guard around the protected palette background. Visible sprite colors inside this range receive unique provisional replacements so they cannot be confused with transparency."
+        },
+        "ikemenZss.openIkemenToolsOnStartup": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Open the IKEMaker activity-bar panel after VS Code finishes restoring its window. Disable this to retain Explorer or the previously active sidebar."
+        },
+        "ikemenZss.extensionUpdates.enabled": {
+          "type": "boolean",
+          "default": true,
+          "scope": "application",
+          "description": "Allow a startup availability check when the configured interval has elapsed. Updates are never downloaded or installed without explicit review and approval."
+        },
+        "ikemenZss.extensionUpdates.feedUrl": {
+          "type": "string",
+          "default": "https://raw.githubusercontent.com/JustNoPoint/ikemaker/main/updates/beta.json",
+          "scope": "application",
+          "description": "Reviewed HTTPS manifest for IKEMaker updates. The beta feed selects exact immutable packages rather than GitHub's latest-release alias."
+        },
+        "ikemenZss.extensionUpdates.channel": {
+          "type": "string",
+          "enum": ["beta"],
+          "default": "beta",
+          "scope": "application",
+          "description": "IKEMaker distribution channel to follow."
+        },
+        "ikemenZss.extensionUpdates.intervalHours": {
+          "type": "number",
+          "default": 24,
+          "minimum": 1,
+          "maximum": 720,
+          "scope": "application",
+          "description": "Minimum number of hours between automatic availability checks."
+        },
+        "ikemenZss.extensionUpdates.trustedAssetHosts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "default": ["github.com", "objects.githubusercontent.com", "release-assets.githubusercontent.com"],
+          "scope": "application",
+          "description": "Additional HTTPS hosts allowed for exact update assets. The feed host is always allowed; downloaded bytes must also match the published size and SHA-256."
+        },
+        "ikemenZss.extensionUpdates.maxDownloadMB": {
+          "type": "number",
+          "default": 128,
+          "minimum": 1,
+          "maximum": 512,
+          "scope": "application",
+          "description": "Hard download-size ceiling for an IKEMaker VSIX update."
+        },
+        "ikemenZss.authorName": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Default author name used by reviewed character starter creation."
+        },
+        "ikemenZss.productionWorkflow.actor": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Team name recorded on workflow and ticket updates. When empty, the configured author name is used; otherwise updates use the neutral label Team member."
+        },
+        "ikemenZss.mutationBackups": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Create compact hidden backups before direct visual-editor and generated-profile writes.",
+          "deprecationMessage": "Automatic backups have been removed. Use Make Backup instead."
+        },
+        "ikemenZss.mutationHistory": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Record direct visual-editor writes in .ikemen-tools/mutations.json with hashes and backup locations."
+        },
+        "ikemenZss.mutationHistoryLimit": {
+          "type": "number",
+          "default": 200,
+          "minimum": 10,
+          "maximum": 2000,
+          "scope": "resource",
+          "description": "Maximum direct-write history entries retained per mutation root."
+        },
+        "ikemenZss.experience.zss": {
+          "type": "string",
+          "enum": [
+            "learning",
+            "advanced"
+          ],
+          "default": "learning",
+          "scope": "resource",
+          "description": "ZSS presentation level. Learning adds guidance and explanations; Advanced favors compact and bulk-oriented workflows without removing help."
+        },
+        "ikemenZss.experience.lua": {
+          "type": "string",
+          "enum": [
+            "learning",
+            "advanced"
+          ],
+          "default": "learning",
+          "scope": "resource",
+          "description": "Lua presentation level for IKEMEN frontend, module, and hook authoring."
+        },
+        "ikemenZss.experience.cns": {
+          "type": "string",
+          "enum": [
+            "learning",
+            "advanced"
+          ],
+          "default": "learning",
+          "scope": "resource",
+          "description": "CNS presentation level, configured independently from ZSS and Lua."
+        },
+        "ikemenZss.experience.assets": {
+          "type": "string",
+          "enum": [
+            "learning",
+            "advanced"
+          ],
+          "default": "learning",
+          "scope": "resource",
+          "description": "SFF, AIR, SND, and palette presentation level."
+        },
+        "ikemenZss.experience.stageUi": {
+          "type": "string",
+          "enum": [
+            "learning",
+            "advanced"
+          ],
+          "default": "learning",
+          "scope": "resource",
+          "description": "Stage and screenpack presentation level."
+        },
+        "ikemenZss.story.portraitGroup": {
+          "type": "number",
+          "default": 9100,
+          "minimum": 0,
+          "maximum": 99999,
+          "scope": "resource",
+          "description": "Project-configurable suggested SFF group for native Dialogue portraits. Indices 0-19 are presented as reaction slots; this is a workflow convention, not an IKEMEN requirement."
+        },
+        "zssNavigator.showWorkspaceFiles": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show all workspace ZSS files below the active file in ZSS Navigator."
+        },
+        "ikemenZss.mapPrefix": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "deprecationMessage": "Use ikemenZss.mapPrefixes to allow multiple project namespaces.",
+          "description": "Legacy single allowed map prefix. Empty disables it."
+        },
+        "ikemenZss.functionPrefix": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "deprecationMessage": "Use ikemenZss.functionPrefixes to allow multiple project namespaces.",
+          "description": "Legacy single allowed function prefix. Empty disables it."
+        },
+        "ikemenZss.mapPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Allowed prefixes for project-owned map names. Leave empty for no prefix warnings. Configure per workspace or workspace folder to tie rules to a project."
+        },
+        "ikemenZss.functionPrefixes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Allowed prefixes for project-owned ZSS function names. Leave empty for no prefix warnings. Configure per workspace or workspace folder to tie rules to a project."
+        },
+        "ikemenZss.generatedSymbolPrefix": {
+          "type": "string",
+          "default": "IkZss_",
+          "scope": "resource",
+          "pattern": "^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "Prefix used by generated guard-proximity and hit-reaction helper symbols. Configure per workspace or workspace folder."
+        },
+        "ikemenZss.guardHelperSymbolPrefix": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "pattern": "^$|^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "Optional guard-helper-specific prefix. Empty uses generatedSymbolPrefix."
+        },
+        "ikemenZss.hitReactionSymbolPrefix": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "pattern": "^$|^[A-Za-z_][A-Za-z0-9_]*$",
+          "description": "Optional hit-reaction-helper-specific prefix. Empty uses generatedSymbolPrefix."
+        },
+        "ikemenZss.maxAuditFiles": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Maximum workspace ZSS files scanned by the registry and full audit."
+        },
+        "ikemenZss.validation.enabledLevels": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "error",
+              "warning",
+              "convention",
+              "suggestion"
+            ]
+          },
+          "default": [
+            "error",
+            "warning",
+            "convention",
+            "suggestion"
+          ],
+          "description": "Validation levels shown by the editor. Project convention and suggestion checks can be disabled without hiding engine errors."
+        },
+        "ikemenZss.validation.disabledConventionRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "description": "Convention diagnostic codes to suppress, such as map-prefix or function-prefix. The project registry may also define this list."
+        },
+        "ikemenZss.impactPreview.maxFiles": {
+          "type": "number",
+          "default": 1500,
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Maximum text files inspected by a cross-file change-impact preview. The scan stops and reports truncation at this budget."
+        },
+        "ikemenZss.impactPreview.maxFileBytes": {
+          "type": "number",
+          "default": 2097152,
+          "minimum": 1024,
+          "maximum": 16777216,
+          "description": "Maximum size of one text file inspected by change-impact preview. Larger files are skipped and reported."
+        },
+        "zssNavigator.maxWorkspaceFiles": {
+          "type": "number",
+          "default": 500,
+          "minimum": 1,
+          "maximum": 5000,
+          "description": "Maximum number of ZSS files indexed by ZSS Navigator."
+        },
+        "ikemenZss.updates.enabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Check the latest official IKEMEN release and documentation sources when the configured interval has elapsed."
+        },
+        "ikemenZss.updates.intervalDays": {
+          "type": "number",
+          "default": 7,
+          "minimum": 1,
+          "maximum": 365,
+          "description": "Days between automatic upstream checks. Checks run only while VS Code is open."
+        },
+        "ikemenZss.updates.maxWorkspaceFiles": {
+          "type": "number",
+          "default": 1000,
+          "minimum": 1,
+          "maximum": 10000,
+          "description": "Maximum project files scanned for removed or renamed feature candidates."
+        },
+        "ikemenZss.engine.showOtherVersions": {
+          "type": "boolean",
+          "default": false,
+          "description": "Show discoverable features from other engine targets as disabled controls with their version requirement. This never enables unsupported output."
+        },
+        "ikemenZss.engine.customKnowledgeSources": {
+          "type": "array",
+          "default": [],
+          "items": { "type": "string", "pattern": "^https://" },
+          "description": "Optional HTTPS URLs for declarative custom-fork engine catalogs. Imported claims remain observed/unverified until checked locally; remote content is never executed."
+        },
+        "ikemenZss.docs.offlineUpdatesEnabled": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show offline-library update actions alongside IKEMEN documentation checks. Downloads occur only after explicit confirmation."
+        },
+        "ikemenZss.sizeboxReferenceXscale": {
+          "type": "number",
+          "default": 1.185,
+          "exclusiveMinimum": 0,
+          "description": "Project reference xscale used by the contextual CNS sizebox converter."
+        },
+        "ikemenZss.sizeboxReferenceYscale": {
+          "type": "number",
+          "default": 1.185,
+          "exclusiveMinimum": 0,
+          "description": "Project reference yscale used by the contextual CNS sizebox converter."
+        },
+        "ikemenZss.sprMake2Path": {
+          "type": "string",
+          "default": "sprmake2.exe",
+          "description": "Optional SprMaker2 override. The Windows extension includes a ready-to-use copy and also honors a project's _development/tools/mugen-build copy."
+        },
+        "ikemenZss.ikemenPath": {
+          "type": "string",
+          "default": "",
+          "description": "Full path to Ikemen_GO.exe. When empty, the extension searches upward from the current file."
+        },
+        "ikemenZss.defaultTrainingCharacter": {
+          "type": "string",
+          "default": "",
+          "description": "Character DEF used when no character can be inferred from the current editor."
+        },
+        "ikemenZss.defaultTrainingStage": {
+          "type": "string",
+          "default": "stages/stage0.def",
+          "description": "Default stage used by the one-click mirror training launcher."
+        },
+        "ikemenZss.additionalSourceExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Additional filename extensions IKEMaker should include while discovering character files. Enter values such as cfg or inc without a leading dot. DEF-assigned files are recognized by their assigned role even when their extension is unconventional."
+        },
+        "ikemenZss.additionalCodeExtensions": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Optional extensions to display as character code when they are not assigned through a DEF. A DEF-assigned .txt state/options file is recognized automatically and does not need to be added here."
+        },
+        "ikemenZss.testProfile": {
+          "type": "string",
+          "default": "default",
+          "enum": [
+            "default",
+            "sf6",
+            "dsvssf",
+            "ds4",
+            "hdbz"
+          ],
+          "description": "Active IKEMaker test profile. Universal tests remain available; game-specific tests require an explicit matching profile."
+        },
+        "ikemenZss.stageRigMoveSpeed": {
+          "type": "number",
+          "default": 2,
+          "exclusiveMinimum": 0,
+          "description": "World-coordinate pixels moved per tick by the development-only IKEMaker Stage Rig."
+        },
+        "ikemenZss.stageRigFineMoveSpeed": {
+          "type": "number",
+          "default": 0.5,
+          "exclusiveMinimum": 0,
+          "description": "Fine-adjustment speed used while holding game button X in the IKEMaker Stage Rig."
+        },
+        "ikemenZss.stageRigFastMoveSpeed": {
+          "type": "number",
+          "default": 8,
+          "exclusiveMinimum": 0,
+          "description": "Fast-traversal speed used while holding game button Y in the IKEMaker Stage Rig."
+        },
+        "ikemenZss.sffDefaultFilename": {
+          "type": "string",
+          "default": "Character.sff",
+          "description": "Default output filename offered by the SFF build commands."
+        },
+        "ikemenZss.sffProjectProfile": {
+          "type": "string",
+          "default": "default",
+          "scope": "resource",
+          "description": "Remembered SFF build/animation profile. Default uses universal rules; projects and users may select or create another local profile."
+        },
+        "ikemenZss.sffAutoSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically write direct SFF axis edits after a short delay. Keep disabled when the SprMaker2 manifest is authoritative.",
+          "deprecationMessage": "Use IKEMaker Auto Save (ikemenZss.autoSave)."
+        },
+        "ikemenZss.sffCreateBackups": {
+          "type": "boolean",
+          "default": false,
+          "description": "Create timestamped backups before direct SFF or manifest edits. Disable only when external version control or another backup system is authoritative.",
+          "deprecationMessage": "Automatic backups have been removed. Use Make Backup instead."
+        },
+        "ikemenZss.sffNamingProfile": {
+          "type": "string",
+          "enum": [
+            "jnp",
+            "none"
+          ],
+          "enumDescriptions": [
+            "Display names, families, and aliases from the optional JNP Shared Fighter Standard.",
+            "Disable project numbering guidance while retaining custom names and native SFF/AIR validation."
+          ],
+          "default": "jnp",
+          "scope": "resource",
+          "description": "Optional project-specific SFF numbering and naming profile. This never controls native IKEMEN/MUGEN validation."
+        },
+        "ikemenZss.sffNumberingWarnings": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Allow warnings produced specifically by the optional JNP numbering profile. Native SFF/AIR integrity checks remain enabled independently."
+        },
+        "ikemenZss.defCommonPathMarkers": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "common",
+            "shared",
+            "template",
+            "universal",
+            "external"
+          ],
+          "scope": "resource",
+          "description": "Folder-name markers treated as shared/common ownership when coloring file references in IKEMEN DEF files. References resolving outside the DEF folder and stcommon assignments are always shared."
+        },
+        "ikemenZss.ffmpegPath": {
+          "type": "string",
+          "default": "ffmpeg",
+          "description": "FFmpeg executable used for non-destructive SFF image resize, crop, rotation, channel, and aligned-export tools."
+        },
+        "ikemenZss.imageEditorPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Image editor executable used by the SFF Image Editor button. Leave blank to use the operating-system default; choose Photoshop.exe to open sprites in Photoshop."
+        },
+        "ikemenZss.audioEditorPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Audio editor executable used by the SND workspace. Leave blank to choose Audacity or another editor when first needed."
+        },
+        "ikemenZss.sndMakerPath": {
+          "type": "string",
+          "default": "sndmaker.exe",
+          "description": "Optional SndMaker override. The Windows extension includes a ready-to-use copy and also honors a project's _development/tools/mugen-build copy."
+        },
+        "ikemenZss.sndCreateBackups": {
+          "type": "boolean",
+          "default": false,
+          "description": "Create timestamped backups before sound profile, CommonFX DEF, manifest, or SND rebuild changes.",
+          "deprecationMessage": "Automatic backups have been removed. Use Make Backup instead."
+        },
+        "ikemenZss.paletteLibraryPath": {
+          "type": "string",
+          "default": "",
+          "scope": "resource",
+          "description": "Project folder containing reusable ACT or indexed PNG palettes shown in the SFF palette library. Configure per workspace folder so different games or characters can use separate libraries."
+        },
+        "ikemenZss.animationStandardDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Warn when an AIR file is missing actions from the selected character animation standard sets."
+        },
+        "ikemenZss.animationStandardSets": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [
+            "ikemen-1.0-character-core"
+          ],
+          "scope": "resource",
+          "description": "Animation standard set IDs used by AIR diagnostics. Project requirement profiles may add stricter project-only standards separately."
+        },
+        "ikemenZss.airLegacyReferenceDiagnostics": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Show informational notices for explicitly archived or unreferenced legacy AIR actions whose sprites were intentionally removed from the SFF. Required and confirmed runtime references remain visible regardless of this setting."
+        },
+        "ikemenZss.airAutoOpenWorkspace": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Open the visual AIR companion workspace beside editable AIR code. Disable this to open it only through AIR: Open Animation & Layer Preview."
+        },
+        "ikemenZss.characterHealth.checkUnknownParameters": {
+          "type": "boolean",
+          "default": true,
+          "scope": "resource",
+          "description": "Compare legacy CNS and CMD controller options with the bundled IKEMEN GO 1.0 documentation. Disable for a custom dialect, or choose Custom / conservative in Character Health without changing this setting."
+        },
+        "ikemenZss.characterHealth.allowedParameters": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Additional project-defined legacy controller parameter names that Character Health should accept."
+        },
+        "ikemenZss.characterHealth.ignoredRules": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Character Health rule codes hidden for this workspace or project. Engine errors should only be suppressed after review."
+        },
+        "ikemenZss.viewerSharedFxDefs": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": [],
+          "scope": "resource",
+          "description": "Additional native CommonFX DEF files for viewer navigation. Relative paths resolve from the character, then the game root and data folder. Character DEF fx assignments and sound profiles are also read. Duplicate prefixes require an explicit archive choice."
+        },
+        "ikemenZss.autoSave": {
+          "type": "boolean",
+          "default": false,
+          "scope": "resource",
+          "description": "Automatically save sprite-axis edits and Workflow drafts. Off by default. Text editor autosave is configured separately with VS Code files.autoSave. Explicit Save and Apply actions still save."
+        },
+        "ikemenZss.multipleAssetWorkspaces": {
+          "type": "boolean",
+          "default": false,
+          "scope": "window",
+          "description": "Keep multiple Sprite, Animation and Sound workspaces open. When off, switching replaces the previous clean asset viewer and remembers its selection for this session. Unfinished edits block switching. Takes effect on the next asset open.",
+          "deprecationMessage": "Use IKEMaker: Change Mode. This legacy preference is used only when no interface mode is configured."
+        },
+        "ikemenZss.simpleAssetInterface": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Start asset viewers with essential navigation, fewer side panels and collapsed advanced sections. All tools remain available through More and Layout. Saved customizations take precedence. Reopen viewers after changing.",
+          "deprecationMessage": "Use IKEMaker: Change Mode. This legacy preference is used only when no interface mode is configured."
+        },
+        "ikemenZss.interfaceMode": {
+          "type": "string",
+          "enum": [
+            "player",
+            "simple",
+            "workspace"
+          ],
+          "enumDescriptions": [
+            "Player tools only: roster, stages, stories and play.",
+            "Player tools plus simplified creation and editing.",
+            "All features, advanced authoring and multiple viewers."
+          ],
+          "default": "simple",
+          "scope": "window",
+          "description": "Choose the IKEMaker interface. New users are asked on first use; change anytime with IKEMaker: Change Mode."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node test/run_all.js",
+    "scan:game": "node tools/full_game_compatibility.js",
+    "audit:baseline": "node tools/baseline-rehearsal-audit.js"
+  }
+}

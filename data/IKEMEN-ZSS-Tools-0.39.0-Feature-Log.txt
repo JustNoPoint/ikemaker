@@ -1,0 +1,32 @@
+IKEMEN ZSS Tools 0.39.0
+=======================
+
+Creation guidance and clean baseline
+-------------------------------------
+- New-character creation now requires an explicit Guided starter or Clean
+  baseline choice.
+- Learning/Advanced experience only changes which choice is recommended. It
+  never silently changes generated character content.
+- Guided creates the labeled X / State 200 teaching example.
+- Clean creates the same native file boundaries without an example attack.
+- The confirmation screen lists every generated file and the required SFF,
+  AIR, coordinate, constants, command/state, and SND follow-up work.
+- The generated README preserves the dependency checklist and safety boundary.
+- Completion can open either the checklist or the character DEF immediately.
+
+Stage and screenpack learning recipes
+-------------------------------------
+- Stage workspace includes offline staged guidance for localcoord/floor,
+  camera proofing, BG ownership, and motion-based parallax validation.
+- Screenpack workspace includes offline staged guidance for file/section
+  ownership, localcoord, pos versus offset, representative data, and the Lua
+  presentation boundary.
+- Recipes open by default in Learning and remain available collapsed in
+  Advanced.
+
+Safety and compatibility
+------------------------
+- Character creation remains transactional and refuses every existing target.
+- Existing visual position operations retain preview, confirmation, stale-file,
+  backup, and history safeguards.
+- All active terminology targets IKEMEN 1.0 only.

@@ -1,0 +1,6 @@
+[StateDef 200; type: S; movetype: A]
+changeAnim{value: 200}
+
+[State 200, Hit]
+type = hitDef
+trigger1 = animelem = 1

@@ -1,0 +1,40 @@
+IKEMEN ZSS Tools 0.26.0
+=======================
+
+Visual code structure
+- Added a side-by-side nested structure workspace for ZSS, CNS, and Lua.
+- Recognizes states, functions, conditions, loops, controllers, assignments,
+  callbacks, tables, and module imports.
+- Synchronizes selections with the editable source file.
+- Adds search, filters, collapse persistence, responsive narrow-screen layout,
+  source excerpts, and expandable explanations.
+- Uses the bundled controller catalog to explain recognized ZSS controllers and
+  list their documented fields.
+
+Lua and online boundaries
+- Added conservative Front-end / Review / Rollback unsafe guidance.
+- Added a screenpack action that creates or opens a project-owned [Files] module
+  without modifying IKEMEN default Lua.
+- Added a direct Lua Structure action in the screenpack visual workspace.
+- Generated comments keep rollback-relevant gameplay and input in native/ZSS.
+
+Offline documentation
+- Bundled an offline library for Lua safety, visual structure, and native input
+  timing.
+- Added explicit Open and Update Offline Documentation commands.
+- Connected the upstream scanner to those actions without automatic downloads.
+- Changed the upstream monitor to the latest official IKEMEN 1.0 release plus
+  the official wiki and merged IKEMEN 1.0 documentation.
+
+HDBZ input-parser handoff
+- Added Simple Native held-start QCF, QCB, DP, and reverse-DP presets.
+- Added native Capcom B-F and Down-Up charge references.
+- Added separately labeled Advanced Normalized HCF/HCB optional-diagonal,
+  360/720 rotation, and held-start deadline map contracts.
+- Added round-trip tests so paired same-name definitions retain their timing.
+
+Reliability
+- Debounced visual parsing while typing.
+- Added 3 new test files; all 40 test files pass.
+- Fixed stale VSIX identity versions by synchronizing the build manifest from
+  package.json during packaging.

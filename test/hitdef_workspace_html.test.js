@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('assert');
+const vm = require('vm');
+const Module = require('module');
+const original = Module._load;
+Module._load = function(request, parent, isMain) { if (request === 'vscode') return {}; return original.call(this, request, parent, isMain); };
+const { page } = require('../src/hitdef_workspace');
+Module._load = original;
+const html = page({ file: 'move.zss', syntax: 'zss', currentIndex: 0, blocks: [{}], duplicates: [], groups: [], description: 'Attack', visual: { state: 'unavailable', detail: 'Choose character.' } });
+for (const required of ['Universal HitDef Editor', 'id="canvas"', 'id="p1Action"', 'id="p2Action"', 'Position shade', 'Throw Creator', 'Generated controller preview', 'data-ikemen-launch="game"']) assert.ok(html.includes(required), `Missing ${required}`);
+for (const required of ['Drag the yellow spark', 'sparkCanvasPoint', "spark?'spark':'pan'", 'sparkxy position drafted']) assert.ok(html.includes(required), `Missing ${required}`);
+const scripts = [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1]);
+assert(scripts.length); for (const script of scripts) assert.doesNotThrow(() => new vm.Script(script));
+console.log('Universal HitDef workspace HTML tests passed');

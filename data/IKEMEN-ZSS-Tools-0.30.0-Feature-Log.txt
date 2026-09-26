@@ -1,0 +1,18 @@
+IKEMEN ZSS Tools 0.30.0
+=======================
+
+New character creation
+----------------------
+- Added IKEMEN: Create New 1.0 Character to the command palette and sidebar.
+- Creates reviewed DEF, CNS, CMD, ZSS, AIR, SFF 2.1, SND, and README starters.
+- Uses the configured author name and a user-reviewed display name.
+- Automatically registers and opens the new character workbench.
+- Refuses the complete operation when any target exists.
+- Rolls back only newly created files when a write fails partway through.
+- Keeps the starter intentionally system-neutral and documents its first
+  required sprite, animation, constants, and collision reviews.
+
+Verification
+------------
+- Added starter-content, conflict, and rollback tests.
+- All 48 extension test files pass.

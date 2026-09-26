@@ -1,0 +1,44 @@
+IKEMaker 0.64.9
+
+SHARED VISUAL VIEWER GROUP
+
+- Visual workspaces now open as tabs in one shared editor group by default rather
+  than repeatedly creating separate columns.
+- This applies to AIR, SFF, SND, Move Constants, code structure, command and
+  movelist, character connections and health, CNS conversion, palettes, PalFX,
+  production workflow, stages, screenpacks, roster, story, diagnostics, recovery,
+  and Throw Creator.
+- The first viewer uses the active editor group. If a user manually drags a viewer
+  to another group and activates it, subsequently opened viewers follow that group.
+- Existing viewers retain their manually chosen locations when reopened.
+
+MOVE CONSTANTS BULK COPYING
+
+- Every Move Constants category has Copy category and Copy checked actions.
+- Every individual option has its own Copy action.
+- Destination moves can be entered together as state/action numbers or constant
+  prefixes, for example: 210, 220, 250.
+- Existing destination values are replaced and selected missing options are added
+  to an existing destination move profile.
+- The editor shows a confirmation preview, warns when identity fields are included,
+  keeps VS Code undo available, and leaves the changed constants document unsaved
+  for review.
+
+AIR TIMING IMPORT AND HIT-PAUSE SMEARS
+
+- Animation Timing can import the first effective Clsn1 element as the authored
+  contact/hit-pause frame and the element after the final active collision as the
+  recovery boundary.
+- Right-clicking an AIR thumbnail can set the start of the smear sequence that
+  continues animating during hit pause, set the later frame on which it freezes,
+  or clear the range.
+- The smear tick total is calculated from the real AIR durations between those
+  two elements. The timeline highlights the advancing range, start, and freeze
+  frame without pretending that non-contiguous frames can form one animation run.
+
+VERIFICATION
+
+- Shared viewer placement and coverage have automated regression tests.
+- Move target resolution, category/field copying, replacement, and insertion have
+  automated regression tests.
+- All 120 automated test files pass.

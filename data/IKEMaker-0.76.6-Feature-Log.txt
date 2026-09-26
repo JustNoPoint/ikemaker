@@ -1,0 +1,12 @@
+IKEMaker 0.76.6 — Attack Workspace draft safety
+
+- Stores connected-code drafts by character and stable StateDef/function identity instead of line range.
+- Retains the original source hash, text and location until the user explicitly rebases or discards.
+- Blocks stale Apply after same-range changes, preceding line insertions, source refreshes or external edits.
+- Restores drafts through webview reload/restore and keeps different characters isolated.
+- Includes code drafts in close protection and persistent workspace recovery.
+- Displays and permits discarding drafts whose source block was removed or renamed.
+- Prevents an old Apply acknowledgement from deleting newer typing.
+- Refreshes scoped source/save/diagnostic changes while preserving the selected move and AIR element.
+- Remembers both the Connected code wrapper and individual code-section disclosure layout.
+- Keeps 0.76.5’s tightened viewer/text placement and focused Attack Workspace hierarchy.

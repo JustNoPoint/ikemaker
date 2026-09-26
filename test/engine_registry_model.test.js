@@ -1,0 +1,24 @@
+'use strict';
+const assert = require('assert');
+const model = require('../src/engine_registry_model');
+const seed = require('../data/engine-capability-catalog.json');
+
+assert.equal(model.normalizeTarget().buildId, model.STABLE_BUILD_ID, 'legacy projects resolve to stable in memory');
+assert.equal(model.validateCatalog(seed).valid, true);
+assert.equal(model.validateCatalog({ builds: [{ id: 'floating', channel: 'nightly' }] }).valid, false);
+const installed = model.registerInstalled({}, { buildId: model.STABLE_BUILD_ID, executable: 'D:/Game/Ikemen_GO.exe', executableSha256: seed.builds[0].executableSha256, identityStatus: 'verified' });
+const review = model.adoptionReview({ id: 'game' }, model.targetFromBuild(seed.builds[0], installed.builds[0]), seed, installed);
+assert.deepStrictEqual(review.blockers, []);
+const adopted = model.adoptProject({ id: 'game' }, review, { adoptedAt: '2026-09-24T00:00:00.000Z', catalogRevision: 1 });
+assert.equal(adopted.engineTarget.version, '1.0.0');
+assert.equal(adopted.engineAdoptionHistory.length, 1);
+assert.equal(adopted.engineTarget.executableSha256, seed.builds[0].executableSha256, 'project target pins the exact adopted executable');
+const nightlyReview = model.adoptionReview({ id: 'game' }, model.targetFromBuild(seed.builds[1]), seed, installed);
+assert(nightlyReview.blockers.some((item) => /monitor-only/.test(item)));
+const catalog = model.normalizeCatalog({ builds: seed.builds, capabilities: [{ id: 'future', buildIds: [seed.builds[1].id], evidence: [{ domain: 'source', status: 'observed' }] }] });
+assert.equal(model.capabilityStatus(catalog, model.STABLE_TARGET, 'future').status, 'unsupported');
+assert.equal(model.capabilityStatus(catalog, model.targetFromBuild(seed.builds[1]), 'future').status, 'unverified');
+const asserted = model.registerInstalled({}, { buildId: model.STABLE_BUILD_ID, executable: 'D:/Game/Test.exe', executableSha256: 'a'.repeat(64) });
+assert(model.adoptionReview({ id: 'game' }, model.targetFromBuild(seed.builds[0], asserted.builds[0]), seed, asserted).blockers.some((item) => /user-asserted/.test(item)));
+assert.deepStrictEqual(model.adoptionReview({ id: 'game' }, model.targetFromBuild(seed.builds[0], asserted.builds[0]), seed, asserted, { allowUserAsserted: true }).blockers.filter((item) => /user-asserted/.test(item)), []);
+console.log('Engine registry model tests passed');

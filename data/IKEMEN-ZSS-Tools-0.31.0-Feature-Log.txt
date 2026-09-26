@@ -1,0 +1,40 @@
+IKEMEN ZSS Tools 0.31.0
+=======================
+
+Reviewed direct-save safety
+---------------------------
+- Added one transactional write service for direct extension mutations.
+- Writes are staged before replacement and restored if a multi-file commit
+  fails partway through.
+- Stale visual previews are rejected instead of overwriting newer file edits.
+- Optional hidden backups are stored below the nearest project
+  .ikemen-tools/backups directory.
+- Optional capped mutation history is stored in
+  .ikemen-tools/mutations.json.
+- Added IKEMEN: Open Recent Mutation History to the command palette and the
+  Standards & Help sidebar group.
+- Stage and screenpack workspaces now display their direct-save authority,
+  backup setting, and history setting in the status bar.
+- Stage background edits, attached-character assignment, interaction-file
+  generation, screenpack layout edits, project-owned Lua-module creation, and
+  UI preview profiles now use the shared safety layer.
+- New SFF, AIR, SND, stage, screenpack/fight UI, and complete-character
+  creation now use conflict-safe transactional creation as well.
+
+Remaining migration scope
+-------------------------
+- Palette/profile JSON, SFF source-manifest editing, SFF binary editing, and
+  SND build/profile mutations retain their existing local backup behavior for
+  now. They are explicitly recorded as the next shared-safety migration group.
+
+Settings
+--------
+- ikemenZss.mutationBackups
+- ikemenZss.mutationHistory
+- ikemenZss.mutationHistoryLimit
+
+Verification
+------------
+- Added success, backup, journal, stale-write, conflict, and rollback tests.
+- Added stage and screenpack save-status assertions.
+- All 49 extension test files pass.

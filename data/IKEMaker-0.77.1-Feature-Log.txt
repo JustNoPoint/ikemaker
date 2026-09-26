@@ -1,0 +1,18 @@
+IKEMaker 0.77.1 — Retained and Custom Exact Engine Builds
+
+- Adds an explicit Install Retained or Custom Exact Build command.
+- The user chooses both a local manifest and its sibling ZIP; browsing and
+  preview do not change the project or game.
+- Full commit, platform, repository, file size, and SHA-256 are validated. The
+  ZIP is rehashed before and after copying to notified temporary staging.
+- Bundled exact commit+artifact bindings identify previously reviewed builds;
+  a manifest cannot certify itself.
+- Any exact custom fork can proceed through a separate unsupported-build
+  override and is recorded as custom/user-asserted with runtime evidence unknown.
+- Retained catalog IDs are derived from repository, full commit, platform, and
+  full artifact digest; imported IDs are display claims only. Custom override
+  variants additionally bind the preserved files' content hashes.
+- Compatibility/review gates may be overridden. Archive path/link protection,
+  protected content, backup, journaling, rollback, and live-change checks cannot.
+- Retained builds use the same migration pipeline as online Nightlies, remain
+  pinned, and never authorize automatic future upgrades.

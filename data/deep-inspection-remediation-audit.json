@@ -1,0 +1,34 @@
+{
+  "audit": "IKEMaker deep inspection — original 16 findings",
+  "sourceAuditDate": "2026-09-21",
+  "statusMeaning": "source-verified means the reported implementation defect is remediated and protected by automated evidence; it does not claim live desktop rendering, controller hardware, screen-reader, or full-project performance verification",
+  "findings": [
+    { "id": 1, "name": "Atomic character close and cancellation", "status": "source-verified", "evidence": ["src/character_workbenches.js", "src/viewer_close.js", "test/character_close_policy.test.js", "test/viewer_close_recovery.test.js"] },
+    { "id": 2, "name": "Roster refresh and unapplied arrangement recovery", "status": "source-verified", "evidence": ["src/select_def_workspace.js", "test/roster_draft_lifecycle.test.js", "test/roster_draft_host.test.js", "test/roster_apply_draft.test.js"] },
+    { "id": 3, "name": "Tests retain their bound game context", "status": "source-verified", "evidence": ["src/test_session_workspace.js", "test/test_session_context.test.js", "test/test_session_runtime.test.js", "test/test_session_selection.test.js"] },
+    { "id": 4, "name": "Stable game/work-project ownership and board filtering", "status": "source-verified", "evidence": ["src/production_workflow_workspace.js", "src/team_ticket_model.js", "test/production_workflow_workspace.test.js", "test/team_ticket_model.test.js", "test/project_management_model.test.js"] },
+    { "id": 5, "name": "Central Player/Simple/Workspace presentation policy", "status": "source-verified", "evidence": ["src/interface_capabilities.js", "src/mode_visibility.js", "test/interface_capabilities.test.js", "test/mode_visibility.test.js", "test/ikemen_hub_information_architecture.test.js"] },
+    { "id": 6, "name": "Mode-specific toolbar/layout preferences and live safe updates", "status": "source-verified", "evidence": ["src/viewer_toolbar.js", "src/viewer_layout.js", "src/mode_visibility.js", "test/viewer_toolbar.test.js", "test/viewer_layout.test.js", "test/mode_visibility.test.js"] },
+    { "id": 7, "name": "Typed visual workspace preset restoration", "status": "source-verified", "evidence": ["src/viewer_sessions.js", "src/workspace_presets.js", "test/workspace_preset_routes.test.js", "test/workspace_preset_identity.test.js", "test/workspace_preset_cancel.test.js"] },
+    { "id": 8, "name": "Context-bound authoring form draft lifecycle", "status": "source-verified", "evidence": ["src/form_drafts.js", "test/form_drafts.test.js", "test/workflow_issue_draft.test.js", "test/air_runtime_drafts.test.js", "test/helper_lab_drafts_presets.test.js", "test/throw_creator_drafts_presets.test.js"] },
+    { "id": 9, "name": "Safe asset-viewer replacement and delayed capture", "status": "source-verified", "evidence": ["src/asset_workspace.js", "test/asset_workspace.test.js", "test/asset_workspace_client.test.js"] },
+    { "id": 10, "name": "IKEMaker autosave separated from VS Code text autosave", "status": "source-verified", "evidence": ["src/save_controls.js", "test/save_controls.test.js"] },
+    { "id": 11, "name": "Shared keyboard, focus, tab, status and numerical-accessibility foundation", "status": "source-verified", "evidence": ["src/webview_accessibility.js", "test/webview_accessibility.test.js", "test/roster_keyboard.test.js", "test/roster_selection.test.js"] },
+    { "id": 12, "name": "Shared owner/source resolution and connected navigation", "status": "source-verified", "evidence": ["src/viewer_navigation.js", "src/related_work.js", "test/related_work_ownership.test.js", "test/viewer_navigation_routes.test.js", "test/viewer_shared_archive_routes.test.js"] },
+    { "id": 13, "name": "Read-only log opening and reviewed conflict-safe refresh", "status": "source-verified", "evidence": ["src/asset_group_logs.js", "test/asset_group_logs.test.js"] },
+    { "id": 14, "name": "Mutation rollback and cleanup failure reporting", "status": "source-verified", "evidence": ["src/mutation_safety.js", "test/mutation_safety.test.js", "test/mutation_history.test.js", "test/mutation_history_picker.test.js"] },
+    { "id": 15, "name": "Last-good offline documentation recovery", "status": "source-verified", "evidence": ["src/offline_docs.js", "test/offline_docs_recovery.test.js"] },
+    { "id": 16, "name": "Bounded caches, cancellable discovery and shared webview policy", "status": "source-verified", "evidence": ["src/versioned_file_cache.js", "src/webview_policy.js", "test/versioned_file_cache.test.js", "test/async_discovery.test.js", "test/webview_policy.test.js", "test/workflow_detection_cache.test.js"] }
+  ],
+  "workspaceSetup": {
+    "status": "source-verified",
+    "evidence": ["data/workspace-setup-map.json", "src/workspace_setup.js", "test/workspace_setup.test.js", "test/workspace_setup_runtime.test.js"]
+  },
+  "manualChecksStillRecommended": [
+    "Cancel Close Character with both a dirty text file and a visual draft and confirm the whole session remains open.",
+    "Use two real game roots and confirm Tests and per-project Workspace Setup remain bound while focus moves between them.",
+    "Check keyboard-only use, a screen reader, forced/high contrast, and 200 percent zoom on representative Player, Simple, and Workspace paths.",
+    "Stress rapid SFF/AIR/SND opening and a production-size project to confirm visual responsiveness and memory behavior.",
+    "Confirm final visual spacing, labels, focus movement, and Solo/Team control visibility in the installed desktop build."
+  ]
+}

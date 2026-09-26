@@ -1,0 +1,10 @@
+IKEMaker 0.76.1 — Quick Start clarity
+=====================================
+
+- Removed the selectable version-only row from Quick Start. The installed
+  version remains continuously visible in the status bar and available through
+  IKEMaker: Show Installed Version.
+- Renamed Workspace Setup in the sidebar to Current Project Tool Focus and
+  clarified that it changes presentation only and follows the active project.
+- Includes the signed-off engine-target identity and evidence corrections from
+  the 0.76.0 development batch.

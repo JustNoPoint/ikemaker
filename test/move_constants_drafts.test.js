@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('assert'),vm=require('vm');const {clientScript}=require('../src/move_constants_drafts');
+let state={},listener;const sent=[],elements={fields:{before:element=>elements[element.id]=element}},buttons=[{dataset:{apply:'damage'}},{dataset:{apply:'hitstun'}}];
+const a={id:'normal.mp',values:{damage:30,hitstun:12}},b={id:'normal.hp',values:{damage:50}};
+const context={model:{files:{defPath:'C:/A.def'},formDrafts:{}},move:a,draft:{},vscode:{getState:()=>state,setState:value=>state=value,postMessage:message=>sent.push(message)},document:{getElementById:id=>elements[id],querySelectorAll:()=>buttons,createElement:()=>({setAttribute(){},append(button){this.button=button;}})},window:{addEventListener:(type,fn)=>listener=fn},$:id=>elements[id],render:()=>vm.runInContext('moveDrafts.notice()',context)};
+vm.createContext(context);vm.runInContext(clientScript(),context);const run=code=>vm.runInContext(code,context);
+context.draft={damage:40,hitstun:18};run('moveDrafts.stage()');assert(context.ikemenHasUnappliedForms());assert(context.ikemenCanKeepDraft());assert.equal(sent.at(-1).draft.damage.base,30);
+context.move=b;context.draft=run('moveDrafts.select()');assert.deepEqual({...context.draft},{});context.draft={damage:70};run('moveDrafts.stage()');
+context.move=a;context.draft=run('moveDrafts.select()');assert.equal(context.draft.damage,40);assert.equal(context.draft.hitstun,18);
+listener({data:{type:'moveFieldApplied',defPath:'C:/A.def',sourceId:a.id,suffix:'damage',base:30,value:40}});a.values.damage=40;context.draft=run('moveDrafts.select()');assert(!('damage'in context.draft));assert.equal(context.draft.hitstun,18,'applying one field retains the others');
+a.values.hitstun=99;run('moveDrafts.notice()');assert(buttons[1].disabled);context.draft.hitstun=25;run('moveDrafts.stage()');assert.equal(sent.at(-1).draft.hitstun.base,12,'conflict base is retained while typing');
+elements.moveDraftStatus.button.onclick();assert.deepEqual({...context.draft},{});assert(!buttons[1].disabled);
+context.draft={damage:45};run('moveDrafts.stage()');context.draft.damage=47;run('moveDrafts.stage()');listener({data:{type:'moveFieldApplied',defPath:'C:/A.def',sourceId:a.id,suffix:'damage',base:40,value:45}});a.values.damage=45;context.draft=run('moveDrafts.select()');assert.equal(context.draft.damage,47);assert.equal(run('moveDrafts.base("damage")'),45,'later typing rebases on the successfully applied value');
+context.model.files.defPath='C:/B.def';context.draft=run('moveDrafts.select()');assert.deepEqual({...context.draft},{});assert(state.moveFormDrafts['c:/a.def#normal.hp']);assert(!context.ikemenHasUnappliedForms(),'another character draft does not mark this character dirty');
+console.log('Move drafts retain per-move/per-character values, survive refresh, detect source conflicts, clear only applied fields, and preserve newer input');

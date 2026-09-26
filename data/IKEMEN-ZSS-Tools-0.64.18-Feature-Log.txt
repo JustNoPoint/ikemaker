@@ -1,0 +1,19 @@
+IKEMaker 0.64.18
+
+SFF creation targets
+- Create New SFF explicitly offers 2.1 (recommended) or 2.0 (strict MUGEN 1.0 compatibility).
+- Native IKEMEN character creation always uses SFF 2.1.
+- MUGEN CNS character creation asks for SFF 2.0 / MUGEN 1.0 or SFF 2.1 / MUGEN 1.1 and writes the matching mugenversion.
+- Palette files remain usable with either SFF 2.x choice; SFF format is not used as a substitute for palette authoring.
+
+Safe Roster color placement
+- Added a fifth Palettes inventory beside Characters, Order, Stages, and Excluded.
+- ACT files and indexed PNGs can be loaded as draggable color cards.
+- Dropping a color onto a character asks only which color number should receive it.
+- Existing slots show old/new character previews, changed-index counts, direct sprite usage, and linked-child effects before confirmation.
+- Empty slots show a character preview and prepare a pending palette addition without immediately rewriting the SFF.
+- Player wording hides manifests and builder selection; technical details remain available in Creator/SFF tools.
+- Existing-slot replacement uses IKEMaker transactional backup, stale-file detection, and mutation history.
+
+Verification
+- All 125 automated test files pass.

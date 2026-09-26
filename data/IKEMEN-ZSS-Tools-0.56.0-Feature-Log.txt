@@ -1,0 +1,20 @@
+IKEMEN ZSS Tools 0.56.0
+
+WORKFLOW STABILIZATION FOUNDATION
+
+- Adds a persistent project/character/asset/ownership context bar.
+- Adds a versioned authoritative `.ikemen/project-registry.json` with safe migration and recovery backups.
+- Adds activity workspace presets for coding, SFF/AIR, sound/palettes, QA, stages/UI, and roster work.
+- Adds cross-file change-impact preview with explicit scan budgets.
+- Defines Error, Warning, Project convention, and Suggestion validation levels.
+- Adds ownership dependency rules that prevent universal-to-game and cross-game entanglement.
+- Upgrades production workflow/progress schemas with dependency, evidence, signoff, and lesson gates.
+- Adds the evidence-gated Ryu Baseline v1 freeze phase without marking unfinished work complete.
+- Adds tiny stabilization fixtures and signature-cache tests for fast regression checks.
+- Records the public SF6, DS vs. SF, DS4, and HDBZ foundation progression and completion contracts.
+
+LIMITS
+
+- Exact VS Code pane widths are user-controlled and cannot be restored reliably by the extension API.
+- Binary SFF/SND reference changes still use their dedicated viewers and manifests.
+- Ryu Baseline v1 remains awaiting actual SFF repairs, full rehearsal evidence, and JNP owner signoff.

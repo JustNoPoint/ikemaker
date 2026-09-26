@@ -1,0 +1,27 @@
+IKEMEN ZSS Tools 0.36.0
+=======================
+
+State-aware guided workflows
+----------------------------
+- Added a shared, tested workflow model for SFF, AIR, SND, stages,
+  screenpacks/fight UI, and command/movelist authoring.
+- Learning guidance now derives Done, Next, Review, and Later steps from the
+  current file, connections, profile, diagnostics, and asset state.
+- Advanced mode retains the identical checklist inside its collapsed guide.
+- SFF guidance covers classification, axes, layers, palette protection,
+  requirements audits, and direct-save versus SprMaker2 ownership.
+- AIR guidance distinguishes AIR-owned collision from code-owned push/runtime
+  geometry.
+- SND guidance covers portable profiles, roles, prefixes, named events,
+  validation, manifests, and SndMaker rebuilds.
+- Stage and UI guidance covers coordinates, assets, layers, preview, parallax,
+  diagnostics, and presentation-side Lua boundaries.
+- Command guidance covers file ownership, organization, timing, diagnostics,
+  and displayed movelists.
+
+Verification
+------------
+- Added pure workflow status and safe HTML generation tests.
+- Added workflow rendering checks to every supported visual workspace.
+- All 54 extension test files pass.
+- Current extension wording uses only the IKEMEN 1.0 baseline.

@@ -1,0 +1,144 @@
+{
+  "schemaVersion": 1,
+  "auditedAt": "2026-09-25",
+  "extensionVersion": "0.78.0",
+  "requirements": [
+    {
+      "id": 1,
+      "name": "Ryu Baseline v1 framework",
+      "status": "implemented-awaiting-owner-gate",
+      "evidence": [
+        "data/workflow-profiles/SF-character-production.json",
+        "data/Ryu-Baseline-Rehearsal-2026-09-04.md"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Persistent context bar",
+      "status": "verified-by-tests",
+      "evidence": [
+        "src/project_context_ui.js",
+        "src/project_context_model.js",
+        "test/project_context_model.test.js"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Ownership badges and dependency boundaries",
+      "status": "verified-by-tests-and-live-inventory",
+      "evidence": [
+        "src/ownership_dependency.js",
+        "src/ownership_audit_workspace.js",
+        "data/Ryu-Baseline-Rehearsal-2026-09-04.md"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Workspace presets",
+      "status": "verified-with-platform-limit",
+      "evidence": [
+        "src/workspace_presets.js",
+        "test/workspace_preset_model.test.js",
+        "data/Workflow-Stabilization-Architecture.md"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Authoritative metadata registry",
+      "status": "verified-by-tests",
+      "evidence": [
+        "test/fixtures/stabilization/project-registry-v1.json",
+        "src/metadata_registry.js",
+        "test/metadata_registry.test.js"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "Schema versions and migrations",
+      "status": "verified-by-tests",
+      "evidence": [
+        "src/project_registry.js",
+        "src/production_workflow_model.js",
+        "test/project_registry.test.js",
+        "test/production_workflow_model.test.js"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Validation levels",
+      "status": "verified-by-tests",
+      "evidence": [
+        "src/validation_levels.js",
+        "test/validation_levels.test.js"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "Change-impact previews",
+      "status": "verified-by-tests",
+      "evidence": [
+        "src/impact_analysis.js",
+        "src/impact_preview.js",
+        "test/impact_analysis.test.js"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "Transactional destructive operations",
+      "status": "verified-by-authority-audit",
+      "evidence": [
+        "src/mutation_safety.js",
+        "src/mutation_history.js",
+        "test/direct_write_audit.test.js",
+        "test/mutation_safety.test.js"
+      ]
+    },
+    {
+      "id": 10,
+      "name": "Small reference fixtures",
+      "status": "verified-by-tests",
+      "evidence": [
+        "test/fixtures/stabilization/README.md",
+        "test/stabilization_fixtures.test.js"
+      ]
+    },
+    {
+      "id": 11,
+      "name": "Performance budgets and caching",
+      "status": "verified-by-tests",
+      "evidence": [
+        "src/signature_cache.js",
+        "src/impact_analysis.js",
+        "test/signature_cache.test.js"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Reusable lesson capture",
+      "status": "verified-by-tests",
+      "evidence": [
+        "src/production_workflow_model.js",
+        "src/production_workflow_workspace.js",
+        "test/production_workflow_model.test.js"
+      ]
+    }
+  ],
+  "automatedVerification": {
+    "testFilesPassing": 298,
+    "package": "ikemen-zss-tools-0.78.0.vsix",
+    "packageInstalled": false,
+    "forbiddenRcWordingInExtension": 0,
+    "ryuDefReferences": 21,
+    "ryuOwnershipViolations": 0,
+    "templateDefReferences": 19,
+    "templateOwnershipViolations": 0
+  },
+  "manualRyuGates": [
+    "Repair and visually approve the owner-confirmed disappearing SFF/AIR frames.",
+    "Review the remaining feet, middle, and head axis-reference copies; live palette presentation is owner-confirmed.",
+    "Review and finalize data/Ryu-Baseline-v1-Lesson-Packet.md after asset cleanup.",
+    "Record explicit JustNoPoint/JNP owner sign-off."
+  ],
+  "goalStatus": "active-awaiting-manual-ryu-rehearsal",
+  "liveWaveAuditStatus": "In progress; historical evidence is not a live UI signoff for this version."
+}

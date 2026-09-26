@@ -1,0 +1,8 @@
+IKEMaker 0.75.3
+
+- Renamed Windows file-opening setup to explicitly identify SFF, AIR, SND,
+  and code formats in both Quick Start and Personal Workspace preferences.
+- Delayed opening the IKEMaker activity-bar view until VS Code has completed
+  its normal Explorer/sidebar restoration.
+- The existing Choose Opening Sidebar preference remains authoritative and
+  defaults to IKEMaker for new installations.

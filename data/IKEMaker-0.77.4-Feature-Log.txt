@@ -1,0 +1,13 @@
+IKEMaker 0.77.4
+
+DRAG POSITION SAFETY
+
+- Fixed JNP Move Constants using canvas pixel coordinates as the starting HitDef spark values. Small pointer movement now produces the matching small logical-coordinate change.
+- Logical object positions are never clamped or rewritten by zoom. Intentionally off-screen sparks, helpers, Explods, character positions, and throw binds remain valid.
+- Added Find Spark to JNP Move Constants and Universal HitDef, Find Spawn to Helper Lab, Find Marker to Explod/Position Composer, and Find P2 to Throw Creator. These controls move only the preview camera.
+- Added lost-pointer-capture cleanup to every directly editable coordinate viewer audited in this release, including AIR collision editing.
+- Stage Workspace retains unrestricted off-camera layer placement, global drag completion, Reset, and numeric coordinate recovery.
+
+VERIFICATION
+
+- Added a drag-coordinate regression contract covering the original JNP screen/logical-coordinate collision and recovery/lifecycle coverage across related viewers.

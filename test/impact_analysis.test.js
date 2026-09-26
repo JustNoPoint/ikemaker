@@ -1,0 +1,13 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const impact = require('../src/impact_analysis');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemen-impact-'));
+const first = path.join(root, 'a.zss'), second = path.join(root, 'b.air');
+fs.writeFileSync(first, 'changeAnim{value: 200}\nmap(JNP_Test) := 1;\n'); fs.writeFileSync(second, '[Begin Action 200]\n');
+const result = impact.replacementPreview(impact.scanFiles([first, second], '200'), '205');
+assert.strictEqual(result.filesAffected, 2); assert.strictEqual(result.occurrences, 2); assert.strictEqual(result.replacement, '205');
+assert.strictEqual(impact.scanFiles([first], 'JNP_Test').matches.length, 1);
+console.log('Impact analysis tests passed');

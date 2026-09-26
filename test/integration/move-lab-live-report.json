@@ -1,0 +1,262 @@
+{
+  "startedAt": "2026-09-11T23:45:17.538Z",
+  "characterDef": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def",
+  "passed": true,
+  "checks": {
+    "extensionDiscovered": true,
+    "extensionActive": true,
+    "requiredCommands": [
+      {
+        "command": "ikemen.moveLab.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.moveLab.inspectCurrent",
+        "present": true
+      },
+      {
+        "command": "ikemen.hitDef.openEditor",
+        "present": true
+      },
+      {
+        "command": "ikemen.throwCreator.open",
+        "present": true
+      },
+      {
+        "command": "air.openAnimationPreview",
+        "present": true
+      },
+      {
+        "command": "sff.openViewer",
+        "present": true
+      },
+      {
+        "command": "snd.openViewer",
+        "present": true
+      },
+      {
+        "command": "ikemen.paletteImport.open",
+        "present": true
+      },
+      {
+        "command": "zss.openPalFxEditor",
+        "present": true
+      },
+      {
+        "command": "ikemen.codeStructure.openWorkspace",
+        "present": true
+      },
+      {
+        "command": "zss.openControllers",
+        "present": true
+      },
+      {
+        "command": "zssControllers.insert",
+        "present": true
+      },
+      {
+        "command": "ikemen.characterDependencies.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.testSessions.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.characterHealth.open",
+        "present": true
+      },
+      {
+        "command": "ikemen.mutations.openHistory",
+        "present": true
+      }
+    ],
+    "moveLabTab": true,
+    "character": "Ryu",
+    "visualReady": true,
+    "requiredAssets": [
+      {
+        "kind": "DEF",
+        "ready": true
+      },
+      {
+        "kind": "AIR",
+        "ready": true
+      },
+      {
+        "kind": "SFF",
+        "ready": true
+      },
+      {
+        "kind": "SND",
+        "ready": true
+      }
+    ],
+    "modeCount": 7
+  },
+  "inspection": {
+    "title": "Move Lab",
+    "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def",
+    "context": {
+      "character": "Ryu",
+      "project": "SF6",
+      "ownership": "character",
+      "profile": "SF-character-production",
+      "defPath": "<IKEMEN_ROOT>\\chars\\Ryu\\Ryu.def"
+    },
+    "visualState": "ready",
+    "p1Action": 0,
+    "p2Action": 5000,
+    "files": [
+      {
+        "kind": "DEF",
+        "name": "Ryu.def",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "AIR",
+        "name": "Anim.air",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "SFF",
+        "name": "Ryu_Development.sff",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "SND",
+        "name": "Sound.snd",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "Commands",
+        "name": "template.jnp",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Constants",
+        "name": "Constants.cns",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "Code",
+        "name": "commonoptions.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "input.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "system_movement.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_armor.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_combo_scaling.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "normal_functions.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_hit_regions.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_normal_functions.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_cancel_system.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "damage_compatibility.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_game_options.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "normals.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "normals_extras.zss",
+        "exists": true,
+        "ownership": "character"
+      },
+      {
+        "kind": "Code",
+        "name": "sf6_debug_export_bridge.zss",
+        "exists": true,
+        "ownership": "game"
+      },
+      {
+        "kind": "Code",
+        "name": "sound_archive_bridge.zss",
+        "exists": true,
+        "ownership": "universal"
+      },
+      {
+        "kind": "Code",
+        "name": "JNP_training.zss",
+        "exists": true,
+        "ownership": "game"
+      }
+    ],
+    "totals": {
+      "states": 18,
+      "controllers": 152,
+      "functions": 50,
+      "diagnostics": 0
+    },
+    "throwPlans": 0,
+    "modes": [
+      "overview",
+      "attack",
+      "throw",
+      "animation",
+      "resources",
+      "code",
+      "tests"
+    ]
+  },
+  "finishedAt": "2026-09-11T23:45:21.613Z"
+}

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": 1,
+  "name": "Migration fixture",
+  "games": [{"id":"sf6","name":"SF6","roots":["SF6template"]}],
+  "validation": {"enabledLevels":["error","warning","convention","suggestion"]}
+}

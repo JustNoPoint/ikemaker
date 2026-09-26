@@ -1,0 +1,17 @@
+IKEMAKER 0.67.1 — QUICK FIREBALL RECIPES
+
+- Adds one-click Fireball and Super Fireball creation to Helper Lab.
+- Fireball creates a complete single-hit special-projectile starting point.
+- Super Fireball creates a stronger five-hit hyper-projectile starting point.
+- Both recipes include helper creation, attacking StateDef, AIR action assignment,
+  initial velocity, PlayerPush removal, HitDef, contact counting, MoveHitReset,
+  hit/guard behavior, and deterministic contact/lifetime cleanup.
+- Recipe animation follows the chosen StateDef number so renumbering remains simple.
+- ZSS and CNS output are both supported.
+- A Custom Helper button returns to the unrestricted helper scaffold.
+- Direct HitDef Editor, Move Lab, Position & Camera, and Explod Composer bridges
+  remain beside the generated code for deeper editing.
+- The matching AIR action still needs an authored projectile sprite and collision boxes;
+  the Helper Lab explains this instead of silently producing an invisible projectile.
+
+Automated verification: all 134 test files pass.

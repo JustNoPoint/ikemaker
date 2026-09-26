@@ -1,0 +1,15 @@
+IKEMEN ZSS Tools 0.64.0
+
+- Added the dedicated IKEMaker Throw Creator workspace.
+- Added independent P1/P2 AIR action tracks with element boundaries and real-tick playback.
+- Added Independent, Match P1 Ticks, Match P1 Boundaries, Hold Last P2, loop-interval, and event-step controls.
+- Added draggable P2 bind keyframes stored in character coordinates plus facing and snap controls.
+- Added editable grab, TargetState, ChangeAnim2, bind, release, damage, handoff, sound, camera, pause, shake, priority, part, cleanup, and note markers.
+- Added stationary, command, running, air, wall-slam, and multipart-cinematic starting templates.
+- Added explicit SFF part-bank, owner, runtime lane, Explod, SprPriority, LayerNo, sync, creation, and removal fields.
+- Added Clsn1/Clsn2 display and independent P1, P2, and part onion skins.
+- Added versioned throw plans, source hashes, stale-edit protection, validation, and Recovery Center-compatible writes.
+- Added non-destructive timing preview, reviewed P2 AIR-duration application, review-PNG export, and reviewed ZSS scaffold preview/save.
+- Added Throw Creator access from IKEMaker, Related Work, and the Move Constants workspace.
+- Preserved the neutral Authoring Bridge boundary and direct access to its installer.
+- Added a temporary mirror-training Live Authoring Preview profile for P1/P2 starting positions, facing, and poses, with automatic 30-second disarm and an immediate Disable action.

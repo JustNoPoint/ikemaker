@@ -1,0 +1,146 @@
+IKEMAKER PHASE 1 — BETA TESTER ACCEPTANCE
+Updated: 2026-09-12
+Tester:
+Required package: IKEMaker-0.75.7-Standard-Windows\IKEMEN-Creator-Tools.vsix
+
+RESULT KEY
+[ ] Not tested   [P] Pass   [F] IKEMaker failure   [C] Character/game-content finding
+[A] Automatically verified by the IKEMaker audit — JNP should skip this item
+
+WHAT YOU DO NOT NEED TO RETEST MANUALLY
+[ ] Installation/version discovery: 0.75.7 is installed.
+[A] Package/source parity for the current hub, context UI, feature log, and manifest.
+[A] Public-package privacy text scan: zero private-project-name hits.
+[A] All 154 automated test files: passed.
+[A] All 161 desktop JavaScript source files: syntax-valid.
+[A] All major visual workspaces: common Related Work and F5/F6/F7 header bridges audited.
+[A] Command wiring: all sidebar placements resolve to contributed commands; intentional
+  duplicates are allowed for discoverability.
+[A] Ryu connection tree: 24 files, 23 DEF assignments, 17 cross-file links, zero missing.
+[A] Goku connection tree: 31 files, 30 DEF assignments, zero missing.
+[A] Context classification: Ryu/SF6, SF6 shared, Universal shared, and Goku/HDBZ all resolve.
+[A] Combined-copy structural scan: 198/198 SFF, 53/53 AIR, 51/51 SND,
+  59/59 stages, 3/3 screenpacks, and 34/34 character dependency sets parsed.
+[A] Recent VS Code extension-host logs show successful activation and no extension-host errors.
+
+MINIMUM REQUIRED BEFORE GIVING THIS BUILD TO BETA TESTERS
+
+1. CLEAN-PROFILE VISUAL WALKTHROUGH
+[P] Restart VS Code after installing the current VSIX. Confirm IKEMaker appears and no
+    error notification is shown.
+[ ] In IKEMEN Tools, confirm Create New Game / Project Profile is visible in Quick Start
+    and Game and Project Profiles. Confirm Launcher Settings and Extension Settings are
+    searchable through the VS Code command search.
+[P] On a clean profile, inspect menus, profile choices, workflows, tests, and help pages.
+    Confirm no private-project or private-character name is visible.
+[ ] Create a disposable user project profile through the visible button. Confirm the
+    prompts are understandable and the resulting project/context label is correct.
+[ ] Create disposable MUGEN/CNS and IKEMEN/ZSS characters. Confirm each review lists
+    the correct state format, SFF version, command buttons, and common-file contract.
+[ ] In a disposable game copy with a common file temporarily absent, confirm character
+    creation reports the missing file and can copy it from a matching engine folder.
+
+2. CHARACTER, CONTEXT, AND TAB COHESION
+[ ] Open Ryu using Open Character and the Browse button. Confirm SF6 > Ryu appears in
+    the context bar without typing a path.
+[ ] Open Goku the same way. Switch between Ryu and Goku source tabs and visual tabs.
+    Confirm every adjacent viewer, Related Work action, palette, and suggested workspace
+    follows the active character and never mixes the two characters.
+[ ] Confirm opening Character essentials produces one AIR text tab, not two.
+[ ] Confirm Close Current Character closes only that character's source and visual tabs.
+[ ] Close and reopen VS Code. Confirm character workbenches, selected assets, zoom,
+    filters, and pane layout restore to a useful state.
+
+3. LAYOUT AND ACCESSIBILITY JUDGMENT
+[ ] At your normal ultrawide layout, open SFF, AIR, SND, Palette, Code Structure,
+    Production Workflow, Roster Manager, Stage, Screenpack, Test Suite, and Throw Creator.
+    Confirm important controls remain reachable with your sidebars and Codex chat open.
+[ ] Narrow an editor group. Confirm controls compact or scroll instead of overlapping.
+[ ] Test normal Windows scaling and one alternate display scale.
+[ ] Tab/Shift+Tab through representative workspaces. Confirm focus is visible and
+    Enter/Space activates controls. Confirm hover descriptions are clear.
+[ ] Confirm Related Work opens the expected coinciding file/screen and returning does
+    not discard viewer state.
+
+4. LIVE LAUNCH AND ACTIVE-GAME SAFETY
+[ ] With Ryu active, test Ctrl+Alt+F5 (normal game), Ctrl+Alt+F6 (infinite VS mirror),
+    and Ctrl+Alt+F7 (training mirror). Confirm SF6, Ryu, stage, and intended mode.
+[ ] Confirm Training Mirror does not begin at Time Over.
+[ ] Confirm keyboard and controller gameplay input work after all three launches.
+[ ] Repeat all three shortcuts with Goku active. Confirm HDBZ launches, never SF6.
+[ ] Exit each game and confirm VS Code remains responsive and retains the right context.
+
+5. SFF VISUAL AND INTERACTION ACCEPTANCE
+[ ] On representative Ryu and Goku SFFs, confirm group/sprite names, counts, sorting,
+    static thumbnails, marking, Shift-range selection, Ctrl-specific selection, and
+    Delete-key/context-menu deletion review behave as labeled.
+[ ] Confirm axis front/behind, pan, Fit, wheel zoom, previous/pinned onion skin, and the
+    independent onion-sprite scrollbar are visually correct.
+[ ] Confirm Ryu defaults to palette 1,1 and Goku retains HDBZ palette/remap behavior.
+[ ] Toggle all available base/part layers and ordering. Confirm missing layers are
+    explained and never invented.
+[ ] Confirm viewing, sorting, selecting, zooming, and previewing do not modify the SFF.
+
+6. AIR VISUAL, TIMING, COLLISION, AND SOURCE SYNC
+[ ] Confirm AIR playback starts paused and thumbnails remain static until Play is active.
+[ ] Select actions through the list and by placing the text cursor within an action.
+    Confirm both routes select the same action without duplicating the AIR text tab.
+[ ] Step/play/pause/pan/fit/wheel-zoom representative Ryu and Goku actions. Confirm no
+    viewer-created blinking and the correct default palette appears.
+[ ] Toggle Clsn1, Clsn2, defaults, axis, push/runtime geometry, P2 shadow, and layer
+    overlays. Confirm colors, labels, and sprite alignment are understandable.
+[ ] Review one known Ryu disappearing frame in both AIR and IKEMEN. Mark [C] if the
+    diagnostic identifies the right missing sprite; [F] if it identifies the wrong one.
+[ ] Confirm previewing and playback never rewrite AIR text.
+
+7. SND, PALETTE, AND WORKFLOW JUDGMENT
+[ ] Play several Ryu and Goku sounds. Confirm waveform, duration, volume, looping,
+    stopping, names, selection, and group/index order are correct to the ear.
+[ ] Confirm split-sound prefix/profile information changes with the active project.
+[ ] Confirm palette views agree across SFF and AIR, child variants/forms are clear, and
+    true-color SF6 PalFX does not replace indexed HDBZ behavior.
+[ ] Open Ryu and Goku Production Workflows. Confirm game-specific phases do not leak,
+    human evidence is not auto-passed, and Learning vs Proficient changes explanation
+    density—not authored meaning or safety.
+
+CRITICAL STOPS
+[ ] A private identifier is visible in a clean installation.
+[ ] Merely opening or viewing a file silently modifies it.
+[ ] Any operation targets the wrong project, game, character, stage, or screenpack.
+[ ] Ryu/Goku switching launches the wrong game or carries incompatible profile data.
+[ ] Training Mirror begins at Time Over.
+[ ] A core SFF, AIR, or SND crashes the extension host.
+[ ] Required controls are unreachable or keyboard focus becomes trapped.
+
+MANUAL TESTS REQUIRED BEFORE A PUBLIC RELEASE, BUT NOT REQUIRED FOR PHASE-1 BETA
+
+8. DESTRUCTIVE/TRANSACTIONAL TESTS — USE ONLY A DISPOSABLE FULL COPY
+[ ] Create, edit, save, undo, recover, and reopen one SFF, AIR, SND, palette, stage,
+    screenpack, and select.def change. Verify backup, stale-file, preview, and Recovery
+    Center behavior.
+[ ] Rebuild with SprMaker2 and SndMaker; test SFF crop for one sprite, one group, and all.
+[ ] Test controller insertion, CNS-to-ZSS conversion, collision drawing/batch edits,
+    axis batches, palette linking/replacement, and external file-change detection.
+[ ] Rehearse Complete Project and a patch release. Verify defaults, version increment,
+    manifest/checksums, cropped public SFFs, removed user-created palettes, and that the
+    development copy remains unchanged.
+
+9. HIGH-JUDGMENT VISUAL BUILDERS
+[ ] Roster/Select: motif layers, small/large portraits, protected cells, names/numbers
+    toggle, stage previews, drag/drop, arcade order, exclusions, story/player tools.
+[ ] Stage/Screenpack: camera bounds, scale, parallax, BG/BGCtrl timing, safe areas,
+    character UI bridge, and live IKEMEN comparison.
+[ ] Throw Creator: P1/P2 timing, Match P1, binds, get-hit selection, parts/explods,
+    priorities, camera, interruption/death behavior, and generated code in live IKEMEN.
+[ ] Test Suite: game-profile-specific tests, native debug options, checklist display,
+    evidence capture, and manual pass/signoff behavior.
+
+10. EXTERNAL AND ENVIRONMENT-SPECIFIC COVERAGE
+[ ] Photoshop, Aseprite, and selected audio-editor round trips.
+[ ] A second Windows machine and a clean VS Code user profile.
+[ ] Keyboard plus each supported controller type.
+[ ] Online/netplay and rollback-sensitive modes with two real peers.
+[ ] Android/browser and iPhone/iPad capability messaging on actual devices.
+
+When a check fails, record: active project/profile, character, file, workspace,
+exact action, expected result, actual result, and a screenshot when visual.

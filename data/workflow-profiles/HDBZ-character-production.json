@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "id": "hdbz-character-production",
+  "version": 1,
+  "name": "HDBZ Character Production",
+  "description": "HDBZ character production using shared workflow gates while preserving TemplateZ2 and HDBZ-specific runtime authority.",
+  "extends": "bundled:jnp-character-production",
+  "blocks": ["bundled-block:first-grounded-light-normal"],
+  "phases": []
+}

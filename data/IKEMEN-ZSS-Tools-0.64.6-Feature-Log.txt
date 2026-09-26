@@ -1,0 +1,23 @@
+IKEMaker 0.64.6
+
+CHARACTER-SCOPED TAB GROUPS
+
+- Opening another character reuses the established character workbench groups and
+  creates tabs instead of adding another editor split.
+- AIR viewers reuse one AIR viewer group, so each character receives a distinct
+  labeled tab rather than another side-by-side viewer.
+- SFF and SND viewers follow the same reusable-tab behavior.
+- Viewer titles include the owning character name to make similarly named assets
+  unambiguous.
+- Activating an AIR tab reveals that AIR's own text in the neighboring source
+  group. It no longer leaves another character's AIR source visible beside it.
+- When matching SFF, AIR, or SND tabs already exist in neighboring groups,
+  changing character context brings the matching character tabs forward.
+- Open SFF from AIR opens as a tab in the visual group rather than creating an
+  additional split.
+
+VERIFICATION
+
+- Character-folder, reusable-column, neighboring-source, and matching-peer rules
+  have automated regression coverage.
+- All 115 automated test files pass.

@@ -1,0 +1,12 @@
+IKEMaker 0.76.5 — Focused Attack Workspace
+
+- Reframes JNP Move Constants as one cohesive Attack Workspace instead of another competing editor.
+- Keeps character, move, StateDef, AIR action, selected element, and unsaved state visible in the header.
+- Opens AIR / CLSN on the selected move and exact selected AIR element.
+- Adds plain-language explanations to move fields while preserving direct source access.
+- Adds compact move-specific Problems with error/review distinctions and source navigation.
+- Adds live-edit connected-code sections for the selected StateDef and directly connected/shared functions.
+- Protects connected-code edits with source hashes, retained drafts, normal VS Code Undo, and explicit Save.
+- Keeps advanced profile/text/throw actions collapsed and remembers the user’s expanded layout.
+- Preserves one shared visual viewer area beside text editors; no duplicate viewer or text tabs were added.
+- Leaves guided Flow Mode recorded as future backlog only.

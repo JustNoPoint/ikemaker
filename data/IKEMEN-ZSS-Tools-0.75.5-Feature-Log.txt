@@ -1,0 +1,20 @@
+IKEMaker 0.75.5
+
+PROVISIONAL CS PHASE 1 TABLES
+
+- Palette Index Organizer now defaults to an artist-readable provisional layout.
+- Every visible color must be assigned to a named material row or a clearly
+  provisional REVIEW_* row before a Phase 1 export.
+- Shades remain together and are ordered dark-to-light inside each row.
+- Exactly one RESERVED_ROW_GAP palette index is inserted between adjacent
+  logical rows. Gaps are never inserted between individual shades, and there is
+  no unnecessary trailing gap after the final row.
+- Capacity validation includes the separators and stops safely if the complete
+  plan would exceed 256 entries.
+- JSON, CSV, ACT, Photoshop ACO, Aseprite GPL, indexed swatch, and converted PNG
+  output all derive from the same gap-aware index authority.
+- The rule can be disabled for non-CS/general palette exports, but it is enabled
+  by default for Phase 1 preparation.
+- A provisional CS artist handoff requires only the temporary SFF with this
+  organized palette embedded. Cross-editor palette packs are optional during
+  provisional work and become required only after approval or explicit export.

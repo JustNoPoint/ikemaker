@@ -1,0 +1,85 @@
+# IKEMEN Tools Authoring Bridge v1
+# Neutral, opt-in, local-training-only preview and character audit support.
+# All maps default to 0, so loading this module does not change normal matches.
+
+[StateDef -4]
+
+ignoreHitPause if !isHelper && gameMode = "training" {
+	# Apply a requested preview pose once per serial change.
+	if map(IkTools_Preview_Enabled)
+			&& map(IkTools_Preview_Serial) != map(IkTools_Preview_AppliedSerial) {
+		posSet{x: map(IkTools_Preview_PosX); y: map(IkTools_Preview_PosY)}
+		velSet{x: 0; y: 0}
+		if map(IkTools_Preview_Facing) != 0
+				&& facing != map(IkTools_Preview_Facing) {
+			turn{}
+		}
+		if map(IkTools_Preview_UseAnim)
+				&& selfAnimExist(map(IkTools_Preview_Anim)) {
+			changeAnim{value: map(IkTools_Preview_Anim)}
+		}
+		map(IkTools_Preview_AppliedSerial) := map(IkTools_Preview_Serial);
+	}
+
+	# The audit runs only when a tool or author increments this serial.
+	if map(IkTools_Audit_Enabled)
+			&& map(IkTools_Audit_Serial) != map(IkTools_Audit_AppliedSerial) {
+		map(IkTools_Audit_AppliedSerial) := map(IkTools_Audit_Serial);
+		map(IkTools_Audit_MissingCount) := 0;
+		if !selfAnimExist(0) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(6) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(10) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(11) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(12) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(20) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(21) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(40) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(41) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(42) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(43) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(100) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(105) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(130) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(131) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(132) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5000) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5010) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5020) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5030) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5050) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5070) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5080) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		if !selfAnimExist(5120) { map(IkTools_Audit_MissingCount) := map(IkTools_Audit_MissingCount) + 1; }
+		map(IkTools_Audit_Complete) := map(IkTools_Audit_MissingCount) = 0;
+	}
+
+	if map(IkTools_Audit_Show) {
+		displayToClipboard{text: "IKEMEN TOOLS ANIMATION AUDIT: missing %d"; params: map(IkTools_Audit_MissingCount)}
+		if !selfAnimExist(0) { appendToClipboard{text: "\nMISSING 0 Standing idle"} }
+		if !selfAnimExist(5) { appendToClipboard{text: "\nMISSING 5 Standing turn"} }
+		if !selfAnimExist(6) { appendToClipboard{text: "\nMISSING 6 Crouching turn"} }
+		if !selfAnimExist(10) { appendToClipboard{text: "\nMISSING 10 Stand to crouch"} }
+		if !selfAnimExist(11) { appendToClipboard{text: "\nMISSING 11 Crouching idle"} }
+		if !selfAnimExist(12) { appendToClipboard{text: "\nMISSING 12 Crouch to stand"} }
+		if !selfAnimExist(20) { appendToClipboard{text: "\nMISSING 20 Walk forward"} }
+		if !selfAnimExist(21) { appendToClipboard{text: "\nMISSING 21 Walk backward"} }
+		if !selfAnimExist(40) { appendToClipboard{text: "\nMISSING 40 Jump start"} }
+		if !selfAnimExist(41) { appendToClipboard{text: "\nMISSING 41 Neutral jump"} }
+		if !selfAnimExist(42) { appendToClipboard{text: "\nMISSING 42 Forward jump"} }
+		if !selfAnimExist(43) { appendToClipboard{text: "\nMISSING 43 Backward jump"} }
+		if !selfAnimExist(100) { appendToClipboard{text: "\nMISSING 100 Run or forward dash"} }
+		if !selfAnimExist(105) { appendToClipboard{text: "\nMISSING 105 Back dash"} }
+		if !selfAnimExist(130) { appendToClipboard{text: "\nMISSING 130 Guard start"} }
+		if !selfAnimExist(131) { appendToClipboard{text: "\nMISSING 131 Guard"} }
+		if !selfAnimExist(132) { appendToClipboard{text: "\nMISSING 132 Guard end"} }
+		if !selfAnimExist(5000) { appendToClipboard{text: "\nMISSING 5000 High get-hit"} }
+		if !selfAnimExist(5010) { appendToClipboard{text: "\nMISSING 5010 Mid or low get-hit"} }
+		if !selfAnimExist(5020) { appendToClipboard{text: "\nMISSING 5020 Crouching get-hit"} }
+		if !selfAnimExist(5030) { appendToClipboard{text: "\nMISSING 5030 Hit-back transition"} }
+		if !selfAnimExist(5050) { appendToClipboard{text: "\nMISSING 5050 Aerial fall"} }
+		if !selfAnimExist(5070) { appendToClipboard{text: "\nMISSING 5070 Trip"} }
+		if !selfAnimExist(5080) { appendToClipboard{text: "\nMISSING 5080 OTG or liedown"} }
+		if !selfAnimExist(5120) { appendToClipboard{text: "\nMISSING 5120 Get up"} }
+	}
+}

@@ -1,0 +1,95 @@
+<html><head><meta charset="utf-8"/><title>3D-Model-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/3D-Model-features">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="overview">Overview</h1>
+<p>Ikemen GO uses the <a href="https://www.khronos.org/Gltf">glTF</a> format (in either .glb or .gltf extensions) for loading and displaying 3D assets. This format can be exported to using modelling programs such as <a href="https://www.blender.org/">Blender</a>. Ikemen GO can display 3D models defined in stage and screenpack.</p>
+<h1 id="standard-features">Standard Features</h1>
+<p>Refer to <a href="https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html">glTF™ 2.0 Specification</a> for full set of features in glTF2.0</p>
+<p>Details about the standard glTF features supported by Ikemen GO:
+* <strong>COLOR_n</strong> - Only COLOR_0 is supported
+* <strong>TEXCOORD_n</strong> - Multiple texture coordinate is not supported. All textures use TEXCOORD_0
+* <strong>JOINTS_n,WEIGHTS_n</strong> - Up to 2 sets of joins and weights are supported
+* <strong>Morph Target Animation</strong> - Up to 8 active morphed attributes per primitive are supported</p>
+<h1 id="supported-gltf-extensions">Supported glTF Extensions</h1>
+<p>The following glTF extensions are supported:
+* <a href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_animation_pointer/README.md">KHR_animation_pointer</a>
+* <a href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_lights_punctual/README.md">KHR_lights_punctual</a>
+(Up to 4 light sources are supported)
+* <a href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_materials_unlit/README.md">KHR_materials_unlit</a>
+* <a href="https://github.com/KhronosGroup/glTF/blob/main/extensions/2.0/Khronos/KHR_texture_transform/README.md">KHR_texture_transform</a></p>
+<h1 id="extras-custom-properties">Extras / Custom Properties</h1>
+<p>In addition to the extensions mentioned above, Ikemen GO can further tweak the rendering behavior on a per-object basis using a glTF node's "extras" field.</p>
+<h2 id="trans">trans</h2>
+<blockquote>
+<p>Values: string of "ADD"/"SUB"/"MUL"/"NONE"<br/>
+Default: "NONE"</p>
+</blockquote>
+<p>Renders the object with the specified blending mode.</p>
+<h2 id="id">id</h2>
+<blockquote>
+<p>Values: integer
+Default: N/A</p>
+</blockquote>
+<p>ID number used to identify a node. For use with the BGCtrl3D state controller.
+This property can be applied to both nodes and animations inside a GLTF file.</p>
+<h2 id="loopcount">loopCount</h2>
+<blockquote>
+<p>Values: integer
+Default: -1</p>
+</blockquote>
+<p>Applies to animations. Controls the number of times an animation will loop. -1 is treated as infinity. Note the capital C (case-sensitive)</p>
+<h2 id="enabled">enabled</h2>
+<blockquote>
+<p>Values: string
+Default: "1"</p>
+</blockquote>
+<p>Applies to animations. Controls whether the animation plays. Set this to "0" or "false" to disable.</p>
+<h2 id="castshadow">castShadow</h2>
+<blockquote>
+<p>Values: integer<br/>
+Default: 1</p>
+</blockquote>
+<p>Applies to nodes. Toggles whether or not that object casts shadows. Set to 0 to disable.</p>
+<h2 id="shadowmapbias">shadowMapBias:</h2>
+<blockquote>
+<p>Values: float<br/>
+Default: 0.02</p>
+</blockquote>
+<p>Applies to lights, define the shadow map bias of the light. Increase this value to reduce shadow acne; Decrease this value to reduce peter panning.</p>
+<h2 id="shadowmapnear-shadowmapfar-shadowmapbottom-shadowmaptop-shadowmapleft-shadowmapright">shadowMapNear, shadowMapFar, shadowMapBottom, shadowMapTop, shadowMapLeft, shadowMapRight:</h2>
+<blockquote>
+<p>Values: float<br/>
+Default: 0.1 (point/spot lights)/-20 (directional lights), 50, -20, 20, -20, 20</p>
+</blockquote>
+<p>Applies to lights, define the shadow mapping frustum. The frustum should cover all the visible objects in order to produce correct result.</p>
+<h2 id="disableztest">disableZTest</h2>
+<blockquote>
+<p>Values: boolean<br/>
+Default: false</p>
+</blockquote>
+<p>Applies to nodes. Disables depth testing. Not recommended unless you know exactly what you're doing.</p>
+<h2 id="disablezwrite">disableZWrite</h2>
+<blockquote>
+<p>Values: boolean<br/>
+Default: false</p>
+</blockquote>
+<p>Applies to nodes. Disables writing to the depth buffer. Useful when rendering 2D stuffs in the model</p>
+<h2 id="layernumber">layerNumber</h2>
+<blockquote>
+<p>Values: integer<br/>
+Default: 0 (screenpack model / scene 0 of stage model), 1 (scene 1 of stage model)</p>
+</blockquote>
+<p>Applies to nodes. Define the layer number of the node. Valid values are -1 (stage model only), 0, 1</p>
+<h2 id="meshoutline">meshOutline</h2>
+<blockquote>
+<p>Values: float<br/>
+Default: 0</p>
+</blockquote>
+<p>Apply to nodes. Extrude the back facing vertices to draw a outline around the mesh if the value is greater than 0. Thicker outline will be drawn if the value is larger.</p>
+<h1 id="custom-attributtes">Custom Attributtes</h1>
+<h2 id="_outline_attribute">_OUTLINE_ATTRIBUTE</h2>
+<blockquote>
+<p>Values: vec4<br/>
+Default: (0,0,0,0)</p>
+</blockquote>
+<p>Do nothing when mesh outline is not enabled. xyz of the attribute determines the direction of the vertex being extruded. w determines the amount of extrusion. Vertex normal will be used as the extrusion direction if this attribute is not provided.</p>
+<h1 id="mesh-outline">Mesh Outline</h1>
+<p>Ikemen GO uses inverted hull method to draw outline of mesh. <strong>This method only works on opaque meshes with back face culling</strong>.</p>
+<p>Set <code>meshOutline</code> of the node to a value greater than 0 to enable the mesh outline. By default the back face vertices will be extruded alone the direction of the normal. Usually you will need to adjust the direction with the custom attribute <code>_OUTLINE_ATTRIBUTE</code> for geometry with sharp edges.</p></body></html>

@@ -1,0 +1,298 @@
+<html><head><meta charset="utf-8"/><title>Character-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Character-features">Original source (online)</a> · Snapshot 2026-09-13</div><p>Character files have the following new features.</p>
+<h1 id="animations"><a name="air">Animations</a></h1>
+<p>The character's animations file (referenced to as <code>anim</code> in the character's DEF file) has the following new features.  </p>
+<h2 id="copy-action"><a name="air_copyaction">Copy Action</a></h2>
+<p>Animations can be duplicated by using <code>Copy Action</code>. This prevents having to manually copy the contents of one <code>[Begin Action]</code> into another.</p>
+<p>Example</p>
+<pre><code class="language-ini">; Use Walk Forward animation for running
+[Begin Action 100]
+Copy Action 20
+</code></pre>
+<h2 id="transparency"><a name="air_transparency">Transparency</a></h2>
+<h3 id="sub"><a name="air_transparency_sub">Sub</a></h3>
+<p>The <code>S</code> (subtractive) transparency is now also compatible with the alpha parameters, including interpolation.  </p>
+<p>Example</p>
+<pre><code class="language-ini">[Begin Action 140]
+140,0, 0,0, 59, , SS0D256
+Interpolate Blend
+140,0, 0,0, 1, , SS256D0
+</code></pre>
+<h3 id="subadd"><a name="air_transparency_sub">SubAdd</a></h3>
+<p>The <code>subAdd</code> transparency mode can also be used in animations.  </p>
+<p>Example</p>
+<pre><code class="language-ini">[Begin Action 150]
+150,0, 0,0, 60, , SA
+150,0, 0,0, 59, , SAS256D256
+Interpolate Blend
+150,0, 0,0, 1, , SAS0D0
+</code></pre>
+<h1 id="commands"><a name="cmd">Commands</a></h1>
+<p>Ikemen's input parser fixes several longstanding issues Mugen's had, such as proper direction charging and steady input delay.<br/>
+The command syntax also supports things that looked like they should've worked in Mugen but didn't, such as <code>~x+~y</code> triggering when both buttons are released at the same time.<br/>
+In addition, the Command file (referenced to as <code>cmd</code> in the character's DEF file) has the following new features.  </p>
+<h2 id="default-parameters"><a name="cmd_defaultparameters">Default Parameters</a></h2>
+<p>New command parameters also have their own default values that can be set in the <code>[Defaults]</code> group, similarly to <code>command.time</code> and <code>command.buffer.time</code>.  The following are now supported:</p>
+<ul>
+<li><code>command.autogreater</code>: Default value for <code>autogreater</code>. Defaults to 1.</li>
+<li><code>command.steptime</code>: Default value for <code>steptime</code>. Defaults to -1 if omitted.</li>
+<li><code>command.buffer.hitpause</code>: Default value for <code>buffer.hitpause</code>. Defaults to 1 if omitted.</li>
+<li><code>command.buffer.pauseend</code>: Default value for <code>buffer.pauseend</code>. Defaults to 1 if omitted.</li>
+<li><code>command.buffer.shared</code>: Default value for <code>buffer.shared</code>. Defaults to 1 if omitted.</li>
+</ul>
+<h2 id="parameters"><a name="cmd_parameters">Parameters</a></h2>
+<h3 id="autogreater-bool"><a name="cmd_parameters_autogreater">autogreater (bool)</a></h3>
+<p>Like Mugen, Ikemen expands consecutive identical directions into <code>&gt;</code> inputs. For instance, <code>F, F</code> is automatically expanded into <code>F, &gt;~F, &gt;F</code>.<br/>
+Setting <code>autogreater</code> to 0 disables this behavior. Defaults to <code>command.autogreater</code>.</p>
+<h3 id="bufferhitpause-bool"><a name="cmd_parameters_buffer_hitpause">buffer.hitpause (bool)</a></h3>
+<p>A command with <code>buffer.hitpause</code> set to 0 will not stay buffered during a hitpause.<br/>
+Defaults to <code>command.buffer.hitpause</code>.  </p>
+<p>Note: This parameter deprecates the <code>Input.PauseOnHitPause</code> character constant.  </p>
+<h3 id="bufferpauseend-bool"><a name="cmd_parameters_buffer_pauseend">buffer.pauseend (bool)</a></h3>
+<p>A command with <code>buffer.pauseend</code> set to 0 will not stay buffered during the <code>endcmdbuftime</code> window of <code>Pause</code> and <code>SuperPause</code>.<br/>
+Defaults to <code>command.buffer.pauseend</code>.  </p>
+<h3 id="buffershared-bool"><a name="cmd_parameters_buffer_shared">buffer.shared (bool)</a></h3>
+<p>A command with <code>buffer.shared</code> set to 0 will not be reset upon completion of another command with the same name.<br/>
+Defaults to <code>command.buffer.shared</code>.  </p>
+<h3 id="steptime-int"><a name="cmd_parameters_steptime">steptime (int)</a></h3>
+<p>Defines how many frames a command step stays active after being completed. In other words, how many frames are allowed for the player to enter the next input in a command.<br/>
+A value of -1 makes <code>steptime</code> use the same value as the command's <code>time</code>.<br/>
+Defaults to <code>command.steptime</code>.  </p>
+<p>Example:  </p>
+<pre><code class="language-ini">[Command]
+name = "Super Attack"
+command = ~D, DF, F, D, DF, F, y
+time = 60     ; 60 frames to complete entire motion no matter what
+steptime = 10 ; 10 frames to enter next input in the sequence
+</code></pre>
+<h2 id="symbols"><a name="cmd_symbols">Symbols</a></h2>
+<p>Command definition syntax is more flexible in Ikemen GO. Each command step can now accept multiple symbols correctly, as well as individual symbols for each key in the same step.  </p>
+<p>Some examples:<br/>
+<code>/a + /b</code>: Hold <code>a</code> and hold <code>b</code><br/>
+<code>~/c</code>: Not hold <code>c</code><br/>
+<code>/60x + ~30y</code>: Charge <code>x</code> for 60 frames without releasing and release <code>y</code> after charging for 30 frames  </p>
+<h3 id="_1"><a name="cmd_symbols_or">|</a></h3>
+<p>The <code>|</code> symbol makes a command step use OR logic. Similar to how <code>+</code> uses AND logic.  </p>
+<p>Example: <code>x | y | z</code> means "press x or y or z".  </p>
+<p>Note: <code>|</code> and <code>+</code> cannot be used in the same command step.  </p>
+<h3 id="_2"><a name="cmd_symbols_dollar">$</a></h3>
+<p>Dollar sign was adjusted so that the buffer timer is shared between all variations of a "dollar" direction. For instance, inputting <code>DB, D, DF</code> only satisfies <code>$D</code> once rather than three times.</p>
+<p>UPDATE: This change is currently disabled.  </p>
+<h3 id="_3"><a name="cmd_symbols_slash">/</a></h3>
+<p>The <code>/</code> symbol now also allows defining a charge time.  </p>
+<p>Example:<br/>
+If you charge <code>B</code> for 30 frames, <code>~30B</code> is true when you release it, while <code>/30B</code> is true for as long as you keep holding it.</p>
+<h3 id="l-and-r-directions"><a name="cmd_symbols_lr">L and R directions</a></h3>
+<p>In addition to B and F, characters can now use L (left) and R (right) absolute directions when defining commands. These inputs are the same no matter which way the player is facing.  </p>
+<p>Example:  </p>
+<pre><code class="language-ini">[Command]
+name = "QCR_x"
+command = ~D, DR, R, x
+</code></pre>
+<h3 id="n-direction"><a name="cmd_symbols_n">N direction</a></h3>
+<p>Characters can now also use N (neutral) direction when defining commands.  </p>
+<p>Example:  </p>
+<pre><code class="language-ini">[Command]
+name = "Test"
+command = ~60N, F+a; press forward plus A after not pressing any direction for 60 frames
+</code></pre>
+<p>Note: For backward compatibility purposes and because it would otherwise lack any meaning, <code>$N</code> stands for "any press or release of any key".</p>
+<h1 id="constants"><a name="cns">Constants</a></h1>
+<p>The character's Constants file (referenced to as <code>cns</code> in the character's DEF file) has the following new features.  </p>
+<h2 id="constants_1"><a name="cns_constants">[Constants]</a></h2>
+<p>Defining a <code>[Constants]</code> group in the character's <code>cns</code> file allows you to set an unlimited amount of your own custom float type constants. These can be returned by the <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#changed_const">Const</a> trigger like any other constant.<br/>
+A character's constants will overwrite the default constants assigned via the <code>data/common.const</code> file.<br/>
+Constant names should not contain spaces or brackets.  </p>
+<pre><code class="language-ini">[Constants]
+Default.Attack.LifeToPowerMul = 0.7
+Default.GetHit.LifeToPowerMul = 0.6
+Super.TargetDefenceMul = 1.5
+Default.LifeToGuardPointsMul = -1.5
+Default.LifeToDizzyPointsMul = 0
+Default.LifeToRedLifeMul = 0.25
+Default.IgnoreDefeatedEnemies = 1
+Input.PauseOnHitPause = 1
+</code></pre>
+<h2 id="data"><a name="cns_data">[Data]</a></h2>
+<p>The [Data] constants group accepts the following new constants.  </p>
+<h3 id="dizzypoints"><a name="cns_data_dizzypoints">dizzypoints</a></h3>
+<p>Amount of <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#dizzy">Dizzy</a> Points to start with (defaults to same as <code>life</code>)</p>
+<h3 id="guardpoints"><a name="cns_data_guardpoints">guardpoints</a></h3>
+<p>Amount of <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#guardbreak">Guard</a> Points to start with (defaults to same as <code>life</code>)</p>
+<h3 id="guardsoundchannel"><a name="cns_data_guardsoundchannel">guardsound.channel</a></h3>
+<p>The default channel for guardsounds. Defaults to <code>-1</code>, meaning the sound will play on any free channel.</p>
+<h3 id="hitsoundchannel"><a name="cns_data_hitsoundchannel">hitsound.channel</a></h3>
+<p>The default channel for hitsounds. Defaults to <code>-1</code>, meaning the sound will play on any free channel.</p>
+<h2 id="size"><a name="cns_size">[Size]</a></h2>
+<p>The [Size] constants group accepts the following new constants.  </p>
+<h3 id="airsizebox"><a name="cns_size_air_sizebox">air.sizebox</a></h3>
+<p>Defines the character's width and height while jumping. See <code>stand.sizebox</code>.</p>
+<h3 id="attackdistwidth"><a name="cns_size_attack_dist_width">attack.dist.width</a></h3>
+<p>Sets the default attack distance that can trigger an enemy's proximity guard in the x-axis. Takes two parameters: <code>front</code> and <code>back</code>.<br/>
+The back distance allow a player to attack from behind the enemy and still trigger proximity guard.  </p>
+<h3 id="attackdistheight"><a name="cns_size_attack_dist_height">attack.dist.height</a></h3>
+<p>Sets the default attack distance that can trigger an enemy's proximity guard in the y-axis. Takes two parameters: <code>top</code> and <code>bottom</code>.  </p>
+<h3 id="attackdistdepth"><a name="cns_size_attack_dist_depth">attack.dist.depth</a></h3>
+<p>Sets the default attack distance that can trigger an enemy's proximity guard in the z-axis. Takes two parameters: <code>top</code> and <code>bottom</code>.  </p>
+<h3 id="crouchsizebox"><a name="cns_size_crouch_sizebox">crouch.sizebox</a></h3>
+<p>Defines the character's width and height while crouching. See <code>stand.sizebox</code>.</p>
+<h3 id="downsizebox"><a name="cns_size_down_sizebox">down.sizebox</a></h3>
+<p>Defines the character's width and height while lying down. See <code>stand.sizebox</code>.</p>
+<h3 id="projattackdistwidth"><a name="cns_size_proj_attack_dist_width">proj.attack.dist.width</a></h3>
+<p>Sets the default projectile distance that can trigger an enemy's proximity guard in the x-axis. Takes two parameters: <code>front</code> and <code>back</code>.<br/>
+The back distance allow a player's projectile to be behind the enemy and still allow them to enter proximity guard.</p>
+<h3 id="projattackdistheight"><a name="cns_size_proj_attack_dist_height">proj.attack.dist.height</a></h3>
+<p>Sets the default projectile distance that can trigger an enemy's proximity guard in the y-axis. Takes two parameters: <code>top</code>and <code>bottom</code>.  </p>
+<h3 id="projattackdistdepth"><a name="cns_size_proj_attack_dist_depth">proj.attack.dist.depth</a></h3>
+<p>Sets the default projectile distance that can trigger an enemy's proximity guard in the z-axis. Takes two parameters: <code>top</code>and <code>bottom</code>.  </p>
+<h3 id="pushfactor"><a name="cns_size_pushfactor">pushfactor</a></h3>
+<p>The push factor constant determines how smoothly a player size box overlap is resolved. Lower values will make players push "out of" each other more gradually. Defaults to <code>1.0</code>.</p>
+<h3 id="standsizebox"><a name="cns_size_stand_sizebox">stand.sizebox</a></h3>
+<p>Defines the character's width and height while standing. Uses the same rectangle format as Clsn boxes. Overrides legacy size constants like <code>ground.front</code> or <code>height</code>.</p>
+<p>Format:  </p>
+<blockquote>
+<p>stand.sizebox = <em>back_width</em>, <em>top_height</em>, <em>front_width</em>, <em>bottom_height</em></p>
+</blockquote>
+<p>Example</p>
+<pre><code class="language-ini">stand.sizebox = -15, -60, 16, 0
+</code></pre>
+<h3 id="weight"><a name="cns_size_weight">weight</a></h3>
+<p>The weight constant is factored into how much characters can push each other. If two players push each other with the same velocity, the player with the higher weight constant will win the struggle proportionally. Defaults to <code>100</code>.</p>
+<h3 id="depth"><a name="cns_size_depth">depth</a></h3>
+<p>Defines the player width in the Z axis. Accepts two values, for <code>top</code>and <code>bottom</code> size respectively.<br/>
+This constant was named <code>z.width</code> in early Mugen beta versions. Ikemen GO reintroduces Z axis functionality, so this constant is brought back.<br/>
+Similar to <code>ground.front</code> and <code>ground.back</code> in the X axis.  </p>
+<h3 id="attackdepth"><a name="cns_size_attackdepth">attack.depth</a></h3>
+<p>The default Z width for every attack. In other words, the default <code>attack.depth</code> when a character uses a <code>Hitdef</code>. Accepts two values: <code>top</code>and <code>bottom</code>.<br/>
+This constant was named <code>attack.width</code> in early Mugen beta versions. Ikemen GO reintroduces Z axis functionality, so this constant is brought back.  </p>
+<h2 id="velocity"><a name="cns_velocity">[Velocity]</a></h2>
+<p>The [Velocity] constants group accepts the following new constants.  </p>
+<h3 id="airgethitkoadd"><a name="cns_velocity_airgethitkoadd">air.gethit.ko.add</a></h3>
+<p>Extra velocity for a KO'd character in the air (x, y, z). Defaults to <code>-2, -2, 0</code> for 240p chars (auto scaled based on localcoord, if omitted).</p>
+<h3 id="airgethitkoymin"><a name="cns_velocity_airgethitkoymin">air.gethit.ko.ymin</a></h3>
+<p>Minimum y-velocity for a non-falling KO'd character in the air. Defaults to <code>3</code> for 240p chars (auto scaled based on localcoord, if omitted).</p>
+<h3 id="groundgethitkoxmul"><a name="cns_velocity_groundgethitkoxmul">ground.gethit.ko.xmul</a></h3>
+<p>Multiplier for the x-velocity of a KO'd character on the ground. Defaults to <code>0.66</code> for 240p chars.</p>
+<h3 id="groundgethitkoadd"><a name="cns_velocity_groundgethitkoadd">ground.gethit.ko.add</a></h3>
+<p>Extra velocity for a KO'd character on the ground (x, y, z). Defaults to <code>-2.5, -2, 0</code> for 240p chars (auto scaled based on localcoord, if omitted).</p>
+<h3 id="groundgethitkoymin"><a name="cns_velocity_groundgethitkoymin">ground.gethit.ko.ymin</a></h3>
+<p>Minimum y-velocity for a non-falling KO'd character on the ground. Defaults to <code>-6</code> for 240p chars (auto scaled based on localcoord, if omitted).</p>
+<h1 id="character-definition"><a name="def">Character Definition</a></h1>
+<p>The character's Definition file (the <code>DEF</code> file itself) supports the following new features.  </p>
+<h2 id="files"><a name="def_files">[Files]</a></h2>
+<p>All parameters in the [Files] section of the character definition file are now optional. This update is particularly beneficial for AttachedChars that do not intend to utilize sprites, sounds or commands, but solely character state code. In such cases, they can simply declare st files and proceed accordingly without the need for additional parameters.</p>
+<h3 id="font"><a name="def_files_font">Font</a></h3>
+<p>Up to 10 fonts can be specified in the same way as in motif definition files (<em>fight.def</em> and <em>system.def</em>). These fonts can be used with the <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_textrender">Text</a> controller. Fonts are searched in the following order: the character's DEF file directory, the motif directory, the mugen program directory, <em>data/</em>, and <em>font/</em>. Currently, font loading for <a href="Stage-features.html#info_attachedchar">AttachedChar</a> is not supported.</p>
+<pre><code class="language-ini">font0 = font/jg.fnt
+font1 = font/num1.fnt
+font2 = mssansserif-tt36.def
+font2.height = 36
+</code></pre>
+<h3 id="fx"><a name="def_files_fx">FX</a></h3>
+<p>Can load <a href="Miscellaneous-info.html#common-files-air-cmd-const-fx-states">CommonFX</a> files directly from a character's .def file. This is useful for character-specific FightFX that you don't want to load globally.
+In character's .def file, under the [Files] section, add the fx key. You can specify one or more .def files, separated by commas.</p>
+<pre><code class="language-ini">[Files]
+fx = kfm_effects.def, data/fx/kfm_gofx.def
+</code></pre>
+<p>The engine will load kfm_effects.def and kfm_gofx.def when this character is loaded for a match. The associated assets will be automatically unloaded from memory when they are no longer in use.</p>
+<h3 id="movelist"><a name="def_files_movelist">Movelist</a></h3>
+<p>The Pause menu command list can display data assigned in the character's DEF file, under the <code>[Files]</code> section.</p>
+<pre><code class="language-ini">[Files]
+movelist = movelist.dat
+</code></pre>
+<p>Additional movelists can be assigned with numbered parameters. <code>movelist</code> and <code>movelist0</code> both refer to index 0. If both are specified, <code>movelist</code> takes priority.</p>
+<pre><code class="language-ini">[Files]
+movelist = normal.dat
+movelist1 = evil.dat
+movelist2 = poweredup.dat
+</code></pre>
+<p>The active movelist can be changed during a match with <a href="State-controllers-%28new%29.html#new_changemovelist">ChangeMovelist</a>. The selected movelist index persists between rounds and resets when the character is loaded or reused for a new match.</p>
+<h2 id="info"><a name="def_info">[Info]</a></h2>
+<p>The information section accepts the following new parameters.</p>
+<h3 id="ikemenversion"><a name="def_info_ikemenversion">IkemenVersion</a></h3>
+<p>Similarly to <code>mugenversion</code>, <code>ikemenversion</code> identifies the version of Ikemen GO that the content was developed for. One of its purposes is to maintain backward compatibility with legacy content, so, in general, content without this parameter will work as it did in Mugen. To take full advantage of Ikemen GO's features one should use it, however. Defaults to <code>0.0</code>.  </p>
+<p>The behavior of some triggers and state controllers will change when this parameter is defined. Refer to this wiki's respective sections to see what changes when <code>ikemenversion</code> is used.  </p>
+<h3 id="lifebarname"><a name="def_info_lifebarname">LifebarName</a></h3>
+<p>The name of the character to be displayed on the lifebar can be specified. If no name is specified, the default name "DisplayName" will be used.</p>
+<h3 id="portraitscale"><a name="def_info_portraitscale">PortraitScale</a></h3>
+<p>Sets the portrait draw scale (same idea as lifebar <code>[FightFx]</code> scale), overriding the automatic scaling derived from the character's <code>localcoord</code>. If not set, a higher-resolution (<code>localcoord</code>) character needs a proportionally larger portrait, or you can just set <code>portraitscale</code> to compensate.</p>
+<p>To match the scaling factor, use: <strong><code>portraitscale = localcoordX / 320</code></strong></p>
+<p>Example: a 720p character (<code>localcoord = 1280,720</code>) using a 120×240 portrait needs the following scale to display at the same apparent size as on a 240p character:</p>
+<pre><code class="language-ini">portraitscale = 4
+</code></pre>
+<h3 id="fightfxprefix"><a name="def_info_Fightfx.Prefix">Fightfx.Prefix</a></h3>
+<p>Can override the default fightfx (the one typically used with the F prefix in SCTRLs like Explod or PlaySnd) for a specific character.
+In character's .def file, under the [Info] section, add the fightfx.prefix key. The value should be the prefix of a <a href="Miscellaneous-info.html#common-files-air-cmd-const-fx-states">CommonFX</a> that has been loaded either globally (in config.ini) or through the character's own fx definition.</p>
+<pre><code class="language-ini">[Info]
+fightfx.prefix = KFMGO ; This character will now use 'KFMGO' as its default fightfx.
+
+[Files]
+; Make sure the corresponding CommonFX is loaded.
+fx = data/fx/kfm_gofx.def
+</code></pre>
+<p>Sample CommonFx .def file:</p>
+<pre><code class="language-ini">[Info]
+prefix = KFMGO 
+fx.scale = 1
+localcoord = 320, 240
+
+[Files]
+sff = kfm_gofx.sff 
+air = kfm_gofx.air
+snd = kfm_gofx.snd
+</code></pre>
+<p>When you use anim = F10 in this character's states, the engine will look for the animation from the CommonFX with the prefix KFMGO instead of the default one from fight.def.
+This allows to give their characters unique hit sparks, guard effects, and other common visuals without modifying global files.</p>
+<h2 id="map"><a name="def_map">[Map]</a></h2>
+<p>This variant of associative array allows to link a string and a float value for each character. This can be used as a variable, as a tag, or as a flag for a specific technique. For example, a map can be set by adding the following description to the character def file:</p>
+<pre><code class="language-ini">[Map]
+Ryu = 1
+Streetfighter = 1
+man = 1
+birthyear = 1964
+Japan = 1
+Ansatsuken = 1
+</code></pre>
+<p>This map can be recognized by a <a href="Triggers-%28new%29.html#new_map">Map</a> trigger and its value can be modified or set by <a href="State-controllers-%28new%29.html#new_mapset">MapSet</a> and <a href="State-controllers-%28new%29.html#new_mapadd">MapAdd</a> state controllers. Note that spaces cannot be used in map names.</p>
+<h2 id="shaders"><a name="def_shaders">[Shaders]</a></h2>
+<p>Custom shaders can be loaded through the character.<br/>
+Define the shader name and specify the file path of the shader to load.</p>
+<pre><code class="language-ini">[Shaders]
+kfm_zss_distortion = distortion.frag
+kfm_zss_wobble = wobble.frag
+kfm_zss_disintegrate = disintegrate.frag
+</code></pre>
+<p>Currently, the loaded custom shaders are available for use by the entire character, so need to choose a name that won't conflict with another character's.<br/>
+For Vulkan, an spv file with the same name and the extension .spv added is required.  </p>
+<p>Custom shaders can be set or modified using <a href="State-controllers-%28new%29.html#new_shaderset">ShaderSet</a>, Explod, and Projectile state controllers.<br/>
+Custom shaders on a character can be recognized by <a href="Triggers-%28new%29.html#new_shader">Shader</a> triggers.</p>
+<h2 id="remappreset-x"><a name="cns_remappreset">[RemapPreset X]</a></h2>
+<p>Ikemen GO allows you to remap your character's sprites using the <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#new_remapsprite">RemapSprite</a> state controller. You can use the <em>[RemapPreset X]</em> sections, declared in your character's CNS (referenced as <code>cns</code> in the character's DEF file), alongside other constant groups, to prepare multiple sprite remaps in advance and use them all at once. There can be multiple <em>[RemapPreset X]</em> sections in the cns file; <code>X</code> is the name of the preset.</p>
+<pre><code class="language-ini">[RemapPreset Claw]
+5000,0 = 5000,100
+5071,10 = 5071,110
+5071,20 = 5071,120
+
+[RemapPreset ClawAndMask]
+5000,0 = 5000,200
+5071,10 = 5071,210
+5071,20 = 5071,220
+</code></pre>
+<h1 id="character-states"><a name="st">Character States</a></h1>
+<p>The character's States files (referenced to as <code>st</code> in the character's DEF file) have the following new features.  </p>
+<h2 id="negative-states"><a name="st_negative">Negative States</a></h2>
+<p>In MUGEN, declaring a negative StateDef in one file prevents doing so in other files. For characters with <code>ikemenversion</code>, this limitation is lifted, allowing one to define the same negative state in multiple files. State controllers defined in the current <code>StateDef</code> will be appended to the previously defined <code>StateDef</code>.  </p>
+<p>Note: ZSS files and files defined under <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Miscellaneous-Info/#CommonStates">CommonStates</a> don't require an IkemenVersion declared to work like this.  </p>
+<h2 id="statedef-constant"><a name="st_statedef_constant">Statedef Constant</a></h2>
+<p><code>Statedef</code> headers can now also parse constants using the <code>Const</code> trigger. This allows to easily change character state numbers to avoid conflicts between characters and gameplay systems.<br/>
+New constant variables can be used to make your code easier to read by replacing confusing numbers (like helper ID, states etc.) with Const trigger.  </p>
+<pre><code class="language-ini">[Constants]
+TagInState = 5600
+
+[StateDef const(TagInState)]
+type = S
+</code></pre>
+<h2 id="variables"><a name="st_variables">Variables</a></h2>
+<p>The Mugen limit of 60 <code>var</code>, 40 <code>fvar</code>, 5 <code>sysvar</code> and 5 <code>sysfvar</code> has been lifted. The index will now accept any positive <code>int32</code> number.<br/>
+For performance reasons, <code>VarRangeSet</code> has been capped at setting 2500 variables per use.  </p>
+<pre><code class="language-ini">trigger1 = var(12345) &gt; 0
+</code></pre></body></html>

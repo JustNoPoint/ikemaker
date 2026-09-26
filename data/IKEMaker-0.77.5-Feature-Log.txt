@@ -1,0 +1,16 @@
+IKEMaker 0.77.5
+
+DIRECT AIR TIMELINE AUTHORING
+
+- Added always-visible AIR frame fields for sprite group/index, offsets, duration, flip, blend, scale, and angle.
+- Frame values write automatically after typing pauses; no manual Apply step is required, and edits retain VS Code Undo.
+- Added timeline Add After, Duplicate, and Delete. Deleting an element also removes collision blocks explicitly attached to that element while preserving default collision data.
+- AIR source opened from the viewer now uses a normal tab in the same group, and automatic viewer synchronization no longer steals focus back from that source tab.
+- Added Previous Issue and Next Issue navigation across confirmed missing-sprite AIR elements.
+- Prevented the Delete key on a focused frame from deleting the entire animation.
+- Recorded later AIR parity work for safe element reordering, onion skinning, reviewed bulk property operations, and visible action-level creation/duplication/deletion.
+
+VERIFICATION
+
+- Added AIR model, rendered-control, issue-navigation, automatic-edit, nested-source-tab, and focus-regression coverage.
+- All 287 test files pass.

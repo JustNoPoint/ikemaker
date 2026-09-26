@@ -1,0 +1,16 @@
+IKEMEN ZSS Tools 0.43.0
+
+Completion and guided-workflow audit
+
+- Completed the requirement-by-requirement audit for the IKEMEN 1.0 creation
+  environment goal.
+- Added full Learning recipes for SFF and palette work, AIR collision and
+  runtime ownership, native split-profile SND work, and command/movelist
+  authoring.
+- Kept Advanced mode compact while routing every shortcut through the same
+  reviewed operations and mutation safeguards.
+- Recorded deliberate boundaries for runtime simulation, automatic CNS-to-ZSS
+  conversion, optional JNP conventions, and portable browser archive tools.
+- Verified all 60 test files after the final workflow changes.
+- Verified that current user-facing source, catalogs, documentation, and
+  package metadata use the IKEMEN 1.0 baseline.

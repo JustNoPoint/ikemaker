@@ -1,0 +1,321 @@
+<html><head><meta charset="utf-8"/><title>Stage-features</title><style>body{max-width:1100px;margin:24px auto;padding:0 20px;font:16px/1.55 system-ui,sans-serif}pre{overflow:auto;background:#eee;padding:12px}table{border-collapse:collapse}td,th{border:1px solid #bbb;padding:6px}img{max-width:100%}.offline-nav{padding:12px;background:#e6eef6;margin-bottom:24px}</style></head><body><div class="offline-nav"><a href="../index.html">Offline library</a> · <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Stage-features">Original source (online)</a> · Snapshot 2026-09-13</div><h1 id="changes-to-stage-parameters"><a name="changed">Changes to Stage Parameters</a></h1>
+<p>Some stage parameters are carried over from MUGEN, but with their functionality altered.  </p>
+<h2 id="camera"><a name="changed_camera">[Camera]</a></h2>
+<h3 id="skipped-zoomout-processing-of-boundhigh"><a name="changed_camera_boundhigh">Skipped zoomout processing of boundhigh</a></h3>
+<p>:warning: <strong>Removed in nigthly.</strong> Nigthly build matches MUGEN 1.1 behavior and the <em><q>Skipped zoomout processing of boundhigh</q></em> described in this section below no longer applies. Use the new <a href="Stage-features.html#new_camera_boundhighzoomdelta"><code>BoundHighZoomDelta</code></a> camera parameter to bring back this behaviour in a parametrized manner.</p>
+<p>Ikemen <code>v0.99.0</code> and below: the lack of boundhigh zoomout correction is the intended behavior. Reasoning:
+in MUGEN 1.1, boundhigh changes with zoomout, but the value to be corrected varies per stage, so it can't be done automatically due to the varying zoomdelta of the background layer that determines the boundhigh of the stage. For boundright and boundleft, there is almost always a background layer with a reference zoomdelta of 1, so the value that is shifted due to zoomout is constant. For boundhigh, the zoomdelta of the layer is set to 0.2 or 1. Furthermore, it cannot be determined just by reading the def which layer determines the boundhigh. In MUGEN 1.1, there is a bug that the stage does not reach the display limit unless it is in the maximum zoomout state, and in some cases, boundhigh is set according to this. Also, some creators set boundhigh ignoring the zoomout bug of 1.1. </p>
+<h2 id="reflection"><a name="changed_reflection">[Reflection]</a></h2>
+<h3 id="same-parameters-as-shadow-group"><a name="changed_reflection_matching_params">Same parameters as <code>[Shadow]</code> group</a></h3>
+<p>In addition to new parameters, reflections now support all of the same parameters as the original <code>[Shadow]</code> group (<code>color</code>, <code>yscale</code>, and <code>fade.range</code>).</p>
+<h3 id="layerno"><a name="changed_reflection_layerno">layerno</a></h3>
+<blockquote>
+<p>layerno = <em>layer_number</em> (int)<br/>
+Specifies the stage layer on which the reflection will be drawn  </p>
+</blockquote>
+<p>Stage reflections can now use <code>layerno = -1</code> in order to draw the reflections behind layer 0. This allows reflection effects such as water puddles.  </p>
+<h3 id="offset"><a name="changed_reflection_offset">Offset</a></h3>
+<blockquote>
+<p>offset = <em>offset_x</em>, <em>offset_y</em> (float, float)<br/>
+Specifies the offset at which reflections will be drawn.  </p>
+</blockquote>
+<p>The <code>offset</code> parameter will offset the player's reflection by <code>offset_x</code>,<code>offset_y</code> amount.  </p>
+<h3 id="window"><a name="changed_reflection_window">Window</a></h3>
+<blockquote>
+<p>window = <em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em> (float, float, float, float)<br/>
+Specifies the size of a rectangle relative to the stage</p>
+</blockquote>
+<p>The <code>window</code> parameter forms a rectangle relative to the stage, outside of which reflections will not be drawn.</p>
+<h3 id="xscale"><a name="changed_reflection_xscale">XScale</a></h3>
+<blockquote>
+<p>xscale= <em>scale</em> (float)  </p>
+</blockquote>
+<p>Determines the horizontal scale of the reflection.<br/>
+Defaults to 1.  </p>
+<h3 id="ydelta"><a name="changed_reflection_ydelta">YDelta</a></h3>
+<blockquote>
+<p>ydelta = <em>delta</em> (float)  </p>
+</blockquote>
+<p>Determines how closely the reflection will follow the player's movement in the y-axis. A <code>ydelta</code> value of 1 will make no change, a value of 0 will make the reflection not move in the y-axis, and other values scale linearly.<br/>
+Defaults to 1.  </p>
+<h2 id="shadow"><a name="changed_shadow">[Shadow]</a></h2>
+<h3 id="color"><a name="changed_shadow_color">Color</a></h3>
+<p>The <code>color</code> parameter will be disabled if the stage's <code>mugenversion</code> is 1.1 and its <code>ikemenversion</code> is 0.  </p>
+<h3 id="offset_1"><a name="changed_shadow_offset">Offset</a></h3>
+<blockquote>
+<p>offset = <em>offset_x</em>, <em>offset_y</em> (float, float)<br/>
+Specifies the offset at which shadows will be drawn.  </p>
+</blockquote>
+<p>The <code>offset</code> parameter will offset the player's shadow by <code>offset_x</code>,<code>offset_y</code> amount.  </p>
+<h3 id="window_1"><a name="changed_shadow_window">Window</a></h3>
+<blockquote>
+<p>window = <em>x1</em>, <em>y1</em>, <em>x2</em>, <em>y2</em> (float, float, float, float)<br/>
+Specifies the size of a rectangle relative to the stage</p>
+</blockquote>
+<p>The <code>window</code> parameter forms a rectangle relative to the stage, outside of which shadows will not be drawn.</p>
+<h3 id="xscale_1"><a name="changed_shadow_xscale">XScale</a></h3>
+<blockquote>
+<p>xscale= <em>scale</em> (float)  </p>
+</blockquote>
+<p>Determines the horizontal scale of the shadow.<br/>
+Defaults to 1.  </p>
+<h3 id="ydelta_1"><a name="changed_shadow_ydelta">YDelta</a></h3>
+<blockquote>
+<p>ydelta = <em>delta</em> (float)  </p>
+</blockquote>
+<p>Determines how closely the shadow will follow the player's movement in the y-axis. A <code>ydelta</code> value of 1 will make no change, a value of 0 will make the shadow not move in the y-axis, and other values scale linearly.<br/>
+Defaults to 1.  </p>
+<h3 id="changed-y-tilespacing-from-winmugen">Changed Y Tilespacing from WinMugen</h3>
+<blockquote>
+<p>tilespacing = <em>tilespacing_x</em>, <em>tilespacing_y</em> (float, float)<br/>
+Specifies the spacing between tiles in every axis.  </p>
+</blockquote>
+<p>Tilespacing in WinMugen can be declared as a single parameter instead of two. If your WinMugen stage looks bad, it's probably this. Just repeat the tilespacing for both axis to fix it.</p>
+<h1 id="new-stage-parameters"><a name="new">New Stage Parameters</a></h1>
+<p>Below are new parameters exclusive to Ikemen GO.  </p>
+<h2 id="camera_1"><a name="new_camera">[Camera]</a></h2>
+<h3 id="autozoom"><a name="new_camera_autozoom">AutoZoom</a></h3>
+<p>An automatic zoomout is applied and the behavior of the stage changes.</p>
+<ul>
+<li>A default zoomout value is automatically calculated based on the stage bounds. While a zoomout value can be specified, it will be limited to prevent showing empty space.</li>
+<li>Values equivalent to zoomdelta are automatically applied based on delta values.</li>
+<li>The default values ​​for zoomindelay, zoomoutspeed, zoominspeed are changed.</li>
+<li>The default boundhighzoomdelta is 1.</li>
+<li>The default zoomanchor is bottom.</li>
+<li>autoresizeparallax is enabled by default.</li>
+<li>The boundleft, boundright and boundhigh values ​​are not affected by the zoomout value.</li>
+</ul>
+<p>This function is a replicate the zoom behavior of the legacy IKEMEN engine.</p>
+<h3 id="autocenter"><a name="new_camera_autocenter">AutoCenter</a></h3>
+<p>Always try to keep the camera centered between the characters. When this parameter is enabled, the <code>Tension</code> value is only used to calculate the camera zoom.  </p>
+<h3 id="boundhighzoomdelta"><a name="new_camera_boundhighzoomdelta">BoundHighZoomDelta</a></h3>
+<blockquote>
+<p>BoundHighZoomDelta = <em>bg_y_delta</em> (float)<br/>
+Set to a value <code>&gt;0</code> to extend the <code>BoundHigh</code> when the camera zooms in. Defaults to 0.</p>
+</blockquote>
+<p>Related to how camera worked in Ikemen GO <code>v0.99.0</code> and older.</p>
+<p>Automatically increases <code>BoundHigh</code> when the current camera zoom is not at minimum (<code>ZoomOut</code>), allowing more of the stage to be seen. Default value is 0 (constant <code>BoundHigh</code>). For values above 0, a value closer to 0 means a greater difference, as this value can be interpreted as the horizontal (y) delta of a stage background (<code>BG</code>) that determines the appropriate <code>BoundHigh</code> for the stage, if the <code>ZoomDelta</code> of this  is equal to 1.</p>
+<p>For example, if a background that determines the <code>BoundHigh</code> uses <strong>only</strong>  vertical (y) delta and does not specify <code>ZoomDelta</code>, then you only need to set <code>BoundHighZoomDelta</code> to the exact value of the vertical (y) delta of the background. If the background has:</p>
+<pre><code class="language-ini">[BG Sky]
+Type = normal
+SpriteNo = 0, 0
+Start = 0, 0
+Delta = 0.5, 0.7
+</code></pre>
+<p>Then you need to set:</p>
+<pre><code class="language-ini">[Camera]
+BoundHighZoomDelta = 0.7
+</code></pre>
+<p>For backgrounds using either only <code>ZoomDelta</code> or both <code>ZoomDelta</code> and vertical (y) delta the appropriate value needs to be adjusted manually. Some example follow, but you may still need different for different stages:</p>
+<ul>
+<li><code>ZoomDelta = 0.7</code> =&gt; <code>BoundHighZoomDelta = 1.95</code>,</li>
+<li><code>ZoomDelta = 0.4</code> =&gt; <code>BoundHighZoomDelta = 4.7</code>,</li>
+<li><code>ZoomDelta = 0.7</code>, <code>Delta=?, 0.7</code> =&gt; <code>BoundHighZoomDelta = 1.375</code>.</li>
+</ul>
+<h3 id="verticalfollowzoomdelta"><a name="new_camera_verticalfollowzoomdelta">VerticalFollowZoomDelta</a></h3>
+<blockquote>
+<p>VerticalFollowZoomDelta = <em>vf_zoom_delta</em> (float)<br/>
+Set to a value above 0 to increase the <code>VerticalFollow</code> when the camera zooms in. Defaults to 0.</p>
+</blockquote>
+<p>Automatically increases <code>VerticalFollow</code> when the current camera zoom is not at minimum (<code>ZoomOut</code>). Default value is 0 (constant <code>VerticalFollow</code>). For values above 0, the value of <code>VerticalFollow</code> is increased by the amount of <em><code>current_zoom_in</code></em> multiplied by <em><code>vf_zoom_delta</code></em>, where <em><code>current_zoom_in</code></em> is the difference between the <em>current</em> camera zoom value and the <em>minimum</em> camera zoom (as set by <code>ZoomOut</code>).</p>
+<h3 id="far"><a name="new_camera_far">Far</a></h3>
+<p>Define the far plane of the view frustum when the 3D model is rendered</p>
+<h3 id="fov"><a name="new_camera_fov">fov</a></h3>
+<blockquote>
+<p>fov= <em>fov</em> (float)  </p>
+</blockquote>
+<p>Field of view of the camera when the 3d model is rendered.</p>
+<h3 id="lowestcap"><a name="new_camera_lowestcap">LowestCap</a></h3>
+<p>Enabling this parameter allows the camera to also zoom out when players are close to each other but reach the vertical end of the stage.<br/>
+Defaults to 0. Before Ikemen GO 1.0, the camera was hardcoded to act as if <code>lowestcap = 1</code>.  </p>
+<h3 id="near"><a name="new_camera_near">Near</a></h3>
+<p>Define the near plane of the view frustum when the 3D model is rendered</p>
+<h3 id="tensionvel"><a name="new_camera_tensionvel">TensionVel</a></h3>
+<p>Sets default <code>tension</code> correction speed, or how fast the camera will track the players horizontally. Differences can be noticed when a character teleports from one side of the screen to another in the x-axis. Defaults to 1.  </p>
+<p>This parameter also affects how fast the stage camera will zoom.</p>
+<h3 id="yshift"><a name="new_camera_yshift">YShift</a></h3>
+<p>Define the y shift value of the camera when 3D model is rendered</p>
+<h3 id="yscrollspeed"><a name="new_camera_yscrollspeed">YScrollSpeed</a></h3>
+<blockquote>
+<p>YScrollSpeed = <em>speed_factor</em> (float)<br/>
+Set to a value between 0 and 1 to slow down the speed at which the camera scrolls vertically. Defaults to 1.</p>
+</blockquote>
+<p>This parameter can be used to unconditionally slow down the speed at which the camera scrolls vertically. The rate of change of the camera's y position is simply multiplied by the set <em><code>speed_factor</code></em> at each frame. The default value is 1, which is the fastest speed, matching MUGEN 1.1.</p>
+<p>This can be applied e.g. to slow down vertical scrolling when the camera is in the <em><q>Y Tension</q></em> mode (when <code>TensionLow</code> and <code>TensionHigh</code> are set), as the value of <code>VerticalFollow</code> is not applied in this case, especially if a zoom slowdown was also applied using parameters such as <a href="Stage-features.html#new_camera_tensionvel"><code>TensionVel</code></a> or <a href="Stage-features.html#new_camera_zoomoutspeed"><code>ZoomOutSpeed</code></a>.</p>
+<h3 id="zoomanchor"><a name="new_camera_zoomanchor">ZoomAnchor</a></h3>
+<p>This parameter brings back previous zoom out behavior from Ikemen GO 0.98.2. When the <code>ZoomAnchor</code> paramater is set to <code>bottom</code>, an "anchor" is placed in the bottom side of the screen, preventing the zoom to go beyond that. Any other parameter will default to <code>center</code> (Mugen 1.1 behavior).</p>
+<h3 id="zoomindelay"><a name="new_camera_zoomindelay">ZoomInDelay</a></h3>
+<p>Makes the camera wait the specified number of frames before zooming in.  </p>
+<h3 id="zoominspeed"><a name="new_camera_zoominspeed">ZoomInSpeed</a></h3>
+<blockquote>
+<p>ZoomInSpeed = <em>speed_factor</em> (float)<br/>
+Set to a value between 0 and 1 to slow down the speed at which the camera zooms in. Defaults to 1.</p>
+</blockquote>
+<p>This parameter can be used to unconditionally slow down the speed at which the camera zooms in. The rate of change of zoom is simply multiplied by the set <em><code>speed_factor</code></em> at each frame. The default value is 1, which is the fastest zoom speed, matching MUGEN 1.1.</p>
+<h3 id="zoomoutspeed"><a name="new_camera_zoomoutspeed">ZoomOutSpeed</a></h3>
+<blockquote>
+<p>ZoomOutSpeed = <em>speed_factor</em> (float)<br/>
+Set to a value between 0 and 1 to slow down the speed at which the camera zooms out. Defaults to 1.</p>
+</blockquote>
+<p>This parameter can be used to unconditionally slow down the speed at which the camera zooms out. The rate of change of zoom is simply multiplied by the set <em><code>speed_factor</code></em> at each frame. The default value is 1, which is the fastest zoom speed, matching MUGEN 1.1.</p>
+<p>As opposed to <a href="Stage-features.html#new_camera_tensionvel"><code>TensionVel</code></a>, this will forcibly keep the zoom out slow, so setting it too low can cause fast moving characters to be blocked by the screen edge before the camera fully zooms out.</p>
+<h2 id="constants"><a name="new_constants">[Constants]</a></h2>
+<p>Stages in Ikemen GO can have float type constant variables set under stage's DEF <em>[Constants]</em> section. In-game these constant variables are detectable by all characters via <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/Triggers/#new_stageconst">StageConst</a> trigger. Constant variable names should not have spaces and brackets.</p>
+<pre><code class="language-ini">[Constants]
+WaterGround = 1
+</code></pre>
+<h2 id="info"><a name="new_info">[Info]</a></h2>
+<h3 id="attachedchar"><a name="new_info_attachedchar">AttachedChar</a></h3>
+<p>The character with the specified path appears as the character on the stage side. The main use is to allow stages to realize functions that cannot be implemented with stage DEF file alone, such as stage interactivity.</p>
+<p>This extra character is not taken into account for anything match related (not rendering lifebar, doesn't have to be beaten to finish the round, is not killable, is not part of P1 or P2 team). <code>TeamSide</code> trigger returns 0 for this character. AttachedChar initially begins in standby mode ("Tagged Out"). They must be tagged in prior to being able to interfere with characters via RedirectID.</p>
+<p>Hint: Use <code>AssertSpecial</code> sctrl in order to turn the attached character invisible and/or make it not affecting the camera/pushboxes. <a href="https://github.com/ikemen-engine/Ikemen-GO/wiki/State-controllers/#changed_all_redirectid">RedirectID</a> may be useful for creating stage interactions.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">AttachedChar = stages/myStage/stageInteraction.def
+</code></pre>
+<h3 id="multiple-attachedchars"><a name="new_info_multiple_attachedchar">Multiple AttachedChars</a></h3>
+<p>Up to 4 AttachedChars can be assigned to a stage.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">AttachedChar1 = stages/myStage/stageInteraction1.def
+AttachedChar2 = stages/myStage/stageInteraction2.def
+AttachedChar3 = stages/myStage/stageInteraction3.def
+AttachedChar4 = stages/myStage/stageInteraction4.def
+</code></pre>
+<h3 id="ikemenversion"><a name="new_info_ikemenversion">IkemenVersion</a></h3>
+<p>Identifies which engine version the stage was made for. May alter behavior of certain features.  </p>
+<h3 id="roundxdef"><a name="new_info_roundxdef">RoundXDef</a></h3>
+<p><code>RoundXDef</code> parameters can be used to preload more than 1 stage before match and swap to it at particular round. <em>X</em> in parameter name refers to round number and the parameter points to stage DEF file. The last loaded stage remains if the next round doesn't have <code>RoundXDef</code> parameter assigned. The specified path can be relative to the main stage DEF file, <em>data</em> directory, or top ikemen directory.</p>
+<p>Note: Values read from the <code>RoundXDef</code>, <code>AttachedChar</code> and <code>Music</code> sections will be read from the main stage instead of each individual preloaded stage. This means that, for instance, you should define the music that plays in each round in the main stage DEF file rather than in each individual stage.</p>
+<p>Hint: The main stage itself can be either a normal stage (in such case assigning <code>round1def</code> parameter doesn't make much sense) or a "shell" for example with only <em>[Info]</em> and <em>[Music]</em> sections, if it's meant to be used just to load particular <code>RoundXDef</code> parameters combination.</p>
+<p><em>Example:</em></p>
+<pre><code class="language-ini">round1def = stages/kfm.def
+round2def = stages/kfm_evening.def
+round3def = stages/kfm_night.def
+</code></pre>
+<h3 id="roundloop"><a name="new_info_roundloop">RoundLoop</a></h3>
+<p>If set to 1, main stage, as well as stages loaded via <a href="Stage-features.html#info_roundxdef">RoundXDef</a> parameters, will show up in ascending order (regardless of round numbers assigned in <code>RoundXDef</code> parameters), looped over if needed.</p>
+<h2 id="model"><a name="model">[Model]</a></h2>
+<h3 id="environment"><a name="model_environment">Environment</a></h3>
+<blockquote>
+<p>Environment= <em>hdr_file</em> (string)  </p>
+</blockquote>
+<p>Filename of a hdr file. Controls the image based lighting of the 3d model.</p>
+<h3 id="environmentintensity"><a name="model_environmentintensity">EnvironmentIntensity</a></h3>
+<blockquote>
+<p>EnvironmentIntensity= <em>environmentintensity</em> (float)  </p>
+</blockquote>
+<p>Controls the contribution of image based lighting to the render result of the 3d model</p>
+<h3 id="offset_2"><a name="model_offset">Offset</a></h3>
+<blockquote>
+<p>Offset= <em>offset_x</em>, <em>offset_y</em>, <em>offset_z</em> (float, float, float)  </p>
+</blockquote>
+<p>X, Y, and Z coordinates of the 3d model</p>
+<h3 id="scale"><a name="model_scale">Scale</a></h3>
+<blockquote>
+<p>Offset= <em>offset_x</em>, <em>offset_y</em>, <em>offset_z</em> (float, float, float)  </p>
+</blockquote>
+<p>X, Y, and Z scale of the 3d model</p>
+<h2 id="music"><a name="music">[Music]</a></h2>
+<h3 id="multiple-tracks-random-selection"><a name="music_random">Multiple tracks (random selection)</a></h3>
+<p><code>*.bgmusic</code> parameters can point to <strong>more than one</strong> music file. To do this, provide a <strong>comma-separated list</strong> of tracks:</p>
+<pre><code class="language-ini">round2.bgmusic = sound/bgm/a.ogg, sound/bgm/b.ogg, sound/bgm/c.ogg
+</code></pre>
+<p>When the engine needs to play that music slot, it will <strong>randomly pick one</strong> of the listed tracks.</p>
+<p>If you use multiple tracks, any related per-track settings (loop points / volume) can also be written as <strong>comma-separated lists</strong>, where each value applies to the track in the same position:</p>
+<pre><code class="language-ini">round2.bgmloopstart = 12345, 45678, 11111
+round2.bgmloopend   = 23456, 56789, 22222
+round2.bgmvolume    = 100,   90,   100
+</code></pre>
+<h3 id="finalbgmusic"><a name="music_bgmusicfinal">final.bgmusic</a></h3>
+<p>Behaves like bgmusic, but refers to a track that should play on the final round.<br/>
+Note: A round is considered "final" when even a draw game will end the match. So it may vary with the maximum draw games setting.  </p>
+<p>Optional adjustments:
+* <code>final.bgmloopstart</code>
+* <code>final.bgmloopend</code>
+* <code>final.bgmvolume</code></p>
+<h3 id="roundxbgmusic"><a name="new_music_bgmusicroundX">roundX.bgmusic</a></h3>
+<p>Behaves like bgmusic, but refers to a track that should play on the round specified in the parameter's name (e.g. round2.bgmusic would play on the second round).</p>
+<p>Optional adjustments:
+* <code>roundX.bgmloopstart</code>
+* <code>roundX.bgmloopend</code>
+* <code>roundX.bgmvolume</code></p>
+<h3 id="lifebgmusic"><a name="new_music_bgmusiclife">life.bgmusic</a></h3>
+<p>Like bgmusic but refers to track that should trigger when the character's life reaches certain percentage value.</p>
+<p>Optional adjustments:
+* <code>bgmratio</code>: percentage of life that should trigger bgmusic.life track (30% by default)
+* <code>bgmtrigger</code>: 0 = music triggers only when character is at risk of being eliminated (there won't be next round when he/she lose), 1 = music triggers in all rounds
+* <code>life.bgmloopstart</code>
+* <code>life.bgmloopend</code>
+* <code>life.bgmvolume</code></p>
+<h3 id="victorybgmusic"><a name="new_music_bgmusicvictory">victory.bgmusic</a></h3>
+<p>Like bgmusic but refers to track that should trigger right after the final round K.O. and continue throughout the victory screen.</p>
+<p>Optional adjustments:
+* <code>victory.bgmloopstart</code>
+* <code>victory.bgmloopend</code>
+* <code>victory.bgmvolume</code></p>
+<h2 id="playerinfo"><a name="new_playerinfo">[PlayerInfo]</a></h2>
+<h3 id="partnerspacing"><a name="new_playerinfo_partnerspacing">PartnerSpacing</a></h3>
+<ul>
+<li>Specifies amount of pixels between team members at the round start (the value automatically takes stage localcoord into account) (default: 25)</li>
+</ul>
+<pre><code class="language-ini">partnerspacing = 15
+</code></pre>
+<h3 id="startx-p5-p8"><a name="new_playerinfo_startx">Startx (P5-P8) </a></h3>
+<ul>
+<li>Sets the starting x-position, now supporting values for up to 8 players.</li>
+</ul>
+<pre><code class="language-ini">p6startx = 100
+</code></pre>
+<h3 id="starty-p5-p8"><a name="new_playerinfo_starty">Starty (P5-P8) </a></h3>
+<ul>
+<li>Sets the starting y-position, now supporting values for up to 8 players.</li>
+</ul>
+<pre><code class="language-ini">p7starty = 20
+</code></pre>
+<h3 id="startz"><a name="new_playerinfo_startz">Startz</a></h3>
+<ul>
+<li>Sets the starting z-position (used with z-axis), now supporting values for up to 8 players.</li>
+</ul>
+<pre><code class="language-ini">p1startz = -20
+</code></pre>
+<h3 id="facing-p5-p8"><a name="new_playerinfo_facing">Facing (P5-P8) </a></h3>
+<ul>
+<li>Controls which way Players faces at the start, now supporting values for up to 8 players. Set to 1 to face right, or -1 to face left.</li>
+</ul>
+<pre><code class="language-ini">p8facing = -1
+</code></pre>
+<h2 id="scaling"><a name="new_scaling">[Scaling]</a></h2>
+<h3 id="depthtoscreen"><a name="new_scaling_depthtoscreen">DepthToScreen</a></h3>
+<p>Determines how a player's Z position affects their Y offset on screen, enabling finer control of perspective. Defaults to 1, which means 1 pixel in Z space equates to 1 pixel in vertical screen space.  </p>
+<p>Example:</p>
+<pre><code class="language-ini">depthtoscreen = 0.5; For every 2 pixels in Z space, player is offset 1 pixel in vertical screen space
+</code></pre>
+<h2 id="stageinfo"><a name="new_stageinfo">[StageInfo]</a></h2>
+<h3 id="portraitscale"><a name="new_stageinfo_portraitscale">PortraitScale</a></h3>
+<p>Sets the portrait draw scale (same idea as lifebar <code>[FightFx]</code> scale), overriding the automatic scaling derived from the stage's <code>localcoord</code>. If not set, a higher-resolution (<code>localcoord</code>) stage needs a proportionally larger portrait, or you can just set <code>portraitscale</code> to compensate.</p>
+<p>To match the scaling factor, use: <strong><code>portraitscale = localcoordX / 320</code></strong></p>
+<p>Example: a 720p stage (<code>localcoord = 1280,720</code>) using a 240×100 portrait needs the following scale to display at the same apparent size as on a 240p stage:</p>
+<pre><code class="language-ini">portraitscale = 4
+</code></pre>
+<h2 id="stage-portraits"><a name="new_stageportrait">Stage Portraits</a></h2>
+<p>Similarly to how characters can have a portrait, stages can have a portrait displayed on the select screen. Stage portraits are stored in the SFF file of the stage in question, using the index <code>9000, 1</code> and a default resolution of 240x100. The index used can be changed in <code>system.def</code> if desired.  </p>
+<h2 id="z-axis"><a name="new_zaxis">Z Axis</a></h2>
+<p>Returning all the way back from the beta versions of DOS Mugen, characters can move in the Z axis if a stage allows it. That means the following stage parameters are once again operational:</p>
+<pre><code class="language-ini">[PlayerInfo]
+topbound  =  -50    ;Top bound (z-movement)
+botbound  =  50     ;Bottom bound
+
+[Scaling]
+topz     = 0       ;Top z-coordinate for scaling
+botz     = 50      ;Bottom z-coordinate for scaling
+topscale = 1       ;Scale to use at top
+botscale = 1.2     ;Scale to use at bottom
+</code></pre>
+<h1 id="loading-stages-from-zip-archives"><a name="zip">Loading Stages from ZIP Archives</a></h1>
+<p>Similar to how Ikemen GO can load characters from ZIP archives, this functionality has been extended to stages.
+To load a stage from a ZIP archive, simply add the path to the .zip file under the [ExtraStages] section in your select.def file.</p>
+<pre><code class="language-ini">[ExtraStages]
+; The engine will look for my_stage.def inside the zip
+stages/my_stage.zip
+</code></pre>
+<p>the name of the stage's main definition file (.def) inside the archive must match the name of the ZIP file itself.
+For example, for an archive named heaven.zip, the engine will search for heaven.def inside it. The .def file can be at the root of the archive or inside a subdirectory that shares the same name, just like with characters.</p></body></html>

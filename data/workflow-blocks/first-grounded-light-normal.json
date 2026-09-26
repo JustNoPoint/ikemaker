@@ -1,0 +1,149 @@
+{
+  "schemaVersion": 1,
+  "id": "first-grounded-light-normal",
+  "version": 3,
+  "name": "First Grounded Light Normal",
+  "category": "Learning and sign-off",
+  "description": "A reusable implementation, testing, logger, and coding curriculum lesson. It records IKEMaker workflow quality separately from the learner's demonstrated IKEMEN understanding. Ryu's standing light punch is the reference example, not the universal gameplay definition.",
+  "phases": [
+    {
+      "id": "first-light-normal",
+      "name": "5. First Grounded Light Normal",
+      "summary": "Finish one deeply researched grounded light normal through art, code, sound, systems, QA, and recorded sign-off while separately evaluating the IKEMaker workflow and the learner's coding independence.",
+      "steps": [
+        {
+          "id": "light-normal.dual-purpose",
+          "label": "Record separate workflow and coding-learning objectives",
+          "discipline": "Learning",
+          "learning": "This pass tests both IKEMaker and the learner, but they are not the same result. Tool completion never proves coding understanding, and a tool defect does not erase demonstrated source-code understanding.",
+          "acceptance": "The session names its Learn, Practice, or Assessment mode and separately records IKEMaker workflow Pass/Fail/Needs Improvement and learner Green/Yellow/Red/Blocked.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.authority-boundary",
+          "label": "Classify ZSS, Lua, and IKEMaker authority before editing",
+          "discipline": "Learning",
+          "learning": "For a proficient MUGEN author, the first migration skill is placing work correctly: deterministic match-time gameplay belongs to ZSS/native engine behavior; frontend and synchronized pre-match launch may use Lua; authoring, validation, evidence, recovery, and publishing belong to IKEMaker.",
+          "acceptance": "The learner can classify the move's gameplay, frontend options, and creator workflow without assigning match-time or rollback authority to Lua or IKEMaker, and can explain where an agreed pre-match choice stops being frontend state.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.coherent-production-loop",
+          "label": "Complete one coherent Move Lab production loop",
+          "discipline": "Learning",
+          "action": "open-code",
+          "learning": "Replace the disconnected MUGEN tool/file routine with one context-preserving path: intent, owner, connected visual/source editor, prediction, bounded edit, diagnostics, targeted launch, evidence, review, and recovery.",
+          "acceptance": "Starting from the character once, the learner reaches every required owner and test/recovery surface without mixing character contexts, manually reconstructing the dependency map, or accepting duplicated/dead navigation as normal.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.prerequisites",
+          "label": "Confirm movement, get-hit, guard, palette, and sound foundations",
+          "discipline": "Production",
+          "acceptance": "The character can enter training, move, guard, receive hits, and render its default palette without an unexplained error.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.assets",
+          "label": "Review attack sprites, AIR timing, axes, Clsn1, and Clsn2",
+          "discipline": "SFF / AIR",
+          "action": "open-air",
+          "learning": "Treat visible frames, collision frames, and state timing as related but separately owned data. Check for accidental invisible frames and review the active collision on every hit.",
+          "acceptance": "Every intended frame is visible, aligned, timed, and boxed; active elements match the authored attack timing.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.constants",
+          "label": "Review character-owned move constants",
+          "discipline": "Code",
+          "action": "open-constants",
+          "learning": "Character constants own this fighter's values. Shared mechanisms and game policy must not absorb character frame data merely to shorten a state.",
+          "acceptance": "Damage, timing, velocities, pause, spark position, sound IDs, meter, score, and game-specific metadata have explicit owners."
+        },
+        {
+          "id": "light-normal.ownership-teachback",
+          "label": "Explain the move ownership and execution path before editing",
+          "discipline": "Learning",
+          "action": "open-code",
+          "learning": "For each layer, state what it owns, what it deliberately does not own, and what evidence would prove the behavior. Explain command eligibility, state entry, shared wrapper, character constants, AIR, SFF, SND, contact, recovery, and cleanup in your own words.",
+          "acceptance": "The learner can locate the real owner, identify tempting incorrect edit locations, and explain the route from input to neutral without treating a prepared answer or IKEMaker link as proof.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.predict-edit-diagnose",
+          "label": "Predict, make, verify, diagnose, and revert one bounded change",
+          "discipline": "Learning",
+          "action": "open-constants",
+          "learning": "Write the expected visible/runtime change and one non-change before running. Either partner may author the edit; the other must review it. Compare the result to the prediction, diagnose any mismatch from evidence, and restore the baseline.",
+          "acceptance": "The record includes the author and reviewer, old value, prediction, changed owner, narrow test, non-regression check, observed result, mismatch explanation if any, and proof of reversal. Assistance level is recorded honestly.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.state",
+          "label": "Review state timing, control, interruption, and cleanup",
+          "discipline": "Code",
+          "action": "open-code",
+          "learning": "Trace the move from command request through StateDef, active publication, HitDef, recovery, and every interruption path.",
+          "acceptance": "The state enters, attacks, recovers, exits, and clears state-owned metadata correctly."
+        },
+        {
+          "id": "light-normal.hitdef",
+          "label": "Complete HitDef and authored attack metadata",
+          "discipline": "Code",
+          "detect": "slp-code",
+          "action": "open-code",
+          "learning": "Use native IKEMEN contact authority first. Publish only metadata that the engine does not already provide and only during its real ownership window.",
+          "acceptance": "Hit, guard, Counter Hit, Punish Counter, scaling, meter, score, region, and delivery metadata match the selected game's policy."
+        },
+        {
+          "id": "light-normal.sound",
+          "label": "Verify swing, hit, guard, voice, and language-profile routing",
+          "discipline": "Sound",
+          "action": "open-snd",
+          "acceptance": "Every expected sound fires exactly once from its intended shared, character-FX, or voice archive; changing a voice profile does not replace universal effects.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.contact-matrix",
+          "label": "Run the contact-result test matrix",
+          "discipline": "Testing",
+          "action": "launch-training",
+          "learning": "Test observable outcomes rather than assuming one successful hit proves every result path.",
+          "acceptance": "Raw hit, guard, Counter Hit, Punish Counter, air hit, corner interaction, armor absorption, and Armor Break are either passed or explicitly marked not applicable.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.data-displays",
+          "label": "Verify player-facing attack, damage, life, meter, drive, and score information",
+          "discipline": "Testing",
+          "action": "launch-training",
+          "acceptance": "Both players display the intended values without clipping, stale data, debug-only dependencies, or unexplained disagreement with gameplay."
+        },
+        {
+          "id": "light-normal.logger",
+          "label": "Complete and export the developer logger run",
+          "discipline": "QA",
+          "action": "open-reports",
+          "learning": "The logger identifies what still needs to be performed; it does not replace manual assertions or game-feel review.",
+          "acceptance": "The scenario checklist is complete, the report can be logged while its UI is active, and the exported evidence is readable.",
+          "evidenceRequired": true
+        },
+        {
+          "id": "light-normal.failure-review",
+          "label": "Resolve or ticket every unexplained failure",
+          "discipline": "QA",
+          "learning": "Typical symptoms include missing sounds, invisible AIR elements, off-screen displays, incorrect opponent values, stale maps, native/custom push disagreement, and incomplete report capture.",
+          "acceptance": "Every failure is corrected, intentionally deferred with a ticket, or documented as a confirmed engine limitation."
+        },
+        {
+          "id": "light-normal.signoff",
+          "label": "Record owner sign-off before using this character as a game template",
+          "discipline": "Review",
+          "learning": "Production approval and learner assessment are separate decisions. A completed move can still require more learning practice; a strong teach-back cannot approve an untested move.",
+          "acceptance": "The project owner has reviewed the implementation, test evidence, known limitations, teaching notes, IKEMaker workflow result, and learner result. Detection, workflow completion, or a successful launch alone cannot pass either gate.",
+          "evidenceRequired": true
+        }
+      ]
+    }
+  ]
+}

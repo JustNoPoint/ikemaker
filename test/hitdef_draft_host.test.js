@@ -1,0 +1,27 @@
+'use strict';
+const assert=require('assert'),Module=require('module');const original=Module._load;
+let text='[State 200, Attack]\ntype = HitDef\ntrigger1 = 1\nattr = S, NA\ndamage = 30, 0\n',saved={},allow=false,hold,entered,writes=0;const commands={},sent=[],panels=[];
+const uri={fsPath:'C:/Game/attack.cns',toString:()=>uri.fsPath};
+const document={uri,fileName:uri.fsPath,languageId:'ikemen-cns',getText:()=>text,offsetAt:()=>0,positionAt:offset=>({line:0,character:0,offset})};const editor={document,selection:{active:{line:0,character:0}},viewColumn:1};
+const api={Uri:{file:()=>uri},ViewColumn:{Active:1},Range:class{},WorkspaceEdit:class{replace(uri,range,value){this.value=value;}},workspace:{textDocuments:[document],openTextDocument:async()=>document,applyEdit:async edit=>{writes++;entered?.();if(hold)await hold;if(allow)text=edit.value;return allow;},getConfiguration:()=>({get:(key,fallback)=>fallback})},window:{activeTextEditor:editor,visibleTextEditors:[editor],showTextDocument:async()=>editor,onDidChangeTextEditorSelection:()=>({}),showWarningMessage(){},showErrorMessage:message=>{throw Error(message);},createWebviewPanel:()=>{const listeners=[],dispose=[];const p={viewColumn:1,reveal(){},onDidDispose:fn=>dispose.push(fn),dispose:()=>dispose.forEach(fn=>fn()),receive:message=>Promise.all(listeners.map(fn=>fn(message))),webview:{onDidReceiveMessage:fn=>{listeners.push(fn);return{};},postMessage:async message=>{sent.push(message);return true;}}};panels.push(p);return p;}},commands:{registerCommand:(id,fn)=>{commands[id]=fn;return{};}}};
+Module._load=function(name,parent,main){if(name==='vscode')return api;if(parent?.filename.endsWith('hitdef_workspace.js')){if(name==='./character_picker')return{nearestCharacterDef:()=>'',characterCandidates:()=>({current:[]})};if(name==='./authoring_context_registry')return{currentContext:()=>null};if(name==='./viewer_group')return{trackViewerPanel:p=>p,preferredViewerColumn:()=>1};if(name==='./launch_controls')return{launchControlsHtml:()=>'',launchControlsClientScript:()=>'',handleLaunchMessage:async()=>false};}return original.call(this,name,parent,main);};
+(async()=>{
+ const source=require('../src/hitdef_workspace');const context={subscriptions:[],workspaceState:{get:()=>saved,update:async(key,value)=>saved=value}};source.registerHitDefWorkspace(context);
+ await commands['ikemen.hitDef.openEditor']();let panel=panels[0];const base=source.documentModel(document,0).sourceHash,fields=[{name:'damage',value:'45, 0',enabled:true}],draft={base,fields};
+ await panel.receive({type:'hitdefDraft',file:uri.fsPath,index:0,draft});assert.deepEqual(source.documentModel(document,0).formDraft,draft);
+ panel.dispose();await commands['ikemen.hitDef.openEditor']();panel=panels[1];assert.deepEqual(source.documentModel(document,0).formDraft,draft,'close/reopen retains stored draft');
+ const apply={type:'apply',file:uri.fsPath,index:0,sourceHash:base,changes:fields};await panel.receive(apply);assert.deepEqual(source.documentModel(document,0).formDraft,draft,'failed apply retains draft');assert(!sent.some(m=>m.type==='hitdefDraftApplied'));
+ allow=true;await panel.receive({...apply,file:'C:/Other/attack.cns'});assert(text.includes('30, 0'),'same-hash messages from another source cannot apply');
+ await panel.receive(apply);assert(text.includes('45, 0'));assert.equal(source.documentModel(document,0).formDraft,undefined);assert(sent.some(m=>m.type==='hitdefDraftApplied'));
+ const nextBase=source.documentModel(document,0).sourceHash,submitted=[{name:'damage',value:'55, 0',enabled:true}],nextDraft={base:nextBase,fields:submitted};
+ await panel.receive({type:'hitdefDraft',file:uri.fsPath,index:0,draft:nextDraft});
+ let release,signal;hold=new Promise(resolve=>{release=resolve;});const started=new Promise(resolve=>{signal=resolve;});entered=signal;
+ const pending=panel.receive({type:'apply',file:uri.fsPath,index:0,sourceHash:nextBase,changes:submitted});await started;
+ const writeCount=writes;await panel.receive({type:'apply',file:uri.fsPath,index:0,sourceHash:nextBase,changes:submitted});assert.equal(writes,writeCount,'duplicate Apply is blocked');
+ assert.equal(await require('../src/viewer_close').prepare([panel],{window:{showInformationMessage:async()=>{},showWarningMessage:async()=>{throw Error('busy close must not offer discard');}}}),false);
+ await commands['ikemen.hitDef.openEditor']();assert.equal(panels.length,2,'reopening during Apply does not replace the page');
+ const later={base:nextBase,fields:[{name:'damage',value:'65, 0',enabled:true}]};await panel.receive({type:'hitdefDraft',file:uri.fsPath,index:0,draft:later});assert.deepEqual(source.documentModel(document,0).formDraft,later);
+ panel.dispose();release();await pending;assert(text.includes('55, 0'));assert.deepEqual(source.documentModel(document,0).formDraft,later,'late success after closing retains later typing');
+ hold=undefined;entered=undefined;
+ console.log('HitDef host retains drafts across close/reopen and failed Apply, rejects wrong-source messages, and clears only after successful edits');
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>Module._load=original);

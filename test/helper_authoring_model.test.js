@@ -1,0 +1,50 @@
+'use strict';
+const assert = require('assert');
+const helper = require('../src/helper_authoring_model');
+
+const plan = helper.newHelper({ name: 'Fireball Core', role: 'projectile', id: 6000, stateNo: 6000, extendsMap: true, ownProjectile: true, maps: [{ name: 'family', value: '60', direction: 'input' }, { name: 'strength', value: '2', direction: 'input' }] });
+const generated = helper.generateHelper(plan);
+assert(generated.valid); assert.match(generated.code, /helper\{/); assert.match(generated.code, /map\.family: 60/); assert.match(generated.code, /IKEMaker_Helper_6000_PlayerID/); assert.match(generated.code, /lastPlayerID/); assert.match(generated.code, /destroySelf/);
+assert.match(generated.code, /parentMapSet\{map: "IKEMaker_Helper_6000_PlayerID"; value: id/); assert.match(generated.spawnCode, /helper\{/); assert.doesNotMatch(generated.spawnCode, /\[StateDef/); assert.match(generated.stateCode, /\[StateDef 6000/);
+assert.match(generated.creationControllerCode, /helper\{/); assert.doesNotMatch(generated.creationControllerCode, /StateDef/);
+const cns = helper.generateHelper({ ...plan, language: 'cns' }); assert.match(cns.code, /type = Helper/); assert.match(cns.code, /map\.strength = 2/); assert.match(cns.code, /type = MapSet/); assert.match(cns.code, /value = LastPlayerID/); assert.match(cns.code, /!PlayerIDExist/); assert.match(cns.code, /type = ParentMapSet/); assert.match(cns.code, /value = ID/);
+assert.match(cns.creationControllerCode, /type = Helper/); assert.doesNotMatch(cns.creationControllerCode, /StateDef/);
+assert(helper.DATA_DOMAINS.some((item) => item.id === 'spatial')); assert(helper.DATA_DOMAINS.some((item) => item.id === 'combat' && item.risk === 'high'));
+const fireball = helper.generateHelper(helper.applyRecipe('basic-fireball', { id: 1100, stateNo: 1100 }));
+assert.match(fireball.code, /basic-fireball recipe/); assert.match(fireball.code, /anim: 1100/); assert.match(fireball.code, /velSet\{x: 4/); assert.match(fireball.code, /damage: 50, 5/); assert.match(fireball.code, /moveHitReset/); assert.match(fireball.code, /time >= 180/);
+const superFireball = helper.generateHelper(helper.applyRecipe('super-fireball', { id: 3100, stateNo: 3100 }));
+assert.match(superFireball.code, /super-fireball recipe/); assert.match(superFireball.code, /attr: S, HP/); assert.match(superFireball.code, /damage: 120, 20/); assert.match(superFireball.code, /< 5/); assert.match(superFireball.code, /supermovetime: -1/);
+const renumbered = helper.generateHelper({ ...helper.applyRecipe('basic-fireball', { id: 1100, stateNo: 1100 }), stateNo: 1150 }); assert.match(renumbered.code, /anim: 1100/);
+const separateAnimation = helper.generateHelper({ ...helper.applyRecipe('basic-fireball', { id: 1100, stateNo: 1100 }), projectile: { ...helper.applyRecipe('basic-fireball', { id: 1100, stateNo: 1100 }).projectile, animation: 6050 } }); assert.match(separateAnimation.code, /anim: 6050/);
+const cnsFireball = helper.generateHelper({ ...helper.applyRecipe('basic-fireball', { id: 1100, stateNo: 1100 }), language: 'cns' });
+assert.match(cnsFireball.code, /type = HitDef/); assert.match(cnsFireball.code, /type = VelSet/); assert.match(cnsFireball.code, /type = MoveHitReset/);
+for (const scaffold of helper.BUILTIN_SCAFFOLDS) {
+  const built = helper.generateHelper(helper.applyRecipe(scaffold.id, { id: 8000, stateNo: 8000 }));
+  assert(built.valid, scaffold.id); assert.match(built.code, /helper\{/); assert.match(built.code, /\[StateDef 8000\]/); assert.match(built.code, /destroySelf/); assert.doesNotMatch(built.code, /hitDef\{/);
+}
+const visualAfterFireball = helper.applyRecipe('visual-follower', helper.applyRecipe('basic-fireball', { id: 8100, stateNo: 8100 }));
+assert.strictEqual(visualAfterFireball.ownProjectile, false); assert.strictEqual(visualAfterFireball.recipe, 'visual-follower'); assert.deepStrictEqual(visualAfterFireball.position, [0, 0]);
+assert.deepStrictEqual(visualAfterFireball.maps.map((entry) => entry.name), ['mode']); assert.strictEqual(visualAfterFireball.id, 8100); assert.strictEqual(visualAfterFireball.stateNo, 8100);
+const fireballAfterCompanion = helper.applyRecipe('basic-fireball', helper.applyRecipe('companion', { id: 8200, stateNo: 8200 }));
+assert.deepStrictEqual(fireballAfterCompanion.maps, []); assert.strictEqual(fireballAfterCompanion.ownPal, false); assert.strictEqual(fireballAfterCompanion.ownProjectile, true);
+assert.match(helper.flowCode({ from: 'self', to: 'parent', operation: 'set', map: 'hit', value: '1' }), /parentMapSet/);
+assert.match(helper.flowCode({ from: 'root', to: 'helper', helperId: 6000, operation: 'add', map: 'charge', value: '1' }), /helper\(6000\), mapAdd/);
+assert.match(helper.flowCode({ from: 'self', to: 'parent', operation: 'set', map: 'hit', value: '1' }, 'cns'), /type = ParentMapSet/);
+assert.match(helper.flowCode({ from: 'root', to: 'helper', helperId: 6000, operation: 'set', map: 'charge', value: '1' }, 'cns'), /redirectid = Helper\(6000\), ID/);
+
+const root = { filename: 'root.zss', text: '[StateDef 200]\nif time = 0 { helper{name: "Core"; id: 6000; stateno: 6000; extendsmap: 1; map.strength: 2} }\n' };
+const child = { filename: 'helper.zss', text: '[StateDef 6000]\nif time = 0 { helper{name: "Trail"; id: 6001; stateno: 6001} }\nif moveHit { rootMapSet{map: "hit"; value: 1} }\nif time > 30 { destroySelf{} }\n[StateDef 6001]\n' };
+const graph = helper.buildHelperGraph([root, child]);
+assert.strictEqual(graph.totals.helpers, 2); assert.strictEqual(graph.totals.nested, 1); assert.strictEqual(graph.totals.mapInitializers, 1); assert.strictEqual(graph.totals.flows, 1); assert.strictEqual(graph.totals.cleanupSites, 1);
+const trail = graph.nodes.find((node) => node.id === 6001); assert.notStrictEqual(trail.parentUid, 'root');
+const loaded = helper.planFromSpawn(graph.nodes.find((node) => node.id === 6000));
+assert.strictEqual(loaded.name, 'Core'); assert.strictEqual(loaded.id, 6000); assert.strictEqual(loaded.stateNo, 6000); assert.strictEqual(loaded.extendsMap, true); assert.strictEqual(loaded.maps[0].name, 'strength');
+const recursive = helper.buildHelperGraph([{ filename: 'recursive.zss', text: '[StateDef 7000]\nhelper{id: 7000; stateno: 7000}\n' }]);
+assert(recursive.nodes.find((node) => node.id === 7000).issues.some((issue) => /recursive/.test(issue.message)));
+const dynamic = helper.buildHelperGraph([{ filename: 'dynamic.zss', text: '[StateDef 200]\nhelper{id: 990100 + $i; stateno: 990100}\n' }]);
+assert.strictEqual(dynamic.nodes[1].id, '990100 + $i'); assert(dynamic.nodes[1].issues.some((issue) => /Computed helper ID/.test(issue.message)));
+const suggested = helper.suggestUnusedPair([root, { filename: 'occupied.zss', text: '[StateDef 1000]\nhelper{id: 1001; stateno: 1002}\n' }], 1000);
+assert.deepStrictEqual({ id: suggested.id, stateNo: suggested.stateNo }, { id: 1003, stateNo: 1003 });
+const defaults = helper.applyProjectileDefaults(helper.applyRecipe('basic-fireball', { id: 1200, stateNo: 1200 }), { velocity: [9, -1], damage: 77, position: [44, -60] });
+assert.deepStrictEqual(defaults.projectile.velocity, [9, -1]); assert.strictEqual(defaults.projectile.damage, 77); assert.deepStrictEqual(defaults.position, [44, -60]);
+console.log('Helper authoring model tests passed');

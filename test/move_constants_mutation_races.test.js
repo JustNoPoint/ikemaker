@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm'),model=require('../src/move_constants_model');
+const source=fs.readFileSync(path.join(__dirname,'../src/move_constants_workspace.js'),'utf8');
+let text='[Constants]\nnormal.mp.moveID = 200\nnormal.mp.damage = 30\nnormal.lp.moveID = 210\nnormal.lp.damage = 10\n',allow=true,writes=0,refreshes=0,input='210';const sent=[];
+const document={getText:()=>text,uri:{},lineCount:5,lineAt:()=>({lineNumber:4,text:''})};
+const owner={assets:{defPath:'A.def',constants:'A.cns'},model:{moves:[]},panel:{webview:{postMessage:m=>sent.push(m)}}};
+let air='original AIR',approval='Import Timing',timingPrompts=0;
+const env={...model,hash:require('../src/mutation_safety').hash,airTimingProposal:()=>({state:'ready',values:{damage:60}}),session:owner,currentText:async filename=>filename==='A.air'?air:text,handleLaunchMessage:async()=>false,refresh:async()=>refreshes++,vscode:{workspace:{openTextDocument:async()=>document,applyEdit:async edit=>{writes++;if(allow)text=edit.value;return allow;}},WorkspaceEdit:class{replace(uri,range,value){this.value=value;}},Range:class{},window:{showInformationMessage:async()=>{timingPrompts++;return approval;},showInputBox:async()=>input,showWarningMessage:async()=>'Copy Options'}}};
+vm.createContext(env);vm.runInContext(source.slice(source.indexOf('async function applyMoveValues('),source.indexOf('async function openMoveSource('))+source.slice(source.indexOf('async function handle('),source.indexOf('async function openMoveConstantsWorkspace(')),env);
+const message={type:'copyFields',sourceId:'normal.mp',suffixes:['damage'],values:{damage:30}};
+(async()=>{
+ let release;input=new Promise(resolve=>{release=resolve;});const copying=env.handle(message);await new Promise(resolve=>setImmediate(resolve));assert(owner.busy);await env.handle(message);assert.equal(writes,0,'duplicate mutation is ignored while dialog is pending');text+='; concurrent edit\n';release('210');await assert.rejects(copying,/constants changed/);assert.equal(writes,0);assert(!owner.busy);
+ input='210';allow=false;await env.handle(message);assert.equal(refreshes,0);assert.equal(sent.length,0,'rejected copy cannot report success');allow=true;await env.handle(message);assert(text.includes('normal.lp.damage = 30'));assert.equal(refreshes,1);
+ const baseline=text;allow=false;await env.applyMoveValues('normal.mp',{damage:50},'timing saved',owner,baseline);assert.equal(refreshes,1);assert(!sent.some(m=>m.text==='timing saved'));
+ allow=true;await assert.rejects(env.applyMoveValues('normal.mp',{damage:50},'timing saved',owner,baseline+'stale'),/constants changed/);assert(text.includes('normal.mp.damage = 30'));
+ input=new Promise(resolve=>{release=resolve;});const closing=env.handle(message);await new Promise(resolve=>setImmediate(resolve));env.session=null;const before=writes;release('210');await closing;assert.equal(writes,before,'closed workspace cannot commit delayed copy');assert(!owner.busy);
+ env.session=owner;owner.assets.air='A.air';owner.model={moves:[{id:'normal.mp',prefix:'normal.mp',values:{damage:30},timeline:{state:'ready'}}],timingSources:{constants:env.hash(text),air:env.hash(air)}};
+ air='changed before action';await assert.rejects(env.handle({type:'importAirTiming',sourceId:'normal.mp'}),/changed since this preview/);assert.equal(timingPrompts,0);
+ owner.model.timingSources.air=env.hash(air);approval=new Promise(resolve=>{release=resolve;});const timing=env.handle({type:'importAirTiming',sourceId:'normal.mp'});await new Promise(resolve=>setImmediate(resolve));air='changed during dialog';const timingWrites=writes;release('Import Timing');await assert.rejects(timing,/AIR changed while choosing timing/);assert.equal(writes,timingWrites);assert(!owner.busy);
+ owner.model.timingSources.air=env.hash(air);approval='Import Timing';await env.handle({type:'importAirTiming',sourceId:'normal.mp'});assert(text.includes('normal.mp.damage = 60'),'unchanged timing dependencies allow Apply');
+ console.log('Move copy and timing writes reject stale source, retain failure state, block overlap and ignore closed sessions');
+})().catch(error=>{console.error(error);process.exitCode=1;});

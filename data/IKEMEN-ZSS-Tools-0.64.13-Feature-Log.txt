@@ -1,0 +1,15 @@
+IKEMaker 0.64.13
+=================
+
+Existing-layout recovery
+------------------------
+- Character opening reuses an already-empty editor group as the visual workspace instead of creating a third column.
+- AIR automatic preview receives the AIR text editor's source column and refuses to use it as the visual destination.
+- An AIR viewer inherited from an older layout is moved to the recovered visual group when its AIR text is opened.
+- SFF and SND then follow AIR into that same visual group.
+
+The 0.64.12 source/code separation, complete Essentials code set, stale-column reset, and duplicate-archive protection remain in effect.
+
+Verification
+------------
+- All 121 automated test files pass.

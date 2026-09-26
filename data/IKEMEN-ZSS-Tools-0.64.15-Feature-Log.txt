@@ -1,0 +1,22 @@
+IKEMaker 0.64.15
+=================
+
+Creation discoverability
+------------------------
+- Added Create Character, Create Stage, Create Screenpack / Fight UI, and Create an Individual File to Quick Start.
+- Added a dedicated top-level Create New section so complete assets and individual files share one predictable home.
+- Repeated character asset creation under Character Authoring and source-file creation under ZSS, CNS, and Lua.
+- Existing SFF, AIR, SND, stage, screenpack, character, and project creators remain the single implementations behind every entry.
+
+Individual file creation
+------------------------
+- Added direct creation for ZSS, CNS, CMD, DEF, Lua, and plain text data files.
+- Added a compact type chooser for users who do not want a long command list.
+- New files ask for a save name/location, refuse to overwrite an existing file, and open immediately in the text editor.
+- Palette creation routes to the existing indexed sprite and palette import assistant rather than creating a misleading empty ACT file.
+
+Regression protection
+---------------------
+- Added source-file template tests and expanded hub information-architecture coverage.
+- Browser hosts expose honest unavailable-command fallbacks for the new desktop creation actions.
+- All 123 automated test files pass.

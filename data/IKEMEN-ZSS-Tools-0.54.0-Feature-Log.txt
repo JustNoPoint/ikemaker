@@ -1,0 +1,24 @@
+IKEMEN ZSS Tools 0.54.0
+=======================
+
+AUTHORING BRIDGE
+- Adds a neutral, reusable ikemen_tools_authoring_bridge.zss module.
+- Installs it into a selected character and links it through the next available
+  [Files] st entry using a backed-up, journaled transaction.
+- All behavior is opt-in, defaults off, and is restricted to training mode.
+- Supports one-shot position/facing/animation preview requests.
+- Supports an in-game IKEMEN 1.0 baseline animation audit and missing list.
+
+SHARED ANIMATION STANDARDS
+- Adds data/animation-standards.json as the canonical registry.
+- AIR files receive a compact Problems warning when required baseline actions
+  are absent. This can be disabled or changed per project.
+- Character requirement profiles can enable shared standard sets.
+- The JNP project set requires feet, middle, and head get-hit axis-reference
+  roles, leaving exact SFF group/index mappings for explicit review.
+- Missing mappings are reported separately; the tool never invents them.
+
+SAFETY
+- Existing profiles remain backward compatible and do not gain requirements
+  until they opt into a standardSets entry.
+- The bridge does not use Lua or modify IKEMEN default/common files.

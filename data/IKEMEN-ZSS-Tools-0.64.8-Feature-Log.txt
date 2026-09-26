@@ -1,0 +1,52 @@
+IKEMaker 0.64.8
+
+PROJECT PROFILE AND DISCOVERABILITY
+
+- Adds Create New Game / Project Profile to Quick Start and Game and Project
+  Profiles. It creates the complete project identity/ownership record rather
+  than only a production-workflow override.
+- Project creation records distribution intent, content basis, and whether
+  optional source-reference research tools are enabled.
+- Renames workflow, requirements, aliases, SFF build rules, and screenpack
+  preview entries so their narrower subprofile responsibilities are explicit.
+- Duplicates common character, SFF, AIR, SND, code, profile, testing, workspace,
+  release, documentation, and editor entry points wherever users reasonably
+  look for them.
+- Keeps contextual-only commands such as selection deletion and tree refreshes
+  out of the main hub because their required target exists only in that viewer.
+- Contributes Launcher Settings and Extension Settings as searchable VS Code
+  commands as well as duplicated sidebar actions. A regression test now rejects
+  any visible IKEMEN Tools action that is not formally contributed.
+
+PERSISTENT CHARACTER CONTEXT
+
+- Character Workbenches visibly identify the detected game profile beside each
+  character and expose the full game root in hover details.
+- The status-bar context survives focus changes into AIR, SFF, SND, and other
+  visual workspaces, including immediately after restoring VS Code.
+- AIR source synchronization reuses an existing AIR text tab instead of opening
+  the same document in a second editor group.
+
+CLOSE AUTHORING CONTEXT
+
+- Close Character closes all tabs and registered visual tools belonging to one
+  character without removing its saved workbench or touching shared files.
+- A character can be closed from its workbench context menu, Quick Start, or the
+  command palette.
+- Close Stage Workspace closes a tracked stage and its neighboring source tabs.
+- Close Current Authoring Context handles the active character, stage, or
+  screenpack through one consistent action.
+- Character visual tools registered for grouped closing include SFF, AIR, SND,
+  Move Constants, Command & Movelist, Character Connections, Character Health,
+  Production Workflow, and Throw Creator.
+- Unsaved text documents retain VS Code's normal save protection.
+
+VERIFICATION
+
+- Context ownership and isolation have automated regression coverage.
+- Desktop and browser command registrations are both complete.
+- A read-only deep scan parsed the combined HDBZ/SF6 test copy without SFF,
+  AIR, SND, stage, screenpack, roster, or character-dependency parser failures.
+- The reduced manual checklist now contains only visual, audio, runtime,
+  destructive-copy, hardware, and human-judgment acceptance work.
+- All 118 automated test files pass.

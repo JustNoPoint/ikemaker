@@ -1,0 +1,28 @@
+'use strict';
+const assert = require('assert');
+const model = require('../src/production_workflow_model');
+
+const base = model.normalizeProfile({ id: 'base', version: 1, phases: [{ id: 'one', name: 'One', steps: [{ id: 'one.a', label: 'A', discipline: 'Code' }, { id: 'one.b', label: 'B' }] }] });
+assert.throws(() => model.normalizeProfile({ id: 'bad', phases: [{ id: 'x', steps: [{ id: 'same' }, { id: 'same' }] }] }), /unique/);
+const merged = model.mergeProfiles(base, { id: 'child', version: 2, phases: [{ id: 'one', name: 'Renamed', steps: [{ id: 'one.a', label: 'A improved' }, { id: 'one.c', label: 'C' }] }] });
+assert.strictEqual(merged.phases[0].name, 'Renamed'); assert.deepStrictEqual(merged.phases[0].steps.map((x) => x.id), ['one.a', 'one.b', 'one.c']);
+let progress = model.reconcileProgress(base, { items: { 'one.a': { status: 'passed', note: 'kept' }, removed: { status: 'blocked' } } }, { id: 'Ryu', name: 'Ryu', defPath: 'Ryu.def' });
+assert.strictEqual(progress.items['one.a'].status, 'passed'); assert.strictEqual(progress.items['one.a'].note, 'kept'); assert.strictEqual(progress.orphanedItems.removed.status, 'blocked');
+progress = model.reconcileProgress(merged, progress, { id: 'Ryu', name: 'Ryu' }); assert.strictEqual(progress.items['one.a'].status, 'passed'); assert.ok(progress.items['one.c']);
+model.setItem(progress, 'one.b', { status: 'in-progress', note: 'started' }, 'JNP'); model.addEvidence(progress, 'one.b', { label: 'File', value: 'Ryu.air' }, 'JNP');
+model.setItem(progress, 'one.b', { assignedTo: 'Balthazar' }, 'JNP');
+const phases = model.decorate(merged, progress, { check: { state: 'detected', detail: 'Found' } });
+assert.strictEqual(model.nextTasks(phases)[0].id, 'one.b'); assert.ok(model.teamBoard(phases).some((x) => x.discipline === 'Code')); assert.strictEqual(progress.items['one.b'].evidence.length, 1); assert.strictEqual(progress.items['one.b'].assignedTo, 'Balthazar');
+const blocked = model.applyBlock(base, { id: 'qa-block', version: 3, name: 'QA Block', phases: [{ id: 'qa', name: 'QA', steps: [{ id: 'qa.signoff', label: 'Sign off', evidenceRequired: true, acceptance: 'Owner approved.' }] }] });
+assert.strictEqual(blocked.phases.length, 2); assert.strictEqual(blocked.appliedBlocks[0].id, 'qa-block'); assert.strictEqual(blocked.phases[1].steps[0].evidenceRequired, true);
+assert.strictEqual(base.schemaVersion, 2);
+const gated = model.normalizeProfile({ id: 'gated', phases: [{ id: 'gate', steps: [{ id: 'proof', evidenceRequired: true }, { id: 'signoff', signoffRequired: true, dependsOn: ['proof'] }] }] });
+let gateProgress = model.reconcileProgress(gated, {}, { id: 'Ryu' });
+assert.strictEqual(model.passEligibility(gated, gateProgress, 'proof').allowed, false);
+model.addEvidence(gateProgress, 'proof', { value: 'report.txt' }, 'JNP'); model.setItem(gateProgress, 'proof', { status: 'passed' }, 'JNP');
+assert.strictEqual(model.passEligibility(gated, gateProgress, 'signoff').allowed, false);
+model.setItem(gateProgress, 'signoff', { note: 'Signed off by JNP.' }, 'JNP');
+assert.strictEqual(model.passEligibility(gated, gateProgress, 'signoff').allowed, true);
+model.addLesson(gateProgress, { rule: 'Use native contact authority.', testProcedure: 'Run logger.' }, 'JNP');
+assert.strictEqual(gateProgress.lessons.length, 1);
+console.log('Production Workflow model tests passed');

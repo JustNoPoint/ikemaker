@@ -1,0 +1,336 @@
+<mamecheat version="1">
+
+  <cheat desc="Infinite Credits">
+    <script state="run">
+      <action>maincpu.pb@FF81B2=09</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Infinite Time">
+    <script state="on">
+      <action>maincpu.pb@FF8E09=99</action>
+    </script>
+    <script state="run">
+      <action condition="(maincpu.pb@FF8E09 GT 1) AND (maincpu.pb@FF8E09 LT 99)">maincpu.pb@FF8E09=99</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Finish this Round Now!">
+    <script state="on">
+      <action>maincpu.pb@FF8E09=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Game Speed always =">
+    <parameter>
+      <item value="0x00">Normal</item>
+      <item value="0x01">Turbo</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8213=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Backdrop">
+    <parameter>
+      <item value="0x00">Demitri's</item>
+      <item value="0x01">Jon Talbain's</item>
+      <item value="0x02">Victor's</item>
+      <item value="0x03">Lord Raptor's</item>
+      <item value="0x04">Morrigan's</item>
+      <item value="0x05">Anakaris's</item>
+      <item value="0x06">Felicia's</item>
+      <item value="0x07">Bishamon's</item>
+      <item value="0x08">Rikuo's</item>
+      <item value="0x09">Sasquatch's</item>
+      <item value="0x0A">Huitzil's</item>
+      <item value="0x0B">Pyron's</item>
+      <item value="0x0C">Hsien-Ko's</item>
+      <item value="0x0D">Donovan's</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8D89=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Starting Stage">
+    <parameter min="1" max="10" step="1"/>
+    <script state="run">
+      <action condition="(maincpu.pb@FF8842==00)">maincpu.pb@FF8842=(param-1)</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Background">
+    <parameter>
+      <item value="0x00">Demitri</item>
+      <item value="0x01">Jon Talbain</item>
+      <item value="0x02">Victor</item>
+      <item value="0x03">Lord Raptor</item>
+      <item value="0x04">Morrigan</item>
+      <item value="0x05">Anakaris</item>
+      <item value="0x06">Felicia</item>
+      <item value="0x07">Bishamon</item>
+      <item value="0x08">Rikuo</item>
+      <item value="0x09">Sasquatch</item>
+      <item value="0x0A">Huitzil</item>
+      <item value="0x0B">Pyron</item>
+      <item value="0x0C">Hsien-Ko</item>
+      <item value="0x0D">Donovan</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pw@FF8D88=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="P1 Infinite Energy">
+    <script state="run">
+      <action condition="(frame % 60 == 0)">maincpu.pb@FF83CB=90</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Drain All Energy Now!">
+    <script state="on">
+      <action>maincpu.pb@FF83CB=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Infinite Special">
+    <script state="run">
+      <action>maincpu.pb@FF8565=0A</action>
+      <action>maincpu.pb@FF855F=70</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 No Specials Available">
+    <script state="run">
+      <action>maincpu.pb@FF855D=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select constant Attack Level">
+    <parameter>
+      <item value="0x00">Low</item>
+      <item value="0x01">Medium</item>
+      <item value="0x02">High</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF83ED=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Infinite Auto Guard">
+    <script state="run">
+      <action>maincpu.pb@FF850D=01</action>
+      <action>maincpu.pb@FF884C=63</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Win this Round to Win Match Now!">
+    <script state="on">
+      <action>maincpu.pb@FF8830=02</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Action Speed Up">
+    <script state="run">
+      <action>maincpu.pb@FF8397=01</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Never be dazed">
+    <script state="run">
+      <action>maincpu.pb@FF83D3=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select Character Now!"> <comment>Free player selection - Use on the level VS screen.</comment>
+    <parameter>
+      <item value="0x01">Demitri</item>
+      <item value="0x02">Jon Talbain</item>
+      <item value="0x03">Victor</item>
+      <item value="0x04">Lord Raptor</item>
+      <item value="0x05">Morrigan</item>
+      <item value="0x06">Anakaris</item>
+      <item value="0x07">Felicia</item>
+      <item value="0x08">Bishamon</item>
+      <item value="0x09">Rikuo</item>
+      <item value="0x0A">Sasquatch</item>
+      <item value="0x0B">Huitzil</item>
+      <item value="0x0C">Pyron</item>
+      <item value="0x0D">Hsien-Ko</item>
+      <item value="0x0E">Donovan</item>
+    </parameter>
+    <script state="change">
+      <action>maincpu.pb@FF8829=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select Character Colour Now!">
+    <parameter>
+      <item value="0x00">Colour 1</item>
+      <item value="0x01">Colour 2</item>
+      <item value="0x02">Colour 3</item>
+      <item value="0x03">Colour 4</item>
+      <item value="0x04">Colour 5</item>
+      <item value="0x05">Colour 6</item>
+      <item value="0x06">Colour 7</item>
+      <item value="0x07">Colour 8</item>
+    </parameter>
+    <script state="change">
+      <action>maincpu.pb@FF882F=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="P2 Infinite Energy">
+    <script state="run">
+      <action condition="(frame % 60 == 0)">maincpu.pb@FF88CB=90</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Drain All Energy Now!">
+    <script state="on">
+      <action>maincpu.pb@FF88CB=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Infinite Special">
+    <script state="run">
+      <action>maincpu.pb@FF8A65=0A</action>
+      <action>maincpu.pb@FF8A5F=70</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 No Specials Available">
+    <script state="run">
+      <action>maincpu.pb@FF8A5D=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select constant Attack Level">
+    <parameter>
+      <item value="0x00">Low</item>
+      <item value="0x01">Medium</item>
+      <item value="0x02">High</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF88ED=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Infinite Auto Guard">
+    <script state="run">
+      <action>maincpu.pb@FF8A0D=01</action>
+      <action>maincpu.pb@FF8D4C=63</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Win this Round to Win Match Now!">
+    <script state="on">
+      <action>maincpu.pb@FF8D30=02</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Action Speed Up">
+    <script state="run">
+      <action>maincpu.pb@FF8897=01</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Never be dazed">
+    <script state="run">
+      <action>maincpu.pb@FF88D3=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select Character Now!"> <comment>Free player selection - Use on the level VS screen.</comment>
+    <parameter>
+      <item value="0x01">Demitri</item>
+      <item value="0x02">Jon Talbain</item>
+      <item value="0x03">Victor</item>
+      <item value="0x04">Lord Raptor</item>
+      <item value="0x05">Morrigan</item>
+      <item value="0x06">Anakaris</item>
+      <item value="0x07">Felicia</item>
+      <item value="0x08">Bishamon</item>
+      <item value="0x09">Rikuo</item>
+      <item value="0x0A">Sasquatch</item>
+      <item value="0x0B">Huitzil</item>
+      <item value="0x0C">Pyron</item>
+      <item value="0x0D">Hsien-Ko</item>
+      <item value="0x0E">Donovan</item>
+    </parameter>
+    <script state="change">
+      <action>maincpu.pb@FF8D29=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select Character Colour Now!">
+    <parameter>
+      <item value="0x00">Colour 1</item>
+      <item value="0x01">Colour 2</item>
+      <item value="0x02">Colour 3</item>
+      <item value="0x03">Colour 4</item>
+      <item value="0x04">Colour 5</item>
+      <item value="0x05">Colour 6</item>
+      <item value="0x06">Colour 7</item>
+      <item value="0x07">Colour 8</item>
+    </parameter>
+    <script state="change">
+      <action>maincpu.pb@FF8D2F=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="No Background Music">
+    <script state="run">
+      <action>audiocpu.pw@F018=0000</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Region"> <comment>This cheat sets the machine region - the effectiveness may vary! You have to enable this ASAP - ON or before the ROM check screen! Or enable + RESET</comment>
+    <parameter>
+      <item value="0x00">Japan</item>
+      <item value="0x02">USA</item>
+      <item value="0x04">Asia</item>
+      <item value="0x06">Hispanic</item>
+      <item value="0x08">Brazil</item>
+      <item value="0x0A">Euro</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8205=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Title">
+    <parameter>
+      <item value="0x00">Vampire Hunter</item>
+      <item value="0x01">Night Warriors</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8214=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Sound Test">
+    <parameter min="1" max="65535" step="1"/>
+    <script state="change">
+      <action>audiocpu.pw@F007=0000</action>
+      <action>audiocpu.pq@F100=0000FF00000000FF</action>
+      <action>audiocpu.pq@F108=00FFFF0000000000</action>
+      <action>audiocpu.pq@F110=1000FF0000000000</action>
+      <action>audiocpu.pq@F118=00FFFF0000000000</action>
+      <action condition="(param LT 100)">audiocpu.pb@F111=param</action>
+      <action>temp0=param/100</action>
+      <action condition="(param GE 100)">audiocpu.pb@F110=temp0</action>
+      <action condition="(param GE 100)">audiocpu.pb@F111=param-(temp0*100)</action>
+      <action>audiocpu.pb@F007=20</action>
+    </script>
+  </cheat>
+
+</mamecheat>
+<!-- Cheat file downloaded from https://www.mamecheat.co.uk, see cheat.txt for list of contributors. -->

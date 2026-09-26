@@ -1,0 +1,18 @@
+IKEMEN ZSS Tools 0.29.0
+=======================
+
+Authored ZSS navigation
+-----------------------
+- Added a cached workspace index for authored functions, maps, variables,
+  state declarations, and supported state references.
+- Added Go to Definition and Find All References providers.
+- Literal changeState and selfState values resolve to their StateDef.
+- Added previewable Rename Symbol for authored functions and map names only.
+- Native controllers, native triggers, variables, and states are protected
+  from unsafe broad rename operations.
+- Added cache invalidation for text, create, delete, and rename events.
+
+Verification
+------------
+- Added navigation model and provider-registration tests.
+- All 47 extension test files pass.

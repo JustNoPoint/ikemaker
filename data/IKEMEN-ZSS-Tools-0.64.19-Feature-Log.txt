@@ -1,0 +1,13 @@
+IKEMaker 0.64.19
+
+Universal HitDef Editor
+
+- Adds a profile-independent visual HitDef editor for ZSS and CNS-style code.
+- Opens the HitDef at or nearest the current text cursor and moves between HitDefs in the same file.
+- Edits an existing controller or inserts a new starter controller directly into source code.
+- Keeps the most frequently used attack options expanded and places specialist options in collapsed groups.
+- Includes bundled offline descriptions and a generated-code preview.
+- Preserves triggers, comments, unknown project options, and surrounding controller code.
+- Refuses an ambiguous write when duplicate HitDef options need manual review.
+- Uses neutral -1 defaults for project-specific spark and sound resources rather than assuming a game profile.
+- Appears in both Character Authoring and ZSS, CNS, and Lua tool groups, plus code-file context menus.

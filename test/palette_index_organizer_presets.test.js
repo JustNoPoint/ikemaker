@@ -1,0 +1,18 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const original=Module._load,folder=fs.mkdtempSync(path.join(os.tmpdir(),'palette-organizer-preset-')),source=path.join(folder,'source.png'),panels=[],registered=new Map();
+function panel(){const receive=[],dispose=[];const value={viewColumn:2,reveal(){},onDidDispose:fn=>dispose.push(fn),dispose:()=>dispose.forEach(fn=>fn()),webview:{cspSource:'test:',html:'',onDidReceiveMessage:fn=>receive.push(fn),postMessage:()=>true}};value.send=message=>receive.forEach(fn=>fn(message));panels.push(value);return value;}
+const sessions={has:value=>registered.has(value),register:(value,file,kind,explicit)=>registered.set(value,{file,kind,explicit}),updateSource:(value,file)=>registered.set(value,{...registered.get(value),file}),unregister:value=>registered.delete(value)};
+const vscode={ViewColumn:{Active:1},Uri:{file:fsPath=>({fsPath})},workspace:{getConfiguration:()=>({get:(_,fallback)=>fallback})},window:{createWebviewPanel:()=>panel(),showErrorMessage:message=>{throw Error(message);}},commands:{}};
+Module._load=function(request,parent,main){if(request==='vscode')return vscode;if(request==='./viewer_sessions')return sessions;if(request==='./viewer_group')return{preferredViewerColumn:()=>2,trackViewerPanel:value=>value};if(request==='./viewer_close')return{support(){}};if(request==='./launch_controls')return{launchControlsHtml:()=>'',launchControlsClientScript:()=>'',handleLaunchMessage:async()=>false};if(request==='./webview_policy')return{protect:value=>value};return original.call(this,request,parent,main);};
+(async()=>{
+ const {paletteSwatchPng}=require('../src/palette_editor'),workspace=require('../src/palette_index_organizer_workspace');
+ const colors=Array.from({length:256},(_,index)=>index?[40,80,120,255]:[0,0,0,0]);fs.writeFileSync(source,paletteSwatchPng(colors));
+ const session={files:[],model:null,sourceKind:'',sff:null,paletteIndex:null,paletteSignature:null,originalFiles:null,construction:null,entryDraft:null,draftIdentity:''};
+ assert(workspace.loadPngPaths(session,[source]));const reference=workspace.stableReference(session);assert.equal(reference.sourceKind,'png');assert.deepEqual(reference.files,[source]);assert(reference.fingerprint);
+ const restored=await workspace.openPaletteIndexOrganizer(vscode.Uri.file(source),{preset:true,reference});assert(restored,'a file-backed PNG preset restores without a picker');assert.deepEqual(registered.get(restored),{file:source,kind:'palette_index_organizer',explicit:true});assert.match(restored.webview.html,/presetReference/);
+ fs.appendFileSync(source,Buffer.from([0]));assert.equal(await workspace.openPaletteIndexOrganizer(vscode.Uri.file(source),{preset:true,reference}),undefined,'changed source bytes reject stale preset restoration');
+ restored.send({type:'dropPngs',items:[{name:'memory.png',base64:paletteSwatchPng(colors).toString('base64')}]});await new Promise(resolve=>setImmediate(resolve));assert(!registered.has(restored),'dropped-only data is not advertised as a durable typed preset');
+ const dropped={files:[],model:null,sourceKind:'',sff:null,paletteIndex:null,paletteSignature:null,originalFiles:null,construction:null,entryDraft:null,draftIdentity:''};workspace.acceptDroppedPngs(dropped,[{name:'memory.png',base64:paletteSwatchPng(colors).toString('base64')}]);assert.equal(workspace.stableReference(dropped),null);
+ console.log('Palette Organizer typed presets restore exact file-backed PNG sources, reject changed bytes, and exclude dropped-only data');
+})().catch(error=>{console.error(error);process.exitCode=1;}).finally(()=>{Module._load=original;fs.rmSync(folder,{recursive:true,force:true});});

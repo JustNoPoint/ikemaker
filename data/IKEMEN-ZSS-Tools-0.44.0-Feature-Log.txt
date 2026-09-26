@@ -1,0 +1,26 @@
+IKEMEN ZSS Tools 0.44.0
+=======================
+
+Visual Code Structure
+---------------------
+- Controller documentation now doubles as a context-aware option inserter.
+- Unused controller options can be clicked, reviewed, given a value, and inserted into the selected ZSS or CNS controller.
+- Every option has bundled offline hover/help text and its expected value format.
+- Already-used options remain visibly marked and cannot be inserted twice.
+- The workspace now follows the active supported ZSS, CNS, or Lua file instead of remaining attached to the file that originally opened it.
+
+Visual select.def Editor
+------------------------
+- Added a dedicated source-preserving editor inspired by VSelect's useful roster-management workflow while covering IKEMEN 1.0 syntax.
+- Tabs cover Characters, ExtraStages, arcade order groups, Options, StoryMode, and custom/unknown sections.
+- Character cards show assigned stages, order, hidden, bonus, exclude, and slot context.
+- Characters can be assigned stages and arcade orders through guided actions.
+- Entries can be added, edited as complete source lines, reordered, removed, revealed in code, and saved.
+- Comments, slot blocks, unlock expressions, mode-specific order parameters, unfamiliar parameters, and custom sections remain in the source.
+- The editor is available from the command palette, IKEMEN sidebar, select.def editor title, and select.def context menus.
+
+Safety and scope
+----------------
+- The new editor uses normal VS Code document edits so Undo remains available.
+- It does not silently rebuild or normalize select.def.
+- Browser/mobile hosts report the desktop visual editor honestly as unavailable rather than simulating native project access.

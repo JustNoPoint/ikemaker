@@ -1,0 +1,14 @@
+'use strict';
+const assert = require('assert');
+const { parseDef } = require('../src/def_model');
+const { appendSection, duplicateSection, deleteSection, appendStageBackground, appendUiElement } = require('../src/visual_def_authoring');
+let text = '[Info]\nname = Test\n';
+text = appendStageBackground(text, { name: 'Sky', sprite: '1,2', layer: -1 });
+let doc = parseDef(text), bg = doc.sections.find((x) => x.name === 'BG Sky');
+assert(bg); assert.match(text, /spriteno = 1,2/);
+text = duplicateSection(text, bg.line, 'BG Sky Copy'); assert.match(text, /\[BG Sky Copy\]/);
+doc = parseDef(text); text = deleteSection(text, doc.sections.find((x) => x.name === 'BG Sky Copy').line); assert.doesNotMatch(text, /Sky Copy/);
+text = appendSection(text, 'Select Info', { pos: '160,120' }); doc = parseDef(text);
+text = appendUiElement(text, doc.sections.find((x) => x.name === 'Select Info').line, 'title', { kind: 'text', reference: '0,0,0', pos: '160,20' });
+assert.match(text, /title\.font = 0,0,0/); assert.throws(() => appendSection(text, 'Info'), /already exists/);
+console.log('Visual DEF authoring tests passed');

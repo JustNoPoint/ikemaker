@@ -1,0 +1,18 @@
+IKEMaker 0.71.3 — GIF timing to IKEMEN tick conversion
+
+- GIF timings are interpreted as elapsed time, not as a one-frame/one-tick format.
+- Normal GIF timing uses cumulative 60 Hz quantization to prevent independent
+  per-frame rounding from accumulating unnecessary drift.
+- Frames shorter than one 60 Hz game tick are detected before AIR generation.
+- The user must choose between:
+  1. Resample to 60 Hz, preserving approximate total duration while allowing
+     unsampled source frames to be omitted.
+  2. Preserve every source frame at a minimum of one tick, accepting that the
+     resulting IKEMEN animation must be longer than the GIF.
+- Generated AIR comments record which timing policy was used.
+- The completion notice reports the resulting AIR element or tick count.
+- Unreliable or missing GIF delays cannot be treated as timing; uniform timing
+  must be selected instead.
+- Artist Intake and Two-SFF Assembly remain SFF-only and never invoke this logic.
+
+Verification: all 142 automated test files pass.

@@ -1,0 +1,14 @@
+'use strict';
+const assert=require('assert'),Module=require('module');
+const original=Module._load;
+Module._load=function(name,parent,main){if(name==='vscode')return {};return original.call(this,name,parent,main)};
+const {html}=require('../src/storyboard_workspace');
+Module._load=original;
+const output=html({filename:'D:/private/project/<credits>.def',model:{scenes:[],localCoord:[320,240]}});
+assert(output.includes('&lt;credits&gt;.def</span>'));
+assert(!output.includes('D:/private/project/<credits>.def</span>'));
+const script=output.match(/<script>([\s\S]*)<\/script>/)[1];
+new Function(script);
+assert(output.includes('for="duration"'));
+assert(output.includes('for="color"'));
+console.log('Storyboard workspace HTML and embedded script tests passed');

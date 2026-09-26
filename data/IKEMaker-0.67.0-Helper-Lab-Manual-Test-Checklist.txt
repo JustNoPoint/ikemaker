@@ -1,0 +1,27 @@
+IKEMAKER 0.67.0 — HELPER LAB MANUAL CHECKLIST
+
+[ ] Open a character, then open Character Authoring > Helper Lab.
+[ ] Confirm the context bar shows the expected project and character.
+[ ] Create a ZSS helper with a name, ID, StateDef, position, and two creation maps.
+[ ] Confirm the preview includes the maps, a family-specific LastPlayerID capture,
+    the owned StateDef, and reviewed DestroySelf scaffolding.
+[ ] Switch output to CNS and confirm Helper, MapSet/LastPlayerID, and DestroySelf blocks.
+[ ] Insert into a chosen code file. Confirm the file remains unsaved and Undo removes it.
+[ ] Open Helper Tree. Confirm detected helpers open their exact source lines.
+[ ] For a helper that creates another helper, confirm the child is nested under it.
+[ ] Confirm duplicate helper IDs and same-state recursive creation receive review warnings.
+[ ] In Map & Data Flow, generate child-to-parent and child-to-root map writes.
+[ ] Generate root-to-helper family and root-to-exact-PlayerID map writes.
+[ ] Confirm detected map traffic opens the exact source line.
+[ ] Open Move Lab, Position & Camera, Explod Composer, Controller Browser, and the full
+    character connection tree from Helper Lab; confirm they retain the same character.
+[ ] Use mouse-wheel zoom and drag-pan in the bridged visual editors where spatial preview applies.
+[ ] Launch Game, Infinite VS, and Training from the shared launch controls.
+[ ] Close the character and confirm Helper Lab closes with its other character-owned tools.
+
+Manual limits for this release:
+- The helper tree is a static source graph, not a live runtime instance graph.
+- Maps have full contract generation. Vars, states, animation, spatial mutation, resources,
+  and combat mutation route to their specialized editors and still require author review.
+- Dynamic helper IDs, computed StateDef targets, and arbitrary nested code blocks may need
+  manual confirmation when static detection cannot prove their relationship.

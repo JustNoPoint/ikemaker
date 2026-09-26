@@ -1,0 +1,6 @@
+IKEMaker 0.72.1
+
+Completes the 0.72 storyboard authoring wave by adding visual creation of
+sprite, animation, and text layers inside storyboard scenes. See the 0.72.0
+feature log for the full stage, screenpack, opening, ending, and storyboard
+creation summary.

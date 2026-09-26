@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "ds-character-production",
+  "version": 7,
+  "name": "Darkstalkers vs. Street Fighter Character Production",
+  "description": "DS vs. SF character production using reusable asset, QA, and sign-off gates. Returning Darkstalkers begin from Vampire Savior behavior; Street Fighter characters require complete native Vampire Savior-era what-if reimagining without losing their established identity.",
+  "extends": "bundled:jnp-character-production",
+  "blocks": ["bundled-block:first-grounded-light-normal"],
+  "phases": [
+    {
+      "id": "ds-character-authority",
+      "name": "DS vs. SF Character Authority",
+      "summary": "Complete the expanded-Vampire-Savior identity and qualitative authored-depth parity review before signoff.",
+      "steps": [
+        {"id": "ds-authority.roster-side", "label": "Character is classified as returning Darkstalkers or Street Fighter-side", "discipline": "Production", "action": "open-requirements"},
+        {"id": "ds-authority.source-evidence", "label": "Source identity and behavior are recorded separately from crossover interpretation", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-authority.what-if-design", "label": "Street Fighter-side design passes the native Vampire Savior-era what-if review", "discipline": "Design", "action": "open-code"},
+        {"id": "ds-authority.moveset-purpose", "label": "Character has a coherent gameplan, meaningful tools and weaknesses, and purposeful new material", "discipline": "Design", "action": "open-code"},
+        {"id": "ds-authority.system-fit", "label": "System participation and character-specific exceptions fit the individual fighter", "discipline": "Design", "action": "launch-training"},
+        {"id": "ds-authority.presentation", "label": "Intros, winposes, taunts, reactions, effects, sounds, transitions, and interactions receive review", "discipline": "Art", "action": "open-air"},
+        {"id": "ds-authority.distinction", "label": "Character avoids random move accumulation, superficial effects, and homogenized chain or mobility design", "discipline": "Review", "action": "launch-training"},
+        {"id": "ds-authority.parity-review", "label": "Written review confirms authored-depth, matchup, and production parity with the surrounding Darkstalkers cast without quotas", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-authority.owner-signoff", "label": "JustNoPoint approves the native Vampire Savior feel and preserved Street Fighter identity", "discipline": "Review", "action": "open-requirements"}
+      ]
+    },
+    {
+      "id": "vs-foundation-v1",
+      "name": "Vampire Savior Foundation v1",
+      "summary": "Prove a representative Darkstalkers cohort, select remaining coverage only after Morrigan, and freeze a safe DS4 branch snapshot.",
+      "steps": [
+        {"id": "vs-foundation.demitri", "label": "Demitri completes applicable implementation, evidence, QA, and JustNoPoint signoff", "discipline": "Review", "action": "open-requirements"},
+        {"id": "vs-foundation.morrigan", "label": "Morrigan completes applicable implementation, evidence, QA, and JustNoPoint signoff", "discipline": "Review", "action": "open-requirements"},
+        {"id": "vs-foundation.coverage-gap", "label": "Post-Morrigan coverage-gap review inventories unproven Vampire Savior assumptions", "discipline": "Production", "action": "open-requirements"},
+        {"id": "vs-foundation.candidate-selection", "label": "JustNoPoint selects one or possibly two contrasting returning Darkstalkers; identities remain provisional until then", "discipline": "Design", "action": "open-requirements"},
+        {"id": "vs-foundation.cohort-proof", "label": "Approved cohort completes applicable implementation, evidence, QA, and signoff", "discipline": "Testing", "action": "launch-training"},
+        {"id": "vs-foundation.reuse-audit", "label": "Audit separates reusable mechanisms and VS foundation policy from DS crossover and character content", "discipline": "Review", "action": "open-code"},
+        {"id": "vs-foundation.freeze", "label": "Freeze and document Vampire Savior Foundation v1 assumptions, supported cases, evidence, gaps, and revision rules", "discipline": "Production", "action": "open-requirements"},
+        {"id": "vs-foundation.owner-signoff", "label": "JustNoPoint approves the versioned foundation as safe to branch for the dedicated DS4 pass", "discipline": "Review", "action": "open-requirements"}
+      ]
+    },
+    {
+      "id": "sf-side-source-conversion",
+      "name": "Street Fighter-Side Source-to-DS Conversion",
+      "summary": "After Demitri and Morrigan signoff, preserve SFA evidence and convert each SF-side character through reviewed Vampire Savior behavior bands without homogenizing identity or silently copying values.",
+      "steps": [
+        {"id": "ds-sf-conversion.source-lock", "label": "Exact SFA game/revision evidence is captured and preserved separately from DS values", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-sf-conversion.role-map", "label": "Each move is mapped by semantic role and conditions rather than button strength alone", "discipline": "Design", "action": "open-requirements"},
+        {"id": "ds-sf-conversion.baseline-scope", "label": "Demitri/Morrigan comparison coverage and any unsupported archetype assumptions are visible", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-sf-conversion.normalize", "label": "Tick rate, coordinates, trajectories, facing, camera, and reaction meanings are normalized", "discipline": "Code", "action": "open-code"},
+        {"id": "ds-sf-conversion.behavior", "label": "Hit pause, reactions, velocities, chains/cancels, collision, damage, resources, and presentation receive reviewed proposals", "discipline": "Design", "action": "open-code"},
+        {"id": "ds-sf-conversion.auto-apply", "label": "Optional Auto-Apply Conversion Drafts records source, prior, formula, proposal, applied value, validation, and undo transaction without stopping between moves", "discipline": "Production", "action": "open-code"},
+        {"id": "ds-sf-conversion.exception-queue", "label": "Ambiguous, unsupported, destructive, dependency-incomplete, or manually diverged changes remain queued instead of being auto-applied", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-sf-conversion.preview", "label": "AIR, boxes, P2 reaction, hit sparks, trajectories, and cancel windows are compared visually", "discipline": "Testing", "action": "open-air"},
+        {"id": "ds-sf-conversion.batch-review", "label": "Applied working drafts are reviewed, revised, or reverted in bulk before QA and character signoff", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-sf-conversion.matrix", "label": "Whiff, hit, guard, air, corner, cancel, and resource experiments pass with recorded evidence", "discipline": "Testing", "action": "launch-training"},
+        {"id": "ds-sf-conversion.deviations", "label": "Source behavior, normalized values, conversion proposals, applied drafts, signed-off values, and deliberate deviations remain separately recorded", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-sf-conversion.signoff", "label": "JustNoPoint approves Vampire Savior fit, Street Fighter identity, and play feel", "discipline": "Review", "action": "open-requirements"}
+      ]
+    },
+    {
+      "id": "ds-backport-review",
+      "name": "DS4-first character backport review",
+      "summary": "When applicable, reinterpret a DS4-origin character for DS rather than copying sequel policy or runtime code.",
+      "steps": [
+        {"id": "ds-port.identity-snapshot", "label": "Source-neutral identity/content snapshot and provenance are reviewed", "discipline": "Production", "action": "open-requirements"},
+        {"id": "ds-port.difference-record", "label": "Port record identifies shared identity, DS4-only decisions, DS replacements, retained behavior, and open questions", "discipline": "Review", "action": "open-requirements"},
+        {"id": "ds-port.adapter-separation", "label": "DS implementation has separate states, constants, effects, sounds, metadata, controls, resources, tests, and balance", "discipline": "Code", "action": "open-code"},
+        {"id": "ds-port.no-live-dependency", "label": "No DS4 runtime import, circular dependency, or automatic synchronization remains", "discipline": "Review", "action": "open-code"},
+        {"id": "ds-port.destination-rubric", "label": "Character passes the complete DS authored-depth and crossover completion rubric", "discipline": "Testing", "action": "launch-training"},
+        {"id": "ds-port.signoff", "label": "JustNoPoint explicitly approves the DS backport independently of DS4 status", "discipline": "Review", "action": "open-requirements"}
+      ]
+    }
+  ]
+}

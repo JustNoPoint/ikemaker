@@ -1,0 +1,32 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const locator = require('../src/engine_locator');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemen-engine-locator-'));
+try {
+  const standard = path.join(root, 'Ikemen_GO.exe'); fs.writeFileSync(standard, '');
+  assert.strictEqual(locator.enginePath(root), standard);
+  fs.unlinkSync(standard); const renamed = path.join(root, 'HDBZWin.exe'); fs.writeFileSync(renamed, '');
+  assert.strictEqual(locator.enginePath(root), renamed);
+  assert.strictEqual(locator.enginePath(root, 'custom\\Game.exe'), path.join(root, 'custom', 'Game.exe'));
+  fs.writeFileSync(path.join(root, 'sprmaker2.exe'), '');
+  assert.strictEqual(locator.enginePath(root), renamed, 'known game executable wins over build tools');
+  assert.strictEqual(locator.targetEnginePath(root, '', undefined, {}), renamed, 'implicit stable projects retain legacy launch behavior');
+  assert.throws(() => locator.targetEnginePath(root, '', { buildId: 'nightly-exact', channel: 'nightly', version: 'nightly', commit: 'abc' }, {}), /not registered as the exact adopted artifact/);
+  const exact = path.join(root, 'nightly.exe'); fs.writeFileSync(exact, 'verified'); const exactHash = locator.sha256(exact);
+  const installed = { builds: [{ buildId: 'nightly-exact', executable: exact, executableSha256: exactHash }] };
+  assert.strictEqual(locator.targetEnginePath(root, '', { buildId: 'nightly-exact', channel: 'nightly', version: 'nightly', commit: 'abc', executableSha256: exactHash }, installed), exact);
+  const installedNormalized = require('../src/engine_registry_model').normalizeInstalledRegistry(installed), installationId = installedNormalized.builds[0].id;
+  assert.strictEqual(locator.targetEnginePath(root, '', { buildId: 'nightly-exact', channel: 'nightly', version: 'nightly', commit: 'abc', installationId, executableSha256: exactHash }, installed), exact);
+  assert.throws(() => locator.targetEnginePath(root, '', { buildId: 'other-build', channel: 'nightly', version: 'nightly', commit: 'def', installationId, executableSha256: exactHash }, installed), /belongs to nightly-exact/);
+  assert.throws(() => locator.targetEnginePath(root, '', { buildId: 'nightly-exact', channel: 'nightly', version: 'nightly', commit: 'abc', installationId, executableSha256: 'b'.repeat(64) }, installed), /pinned executable hash/);
+  const packaged = { builds: [{ buildId: 'nightly-exact', executable: exact, executableSha256: exactHash, artifactSha256: 'c'.repeat(64) }] }, packagedId = require('../src/engine_registry_model').normalizeInstalledRegistry(packaged).builds[0].id;
+  assert.throws(() => locator.targetEnginePath(root, '', { buildId: 'nightly-exact', channel: 'nightly', version: 'nightly', commit: 'abc', installationId: packagedId, executableSha256: exactHash, artifactSha256: 'd'.repeat(64) }, packaged), /pinned package hash/);
+  const registeredStable = { builds: [{ buildId: 'ikemen-go-1.0.0-windows-x64', executable: exact, executableSha256: exactHash }] };
+  assert.strictEqual(locator.targetEnginePath(root, '', undefined, registeredStable), renamed, 'global stable registration must not redirect an implicit legacy stable project');
+  fs.writeFileSync(exact, 'changed');
+  assert.throws(() => locator.targetEnginePath(root, '', { buildId: 'nightly-exact', channel: 'nightly', version: 'nightly', commit: 'abc', executableSha256: exactHash }, installed), /changed after verification/);
+} finally { fs.rmSync(root, { recursive: true, force: true }); }
+console.log('Engine locator tests passed');

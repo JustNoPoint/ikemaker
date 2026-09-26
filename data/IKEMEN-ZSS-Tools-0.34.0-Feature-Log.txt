@@ -1,0 +1,25 @@
+IKEMEN ZSS Tools 0.34.0
+=======================
+
+Recovery Center
+---------------
+- Replaced raw history JSON with IKEMEN: Open Recovery Center.
+- Added search and All/Recoverable/Bulk filters.
+- Added Open Current, Open Backup, compare, and confirmed restore.
+- Restore protects the current version and records another mutation.
+- Bulk entries do not expose unsafe one-file restore.
+- Project-root containment rejects forged history paths.
+
+Remaining mutation coverage
+---------------------------
+- AIR push-box/runtime-geometry plans migrated.
+- External-builder guard for SndMaker.
+- Failed/missing build restores previous SND.
+- Successful build creates hidden backup/history.
+- Mutation-authority audit and four-module direct-write allowlist.
+
+Verification
+------------
+- Recovery Center parser/HTML/path tests.
+- External builder success/rollback tests.
+- All 52 tests pass.

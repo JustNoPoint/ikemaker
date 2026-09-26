@@ -1,0 +1,10 @@
+'use strict';
+const assert = require('assert'); const Module = require('module'), original = Module._load;
+Module._load = function(request, parent, main) { if (request === 'vscode') return { window:{}, workspace:{ getConfiguration:()=>({ get:(_,v)=>v }) }, commands:{}, Uri:{ file:(fsPath)=>({fsPath}) }, ViewColumn:{}, TextEditorRevealType:{}, Selection:function(){}, Range:function(){} }; return original.call(this, request, parent, main); };
+const workspace = require('../src/story_dialogue_workspace'); Module._load = original;
+const page = workspace.html({ file:'C:/game/data/select.def', arcs:[{name:'ryu',displayname:'Ryu Story',path:'data/story/ryu.lua',unlock:'true'}], portraitGroup:9100, maxLines:20 }, 'player');
+assert.match(page, /STORY &amp; DIALOGUE BUILDER|STORY & DIALOGUE BUILDER/); assert.match(page, /IKEMEN 1\.0 NATIVE/); assert.match(page, /maximum 20/); assert.match(page, /Creator/); assert.match(page, /Rollback\/netplay/); assert.match(page, /Ryu Story/);
+assert.match(page, /Discard recovered draft/); assert.match(page, /ikemenCanKeepDraft/); assert.match(page, /ikemenNavigationSelection/); assert.match(page, /dialogueDraft/);
+const script = page.match(/<script>([\s\S]*)<\/script>/)[1]; assert.doesNotThrow(() => new Function(script));
+assert.strictEqual(workspace.gameRootFromSelect('C:/game/data/select.def').replace(/\\/g,'/'), 'C:/game');
+console.log('Story and dialogue workspace tests passed');

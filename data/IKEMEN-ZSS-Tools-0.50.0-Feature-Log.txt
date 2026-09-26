@@ -1,0 +1,17 @@
+IKEMEN ZSS Tools 0.50.0
+
+Project ticket workflow
+
+- Added a project-wide Jira-style Kanban board to Production Workflow.
+- Added stable project ticket keys, epics, parent/child ticket hierarchy,
+  task checklists, ticket and task assignments, comments, and archiving.
+- Added Backlog, Discussion, Ready, Doing, Testing, Review, and Done columns.
+- Parent tickets cannot close until active child tickets are Done.
+- Tickets cannot close while checklist tasks remain incomplete.
+- Clipboard feedback can be preserved as a Discussion ticket for human triage
+  without silently guessing classifications.
+- Ticket data is stored as readable project JSON for review and later GitHub
+  integration.
+
+The existing character production profile remains available as an optional
+repeatable task template. It is not treated as the project ticket hierarchy.

@@ -1,0 +1,32 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
+
+const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'engine_migration_ui.js'), 'utf8');
+const firstApproval = source.indexOf("approved !== 'Approve this backup and migration'");
+const staging = source.indexOf('fs.mkdtempSync');
+const notice = source.indexOf('creating notified temporary staging data');
+const download = source.indexOf('migration.acquireCandidate(candidate');
+const finalApproval = source.indexOf("finalReview !== 'Apply validated migration'");
+const liveApply = source.indexOf('migration.executeMigration');
+assert(firstApproval >= 0 && firstApproval < staging, 'temporary staging must follow explicit operation approval');
+assert(notice >= 0 && notice < download, 'temporary work must be disclosed before download/extraction');
+assert(finalApproval >= 0 && finalApproval < liveApply, 'live engine writes must follow the final validated-file approval');
+assert(source.indexOf('No project registry exists') < 0, 'migration must not silently create missing project metadata');
+assert(source.includes("registerCommand('ikemen.engineMigration.installRetained'"), 'retained/custom exact-build command must be registered');
+assert(source.includes('migration.acquireCandidate(candidate, staging, retainedReview)'), 'both retained and online artifacts must use the shared async acquisition contract');
+assert(source.includes("const officialRepository = String(downloaded.provenance?.repository || '').toLowerCase() === 'ikemen-engine/ikemen-go'"), 'custom fork origin must be classified independently of local override files');
+assert(source.includes("throw new Error('The exact build ID already belongs to different immutable engine bytes or provenance."), 'catalog identity collisions must fail before registration');
+assert(source.indexOf('if (!retainedReview)') < source.indexOf('migration.resolveExactNightly();', source.indexOf('if (!retainedReview)')) + 1, 'rolling-tag re-resolution must remain confined to online Nightly migration');
+
+const manager = fs.readFileSync(path.join(__dirname, '..', 'src', 'project_manager_workspace.js'), 'utf8');
+const populate = manager.slice(manager.indexOf('async function populate'), manager.indexOf('panel.ikemenProjectManagerMessage = panel.webview.onDidReceiveMessage'));
+assert(!/writeRegistry\(/.test(populate), 'opening/browsing Project Manager must not create project files before a user action');
+assert(source.indexOf('classifyObsoleteFiles') < source.indexOf('finalReview'), 'obsolete engine files must be classified before final approval');
+assert(source.indexOf('prepareRegistryWrite') < source.indexOf('projectContext.writeRegistry'), 'the recovery journal must record the intended registry hash before the registry changes');
+assert(source.includes("mutationSafety.hash(fs.readFileSync(selected.loaded.filename)) !== selected.registryHash"), 'the originally reviewed registry hash must be revalidated before engine writes');
+assert(source.includes("projectContext.writeRegistry(selected.loaded.filename, nextRegistry, 'adopt-installed-nightly', selected.registryHash)"), 'registry save must retain the original reviewed hash rather than blessing current bytes');
+const updater = fs.readFileSync(path.join(__dirname, '..', 'src', 'updater.js'), 'utf8');
+assert(!/fs\.(?:writeFile|writeFileSync|copyFile|copyFileSync|rename|renameSync)\s*\(/.test(updater), 'weekly discovery must not write project files');
+console.log('Engine migration approvals gate notified temp work and live writes; browse/update checks stay project-read-only');

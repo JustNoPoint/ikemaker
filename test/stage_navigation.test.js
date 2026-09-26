@@ -1,0 +1,34 @@
+'use strict';
+const assert=require('assert'),vm=require('vm');
+const {findBackground,clientScript}=require('../src/stage_navigation');
+const backgrounds=[{name:'Sky',type:'normal',start:[0,0]},{name:'Floor',type:'parallax',start:[0,200],hidden:true}];
+const ref={backgroundName:'Floor',backgroundType:'parallax'};
+assert.equal(findBackground(backgrounds,ref),backgrounds[1]);assert.equal(findBackground([...backgrounds,{...backgrounds[1]}],ref),null);
+const draft=[[17,23],[29,205]],calls=[];
+const context={model:{backgrounds},selected:0,previewStarts:draft,list:()=>calls.push('list'),inspect:()=>calls.push('inspect'),render:()=>calls.push('render')};vm.createContext(context);vm.runInContext(clientScript(),context);
+assert(context.ikemenCanRestoreNavigation(ref));context.ikemenRestoreNavigation(ref);
+assert.equal(context.selected,1);assert.deepStrictEqual(context.previewStarts,[[17,23],[29,205]],'all background preview coordinates survive history selection');assert(backgrounds[1].hidden);
+assert.deepStrictEqual(calls,['list','inspect','render']);context.ikemenRestoreNavigation(ref);assert.equal(calls.length,3,'same item keeps its form untouched');
+assert.throws(()=>context.ikemenRestoreNavigation({...ref,backgroundName:'Removed'}),/missing/);
+console.log('Stage unique background history, same-selection preservation and preview coordinate retention passed');
+
+const fs=require('fs'),path=require('path');
+const source=fs.readFileSync(path.join(__dirname,'../src/stage_workspace.js'),'utf8');
+const listFunction=source.match(/function list\(\)\{[^]*?\n/)[0];
+const rows=[];
+vm.runInNewContext(listFunction+';list()', {model:{backgrounds},selected:1,escapeHtml:x=>x,services(){},issues(){},render(){},inspect(){},previewStarts:draft,document:{getElementById:()=>({appendChild:row=>rows.push(row)}),createElement:()=>{const input={};return{querySelector:()=>input};}}});
+assert.equal(rows[0].querySelector().checked,true);assert.equal(rows[1].querySelector().checked,false,'redrawing history list keeps hidden background unchecked');
+
+rows[0].onclick({target:{tagName:'DIV'}});
+assert.deepStrictEqual(draft,[[17,23],[29,205]],'manual background selection preserves every unapplied preview');
+rows[1].onclick({target:{tagName:'DIV'}});
+assert.deepStrictEqual(draft,[[17,23],[29,205]],'returning to a background preserves its preview');
+const beforeCheckbox=rows.length;
+rows[1].onclick({target:{tagName:'INPUT'}});
+assert.equal(rows.length,beforeCheckbox,'visibility checkbox does not select or redraw the background');
+const discard=source.match(/document.getElementById\('discard'\).onclick=\(\)=>\{([^]*?)\};/);
+assert(discard,'explicit discard action is present');
+vm.runInNewContext(discard[1],{previewStarts:draft,selected:1,model:{backgrounds},inspect(){},render(){}});
+assert.deepStrictEqual(Array.from(draft[1]),[0,200],'explicit discard resets only the selected background');
+assert.deepStrictEqual(draft[0],[17,23],'discard leaves another background preview intact');
+console.log('Stage manual selection, visibility click and explicit discard preview behavior passed');

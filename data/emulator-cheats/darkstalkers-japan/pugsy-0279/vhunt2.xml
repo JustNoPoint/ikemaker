@@ -1,0 +1,354 @@
+<mamecheat version="1">
+
+  <cheat desc="Infinite Time">
+    <script state="on">
+      <action>maincpu.pb@FF8109=63</action>
+    </script>
+    <script state="run">
+      <action condition="(maincpu.pb@FF8109 GT 1) AND (maincpu.pb@FF8109 LT 63)">maincpu.pb@FF8109=63</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Finish this Match Now!">
+    <script state="on">
+      <action>maincpu.pb@FF8109=00</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Background"> <comment>Turn this cheat off or alter it if you want another background</comment>
+    <parameter>
+      <item value="0x00">01 - FEAST OF THE DAMNED</item>
+      <item value="0x02">02 - CONCRETE CAVE</item>
+      <item value="0x04">03 - TOWER OF ARROGANCE</item>
+      <item value="0x06">04 - RED THIRST</item>
+      <item value="0x08">05 - DESERTED CHATEAU</item>
+      <item value="0x0A">06 - ABARAYA</item>
+      <item value="0x0C">07 - VANITY PARADISE</item>
+      <item value="0x0E">08 - WAR AGONY</item>
+      <item value="0x10">09 - FOREVER TORMENT</item>
+      <item value="0x12">10 - GREEN SCREAM</item>
+      <item value="0x14">11 - IRON HORSE, IRON TERROR</item>
+      <item value="0x16">12 - FETUS OF GOD</item>
+      <item value="0x18">13 - REVENGER'S ROOST</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8101=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="P1 Infinite Energy">
+    <script state="run">
+      <action>maincpu.pd@FF8450=02400240</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Drain All Energy Now!">
+    <script state="on">
+      <action>maincpu.pd@FF8450=00000000</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Infinite Power">
+    <script state="run">
+      <action>maincpu.pd@FF8508=00630090|(maincpu.pd@FF8508 BAND ~00FFFFFF)</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Always No Power">
+    <script state="run">
+      <action>maincpu.pd@FF8508=00000000|(maincpu.pd@FF8508 BAND ~00FFFFFF)</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Shadow Mode">
+    <script state="on">
+      <action>temp0 =maincpu.pb@FF87BC</action>
+    </script>
+    <script state="run">
+      <action>maincpu.pb@FF87BC=FF</action>
+    </script>
+    <script state="off">
+      <action>maincpu.pb@FF87BC=temp0 </action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Marionette Mode">
+    <script state="on">
+      <action>temp0 =maincpu.pb@FF87C3</action>
+    </script>
+    <script state="run">
+      <action>maincpu.pb@FF87C3=FF</action>
+    </script>
+    <script state="off">
+      <action>maincpu.pb@FF87C3=temp0 </action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Infinite Dark Force Change Time">
+    <script state="run">
+      <action>maincpu.pb@FF85C5=70</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Infinite Dark Force Power Time">
+    <script state="run">
+      <action>maincpu.pb@FF8577=70</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select Control">
+    <parameter>
+      <item value="0x00">User</item>
+      <item value="0x01">CPU</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF87B4=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select Character">
+    <parameter>
+      <item value="0x00">#Baby Bonnie Hood</item>
+      <item value="0x01">Demitri Maximov</item>
+      <item value="0x02">Jon Talbain</item>
+      <item value="0x03">Victor von Geldenheim</item>
+      <item value="0x04">Lord Raptor</item>
+      <item value="0x05">Morrigan Aensland</item>
+      <item value="0x06">Anakaris</item>
+      <item value="0x07">Felicia</item>
+      <item value="0x08">Bishamon</item>
+      <item value="0x09">Rikuo</item>
+      <item value="0x0A">Sasquatch</item>
+      <item value="0x0B">#Lord Raptor (during Dark Force)</item>
+      <item value="0x0C">#Q-Bee</item>
+      <item value="0x0D">Hsien-Ko</item>
+      <item value="0x0E">#Lilith</item>
+      <item value="0x0F">#Jedah</item>
+      <item value="0x10">Huitzil</item>
+      <item value="0x11">Pyron</item>
+      <item value="0x12">#Dark Talbain</item>
+      <item value="0x13">Donovan Baine</item>
+      <item value="0x18">#Oboro-Bishamon</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8782=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P1 Select Colour">
+    <parameter>
+      <item value="0x00">LP colour</item>
+      <item value="0x01">MP colour</item>
+      <item value="0x02">HP colour</item>
+      <item value="0x03">LK colour</item>
+      <item value="0x04">MK colour</item>
+      <item value="0x05">HK colour</item>
+      <item value="0x06">PPP colour</item>
+      <item value="0x07">KKK colour</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF87AE=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="P2 Infinite Energy">
+    <script state="run">
+      <action>maincpu.pd@FF8850=02400240</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Drain All Energy Now!">
+    <script state="on">
+      <action>maincpu.pd@FF8850=00000000</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Infinite Power">
+    <script state="run">
+      <action>maincpu.pd@FF8908=00630090|(maincpu.pd@FF8908 BAND ~00FFFFFF)</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Always No Power">
+    <script state="run">
+      <action>maincpu.pd@FF8908=00000000|(maincpu.pd@FF8908 BAND ~00FFFFFF)</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Shadow Mode">
+    <script state="on">
+      <action>temp0 =maincpu.pb@FF8BBC</action>
+    </script>
+    <script state="run">
+      <action>maincpu.pb@FF8BBC=FF</action>
+    </script>
+    <script state="off">
+      <action>maincpu.pb@FF8BBC=temp0 </action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Marionette Mode">
+    <script state="on">
+      <action>temp0 =maincpu.pb@FF8BC3</action>
+    </script>
+    <script state="run">
+      <action>maincpu.pb@FF8BC3=FF</action>
+    </script>
+    <script state="off">
+      <action>maincpu.pb@FF8BC3=temp0 </action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Infinite Dark Force Change Time">
+    <script state="run">
+      <action>maincpu.pb@FF89C5=70</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Infinite Dark Force Power Time">
+    <script state="run">
+      <action>maincpu.pb@FF8977=70</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select Control">
+    <parameter>
+      <item value="0x00">User</item>
+      <item value="0x01">CPU</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8BB4=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select Character">
+    <parameter>
+      <item value="0x00">#Baby Bonnie Hood</item>
+      <item value="0x01">Demitri Maximov</item>
+      <item value="0x02">Jon Talbain</item>
+      <item value="0x03">Victor von Geldenheim</item>
+      <item value="0x04">Lord Raptor</item>
+      <item value="0x05">Morrigan Aensland</item>
+      <item value="0x06">Anakaris</item>
+      <item value="0x07">Felicia</item>
+      <item value="0x08">Bishamon</item>
+      <item value="0x09">Rikuo</item>
+      <item value="0x0A">Sasquatch</item>
+      <item value="0x0B">#Lord Raptor (during Dark Force)</item>
+      <item value="0x0C">#Q-Bee</item>
+      <item value="0x0D">Hsien-Ko</item>
+      <item value="0x0E">#Lilith</item>
+      <item value="0x0F">#Jedah</item>
+      <item value="0x10">Huitzil</item>
+      <item value="0x11">Pyron</item>
+      <item value="0x12">#Dark Talbain</item>
+      <item value="0x13">Donovan Baine</item>
+      <item value="0x18">#Oboro-Bishamon</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8B82=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="P2 Select Colour">
+    <parameter>
+      <item value="0x00">LP colour</item>
+      <item value="0x01">MP colour</item>
+      <item value="0x02">HP colour</item>
+      <item value="0x03">LK colour</item>
+      <item value="0x04">MK colour</item>
+      <item value="0x05">HK colour</item>
+      <item value="0x06">PPP colour</item>
+      <item value="0x07">KKK colour</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8BAE=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc=" "/>
+
+  <cheat desc="No Background Music">
+    <script state="run">
+      <action>audiocpu.pw@F026=0000</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Hide Background">
+    <script state="on">
+      <action>
+        temp0=maincpu.pb@FF8033, temp1=maincpu.ow@007BF0, temp2=maincpu.od@007BF2
+      </action>
+    </script>
+    <script state="run">
+      <action>
+        maincpu.pb@FF8033=temp0, maincpu.ow@007BF0=temp1, maincpu.od@007BF2=temp2
+      </action>
+      <action condition="(maincpu.pw@FF8109 != 0 and maincpu.pd@FF810C == 0)"> <!-- activate only during match -->
+        maincpu.pb@FF8033=0, <!-- BG layers -->
+        maincpu.pw@FFF000=0, <!-- super bars -->
+        maincpu.pw@FFF200=0, <!-- life bars -->
+        maincpu.pw@FF356C=0, <!-- flashing text -->
+        maincpu.ow@007BF0=4E71, maincpu.od@007BF2=4E714E71 <!-- BG sprites -->
+      </action>
+    </script>
+    <script state="off">
+      <action>
+        maincpu.pb@FF8033=temp0, maincpu.ow@007BF0=temp1, maincpu.od@007BF2=temp2
+      </action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Region">
+    <parameter>
+      <item value="0x00">Japan</item>
+      <item value="0x02">USA</item>
+      <item value="0x04">Hispanic</item>
+      <item value="0x06">Oceania</item>
+      <item value="0x08">Asia</item>
+      <item value="0x0A">Euro</item>
+      <item value="0x0C">Brazil</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8091=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Select Title Screen">
+    <parameter>
+      <item value="0x00">Vampire Hunter 2</item>
+      <item value="0x02">Night Warriors 2</item>
+    </parameter>
+    <script state="run">
+      <action>maincpu.pb@FF8091=param</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Sound Test Timer Stop">
+    <script state="run">
+      <action>maincpu.pb@FF800B=FF</action>
+    </script>
+  </cheat>
+
+  <cheat desc="Sound Test">
+    <parameter min="1" max="2047" step="1"/>
+    <script state="change">
+      <action>audiocpu.pw@F015=0000</action>
+      <action>audiocpu.pq@F100=0000FF00000000FF</action>
+      <action>audiocpu.pq@F108=00FFFF0000000000</action>
+      <action>audiocpu.pq@F110=1000FF0000FF0000</action>
+      <action>audiocpu.pq@F118=00FFFF0000000000</action>
+      <action condition="(param LT 100)">audiocpu.pb@F111=param</action>
+      <action>temp0=param/100</action>
+      <action condition="(param GE 100)">audiocpu.pb@F110=temp0</action>
+      <action condition="(param GE 100)">audiocpu.pb@F111=param-(temp0*100)</action>
+      <action>audiocpu.pb@F015=20</action>
+    </script>
+  </cheat>
+
+</mamecheat>
+<!-- Cheat file downloaded from https://www.mamecheat.co.uk, see cheat.txt for list of contributors. -->

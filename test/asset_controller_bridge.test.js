@@ -1,0 +1,11 @@
+'use strict';
+const assert = require('assert');
+const bridge = require('../src/asset_controller_bridge');
+assert(bridge.spriteSnippet('remapsprite', { sprite: [200, 0], destination: [200, 1] }).includes('source: 200, 0;'));
+assert(bridge.spriteSnippet('remappal', { sourcePalette: [1, 1], destPalette: [1, 2] }).includes('dest: 1, 2;'));
+assert(bridge.spriteSnippet('remapspritepreset', { preset: 'SSB' }).includes('preset: "SSB";'));
+assert(bridge.spriteSnippet('remapspritepreset').includes('preset: "Form1";'));
+assert(bridge.soundSnippet('playsnd', { sound: [200, 0], prefix: 'EN', channel: 2, freqmul: .85 }).includes('value: EN200, 0;'));
+assert(bridge.soundSnippet('modifysnd', { channel: 2, freqmul: 1.25 }).includes('freqmul: 1.25;'));
+assert(bridge.soundSnippet('modifybgm', { volume: 80 }).includes('modifyBgm'));
+console.log('Asset controller bridge tests passed');
