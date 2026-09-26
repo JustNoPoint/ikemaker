@@ -23,6 +23,7 @@ const {
 } = require('./requirements');
 const { readSff, paletteRgba, paletteAct, actRgba, spritePng } = require('./sff_reader');
 const { pngPaletteRgba } = require('./palette_library');
+const { readAct, colorsForOrder } = require('./act_palette_order');
 const { verifyPalettePlan, paletteId, applyPaletteShifts } = require('./palette_plan');
 const { detectCapabilities, missingCapabilityMessage } = require('./platform_capabilities');
 const { hash, transactionalWrite, optionsFromConfig } = require('./mutation_safety');
@@ -400,7 +401,7 @@ function resolveStagedPalettes(plan, paletteArchive) {
   for (const palette of paletteArchive.palettes) { const shifted = applyPaletteShifts(palette.group, palette.number, plan.shifts); colors.set(paletteId(shifted.group, shifted.number), paletteRgba(paletteArchive, palette.index)); }
   for (const entry of plan.palettes.filter((item) => item.kind !== 'alias')) {
     const data = fs.readFileSync(entry.source);
-    colors.set(paletteId(entry.group, entry.number), /\.png$/i.test(entry.source) ? pngPaletteRgba(data) : actRgba(data));
+    colors.set(paletteId(entry.group, entry.number), /\.png$/i.test(entry.source) ? colorsForOrder(pngPaletteRgba(data), entry.tableOrder) : readAct(data, entry.tableOrder));
   }
   const resolve = (entry, seen = new Set()) => {
     const id = paletteId(entry.group, entry.number);
@@ -549,7 +550,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
   return { definitionPath, batchPath, sprmake, mapping, profile };
 }
 
-async function generateBuildFiles() {
+async function generateBuildFiles(request = {}) {
   const manifestPath = await pickFile('Choose an approved SFF manifest', { 'CSV manifest': ['csv'] });
   if (!manifestPath) return;
   const selectedProfile = await chooseProjectBuildProfile(manifestPath);
@@ -558,12 +559,13 @@ async function generateBuildFiles() {
   if (!sourceRoot) return;
   const outputDirectory = await pickFolder('Choose a folder for the SprMaker2 build package');
   if (!outputDirectory) return;
-  const paletteMode = await vscode.window.showQuickPick([
+  const forcedPaletteSource = request && typeof request === 'object' && request.paletteSourceSff ? path.resolve(request.paletteSourceSff) : '';
+  const paletteMode = forcedPaletteSource ? { preserve: true } : await vscode.window.showQuickPick([
     { label: 'Preserve palettes from an existing SFF', description: 'Recommended when rebuilding an established character; also retains protected 59000 templates.', preserve: true },
     { label: 'Use the source PNG palettes', description: 'Original behavior for a brand-new SFF with no established palette table.', preserve: false }
   ], { title: 'How should the SFF palette table be built?' });
   if (!paletteMode) return;
-  const paletteSourceSff = paletteMode.preserve ? await pickFile('Choose the SFF whose palette table and assignments should be preserved', { 'SFF archive': ['sff'] }) : undefined;
+  const paletteSourceSff = forcedPaletteSource || (paletteMode.preserve ? await pickFile('Choose the SFF whose palette table and assignments should be preserved', { 'SFF archive': ['sff'] }) : undefined);
   if (paletteMode.preserve && !paletteSourceSff) return;
   const defaultName = vscode.workspace.getConfiguration('ikemenZss').get('sffDefaultFilename', 'Character.sff');
   const outputUri = await vscode.window.showSaveDialog({ title: 'Choose the SFF output filename', defaultUri: vscode.Uri.file(path.join(outputDirectory, defaultName)), filters: { 'SFF archive': ['sff'] } });
@@ -579,10 +581,10 @@ async function generateBuildFiles() {
   }
 }
 
-async function buildApprovedManifest() {
+async function buildApprovedManifest(request = {}) {
   const capabilities = detectCapabilities({ uiKind: vscode.env.uiKind === vscode.UIKind.Web ? 'web' : 'desktop', platform: process.platform, environment: process.env });
   if (!capabilities.nativeBuilders) return vscode.window.showInformationMessage(missingCapabilityMessage('SprMaker2 build execution', capabilities));
-  const generated = await generateBuildFiles();
+  const generated = await generateBuildFiles(request);
   if (!generated) return;
   if (!fs.existsSync(generated.sprmake)) return vscode.window.showErrorMessage(`SprMaker2 was not found: ${generated.sprmake}`);
   const choice = await vscode.window.showWarningMessage('Run SprMaker2 now?', { modal: true, detail: 'The approved manifest has passed validation. Source images will not be modified.' }, 'Build SFF');

@@ -9,7 +9,7 @@ const { readPalettePlan, stagePalette, stagePaletteAlias, stagePaletteInsertion,
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemen-palette-plan-')), chars = path.join(root, 'chars', 'Test'); fs.mkdirSync(chars, { recursive: true }); fs.writeFileSync(path.join(root, 'Ikemen_GO.exe'), '');
 const sff = path.join(chars, 'Test.sff'), palette = path.join(root, 'new.act'); fs.writeFileSync(sff, 'sff'); fs.writeFileSync(palette, Buffer.alloc(768, 4));
 assert.strictEqual(readPalettePlan(sff).palettes.length, 0);
-const staged = stagePalette(sff, palette, 1, 3, ['1,0', '1,1']); assert.strictEqual(staged.plan.palettes[0].number, 3);
+const staged = stagePalette(sff, palette, 1, 3, ['1,0', '1,1'], { tableOrder: 'reversed' }); assert.strictEqual(staged.plan.palettes[0].number, 3); assert.strictEqual(staged.plan.palettes[0].tableOrder, 'reversed');
 assert.throws(() => stagePalette(sff, palette, 1, 3), /already/);
 const alias = stagePaletteAlias(sff, 2, 3, 1, 3, ['1,0', '1,1']);
 assert.strictEqual(alias.plan.palettes[1].kind, 'alias');

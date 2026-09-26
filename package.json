@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.78.4",
+  "version": "0.78.5",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -112,6 +112,9 @@
     "onCommand:ikemen.positionCamera.open",
     "onCommand:ikemen.helperLab.open",
     "onCommand:ikemen.paletteImport.open",
+    "onCommand:ikemen.palettePlayer.open",
+    "onCommand:ikemen.palettePlayer.organize",
+    "onCommand:ikemen.palettePlayer.finishStaged",
     "onCommand:ikemen.productionWorkflow.open",
     "onCommand:ikemen.productionWorkflow.editProfile",
     "onCommand:ikemen.productionWorkflow.openGuide",
@@ -509,6 +512,21 @@
         "command": "ikemen.paletteImport.open",
         "title": "IKEMEN: Open Sprite & Palette Import Assistant",
         "icon": "$(symbol-color)"
+      },
+      {
+        "command": "ikemen.palettePlayer.open",
+        "title": "IKEMaker: Open Player Palette Workshop",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "ikemen.palettePlayer.organize",
+        "title": "IKEMaker: Create, Edit, or Export a Palette",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "ikemen.palettePlayer.finishStaged",
+        "title": "IKEMaker: Finish Staged Palette Update",
+        "icon": "$(run-all)"
       },
       {
         "command": "ikemen.artistIntake.open",
@@ -1883,6 +1901,15 @@
           "when": "ikemen.interfaceMode != player"
         },
         {
+          "command": "ikemen.palettePlayer.open"
+        },
+        {
+          "command": "ikemen.palettePlayer.organize"
+        },
+        {
+          "command": "ikemen.palettePlayer.finishStaged"
+        },
+        {
           "command": "ikemen.paletteOrganizer.open",
           "when": "ikemen.interfaceMode == workspace"
         },
@@ -2905,7 +2932,7 @@
             "workspace"
           ],
           "enumDescriptions": [
-            "Player tools only: roster, stages, stories and play.",
+            "Player tools only: roster, stages, stories, play, and focused character palette customization.",
             "Player tools plus simplified creation and editing.",
             "All features, advanced authoring and multiple viewers."
           ],

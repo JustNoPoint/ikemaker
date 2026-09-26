@@ -1,7 +1,7 @@
 'use strict';
 const KEY='ikemaker.modeChoice.v1';
 const MODES=[
- {label:'Player',value:'player',description:'Play and organize',detail:'Roster, characters, stages, stories and player options. The smallest interface, without creation tools.'},
+ {label:'Player',value:'player',description:'Play, organize, and customize palettes',detail:'Roster, characters, stages, stories, player options, and focused palette customization. The smallest interface, without code or general asset-authoring tools.'},
  {label:'Simple',value:'simple',description:'Play, organize and create',detail:'Everything in Player, plus simplified creation and editing. Essential controls and one asset viewer at a time.'},
  {label:'Workspace',value:'workspace',description:'The complete toolset',detail:'Everything in Simple, plus advanced authoring, multiple viewers and split layouts.'}
 ];
@@ -43,7 +43,8 @@ async function onboard(existingKeys){
  return choose(true);
 }
 const HOME_ACTIONS=[
- ['ikemen.selectDef.openWorkspace','Characters & Stages','Arrange your roster and stage choices.'],
+  ['ikemen.selectDef.openWorkspace','Characters & Stages','Arrange your roster and stage choices.'],
+  ['ikemen.palettePlayer.open','Palette Workshop','Preview, create, edit, import, export, add, or replace character palettes without opening code tools.'],
  ['ikemen.storyDialogue.openPlayer','Stories','View player story routes.'],
  ['ikemen.launchGame','Play','Launch your game.'],
  ['ikemen.character.open','Open Character','Open a character to work on.'],

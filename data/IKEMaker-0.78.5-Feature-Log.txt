@@ -1,0 +1,21 @@
+IKEMaker 0.78.5 source update
+Date: 2026-09-26
+
+Player Palette Workshop
+- Player mode now visibly includes focused character palette customization.
+- Preview, Add, and Replace reuse the existing character chooser and Safe Palette Placement review/apply flow for ACT and indexed PNG files.
+- Create, Edit, and Export open the palette-only index organizer through a Player-scoped alias.
+- Existing character palette folders remain directly browseable.
+- Adding a new embedded palette preserves the selected ACT/PNG table order in the staged build plan, then offers the reviewed SprMaker2 build path without opening the general SFF workspace.
+
+Mode boundary
+- The full SFF viewer, general Sprite & Palette Import Assistant, character creation, code tools, and other sprite-authoring workspaces remain outside Player mode.
+- Simple and Workspace modes retain their existing broader capabilities.
+- Player-mode labels explain the palette scope without implying general character authoring.
+
+Safety and verification
+- The workshop wrapper performs no project or source-file writes of its own.
+- Palette changes continue to use the established preview and explicit reviewed confirmation.
+- A cancelled preview does not stage anything; a cancelled final-build confirmation leaves the reviewed staged plan pending without running SprMaker2.
+- Focused tests cover Player capability gates, Home and Tools discoverability, broader-authoring exclusion, command routing, and cancel behavior.
+- No package, installation, tag, or binary release is included in this source checkpoint.

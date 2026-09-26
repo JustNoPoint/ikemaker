@@ -56,7 +56,8 @@ function stagePalette(sffPath, source, group, number, occupiedIds = [], metadata
   const parent = metadata.variantOf && validCoordinate(metadata.variantOf.group) && validCoordinate(metadata.variantOf.number)
     ? { variantOf: { group: Number(metadata.variantOf.group), number: Number(metadata.variantOf.number) } }
     : {};
-  plan.palettes.push({ kind: 'source', group: g, number: n, source: file, sourceSHA256: sha256File(file), name: path.basename(file), ...parent, stagedAt: new Date().toISOString() });
+  const tableOrder = metadata.tableOrder === 'reversed' ? 'reversed' : 'index';
+  plan.palettes.push({ kind: 'source', group: g, number: n, source: file, sourceSHA256: sha256File(file), name: path.basename(file), tableOrder, ...parent, stagedAt: new Date().toISOString() });
   plan.palettes.sort((a, b) => a.group - b.group || a.number - b.number); const filename = writePalettePlan(sffPath, plan);
   return { filename, plan };
 }

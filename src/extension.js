@@ -54,6 +54,7 @@ const { registerThrowCreator } = require('./throw_creator_workspace');
 const { registerSpatialComposer } = require('./spatial_composer_workspace');
 const { registerHelperLab } = require('./helper_workspace');
 const { registerPaletteImportWorkspace } = require('./palette_import_workspace');
+const { registerPlayerPaletteWorkspace } = require('./player_palette_workspace');
 const { registerArtistIntake } = require('./artist_intake_workspace');
 const { registerSffAssembly } = require('./sff_assembly_workspace');
 const { registerProductionWorkflow } = require('./production_workflow_workspace');
@@ -1205,6 +1206,7 @@ function activate(context) {
   registerSpatialComposer(context);
   registerHelperLab(context);
   registerPaletteImportWorkspace(context);
+  registerPlayerPaletteWorkspace(context);
   registerArtistIntake(context);
   registerSffAssembly(context);
   registerProductionWorkflow(context);

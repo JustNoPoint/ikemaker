@@ -82,6 +82,7 @@ function buildAllHubItems() {
       ]),
       new HubItem('Player Setup', [
         new HubItem('Roster, Stages, and Arcade Order…', null, 'ikemen.selectDef.openWorkspace'),
+        new HubItem('Palette Workshop…', null, 'ikemen.palettePlayer.open', 'preview, create, edit, import, export, add, or replace palettes'),
         new HubItem('Menu and Mode Options…', null, 'ikemen.menuModes.openPlayer'),
         new HubItem('Story and Dialogue…', null, 'ikemen.storyDialogue.openPlayer'),
         new HubItem('Character Select Preview…', null, 'ikemen.selectDef.openLayoutBuilder')
