@@ -13,7 +13,7 @@ Compiled packages stay on the [IKEMaker Releases page](https://github.com/JustNo
 - **With-LuaLS ZIP variants:** the same Offline and Online packages with the reviewed Lua Language Server VSIX available behind an explicit `[y/N]` choice. Pressing Enter skips that companion and leaves any existing Lua installation unchanged.
 - **VSIX:** the raw IKEMaker extension for manual installation or the verified updater. It neither contains nor automatically requests LuaLS.
 
-Upgrading IKEMaker does not remove or disable a Lua extension already installed, and 0.78.1 does not repair LuaLS environment diagnostics. Users decide whether to keep or disable that separate extension. No package includes IKEMEN GO, MUGEN, characters, stages, game content, private workspace files, or credentials.
+Upgrading IKEMaker does not remove or disable a Lua extension already installed, and IKEMaker does not repair LuaLS environment diagnostics. Users decide whether to keep or disable that separate extension. No package includes IKEMEN GO, MUGEN, characters, stages, game content, private workspace files, or credentials.
 
 ## Source history
 
