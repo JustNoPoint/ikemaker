@@ -17,7 +17,9 @@ Upgrading IKEMaker does not remove or disable a Lua extension already installed,
 
 ## Source history
 
-The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Version 0.78.1 is a separate normal source commit; future release tags should identify their actual source commits.
+The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Versions 0.78.1 and 0.78.2 are separate normal source commits; future release tags should identify their actual source commits.
+
+Version 0.78.2 corrects the JNP Move Constants P2 preview transform by storing its axis in authored/world coordinates instead of absolute screen pixels. Zoom and resize now share the P1 camera origin, preserve P2's authored coordinates, and scale the visible P1–P2 relationship consistently; prior saved screen positions migrate without an initial jump. Shared classic HitDef values now use decimal-safe quick inputs and reviewed checkmark Apply actions while retaining Source navigation, stale-source rejection, shared-impact confirmation, normal Undo, and unsaved-document review.
 
 Version 0.78.1 makes Lua Language Server a genuinely optional companion and moves opponent-availability advice into an identified-author rule that is off by default. IKEMaker's VSIX never declares another extension for automatic installation. Standard Windows packages omit LuaLS entirely; clearly labeled `With-LuaLS` variants carry its official VSIX for users who choose it.
 

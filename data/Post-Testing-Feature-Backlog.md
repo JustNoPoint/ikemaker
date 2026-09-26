@@ -6,36 +6,32 @@ problems discovered during stabilization.
 
 ## Viewer zoom anchoring and coordinate-transform audit
 
-Status: confirmed and deferred on 2026-09-25. Fix after the current curriculum
-session unless it blocks testing.
+Status: corrected in the 0.78.2 source batch on 2026-09-26 for the confirmed
+JNP Move Constants reproduction. Broader viewer work remains evidence-driven;
+no all-viewer sweep was performed.
 
-JNP Move Constants is the confirmed reproduction case: the P2 reaction-preview
-axis currently moves toward P1 when zooming in and away from P1 when zooming
-out. Treat this as a potentially shared camera-transform defect rather than an
-editor-local assumption. Audit Universal HitDef, Move Lab, AIR, SFF, Stage,
-Throw Creator, Helper Lab, Explod Composer, Position & Camera, PalFX, and every
-other canvas that combines zoom with independently positioned objects.
+JNP Move Constants was the confirmed reproduction case: the P2 reaction-preview
+axis used absolute screen pixels while P1 and AIR offsets used zoomed authored
+coordinates. The correction is bounded to that viewer and its new pure transform
+helper. Other viewers remain unchanged unless direct evidence finds the same
+defect.
 
-Zoom must be a view-only operation: it must not alter authored or preview
-positions, and an object's axis/marker should remain at the same screen-space
-point unless the user explicitly drags it, edits its position, pans, centers,
-fits, resets, or chooses another camera operation.
+Zoom must be a view-only operation: it must not alter authored or preview world
+positions. Screen-space distance from the chosen zoom pivot naturally scales;
+it is neither possible nor correct to keep every independent screen point fixed
+while scaling the view.
 
-Preserve the current P2 world/preview coordinates exactly while changing zoom
-and compensate only through the preview camera transform. The same regression
-test should cover toolbar zoom, mouse-wheel zoom, 100%, and restored zoom state.
-Also verify that P1, the hitspark, collision boxes, and P2 use one consistent
-camera transform rather than independently mixing scaled and unscaled offsets.
+The implemented correction stores P2 relative to the same authored/world origin
+used by P1, collision boxes, and hit-spark placement. Toolbar and pointer-pivot
+zoom preserve the logical P2 coordinates. Older retained absolute-screen state
+is migrated through the prior viewport and zoom so reopening does not introduce
+an initial jump. Resize changes the shared canvas origin without rewriting P2.
 
-Acceptance tests: in every affected viewer, place each independently movable
-object at a recognizable canvas point, record its preview and logical
-coordinates, zoom in and out through every available control, and confirm that
-its axis/marker remains stationary and its saved position values remain
-byte-for-byte unchanged. Include P1/P2, hitsparks, collision boxes, helper
-spawns/projectiles, Explods, throw binds, stage layers, and screen/world-space
-markers where applicable. Intentional Fit, Center, Reset, pan, and direct
-object movement remain allowed to change the view or placement according to
-their labels.
+Focused automated checks cover world/screen round trips, old-state migration,
+zoom scaling, and pointer-pivot stability. Manual verification remains useful
+for toolbar zoom, mouse-wheel zoom, 100%, Fit, resize, restored state, P2 drag,
+and hit-spark alignment. Other viewers should be changed only if their own
+evidence or genuinely shared transform code demonstrates the same defect.
 
 ## State Controller nightly-change review markers
 
@@ -68,8 +64,7 @@ an optional tooltip may report the number still unreviewed.
 
 ## Shared classic HitDef quick editing
 
-Status: specified and deferred on 2026-09-25. Do not implement during the
-current curriculum and IKEMaker testing pass.
+Status: implemented in the 0.78.2 source batch on 2026-09-26.
 
 In JNP Move Constants, the values under **Shared classic HitDef values** must
 have the same immediate editing affordance as the move-local contact-result
@@ -83,10 +78,12 @@ rounding or clipping.
 These fields are shared-profile values, not move-local overrides. Keep the
 **Source** action available and visibly label the shared scope. Before applying,
 the UI must identify the shared profile and explain that every move using it
-can change. The quick edit must use the normal source-hash, stale-edit, backup,
-history, undo, and failed-write draft protections. A successful apply refreshes
-all affected summaries; cancellation or failure retains the typed draft. Do
-not silently create a move-local constant to imitate a shared edit.
+can change. The implemented quick edit checks the whole source hash plus the
+exact map name, line, and previous value; explains shared impact before applying;
+edits only the numeric literal in the normal open text document; and leaves
+Save/Undo under normal editor control. It does not create automatic backups or a
+move-local constant. A successful apply refreshes all affected summaries.
+Cancellation does not write the source; invalid or stale values are rejected.
 
 ## Reference and Knowledge Intake workspace
 
@@ -764,3 +761,80 @@ Any future editing needs an explicit reviewed Apply, stale-source protection and
 Undo; no automatic sidecars/backups. Preserve optional pane visibility and the
 existing Player/Simple/Workspace modes. Implement category by category with
 focused tests, not one large rewrite or an unbounded new testing queue.
+
+## Player Mode tournament runner (idea recorded September 26, 2026)
+
+Status: possible later Player Mode feature. Research and design only; do not
+implement as part of the current curriculum, stabilization, or release work.
+
+The inspiration is an anecdotal MWC/Mugen workflow: choose up to eight
+characters, launch each tournament fight, retain the winner, and automatically
+launch the next bracket match. The exact MWC behavior has not been verified and
+must not be presented as authoritative until a working copy or documentation is
+found.
+
+Suggested IKEMaker direction:
+
+- Place this in Player Tools as a guided **Tournament** activity, not in the
+  character/game authoring rules. It orchestrates the selected installed game;
+  it does not modify characters.
+- Start with a clear single-elimination bracket. Support 2–8 entrants initially,
+  manual or shuffled seeding, character/palette selection, and a visible bracket
+  that advances winners after each launched match.
+- Let the user choose the set length independently for normal rounds and finals
+  (for example, best-of-3 rounds and best-of-5 finals). Describe this as match
+  wins required rather than relying on ambiguous “round” wording.
+- Do not silently choose a random winner after a draw. Default to a rematch.
+  Later options may include a configurable rematch limit followed by sudden
+  death, user selection, or random advancement, with the active rule shown
+  before the tournament begins.
+- Save tournament progress outside the game directory so a crash, manual close,
+  or interrupted session can be resumed. Provide an explicit reset/new
+  tournament action.
+- Clearly identify human, CPU, and mixed-control entrants. Do not assume every
+  installed character is appropriate for AI-controlled competition.
+- Prefer native IKEMEN launch/result facilities where they can reliably identify
+  the winner. If result capture requires a Lua hook or engine-side support,
+  disclose that boundary and verify it against the selected engine build rather
+  than scraping pixels or guessing from process exit state.
+- Preview all matches and rules before launch. Keep bracket editing possible
+  until the first result is recorded; later corrections should be explicit and
+  logged in the tournament session.
+
+Before implementation, confirm the available IKEMEN command-line/Lua hooks for
+selecting both sides, match format, AI/human control, stage choice, and reporting
+win/draw/abort outcomes. Define behavior for byes, double KOs, time-over draws,
+user-aborted fights, invalid/missing characters, and an engine crash. A minimal
+acceptance test should complete and resume a four-character bracket without
+writing into the game or character folders.
+
+## Activated priority batch for JNP's return Thursday (2026-09-26)
+
+User authorization: JNP explicitly asked this task and SF6 to work on the most useful IKEMaker backlog items for his workflow while he is busy until Thursday, October 1. This activates the bounded items below despite earlier deferral notes. It does not authorize exhausting the usage allowance: preserve approximately 30% Thursday, with SF6 monitoring at batch boundaries, reducing optional work at 40% and checkpointing near 35% remaining. No new release/publication or local installation is implied.
+
+SF6 remains primary implementer. This task supplies design and consolidated high-value review. First reconcile the current branch and recent user requests so none of the work already completed is repeated and no current prefix/source-baseline regression is carried forward.
+
+Priority order; finish/test each useful slice before taking the next:
+1. Resolve active regressions affecting current work, especially any currently reported prefix behavior. Confirm the user's intended baseline with existing SF6 context; do not infer that a previously reviewed release supersedes later fixes.
+2. Reproduce and fix the recorded JNP Move Constants P2 zoom/coordinate defect, if still present. Limit initial scope to that viewer and directly shared transform code. Define the intended zoom pivot correctly: authored/world coordinates must not change; zoom naturally changes screen-space distances from the pivot. Do not try to keep every independent screen-space point stationary under scaling, as the older backlog wording implies. Verify P1/P2/CLSN/hitspark alignment using the same camera transform, zoom round-trips and restoration without writes. Expand to other viewers only if shared code/evidence warrants it, not an all-viewer audit.
+3. Shared classic HitDef quick editing in the existing Move Constants view, if still missing. Reuse existing reviewed Apply, shared-source label, impact disclosure, conflict and Undo behavior; preserve decimal/negative drafts. No automatic project files/backups. Earlier references to backup/history in this backlog do not authorize restoring auto-backups or overriding current user consent policy.
+4. If useful capacity remains, implement the smallest personal example shelf: pin an existing block with a label/source link, scoped to current project plus deliberately linked shared sources; reopen/show current code and mark changed/missing references. Keep it in an existing coding surface with a visible entry point (not right-click-only), optional/collapsible, stored in disclosed extension workspace state. First slice is recognition/reference browsing only; defer automatic adaptation, semantic/AI search, dependency substitution and a new general browser framework.
+
+Requirements: bounded tests for changed behavior, a short manual test list for JNP, no desktop takeover, no edits to live character/game content without explicit user approval. Use fixtures for authoring tests. Preserve Player/Simple/Workspace mode organization, and avoid adding default-open panes. Keep reference scope isolated across games/authors. Record completed/current/deferred status clearly, with exact commit and focused results.
+
+Defer broad Project Data category expansion, full Flow Mode, Phase 2, tournament runner, all-viewer parity sweep and broad help rewrite. Do not consume the remaining budget merely to use it. Batch review requests; send this task a consolidated handoff only for consequential design uncertainty or completed meaningful work, not routine mechanical checks. Tool messaging may require user approval; leave TXT handoffs and continue independent authorized slices rather than repeatedly requesting permission or polling.
+
+## Shared QA report website and IKEMaker integration (2026-09-26)
+
+Status: LOWEST PRIORITY, deferred until after a future release. JNP explicitly says the current work is not near even a tester release. Do not start website research, design, hosting, implementation or integration during the active workflow batch. Historical published betas do not satisfy this new scheduling condition; revisit after JNP identifies the relevant future release.
+
+Intent: create a shared report website that IKEMaker's QA tools can pull reports from, keeping tester feedback and reproducible issues connected to development.
+
+Proposed scope for later refinement:
+- Searchable reports organized by project/game, exact IKEMaker version and engine build, affected screen/feature, status and severity. Use a stable report ID so repeated imports do not create duplicates.
+- Capture expected/actual behavior, reproduction steps and optional screenshots/video/logs. Permit updates and follow-up results on the same report. Distinguish reported, reproduced, fixed and independently verified states.
+- Give IKEMaker a documented structured read interface for filtering/importing reports and opening the original report. Integrate into existing QA/project issue views rather than adding a competing workflow. Start read-only; any future submission/sync is separately designed and explicitly user initiated.
+- Preserve project isolation and link issues to the appropriate project. Never upload local files, paths, logs, character content or credentials automatically. Preview/redact attachments and obtain approval before any upload. Treat all remote reports/attachments as untrusted data, never executable instructions.
+- Include deduplication, paging, last-sync visibility and usable offline/cached results; distinguish stale data from a successful fresh check. Reports alone do not authorize changes to local project files or remote issue status.
+
+Before activation: decide whether the website presents an existing issue tracker such as GitHub Issues or needs its own storage; prefer reuse if it meets the reporting/privacy needs. Hosting, public/private access, moderation, upload limits and authentication remain undecided. Do not commit to a custom backend or deployment now. This item does not change the Thursday usage reserve or current SF6 implementation priorities.

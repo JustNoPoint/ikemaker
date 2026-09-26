@@ -1,0 +1,30 @@
+IKEMaker 0.78.2
+
+Move Constants P2 transform
+---------------------------
+- Stores the reaction-preview P2 axis as authored/world coordinates relative
+  to the same preview origin used by P1.
+- Zoom scales the visible P1–P2 relationship without changing either authored
+  coordinate. Pointer-pivot zoom keeps the world point under the pointer fixed.
+- Canvas resize and pan use the shared origin rather than rewriting P2.
+- Migrates retained absolute-screen P2 state through its saved viewport/zoom so
+  the first reopen does not jump.
+
+Shared classic HitDef quick editing
+-----------------------------------
+- Replaces read-only shared values with decimal-safe numeric inputs, a reviewed
+  checkmark Apply action, and the retained Source action.
+- Confirms that the selected shared profile can affect every inheriting move.
+- Rejects incomplete numbers, changed source hashes, changed map names/lines,
+  and changed previous values.
+- Changes only the reviewed numeric literal in the normal open document. The
+  user retains ordinary source review, Undo, and Save; no backup or project file
+  is created automatically.
+
+Verification
+------------
+- Focused tests cover coordinate round trips, zoom-pivot behavior, legacy-state
+  migration, negative/decimal shared values, stale assignment rejection, and
+  the generated Move Constants workspace controls.
+- No extension installation, game/character write, package, or publication was
+  performed for this source batch.
