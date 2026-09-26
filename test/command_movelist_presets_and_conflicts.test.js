@@ -5,17 +5,18 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
  const def=path.join(root,'fighter.def'),cmd=path.join(root,'fighter.cmd'),moves=path.join(root,'moves.dat');
  const originalCommand='[Command]\nname="x"\ncommand=x\ntime=15\n';
  fs.writeFileSync(def,'[Files]\ncmd=fighter.cmd\nmovelist=moves.dat\n');fs.writeFileSync(cmd,originalCommand);fs.writeFileSync(moves,'Original move\n');
- const commands=new Map(),storage=new Map(),messages=[],errors=[];let panel,warningMode='none';
+ fs.mkdirSync(path.join(root,'save'));fs.mkdirSync(path.join(root,'data'));fs.writeFileSync(path.join(root,'save','config.ini'),'[Config]\nMotif = data/system.def\n');fs.writeFileSync(path.join(root,'data','system.def'),'[Files]\nglyphs = glyphs.sff\n[Glyphs]\n_D = 1,0\n');fs.writeFileSync(path.join(root,'data','glyphs.sff'),'invalid fixture');
+ const commands=new Map(),storage=new Map(),messages=[],errors=[];let panel,warningMode='none',lastWarningOptions={};
  const uri=filename=>({fsPath:filename,toString:()=>filename});
  const document=filename=>({fileName:filename,uri:uri(filename),isDirty:false,getText:()=>fs.readFileSync(filename,'utf8'),positionAt:()=>({line:0,character:0}),save:async()=>true});
  const vscode={
   Uri:{file:uri},Range:class{},ViewColumn:{Active:1,Beside:2},WorkspaceEdit:class{replace(){}},env:{clipboard:{writeText:async()=>{}}},
   workspace:{textDocuments:[],getWorkspaceFolder:()=>({uri:uri(root)}),getConfiguration:()=>({get:(name,fallback)=>fallback}),openTextDocument:async target=>document(target.fsPath||target),applyEdit:async()=>true,onDidChangeTextDocument:()=>({dispose(){}})},
-  window:{registerWebviewPanelSerializer:()=>({dispose(){}}),createWebviewPanel:()=>{const listeners=[];panel={viewColumn:2,reveal(){},onDidChangeViewState:()=>({dispose(){}}),onDidDispose:()=>{},webview:{onDidReceiveMessage(fn){listeners.push(fn);panel.receive=m=>Promise.all(listeners.map(x=>x(m)));return{dispose(){}}},postMessage(m){messages.push(m);return true;}}};return panel;},showInputBox:async()=> 'My authored command',showWarningMessage:async(message,options,choice)=>{if(warningMode==='command-race'&&choice==='Replace Command'){fs.writeFileSync(cmd,originalCommand+'; external change\n');return choice}if(warningMode==='movelist-race'&&choice==='Apply Movelist'){fs.writeFileSync(moves,'External move\n');return choice}return choice;},showInformationMessage:()=>{},showErrorMessage:message=>errors.push(message)},
+  window:{registerWebviewPanelSerializer:()=>({dispose(){}}),createWebviewPanel:()=>{const listeners=[];panel={viewColumn:2,reveal(){},onDidChangeViewState:()=>({dispose(){}}),onDidDispose:()=>{},webview:{onDidReceiveMessage(fn){listeners.push(fn);panel.receive=m=>Promise.all(listeners.map(x=>x(m)));return{dispose(){}}},postMessage(m){messages.push(m);return true;}}};return panel;},showInputBox:async()=> 'My authored command',showWarningMessage:async(message,options,choice)=>{lastWarningOptions=options||{};if(warningMode==='command-race'&&choice==='Replace Command'){fs.writeFileSync(cmd,originalCommand+'; external change\n');return choice}if(warningMode==='movelist-race'&&choice==='Apply Movelist'){fs.writeFileSync(moves,'External move\n');return choice}return choice;},showInformationMessage:()=>{},showErrorMessage:message=>errors.push(message)},
   commands:{registerCommand:(name,fn)=>{commands.set(name,fn);return{dispose(){}};},executeCommand:(name,...args)=>commands.get(name)(...args)}
  };
  const originalLoad=Module._load;
- Module._load=function(name,parent,main){if(name==='vscode')return vscode;if(name==='./character_context')return{owningCharacterDefs:()=>[]};if(name==='./viewer_group')return{preferredViewerColumn:()=>2,trackViewerPanel:p=>p};if(name==='./viewer_toolbar')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};if(name==='./viewer_layout')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};return originalLoad.call(this,name,parent,main)};
+ Module._load=function(name,parent,main){if(name==='vscode')return vscode;if(name==='./character_context')return{owningCharacterDefs:()=>[],gameRoot:()=>root};if(name==='./viewer_group')return{preferredViewerColumn:()=>2,trackViewerPanel:p=>p};if(name==='./viewer_toolbar')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};if(name==='./viewer_layout')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};return originalLoad.call(this,name,parent,main)};
  try{
   const api=require('../src/command_movelist_workspace'),context={subscriptions:[],workspaceState:{get:key=>storage.get(key),update:async(key,value)=>storage.set(key,value)}};api.registerCommandMovelistWorkspace(context);
   await vscode.commands.executeCommand('ikemen.commandMovelist.openEditor',uri(def));
@@ -39,7 +40,8 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
 
   fs.writeFileSync(cmd,originalCommand);warningMode='none';
   const fresh=await vscode.commands.executeCommand('ikemen.commandMovelist.openEditor',uri(def));
-  warningMode='movelist-race';await fresh.receive({type:'saveMovelist',text:'Draft move\n'});
+  warningMode='movelist-race';await fresh.receive({type:'saveMovelist',text:'Draft move _UNKNOWN\n'});
+  assert(lastWarningOptions.detail.includes('possible missing engine glyph reference'),'explicit Apply summarizes advisory missing-glyph findings without enforcing a rewrite');
   assert(errors.at(-1).includes('changed'));assert.strictEqual(fs.readFileSync(moves,'utf8'),'External move\n');
   console.log('Command preset pool and post-confirmation source-conflict tests passed');
  }finally{Module._load=originalLoad;fs.rmSync(root,{recursive:true,force:true});}

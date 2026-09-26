@@ -3,7 +3,7 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.78.6';
+const PACKAGE_VERSION = '0.78.7';
 
 const FALLBACK_COMMANDS = [
   'air.assignClsn2HitReactionRegion', 'air.batchApplyClsn2', 'air.createNew', 'air.deleteSelectedFromViewer', 'air.generateGuardProximityHelper', 'air.openActionLog', 'air.refreshActionLog', 'air.openAnimationPreview',
