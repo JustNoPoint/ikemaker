@@ -1,11 +1,10 @@
 @echo off
-setlocal
+setlocal EnableDelayedExpansion
 title IKEMEN Creator Tools - Offline Installer
 set "HERE=%~dp0"
 set "VSIX=%HERE%IKEMEN-Creator-Tools.vsix"
 set "LUAVSIX=%HERE%Lua-Language-Server.vsix"
 set "CODECLI="
-set "LUA_RESULT=0"
 
 if not exist "%VSIX%" (
   echo The installer could not find IKEMEN-Creator-Tools.vsix beside itself.
@@ -29,15 +28,6 @@ if not defined CODECLI (
   exit /b 2
 )
 
-if exist "%LUAVSIX%" (
-  echo Installing the recommended Lua Language Server...
-  call "%CODECLI%" --install-extension "%LUAVSIX%" --force
-  if errorlevel 1 set "LUA_RESULT=1"
-  echo.
-) else (
-  set "LUA_RESULT=2"
-)
-
 echo Installing IKEMEN Creator Tools...
 call "%CODECLI%" --install-extension "%VSIX%" --force
 if errorlevel 1 (
@@ -50,22 +40,32 @@ if errorlevel 1 (
 )
 
 echo.
-if not "%LUA_RESULT%"=="0" (
-  echo IKEMaker installed, but companion setup is incomplete.
-  if "%LUA_RESULT%"=="1" echo The Lua Language Server installer returned an error.
-  if "%LUA_RESULT%"=="2" echo Lua-Language-Server.vsix was missing from the extracted package.
-  echo Re-extract or download the complete tester ZIP, then in VS Code choose:
-  echo Extensions ^> ... ^> Install from VSIX... ^> Lua-Language-Server.vsix
-  echo Restart Visual Studio Code afterward.
-  echo.
-  pause
-  exit /b 4
+if exist "%LUAVSIX%" (
+  set "INSTALL_LUA=N"
+  set /p "INSTALL_LUA=Optional Lua Language Server is included. Install it too? [y/N]: "
+  if /I "!INSTALL_LUA!"=="Y" (
+    echo Installing the optional Lua Language Server...
+    call "%CODECLI%" --install-extension "%LUAVSIX%" --force
+    set "LUA_EXIT=!ERRORLEVEL!"
+    if not "!LUA_EXIT!"=="0" goto :luaFailed
+    echo Optional Lua Language Server installed.
+  ) else (
+    echo Optional Lua Language Server skipped. IKEMaker's built-in Lua help remains available.
+  )
 )
 
 echo Installation complete.
 echo SprMaker2 and SndMaker are included and will be found automatically.
-echo Lua Language Server is included as the recommended general Lua editor.
+if not exist "%LUAVSIX%" echo This package does not contain or install the optional Lua Language Server.
 echo Restart Visual Studio Code if it is already open.
 echo.
 pause
 exit /b 0
+
+:luaFailed
+echo.
+echo IKEMaker installed, but the selected optional Lua companion failed.
+echo In VS Code choose Extensions ^> ... ^> Install from VSIX... and select Lua-Language-Server.vsix to retry.
+echo.
+pause
+exit /b 4

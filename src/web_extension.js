@@ -181,19 +181,32 @@ async function openPortableStructure() {
   const document = await vscode.workspace.openTextDocument({ language: 'markdown', content: portableStructure(source) });
   await vscode.window.showTextDocument(document, { preview: false, viewColumn: vscode.ViewColumn.Beside });
 }
-function portableAudit(document) {
+function portableCode(line) {
+  let quote = false, result = '';
+  for (let index = 0; index < line.length; index += 1) {
+    const character = line[index];
+    if (character === '"' && line[index - 1] !== '\\') { quote = !quote; result += ' '; continue; }
+    if (character === '#' && !quote) return result;
+    result += quote ? ' ' : character;
+  }
+  return result;
+}
+function portableAudit(document, options = {}) {
   const text = document.getText(), findings = [], braces = (text.match(/\{/g) || []).length - (text.match(/\}/g) || []).length;
   if (braces) findings.push(`Brace balance differs by ${braces}.`);
   text.split(/\r?\n/).forEach((line, index) => {
-    if (/\btime\s*=\s*0\b/i.test(line)) findings.push(`Line ${index + 1}: review time = 0 ownership, especially in negative StateDefs.`);
-    if (/\bp2(?:dist|bodydist|life|stateno|movetype|statetype)\b/i.test(line)) findings.push(`Line ${index + 1}: review opponent availability and numEnemy guarding.`);
+    const code = portableCode(line);
+    if (/\btime\s*=\s*0\b/i.test(code)) findings.push(`Line ${index + 1}: review time = 0 ownership, especially in negative StateDefs.`);
+    if (options.authorName && options.opponentAvailability !== 'off' && /\bp2\s*,/i.test(code)) findings.push(`Line ${index + 1}: author-rule heuristic — review this P2 redirect's persistent selected-opponent contract; it is not simply enemyNear or inherently wrong in Simul.`);
   });
   return [`# Portable ZSS Review`, '', 'This browser-safe review is deliberately smaller than the desktop analyzer. It does not modify the file.', '', ...(findings.length ? findings.map((item) => `- ${item}`) : ['- No portable-review findings. Use the desktop analyzer for the complete safety audit.'])].join('\n');
 }
 async function auditCurrentFile() {
   const source = vscode.window.activeTextEditor && vscode.window.activeTextEditor.document;
   if (!source || source.languageId !== 'zss') return vscode.window.showWarningMessage('Open a ZSS file first.');
-  const document = await vscode.workspace.openTextDocument({ language: 'markdown', content: portableAudit(source) });
+  const config = vscode.workspace.getConfiguration('ikemenZss', source.uri), authorName = String(config.get('authorName', '') || '').trim();
+  const opponentAvailability = authorName ? config.get('authorRules.opponentAvailability', 'off') : 'off';
+  const document = await vscode.workspace.openTextDocument({ language: 'markdown', content: portableAudit(source, { opponentAvailability, authorName }) });
   await vscode.window.showTextDocument(document, { preview: false, viewColumn: vscode.ViewColumn.Beside });
 }
 

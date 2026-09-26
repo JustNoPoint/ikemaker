@@ -2,12 +2,9 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.78.0",
+  "version": "0.78.1",
   "publisher": "justnopoint",
   "license": "MIT",
-  "extensionPack": [
-    "sumneko.lua"
-  ],
   "engines": {
     "vscode": "^1.85.0"
   },
@@ -2552,14 +2549,30 @@
           ],
           "description": "Validation levels shown by the editor. Project convention and suggestion checks can be disabled without hiding engine errors."
         },
-        "ikemenZss.validation.disabledConventionRules": {
+      "ikemenZss.validation.disabledConventionRules": {
           "type": "array",
           "items": {
             "type": "string"
           },
           "default": [],
-          "description": "Convention diagnostic codes to suppress, such as map-prefix or function-prefix. The project registry may also define this list."
-        },
+        "description": "Convention diagnostic codes to suppress, such as map-prefix or function-prefix. The project registry may also define this list."
+      },
+      "ikemenZss.authorRules.opponentAvailability": {
+        "type": "string",
+        "enum": [
+          "off",
+          "information",
+          "warning"
+        ],
+        "enumDescriptions": [
+          "Do not apply this author's opponent-availability convention.",
+          "Show this author's contextual team-mode advice as information.",
+          "Show this author's contextual team-mode advice as warnings."
+        ],
+        "default": "off",
+        "scope": "resource",
+        "description": "Optional rule belonging to the author selected by ikemenZss.authorName. Reviews actual P2, ... redirects and their persistent selected-opponent contract; it does not flag p2dist, p2life, or other p2-prefixed triggers. Off by default and inactive when no author is identified; this is not a game or engine rule. Rule ID: opponent-guard."
+      },
         "ikemenZss.impactPreview.maxFiles": {
           "type": "number",
           "default": 1500,

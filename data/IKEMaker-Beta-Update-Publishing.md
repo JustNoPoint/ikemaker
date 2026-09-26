@@ -7,11 +7,13 @@ repository's `main` branch. It does not use GitHub's mutable “latest” endpoi
 
 ## Safe publication order
 
-1. Build and review a new immutable VSIX and both tester ZIPs. Never overwrite a
-   historical release artifact.
+1. Build and review a new immutable VSIX, the standard no-LuaLS Offline and Online
+   tester ZIPs, and their clearly labeled `With-LuaLS` companion variants. Never
+   overwrite a historical release artifact.
 2. Verify the nested ZIP/VSIX inventories include every required helper/runtime,
-   offline documentation, installer, Lua Language Server VSIX, license, beta notes,
-   and checksums. Confirm no project/game/private paths or credentials are present.
+   offline documentation, installer, beta notes, and checksums. Confirm LuaLS and
+   its license exist only in the `With-LuaLS` variants. Confirm no project/game/
+   private paths or credentials are present.
 3. Create a versioned GitHub release and upload the reviewed artifacts.
 4. Confirm each uploaded asset is downloadable at its final immutable URL.
 5. Generate `updates/beta.json` with `tools/create-extension-update-feed.ps1`, using

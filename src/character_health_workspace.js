@@ -18,6 +18,7 @@ let diagnostics;
 function escapeHtml(value) { return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[character]); }
 function profileOptions(resource, profile = 'ikemen-1.0') {
   const config = vscode.workspace.getConfiguration('ikemenZss', resource);
+  const authorName = String(config.get('authorName', '') || '').trim();
   return {
     profile,
     profileLabel: profile === 'conservative-custom' ? 'Custom / conservative' : 'IKEMEN GO 1.0',
@@ -25,7 +26,9 @@ function profileOptions(resource, profile = 'ikemen-1.0') {
     allowedParameters: config.get('characterHealth.allowedParameters', []),
     analyzerOptions: {
       mapPrefixes: config.get('mapPrefixes', []),
-      functionPrefixes: config.get('functionPrefixes', [])
+      functionPrefixes: config.get('functionPrefixes', []),
+      opponentAvailability: authorName ? config.get('authorRules.opponentAvailability', 'off') : 'off',
+      authorName
     }
   };
 }

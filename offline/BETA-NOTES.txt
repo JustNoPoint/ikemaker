@@ -1,4 +1,4 @@
-IKEMAKER 0.78.0 — TESTER BETA NOTES
+IKEMAKER 0.78.1 — TESTER BETA NOTES
 
 IKEMaker is designed and directed by JustNoPoint (JNP), with OpenAI
 Codex used extensively for coding, review, testing assistance, and documentation.
@@ -6,6 +6,16 @@ AI assistance does not mean every feature is verified. This file distinguishes
 current work from known limits and future plans.
 
 CURRENT HIGHLIGHTS
+- Lua Language Server is no longer an automatic extension dependency. Standard
+  packages omit it; clearly labeled With-LuaLS variants offer it as an unchecked
+  optional companion while IKEMaker's built-in Lua help remains available.
+- Upgrading IKEMaker does not remove or disable a Lua extension you already
+  installed. This patch does not repair Lua Language Server environment
+  diagnostics; you can choose whether to keep it or disable it for this
+  workspace through VS Code Extensions.
+- Actual `P2, ...` redirect advice is an identified-author rule, off by default.
+  It does not flag p2dist or other p2-prefixed triggers. P2's persistent opponent
+  selection is contextual guidance, not an IKEMEN syntax or game rule.
 - Project Maps now has visible entry points and a results-first browser with
   current-file, character, template, assigned-runtime, and combined scopes.
 - AIR timeline frames can be edited directly, with missing-sprite issue navigation.
@@ -38,7 +48,7 @@ INSTALL / UPDATE
   "Install IKEMEN Creator Tools.cmd".
 - First-time user: extract the Online Bootstrap ZIP and run
   "Install IKEMaker Online.cmd". VS Code is downloaded only if absent.
-- Restart or reload VS Code, then confirm IKEMaker 0.78.0.
+- Restart or reload VS Code, then confirm IKEMaker 0.78.1.
 - Future beta updates appear under IKEMaker > Personal Workspace and Preferences.
   Review the version, notes, size, and SHA-256 before choosing install.
 - Downloaded update packages are retained outside game/project folders in VS Code's

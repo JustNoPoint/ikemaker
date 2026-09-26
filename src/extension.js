@@ -100,9 +100,12 @@ function configuredPrefixes(config, pluralKey, legacyKey) {
 
 function analyzerOptions(resource) {
   const config = vscode.workspace.getConfiguration('ikemenZss', resource);
+  const authorName = String(config.get('authorName', '') || '').trim();
   return {
     mapPrefixes: configuredPrefixes(config, 'mapPrefixes', 'mapPrefix'),
-    functionPrefixes: configuredPrefixes(config, 'functionPrefixes', 'functionPrefix')
+    functionPrefixes: configuredPrefixes(config, 'functionPrefixes', 'functionPrefix'),
+    opponentAvailability: authorName ? config.get('authorRules.opponentAvailability', 'off') : 'off',
+    authorName
   };
 }
 

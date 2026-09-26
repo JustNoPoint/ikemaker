@@ -39,6 +39,26 @@ function enclosingContext(lines, line, distance = 6) {
   return lines.slice(Math.max(0, line - distance), line + 1).map(withoutComment).join(' ');
 }
 
+function withoutStrings(line) {
+  let quote = false;
+  let result = '';
+  for (let i = 0; i < line.length; i += 1) {
+    const character = line[i];
+    if (character === '"' && line[i - 1] !== '\\') {
+      quote = !quote;
+      result += ' ';
+    } else result += quote ? ' ' : character;
+  }
+  return result;
+}
+
+function opponentAvailabilitySeverity(value) {
+  const policy = String(value || 'off').toLowerCase();
+  if (policy === 'warning') return 'warning';
+  if (policy === 'information' || policy === 'info' || policy === 'convention') return 'information';
+  return null;
+}
+
 function negativeStateContexts(lines) {
   const result = [];
   let negative = false;
@@ -80,6 +100,7 @@ function usesPrefix(name, prefixes) {
 function analyzeZss(text, options = {}) {
   const mapPrefixes = normalizePrefixes(options.mapPrefixes !== undefined ? options.mapPrefixes : options.mapPrefix);
   const functionPrefixes = normalizePrefixes(options.functionPrefixes !== undefined ? options.functionPrefixes : options.functionPrefix);
+  const opponentSeverity = String(options.authorName || '').trim() ? opponentAvailabilitySeverity(options.opponentAvailability) : null;
   const { lines } = lineOffsets(text);
   const issues = [];
   const records = collectRecords(text);
@@ -114,11 +135,12 @@ function analyzeZss(text, options = {}) {
       }
     }
 
-    const p2 = /\bp2(?:dist|bodydist|life|stateno|movetype|statetype|name|id|teamside)?\b/i.exec(line);
-    if (p2 && !/\bnumEnemy\b/i.test(context)) {
-      issues.push(issue(i, p2.index, p2[0].length, 'warning', 'opponent-guard',
-        'Opponent-dependent expression has no nearby numEnemy guard.',
-        'Guard opponent reads explicitly; Tag/Simul transitions can temporarily invalidate the assumed opponent.'));
+    const p2Line = withoutStrings(line);
+    const p2 = /\bp2\s*,/i.exec(p2Line);
+    if (p2 && opponentSeverity) {
+      issues.push(issue(i, p2.index, p2[0].length, opponentSeverity, 'opponent-guard',
+        'Author-rule heuristic: review this P2 redirect\'s selected-opponent contract.',
+        'P2 is a persistent engine-selected opponent, not simply enemyNear, and is not inherently wrong in Simul. This is the identified author\'s contextual advice, not a game rule, syntax error, or runtime error. Verify that the current P2 selection is the intended target and guard only when the surrounding operation requires it.'));
     }
 
     const partner = /\bpartner\s*,/i.exec(line);

@@ -6,19 +6,20 @@ JustNoPoint brings years of hands-on fighting-game development, including writin
 
 ## Downloads
 
-Compiled packages stay on the [IKEMaker Releases page](https://github.com/JustNoPoint/ikemaker/releases); they are not committed to this repository. For the 0.78.0 tester beta, all three downloads provide the same IKEMaker features:
+Compiled packages stay on the [IKEMaker Releases page](https://github.com/JustNoPoint/ikemaker/releases); they are not committed to this repository.
 
-- **Windows Offline ZIP:** for a computer that already has VS Code. It includes IKEMaker, its installer, the optional-editor companion shipped with that historical release, documentation, checksums, and required tools.
-- **Windows Online Bootstrap ZIP:** for a computer that may not have VS Code. It obtains the official VS Code installer only when necessary, then installs the same IKEMaker package.
-- **VSIX:** the raw IKEMaker extension for manual installation or the verified updater. VS Code must already be installed.
+- **Windows Offline ZIP:** installs IKEMaker when VS Code is already present. The standard package contains no Lua Language Server.
+- **Windows Online Bootstrap ZIP:** can obtain the official VS Code installer when needed, then installs IKEMaker. The standard package contains no Lua Language Server.
+- **With-LuaLS ZIP variants:** the same Offline and Online packages with the reviewed Lua Language Server VSIX available behind an explicit `[y/N]` choice. Pressing Enter skips that companion and leaves any existing Lua installation unchanged.
+- **VSIX:** the raw IKEMaker extension for manual installation or the verified updater. It neither contains nor automatically requests LuaLS.
 
-None of these packages includes IKEMEN GO, MUGEN, characters, stages, game content, private workspace files, or credentials. Later releases may offer clearly labeled package variants; always use that release's notes when choosing a download.
+Upgrading IKEMaker does not remove or disable a Lua extension already installed, and 0.78.1 does not repair LuaLS environment diagnostics. Users decide whether to keep or disable that separate extension. No package includes IKEMEN GO, MUGEN, characters, stages, game content, private workspace files, or credentials.
 
 ## Source history
 
-The 0.78.0 source was imported after its immutable prerelease as an honestly labeled reviewed baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. This import removes personal path/name metadata and excludes the large prebuilt Lua Language Server VSIX from Git; those distribution-only changes do not claim to recreate an earlier private development history.
+The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Version 0.78.1 is a separate normal source commit; future release tags should identify their actual source commits.
 
-Version 0.78.0 adds a separate, user-controlled IKEMaker beta-update channel. Availability checks use an explicit publisher manifest; every install requires release review, bounded download, exact size and SHA-256 verification, and a separate reload choice. Packages are staged in VS Code extension storage rather than game folders, and a failed installation can reuse the already verified package. This release also refreshes the two tester bundles and their concise beta notes.
+Version 0.78.1 makes Lua Language Server a genuinely optional companion and moves opponent-availability advice into an identified-author rule that is off by default. IKEMaker's VSIX never declares another extension for automatic installation. Standard Windows packages omit LuaLS entirely; clearly labeled `With-LuaLS` variants carry its official VSIX for users who choose it.
 
 Version 0.77.9 makes the existing Project Maps browser visibly accessible from IKEMaker Tools > ZSS, CNS, and Lua and as the first action under Project Data > Maps. The Project Data action remains available while the older workspace-wide ZSS inventory is scanning or empty, and it is explicitly labeled as a separate scoped multi-format browser. Launches without reliable context offer character selection; Lua and unresolved launches remain browse-only rather than implying unsupported insertion.
 
@@ -111,16 +112,19 @@ references, and ordinary Lua completion. IKEMEN Creator Tools adds the
 IKEMEN-specific layer: offline API help, visual structure, project/module and
 asset connections, guided screenpack authoring, and rollback-boundary guidance.
 
-The Marketplace package lists `sumneko.lua` as an optional extension-pack
-companion. The Windows offline package contains its official unmodified VSIX
-and installs it separately, so each extension keeps its own version, license,
-updates, settings, and uninstall entry.
+IKEMaker does not declare `sumneko.lua` as an extension-pack dependency and
+never downloads or installs it automatically. Standard Windows packages do not
+contain LuaLS. Clearly labeled `With-LuaLS` packages contain its official,
+unmodified VSIX and ask whether to install it with **No** as the default. Each
+extension keeps its own version, license, updates, settings, and uninstall entry.
 
 Use **IKEMEN: Check Lua Authoring Support** to see both layers. Use **IKEMEN:
 Install LuaLS Definitions into Project** to place a generated `---@meta`
 library under `.ikemen-tools/luals`. This teaches LuaLS the documented IKEMEN
 1.0 globals without editing default IKEMEN Lua or loading the metadata at
 runtime. The action is explicit, transactional, refreshable, and project-local.
+IKEMaker's own Lua completion, hover help, structure, and offline documentation
+remain available when LuaLS is absent.
 
 ## Learning and Advanced experience
 

@@ -294,6 +294,30 @@ map(any_map_name) := 1
 assert.ok(!noPrefixAudit.issues.some((entry) => entry.code === 'map-prefix'));
 assert.ok(!noPrefixAudit.issues.some((entry) => entry.code === 'function-prefix'));
 
+const generalP2Audit = analyzeZss(`
+[StateDef 200]
+if p2, life < 500 { changeState{value: 210} }
+text{text: "p2dist should remain documentation"}
+# p2life is only a comment
+`);
+assert.ok(!generalP2Audit.issues.some((entry) => entry.code === 'opponent-guard'), 'general and KFM-like projects must not receive an author convention by default');
+
+const authorP2Audit = analyzeZss(`
+[StateDef 200]
+if numEnemy && p2, life < 500 { changeState{value: 210} }
+if p2dist x < 40 || p2life < 500 || p2stateno = 200 { changeState{value: 220} }
+text{text: "p2, life"}
+# p2, stateNo
+`, { opponentAvailability: 'information', authorName: 'ExampleAuthor' });
+const authorP2Issues = authorP2Audit.issues.filter((entry) => entry.code === 'opponent-guard');
+assert.strictEqual(authorP2Issues.length, 1, 'author opt-in must inspect actual P2 redirects while ignoring p2-prefixed triggers, comments and strings');
+assert.strictEqual(authorP2Issues[0].severity, 'information');
+assert.match(authorP2Issues[0].message, /Author-rule heuristic/);
+assert.match(authorP2Issues[0].help, /persistent engine-selected opponent/);
+
+const authorWarningAudit = analyzeZss('if p2, stateNo = 5000 { changeState{value: 5000} }', { opponentAvailability: 'warning', authorName: 'ExampleAuthor' });
+assert.ok(authorWarningAudit.issues.some((entry) => entry.code === 'opponent-guard' && entry.severity === 'warning'));
+
 const safeZss = `
 [Function JNP_Ryu_Sync()]
 if teamMode = simul && numPartner {

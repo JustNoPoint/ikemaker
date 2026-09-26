@@ -1,7 +1,7 @@
-# IKEMaker 0.78.0 source snapshot
+# Building IKEMaker 0.78.1
 
-This repository baseline contains the reviewed source and public build inputs used
-for IKEMaker 0.78.0.
+This repository contains the reviewed source and public build inputs for
+IKEMaker 0.78.1.
 IKEMaker is designed and directed by JustNoPoint (JNP) and is licensed under the
 MIT License. Third-party components retain their own licenses and notices.
 
@@ -14,8 +14,9 @@ MIT License. Third-party components retain their own licenses and notices.
 No package download is required to build the IKEMaker VSIX or run its tests. The
 reviewed native builders, required runtimes, and offline documentation are kept
 in Git. The 11 MB prebuilt Lua Language Server VSIX is intentionally not tracked.
-The historical 0.78.0 Windows-bundle scripts require a separately supplied
-`-LuaVsixPath`. Use only the reviewed 3.19.1 payload with this exact identity:
+Standard 0.78.1 packages do not need LuaLS. The explicitly requested
+`With-LuaLS` variants require a separately supplied, reviewed companion file.
+Use only the 3.19.1 payload with this exact identity:
 
 - Filename: `Lua-Language-Server-3.19.1-win32-x64.vsix`
 - Size: `11080310` bytes
@@ -23,8 +24,7 @@ The historical 0.78.0 Windows-bundle scripts require a separately supplied
 
 That exact payload remains preserved in the immutable 0.78.0 source release asset.
 Do not substitute a similarly named file without reviewing its provenance and
-hash. IKEMaker 0.78.1 and later can build their standard Windows packages without
-this companion payload.
+hash.
 
 ## Test
 
@@ -37,7 +37,7 @@ npm test
 ## Build the IKEMaker VSIX
 
 ```powershell
-.\tools\package-vsix.ps1 -OutputPath .\ikemen-zss-tools-0.78.0.vsix
+.\tools\package-vsix.ps1 -OutputPath .\ikemen-zss-tools-0.78.1.vsix
 ```
 
 ## Build the Windows packages
@@ -46,17 +46,30 @@ After building the VSIX:
 
 ```powershell
 .\tools\package-offline.ps1 `
-  -VsixPath .\ikemen-zss-tools-0.78.0.vsix `
-  -LuaVsixPath <reviewed-luals-vsix> `
-  -OutputPath .\IKEMaker-0.78.0-Windows-Offline.zip
+  -VsixPath .\ikemen-zss-tools-0.78.1.vsix `
+  -OutputPath .\IKEMaker-0.78.1-Windows-Offline.zip
 
 .\tools\package-online-bootstrap.ps1 `
-  -VsixPath .\ikemen-zss-tools-0.78.0.vsix `
-  -LuaVsixPath <reviewed-luals-vsix> `
-  -OutputPath .\IKEMaker-0.78.0-Windows-Online-Bootstrap.zip
+  -VsixPath .\ikemen-zss-tools-0.78.1.vsix `
+  -OutputPath .\IKEMaker-0.78.1-Windows-Online-Bootstrap.zip
 ```
 
-The packaging scripts use only the repository plus the explicitly supplied,
-hash-verified companion file when output paths are supplied. Generated caches,
+To build the clearly labeled companion variants after placing the reviewed LuaLS
+file at `third_party\Lua-Language-Server-3.19.1-win32-x64.vsix`:
+
+```powershell
+.\tools\package-offline.ps1 `
+  -VsixPath .\ikemen-zss-tools-0.78.1.vsix `
+  -OutputPath .\IKEMaker-0.78.1-Windows-Offline-With-LuaLS.zip `
+  -IncludeLuaLanguageServer
+
+.\tools\package-online-bootstrap.ps1 `
+  -VsixPath .\ikemen-zss-tools-0.78.1.vsix `
+  -OutputPath .\IKEMaker-0.78.1-Windows-Online-Bootstrap-With-LuaLS.zip `
+  -IncludeLuaLanguageServer
+```
+
+The standard packaging scripts use only the repository. Companion builds also
+use the explicitly supplied, hash-verified LuaLS file. Generated caches,
 previous package-review extractions, `node_modules`, compiled release packages,
 and private game or workspace directories are intentionally excluded.

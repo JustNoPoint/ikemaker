@@ -12,8 +12,9 @@ game, character, stage, screenpack, or commercial game asset.
 
 ## Lua Language Server
 
-The Windows offline bundle includes the official, unmodified `sumneko.lua`
-VSIX as a separate optional extension. Both its VS Code wrapper and its Lua
+Clearly labeled Windows `With-LuaLS` bundles include the official, unmodified
+`sumneko.lua` VSIX as a separate optional extension. Standard bundles omit it.
+Both its VS Code wrapper and its Lua
 language server are distributed under the MIT License. Their copyright,
 permission, warranty, and bundled dependency notices remain inside that VSIX.
 

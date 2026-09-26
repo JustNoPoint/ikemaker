@@ -42,6 +42,7 @@ function Add-FileEntry([string]$Source, [string]$Name) {
 try {
     $description = 'A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.'
     $extensionPack = @($package.extensionPack) -join ','
+    $extensionPackProperty = if ([string]::IsNullOrWhiteSpace($extensionPack)) { '' } else { "      <Property Id=`"Microsoft.VisualStudio.Code.ExtensionPack`" Value=`"$extensionPack`" />" }
     $manifest = @"
 <?xml version="1.0" encoding="utf-8"?>
 <PackageManifest Version="2.0.0" xmlns="http://schemas.microsoft.com/developer/vsx-schema/2011">
@@ -55,7 +56,7 @@ try {
     <Properties>
       <Property Id="Microsoft.VisualStudio.Code.Engine" Value="$($package.engines.vscode)" />
       <Property Id="Microsoft.VisualStudio.Code.ExtensionDependencies" Value="" />
-      <Property Id="Microsoft.VisualStudio.Code.ExtensionPack" Value="$extensionPack" />
+$extensionPackProperty
     </Properties>
   </Metadata>
   <Installation><InstallationTarget Id="Microsoft.VisualStudio.Code" /></Installation>

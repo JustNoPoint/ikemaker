@@ -7,8 +7,11 @@ releases/
 *.vsix
 *.zip
 *.log
+.vsixmanifest
+[[]Content_Types].xml
+BETA-DISTRIBUTION-WARNING.txt
+IKEMaker-*-Distribution-Manifest.txt
 .DS_Store
 Thumbs.db
 .vscode/
 .ikemen-tools/
-

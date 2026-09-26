@@ -1,7 +1,8 @@
 param(
     [string]$OutputPath,
     [string]$VsixPath,
-    [string]$LuaVsixPath
+    [string]$LuaVsixPath,
+    [switch]$IncludeLuaLanguageServer
 )
 
 $ErrorActionPreference = 'Stop'
@@ -19,11 +20,12 @@ if (-not (Test-Path -LiteralPath $VsixPath)) {
     & (Join-Path $PSScriptRoot 'package-vsix.ps1') -OutputPath $VsixPath | Out-Null
 }
 if ([string]::IsNullOrWhiteSpace($OutputPath)) {
-    $OutputPath = Join-Path $releaseDirectory ("IKEMEN-Creator-Tools-{0}-Windows-Offline.zip" -f $version)
+    $suffix = if ($IncludeLuaLanguageServer) { '-With-LuaLS' } else { '' }
+    $OutputPath = Join-Path $releaseDirectory ("IKEMaker-{0}-Windows-Offline{1}.zip" -f $version, $suffix)
 }
 $defaultLuaVsix = Join-Path $root ("third_party\Lua-Language-Server-{0}-win32-x64.vsix" -f $luaVersion)
 if ([string]::IsNullOrWhiteSpace($LuaVsixPath)) { $LuaVsixPath = $defaultLuaVsix }
-if (-not (Test-Path -LiteralPath $LuaVsixPath)) { throw "Official Lua Language Server VSIX is missing: $LuaVsixPath" }
+if ($IncludeLuaLanguageServer -and -not (Test-Path -LiteralPath $LuaVsixPath)) { throw "Official Lua Language Server VSIX is missing: $LuaVsixPath" }
 $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
 New-Item -ItemType Directory -Path (Split-Path -Parent $OutputPath) -Force | Out-Null
 if (Test-Path -LiteralPath $OutputPath) { throw "Output already exists: $OutputPath" }
@@ -41,10 +43,16 @@ function Add-Text([string]$Name, [string]$Value) {
     $writer = [System.IO.StreamWriter]::new($entry.Open(), [System.Text.UTF8Encoding]::new($false))
     try { $writer.Write($Value) } finally { $writer.Dispose() }
 }
+function Get-Sha256([string]$Filename) {
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    $input = [System.IO.File]::OpenRead($Filename)
+    try { return ([System.BitConverter]::ToString($algorithm.ComputeHash($input))).Replace('-', '') }
+    finally { $input.Dispose(); $algorithm.Dispose() }
+}
 
 try {
     Add-File $VsixPath 'IKEMEN-Creator-Tools.vsix'
-    Add-File $LuaVsixPath 'Lua-Language-Server.vsix'
+    if ($IncludeLuaLanguageServer) { Add-File $LuaVsixPath 'Lua-Language-Server.vsix' }
     Add-File (Join-Path $root 'offline\Install IKEMEN Creator Tools.cmd') 'Install IKEMEN Creator Tools.cmd'
     Add-File (Join-Path $root 'offline\README-FIRST.txt') 'README-FIRST.txt'
     Add-File (Join-Path $root 'offline\BETA-NOTES.txt') 'BETA-NOTES.txt'
@@ -53,10 +61,11 @@ try {
     Add-File (Join-Path $root 'offline\PREVIEW-STATUS.md') 'PREVIEW-STATUS.md'
     Add-File (Join-Path $root 'THIRD-PARTY-NOTICES.md') 'THIRD-PARTY-NOTICES.md'
     Add-File (Join-Path $root 'LICENSE') 'licenses/IKEMaker-LICENSE.txt'
-    Add-File (Join-Path $root 'third_party\Lua-Language-Server-LICENSE.txt') 'licenses/Lua-Language-Server-LICENSE.txt'
-    $hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $VsixPath).Hash
-    $luaHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $LuaVsixPath).Hash
-    Add-Text 'SHA256SUMS.txt' (("{0}  IKEMEN-Creator-Tools.vsix`r`n" -f $hash) + ("{0}  Lua-Language-Server.vsix`r`n" -f $luaHash))
+    if ($IncludeLuaLanguageServer) { Add-File (Join-Path $root 'third_party\Lua-Language-Server-LICENSE.txt') 'licenses/Lua-Language-Server-LICENSE.txt' }
+    $hash = Get-Sha256 $VsixPath
+    $checksums = ("{0}  IKEMEN-Creator-Tools.vsix`r`n" -f $hash)
+    if ($IncludeLuaLanguageServer) { $checksums += ("{0}  Lua-Language-Server.vsix`r`n" -f (Get-Sha256 $LuaVsixPath)) }
+    Add-Text 'SHA256SUMS.txt' $checksums
 }
 finally {
     $zip.Dispose()

@@ -6,7 +6,10 @@ const path = require('path');
 
 const root = path.resolve(__dirname, '..');
 const packageJson = require('../package.json');
-assert(packageJson.extensionPack.includes('sumneko.lua'));
+assert(!packageJson.extensionPack, 'IKEMaker must not auto-install LuaLS through extensionPack');
+const vsixPackager = fs.readFileSync(path.join(root, 'tools', 'package-vsix.ps1'), 'utf8');
+assert(vsixPackager.includes("if ([string]::IsNullOrWhiteSpace($extensionPack)) { '' }"), 'empty extension packs must produce no manifest linkage');
+assert(!/foreach \(\$directory in @\([^\r\n]*third_party/i.test(vsixPackager), 'the IKEMaker VSIX must not embed third_party LuaLS payloads');
 
 const library = fs.readFileSync(path.join(root, 'data', 'luals', 'ikemen-1.0.lua'), 'utf8');
 assert(library.startsWith('---@meta IKEMEN_GO_1_0'));
@@ -27,6 +30,13 @@ if (!fs.existsSync(luaVsix)) {
 
 const installer = fs.readFileSync(path.join(root, 'offline', 'Install IKEMEN Creator Tools.cmd'), 'utf8');
 assert(installer.includes('Lua-Language-Server.vsix'));
-assert(installer.indexOf('Lua-Language-Server.vsix') < installer.indexOf('Installing IKEMEN Creator Tools'));
+assert(installer.includes('[y/N]'));
+assert(installer.indexOf('Installing IKEMEN Creator Tools') < installer.indexOf('Optional Lua Language Server is included'));
+
+for (const name of ['package-offline.ps1', 'package-online-bootstrap.ps1']) {
+  const packager = fs.readFileSync(path.join(root, 'tools', name), 'utf8');
+  assert(packager.includes('[switch]$IncludeLuaLanguageServer'));
+  assert(packager.includes('-With-LuaLS'));
+}
 
 console.log('Lua redistribution, public-source provenance and integration tests passed');

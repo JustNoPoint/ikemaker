@@ -1,9 +1,10 @@
+param([switch]$InstallLuaLanguageServer)
+
 $ErrorActionPreference = 'Stop'
 $here = Split-Path -Parent $MyInvocation.MyCommand.Path
 $ikemakerVsix = Join-Path $here 'IKEMEN-Creator-Tools.vsix'
 $luaVsix = Join-Path $here 'Lua-Language-Server.vsix'
 $officialVsCodeUrl = 'https://update.code.visualstudio.com/latest/win32-x64-user/stable'
-$luaResult = 'success'
 
 function Find-CodeCli {
     $command = Get-Command code.cmd -ErrorAction SilentlyContinue
@@ -37,19 +38,23 @@ if (-not $codeCli) {
     if (-not $codeCli) { throw 'VS Code installation completed but its command-line installer could not be located. Restart Windows and rerun this bootstrap.' }
 }
 
-if (Test-Path -LiteralPath $luaVsix) {
-    Write-Host 'Installing the recommended official Lua Language Server...'
-    & $codeCli --install-extension $luaVsix --force
-    if ($LASTEXITCODE -ne 0) { $luaResult = 'installer-failed'; Write-Warning 'Lua Language Server installation failed; IKEMaker installation will continue.' }
-} else { $luaResult = 'payload-missing' }
-
 Write-Host 'Installing IKEMaker...'
 & $codeCli --install-extension $ikemakerVsix --force
 if ($LASTEXITCODE -ne 0) { throw "IKEMaker installation returned exit code $LASTEXITCODE." }
-if ($luaResult -ne 'success') {
-    Write-Warning "IKEMaker installed, but companion setup is incomplete ($luaResult)."
-    Write-Host 'Recovery: re-extract or download the complete tester ZIP, then in VS Code choose Extensions > ... > Install from VSIX... and select Lua-Language-Server.vsix.'
-    Write-Host 'Restart VS Code afterward.'
-    exit 4
+if ($InstallLuaLanguageServer) {
+    if (-not (Test-Path -LiteralPath $luaVsix)) {
+        Write-Warning 'IKEMaker installed, but the selected optional Lua companion is not included in this package.'
+        Write-Host 'Download the clearly labeled With-LuaLS package, or install a Lua extension separately if desired.'
+        exit 4
+    }
+    Write-Host 'Installing the selected optional Lua Language Server...'
+    & $codeCli --install-extension $luaVsix --force
+    if ($LASTEXITCODE -ne 0) {
+        Write-Warning 'IKEMaker installed, but the selected optional Lua companion failed.'
+        Write-Host 'Recovery: in VS Code choose Extensions > ... > Install from VSIX... and select Lua-Language-Server.vsix.'
+        exit 4
+    }
+    Write-Host 'IKEMaker and the selected optional Lua Language Server are installed. Restart VS Code if it was already open.'
+    exit 0
 }
-Write-Host 'IKEMaker and the Lua Language Server are installed. Restart VS Code if it was already open.'
+Write-Host "IKEMaker is installed. No optional Lua extension was requested. Restart VS Code if it was already open."

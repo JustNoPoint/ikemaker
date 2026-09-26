@@ -1,4 +1,4 @@
-# IKEMaker 0.78.0 tester-beta status
+# IKEMaker 0.78.1 tester-beta status
 
 This package is a public beta for focused human testing, not a declaration that
 every IKEMaker workspace has completed acceptance testing. Read `BETA-NOTES.txt`
@@ -16,3 +16,7 @@ workspace layouts, or every game-specific rule.
 Neither tester bundle includes IKEMEN GO, MUGEN, game content, private project files,
 or publisher credentials. The online bundle may obtain VS Code from Microsoft's
 official update endpoint after Windows signature verification.
+
+Standard packages omit Lua Language Server. Clearly labeled With-LuaLS variants
+include its official VSIX but still require an explicit opt-in during installation.
+IKEMaker never declares LuaLS as an automatic extension dependency.
