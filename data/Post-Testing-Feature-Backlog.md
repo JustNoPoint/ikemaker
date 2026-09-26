@@ -762,10 +762,27 @@ Undo; no automatic sidecars/backups. Preserve optional pane visibility and the
 existing Player/Simple/Workspace modes. Implement category by category with
 focused tests, not one large rewrite or an unbounded new testing queue.
 
+## Activated priority batch for JNP's return Thursday (2026-09-26)
+
+User authorization: JNP explicitly asked this task and SF6 to work on the most useful IKEMaker backlog items for his workflow while he is busy until Thursday, October 1. This activates the bounded items below despite earlier deferral notes. It does not authorize exhausting the usage allowance: preserve approximately 30% Thursday, with SF6 monitoring at batch boundaries, reducing optional work at 40% and checkpointing near 35% remaining. No new release/publication or local installation is implied.
+
+SF6 remains primary implementer. This task supplies design and consolidated high-value review. First reconcile the current branch and recent user requests so none of the work already completed is repeated and no current prefix/source-baseline regression is carried forward.
+
+Priority order; finish/test each useful slice before taking the next:
+1. Resolve active regressions affecting current work, especially any currently reported prefix behavior. Confirm the user's intended baseline with existing SF6 context; do not infer that a previously reviewed release supersedes later fixes.
+2. Reproduce and fix the recorded JNP Move Constants P2 zoom/coordinate defect, if still present. Limit initial scope to that viewer and directly shared transform code. Define the intended zoom pivot correctly: authored/world coordinates must not change; zoom naturally changes screen-space distances from the pivot. Do not try to keep every independent screen-space point stationary under scaling, as the older backlog wording implies. Verify P1/P2/CLSN/hitspark alignment using the same camera transform, zoom round-trips and restoration without writes. Expand to other viewers only if shared code/evidence warrants it, not an all-viewer audit.
+3. Shared classic HitDef quick editing in the existing Move Constants view, if still missing. Reuse existing reviewed Apply, shared-source label, impact disclosure, conflict and Undo behavior; preserve decimal/negative drafts. No automatic project files/backups. Earlier references to backup/history in this backlog do not authorize restoring auto-backups or overriding current user consent policy.
+4. If useful capacity remains, implement the smallest personal example shelf: pin an existing block with a label/source link, scoped to current project plus deliberately linked shared sources; reopen/show current code and mark changed/missing references. Keep it in an existing coding surface with a visible entry point (not right-click-only), optional/collapsible, stored in disclosed extension workspace state. First slice is recognition/reference browsing only; defer automatic adaptation, semantic/AI search, dependency substitution and a new general browser framework.
+
+Requirements: bounded tests for changed behavior, a short manual test list for JNP, no desktop takeover, no edits to live character/game content without explicit user approval. Use fixtures for authoring tests. Preserve Player/Simple/Workspace mode organization, and avoid adding default-open panes. Keep reference scope isolated across games/authors. Record completed/current/deferred status clearly, with exact commit and focused results.
+
+Defer broad Project Data category expansion, full Flow Mode, Phase 2, tournament runner, all-viewer parity sweep and broad help rewrite. Do not consume the remaining budget merely to use it. Batch review requests; send this task a consolidated handoff only for consequential design uncertainty or completed meaningful work, not routine mechanical checks. Tool messaging may require user approval; leave TXT handoffs and continue independent authorized slices rather than repeatedly requesting permission or polling.
+
 ## Player Mode tournament runner (idea recorded September 26, 2026)
 
-Status: possible later Player Mode feature. Research and design only; do not
-implement as part of the current curriculum, stabilization, or release work.
+Status: SECOND-LOWEST PRIORITY, immediately above the shared QA report website.
+Research and design only; do not implement as part of the current curriculum,
+stabilization, release work, or active workflow batch.
 
 The inspiration is an anecdotal MWC/Mugen workflow: choose up to eight
 characters, launch each tournament fight, retain the winner, and automatically
@@ -807,22 +824,6 @@ win/draw/abort outcomes. Define behavior for byes, double KOs, time-over draws,
 user-aborted fights, invalid/missing characters, and an engine crash. A minimal
 acceptance test should complete and resume a four-character bracket without
 writing into the game or character folders.
-
-## Activated priority batch for JNP's return Thursday (2026-09-26)
-
-User authorization: JNP explicitly asked this task and SF6 to work on the most useful IKEMaker backlog items for his workflow while he is busy until Thursday, October 1. This activates the bounded items below despite earlier deferral notes. It does not authorize exhausting the usage allowance: preserve approximately 30% Thursday, with SF6 monitoring at batch boundaries, reducing optional work at 40% and checkpointing near 35% remaining. No new release/publication or local installation is implied.
-
-SF6 remains primary implementer. This task supplies design and consolidated high-value review. First reconcile the current branch and recent user requests so none of the work already completed is repeated and no current prefix/source-baseline regression is carried forward.
-
-Priority order; finish/test each useful slice before taking the next:
-1. Resolve active regressions affecting current work, especially any currently reported prefix behavior. Confirm the user's intended baseline with existing SF6 context; do not infer that a previously reviewed release supersedes later fixes.
-2. Reproduce and fix the recorded JNP Move Constants P2 zoom/coordinate defect, if still present. Limit initial scope to that viewer and directly shared transform code. Define the intended zoom pivot correctly: authored/world coordinates must not change; zoom naturally changes screen-space distances from the pivot. Do not try to keep every independent screen-space point stationary under scaling, as the older backlog wording implies. Verify P1/P2/CLSN/hitspark alignment using the same camera transform, zoom round-trips and restoration without writes. Expand to other viewers only if shared code/evidence warrants it, not an all-viewer audit.
-3. Shared classic HitDef quick editing in the existing Move Constants view, if still missing. Reuse existing reviewed Apply, shared-source label, impact disclosure, conflict and Undo behavior; preserve decimal/negative drafts. No automatic project files/backups. Earlier references to backup/history in this backlog do not authorize restoring auto-backups or overriding current user consent policy.
-4. If useful capacity remains, implement the smallest personal example shelf: pin an existing block with a label/source link, scoped to current project plus deliberately linked shared sources; reopen/show current code and mark changed/missing references. Keep it in an existing coding surface with a visible entry point (not right-click-only), optional/collapsible, stored in disclosed extension workspace state. First slice is recognition/reference browsing only; defer automatic adaptation, semantic/AI search, dependency substitution and a new general browser framework.
-
-Requirements: bounded tests for changed behavior, a short manual test list for JNP, no desktop takeover, no edits to live character/game content without explicit user approval. Use fixtures for authoring tests. Preserve Player/Simple/Workspace mode organization, and avoid adding default-open panes. Keep reference scope isolated across games/authors. Record completed/current/deferred status clearly, with exact commit and focused results.
-
-Defer broad Project Data category expansion, full Flow Mode, Phase 2, tournament runner, all-viewer parity sweep and broad help rewrite. Do not consume the remaining budget merely to use it. Batch review requests; send this task a consolidated handoff only for consequential design uncertainty or completed meaningful work, not routine mechanical checks. Tool messaging may require user approval; leave TXT handoffs and continue independent authorized slices rather than repeatedly requesting permission or polling.
 
 ## Shared QA report website and IKEMaker integration (2026-09-26)
 
