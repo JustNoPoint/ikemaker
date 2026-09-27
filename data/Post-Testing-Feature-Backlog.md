@@ -1644,3 +1644,39 @@ remains separate: Helper creation sites are shown exactly, but IKEMaker does not
 guess that an arbitrary Helper is a projectile. Phase 2, research, GIF
 conversion, Tournament Player Mode, and the website remain deferred under the
 existing priority rules.
+
+#### Next-week Phase 1 restart checklist
+
+This is the authoritative restart boundary after the 0.79.8 source checkpoint.
+Do not treat any item below as completed by the source suite alone.
+
+1. Decide whether Move Lab needs an in-panel visual AIR/Clsn frame preview beyond
+   the completed compact catalog. If added, reuse the existing AIR workspace's
+   retained draft, conflict, Apply, Undo, and Save path; do not implement another
+   writer or infer an action from a component number.
+2. Keep the direct HitDef summary read-only unless a compact presentation can call
+   the existing Universal HitDef editor for every mutation. Preserve unknown,
+   custom, duplicate, omitted, classic MUGEN, and custom-parser fields exactly.
+3. Extend Helper and Explod component context only through their established
+   owners. Candidate work is root/parent/P2 overlays, reaction/contact preview,
+   placement/palette/layer context, and richer map ownership. Do not classify an
+   arbitrary Helper as a projectile or give a visual Explod fictional HitDef data.
+4. Continue Stage/Screenpack contextual editing from the completed exact SFF and
+   embedded-action navigation. Any new field edit must retain the selected element
+   and source fingerprint, use its existing source editor/Undo path, and refresh
+   rather than retarget after a source change.
+5. Apply destination metadata to new or newly touched cross-workspace buttons.
+   Existing shared routes, nested AIR source, and SND manifest/maker-text routes
+   are covered; do not recolor ordinary local actions merely because they are
+   buttons.
+6. When installation is separately authorized, replace stale Help screenshots and
+   manually verify the exact packaged build. Minimum QA: Command & Movelist step
+   insertion/reorder/removal without convention normalization; explicit absolute
+   L/R versus relative B/F insertion; nested glyph source/visual draft recovery;
+   exact component switching and return; Action 0 remaining unselected until the
+   user chooses it; remembered selection isolation by component revision; unsaved
+   AIR visibility; stale component/action rejection; destination-colors `subtle`
+   and `off`; narrow layouts, keyboard focus, reload, Undo, Save, and no draft loss.
+7. Only after those Phase 1 gates are reviewed should a new package/version or
+   release-feed update be considered. Phase 2 remains a separate shell and must
+   not begin implicitly from this checklist.
