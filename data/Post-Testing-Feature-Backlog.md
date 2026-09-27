@@ -1425,6 +1425,33 @@ contrast, destination consistency and neutral artwork rendering. Refresh Help
 screenshots after this presentation change, before the release. This is a
 finite Phase 1 visual-cohesion item, not a redesign or new screen family.
 
+### Resizable viewer height and bottom splitter
+
+JNP requirement recorded September 27, 2026. Viewer/canvas regions are becoming
+too short as more controls and information are added beneath them. Applicable
+viewer screens must provide a clear horizontal resize border directly below the
+viewer. Dragging that border downward expands the viewer and pushes every lower
+feature down in normal document flow; lower controls must not overlay the viewer,
+be clipped, or be compressed to keep the original overall height. The containing
+screen may scroll when the expanded layout is taller than the available editor.
+
+Dragging upward may reduce the viewer only to a useful documented minimum. The
+handle must have a visible hover/focus affordance and resize cursor, must not
+steal canvas pan/object-drag gestures, and should support keyboard adjustment as
+an accessible separator. Provide a direct reset-to-default action, such as a
+double-click or nearby menu command, instead of requiring precise reverse
+dragging. Remember the chosen height for the relevant viewer type and layout
+without copying it blindly between incompatible tools or owners.
+
+This is view state only. Resizing must not alter authored coordinates, object
+placement, camera/world positions, zoom, selected frame, drafts, or source files.
+The canvas should redraw into the new viewport while retaining its existing
+camera and Fit/100% semantics. Apply the shared splitter behavior to viewer
+surfaces with stacked controls—including Move Lab/Constants, AIR, HitDef, Helper,
+Explod/Spatial, Throw, SFF/SND, Stage, and Screenpack—when each surface is touched.
+Verify upward/downward dragging, minimum and reset behavior, persistence, narrow
+editor widths, scrolling, keyboard focus, and no draft or selection loss.
+
 ### Approved destination-color mapping — JNP sign-off
 
 September 26, 2026: JNP explicitly signed off this mapping, superseding the
