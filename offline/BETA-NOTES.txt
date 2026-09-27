@@ -1,4 +1,4 @@
-IKEMAKER 0.78.1 — TESTER BETA NOTES
+IKEMAKER 0.79.8 — TESTER BETA NOTES
 
 IKEMaker is designed and directed by JustNoPoint (JNP), with OpenAI
 Codex used extensively for coding, review, testing assistance, and documentation.
@@ -6,6 +6,22 @@ AI assistance does not mean every feature is verified. This file distinguishes
 current work from known limits and future plans.
 
 CURRENT HIGHLIGHTS
+- Command & Movelist now preserves authored separators, whitespace, comments,
+  unknown/custom parser fields, omitted defaults, neighboring definitions, and
+  mixed CRLF/LF/CR line endings. Timeline and nested glyph edits change only the
+  selected content; diagnostics remain advisory and do not impose an input policy.
+- Move Lab now discovers exact assigned StateDefs, ZSS functions, direct HitDefs,
+  Helpers, Explods, and native Projectiles. Exact source identity is revalidated
+  before navigation or delegated editing, and assigned AIR actions are selected
+  explicitly rather than guessed from a state or controller number.
+- Direct HitDef inspection includes authored classic values and custom options,
+  while the existing guarded HitDef editor remains the only mutation owner.
+- Shared destination colors identify AIR, SFF, SND, code, Maps, Move Lab, stage,
+  screenpack/UI, palettes, and Help routes. They can be disabled without changing
+  navigation, focus behavior, or files.
+- The shared Move Lab camera now keeps P1/P2 world positions stable through zoom,
+  pan, resize, reset, and restoration. Exact installed interaction testing remains
+  listed below; source tests do not substitute for visual confirmation.
 - Lua Language Server is no longer an automatic extension dependency. Standard
   packages omit it; clearly labeled With-LuaLS variants offer it as an unchecked
   optional companion while IKEMaker's built-in Lua help remains available.
@@ -18,17 +34,17 @@ CURRENT HIGHLIGHTS
   selection is contextual guidance, not an IKEMEN syntax or game rule.
 - Project Maps now has visible entry points and a results-first browser with
   current-file, character, template, assigned-runtime, and combined scopes.
-- AIR timeline frames can be edited directly, with missing-sprite issue navigation.
-- Major fighter/coordinate viewers share a consistent navy grid and safer drag,
-  zoom, off-screen-object, and nested source behavior.
+- AIR timeline frames can be edited directly, with missing-sprite issue navigation
+  and a shared guarded Batch Apply Clsn2 workflow.
 - Project-aware IKEMEN build tracking, Nightly review, backup, migration, and
   rollback tools are available for explicitly reviewed engine changes.
 - IKEMaker has a separate beta updater. It checks an explicit manifest and only
   downloads or installs after the user reviews the exact release.
 
 KNOWN LIMITS / PLANNED FIXES
-- In JNP Move Constants, the Player 2 reaction-preview axis may shift visually
-  when zoom changes. Authored coordinates should not be changed by zoom.
+- Installed-package interaction testing remains open for the ordinary Constants
+  zoom case, exact Move Lab component handoffs, AIR/Clsn workflows, shared-source
+  warnings, and package-specific optional LuaLS choices.
 - Help, accessibility, unusual layouts, clean-machine installation, and specialist
   editor workflows still need broader human verification.
 - The online bootstrap path downloads VS Code only from Microsoft's official
@@ -41,14 +57,14 @@ PLANNED — NOT YET IMPLEMENTED
   Helpers, Explods, and projectiles.
 - Additional expert-recognition workflow refinements, including searchable next-
   group choices and clearer before/after narrowing summaries in Project Maps.
-- Continued verification and help coverage across all visual workspaces.
+- Continued installed verification and help coverage across all visual workspaces.
 
 INSTALL / UPDATE
 - Existing VS Code user: extract the Offline ZIP and run
   "Install IKEMEN Creator Tools.cmd".
 - First-time user: extract the Online Bootstrap ZIP and run
   "Install IKEMaker Online.cmd". VS Code is downloaded only if absent.
-- Restart or reload VS Code, then confirm IKEMaker 0.78.1.
+- Restart or reload VS Code, then confirm IKEMaker 0.79.8.
 - Future beta updates appear under IKEMaker > Personal Workspace and Preferences.
   Review the version, notes, size, and SHA-256 before choosing install.
 - Downloaded update packages are retained outside game/project folders in VS Code's

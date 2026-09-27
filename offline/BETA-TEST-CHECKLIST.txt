@@ -1,8 +1,8 @@
-IKEMAKER 0.78.1 — FOCUSED TEST CHECKLIST
+IKEMAKER 0.79.8 — FOCUSED TEST CHECKLIST
 
 Use a disposable copy. Test one familiar workflow at a time.
 
-[ ] Extract the ZIP, install, reload, and confirm version 0.78.1.
+[ ] Extract the ZIP, install, reload, and confirm version 0.79.8.
 [ ] Confirm the standard package makes no LuaLS installation request.
 [ ] In a With-LuaLS package, decline once and opt in once; both paths must be clear.
 [ ] Open Help & Learning Center and locate the guide for the chosen workflow.
@@ -12,6 +12,9 @@ Use a disposable copy. Test one familiar workflow at a time.
 [ ] Exercise the documented Undo/Recovery path.
 [ ] Try the workflow at the usual width and at a narrower editor width.
 [ ] Open Project Maps, change scopes, select a parent group, and verify results.
+[ ] Edit one Command timeline step and confirm untouched spacing/comments remain exact.
+[ ] Edit displayed-movelist glyphs and Source text; confirm mixed line endings and custom text remain intact.
+[ ] In Move Lab, inspect an exact StateDef/function/Helper/Explod/projectile site and verify source navigation.
 [ ] If testing updates, review the release details and decline once before install.
 [ ] Report confusing wording, clipped controls, missing previews, or wrong targets.
 

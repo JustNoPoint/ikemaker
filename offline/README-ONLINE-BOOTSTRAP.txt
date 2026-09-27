@@ -1,4 +1,4 @@
-IKEMAKER 0.78.1 — WINDOWS ONLINE / FIRST-TIME PACKAGE
+IKEMAKER 0.79.8 — WINDOWS ONLINE / FIRST-TIME PACKAGE
 
 Use this package when Visual Studio Code may not be installed.
 
@@ -9,7 +9,7 @@ Use this package when Visual Studio Code may not be installed.
 4. The installer runs only after Windows reports a valid Microsoft Corporation
    Authenticode signature.
 5. IKEMaker is installed. No separate Lua extension is downloaded automatically.
-6. Restart or reload VS Code and confirm IKEMaker 0.78.1.
+6. Restart or reload VS Code and confirm IKEMaker 0.79.8.
 7. Read BETA-NOTES.txt before editing valuable work.
 
 IKEMaker includes its native asset builders and required runtimes (including

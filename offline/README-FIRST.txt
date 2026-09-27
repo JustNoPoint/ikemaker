@@ -1,11 +1,11 @@
-IKEMAKER 0.78.1 — WINDOWS OFFLINE / EXISTING VS CODE PACKAGE
+IKEMAKER 0.79.8 — WINDOWS OFFLINE / EXISTING VS CODE PACKAGE
 
 Use this package when Visual Studio Code is already installed.
 
 1. Extract the entire ZIP and keep its files together.
 2. Run "Install IKEMEN Creator Tools.cmd".
 3. Restart or reload Visual Studio Code.
-4. Confirm IKEMaker 0.78.1 is shown in the status bar.
+4. Confirm IKEMaker 0.79.8 is shown in the status bar.
 5. Read BETA-NOTES.txt before editing valuable work.
 
 The package includes IKEMaker, its bundled native asset builders and required

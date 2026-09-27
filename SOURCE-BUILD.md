@@ -1,7 +1,7 @@
-# Building IKEMaker 0.79.1
+# Building IKEMaker 0.79.8
 
 This repository contains the reviewed source and public build inputs for
-IKEMaker 0.79.1.
+IKEMaker 0.79.8.
 IKEMaker is designed and directed by JustNoPoint (JNP) and is licensed under the
 MIT License. Third-party components retain their own licenses and notices.
 
@@ -37,7 +37,7 @@ npm test
 ## Build the IKEMaker VSIX
 
 ```powershell
-.\tools\package-vsix.ps1 -OutputPath .\ikemen-zss-tools-0.79.1.vsix
+.\tools\package-vsix.ps1 -OutputPath .\ikemen-zss-tools-0.79.8.vsix
 ```
 
 ## Build the Windows packages
@@ -46,12 +46,12 @@ After building the VSIX:
 
 ```powershell
 .\tools\package-offline.ps1 `
-  -VsixPath .\ikemen-zss-tools-0.79.1.vsix `
-  -OutputPath .\IKEMaker-0.79.1-Windows-Offline.zip
+  -VsixPath .\ikemen-zss-tools-0.79.8.vsix `
+  -OutputPath .\IKEMaker-0.79.8-Windows-Offline.zip
 
 .\tools\package-online-bootstrap.ps1 `
-  -VsixPath .\ikemen-zss-tools-0.79.1.vsix `
-  -OutputPath .\IKEMaker-0.79.1-Windows-Online-Bootstrap.zip
+  -VsixPath .\ikemen-zss-tools-0.79.8.vsix `
+  -OutputPath .\IKEMaker-0.79.8-Windows-Online-Bootstrap.zip
 ```
 
 To build the clearly labeled companion variants after placing the reviewed LuaLS
@@ -59,13 +59,13 @@ file at `third_party\Lua-Language-Server-3.19.1-win32-x64.vsix`:
 
 ```powershell
 .\tools\package-offline.ps1 `
-  -VsixPath .\ikemen-zss-tools-0.79.1.vsix `
-  -OutputPath .\IKEMaker-0.79.1-Windows-Offline-With-LuaLS.zip `
+  -VsixPath .\ikemen-zss-tools-0.79.8.vsix `
+  -OutputPath .\IKEMaker-0.79.8-Windows-Offline-With-LuaLS.zip `
   -IncludeLuaLanguageServer
 
 .\tools\package-online-bootstrap.ps1 `
-  -VsixPath .\ikemen-zss-tools-0.79.1.vsix `
-  -OutputPath .\IKEMaker-0.79.1-Windows-Online-Bootstrap-With-LuaLS.zip `
+  -VsixPath .\ikemen-zss-tools-0.79.8.vsix `
+  -OutputPath .\IKEMaker-0.79.8-Windows-Online-Bootstrap-With-LuaLS.zip `
   -IncludeLuaLanguageServer
 ```
 
