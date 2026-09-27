@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "productId": "ikemaker",
+  "releases": [
+    {
+      "version": "0.79.6",
+      "channel": "beta",
+      "publishedAt": "2026-09-27T10:44:24Z",
+      "compatibleEditor": {
+        "min": "1.85.0",
+        "max": ""
+      },
+      "notes": [
+        "Exact CNS/ZSS StateDef and ZSS Function editing in Move Lab",
+        "Retained stale/orphan draft recovery with explicit copy/discard",
+        "AIR lifecycle, frame ordering, and shared batch Clsn2 workflows",
+        "Command/movelist, Player Palette Workshop, and CNS Explod parity updates"
+      ],
+      "package": {
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.6/ikemen-zss-tools-0.79.6.vsix",
+        "sha256": "e56b884c742ad667db20f2529544738abcb74dacfa961cea01215aa007270d9c",
+        "bytes": 20358035
+      }
+    }
+  ]
+}
