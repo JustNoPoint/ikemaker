@@ -6,14 +6,14 @@ const { routeRosterPalette } = require('./roster_palette_flow');
 
 async function openPlayerPaletteWorkspace(uri) {
   const choice = await vscode.window.showQuickPick([
-    { label: 'Preview, add, or replace a character palette…', description: 'Choose an ACT or indexed PNG, preview it on the character, then review Add or Replace.', action: 'apply' },
+    { label: 'Add a new palette or replace an existing palette…', description: 'Choose an ACT or indexed PNG, then explicitly choose Add New or Replace Existing before previewing.', action: 'apply' },
     { label: 'Create, edit, or export a palette…', description: 'Open the palette-only index organizer for ACT/PNG/SFF color work and reviewed exports.', action: 'organize' },
     { label: 'Open the current character palette folder', description: 'Browse existing character palette files without opening sprite or code authoring.', action: 'folder' }
   ], { title: 'Player Palette Workshop', placeHolder: 'Palette tools only — no code or general sprite-authoring workspace.' });
   if (!choice) return;
   if (choice.action === 'organize') return vscode.commands.executeCommand('ikemen.palettePlayer.organize', uri);
   if (choice.action === 'folder') return vscode.commands.executeCommand('ikemen.openPaletteFolder');
-  const defPath = await chooseCharacterDef(uri, { title: 'Choose the character whose palette you want to preview, add, or replace' });
+  const defPath = await chooseCharacterDef(uri, { title: 'Choose the character that will receive the new or replacement palette' });
   if (!defPath) return;
   const source = await vscode.window.showOpenDialog({ title: 'Choose an ACT or indexed PNG palette', canSelectMany: false, canSelectFiles: true, canSelectFolders: false, filters: { 'ACT or indexed PNG palette': ['act', 'png'] } });
   if (!source?.[0]) return;

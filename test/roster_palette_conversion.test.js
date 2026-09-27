@@ -20,6 +20,7 @@ const hostile='</script><script>alert(1)</script><img src=x onerror=alert(2)>';
 const protectedPage=require('../src/webview_policy').protect(box.page({character:hostile,source:{name:hostile},targets:[],after:''}));
 assert(!protectedPage.includes(hostile));assert.equal((protectedPage.match(/<script /g)||[]).length,1,'only the application script receives a nonce');assert(protectedPage.includes('&lt;img'));
 const rememberedPage=box.page({character:'Ryu',source:{name:'pal.act',kind:'ACT'},targets:[],after:'',defaultFlip:true});
+assert(rememberedPage.includes('Replace Existing Palette — Preview'));assert(rememberedPage.includes('Review Replacement…'));assert(rememberedPage.includes('Cancel Without Changes'));
 assert(rememberedPage.includes('id="flipTable" type="checkbox" checked'),'remembered reversed order is visible before preview');
 assert(rememberedPage.includes('Remember this ACT order'));assert(rememberedPage.includes('ACT has no producer marker'));
 const pngPage=box.page({character:'Ryu',source:{name:'pal.png',kind:'Indexed PNG'},targets:[],after:''});

@@ -40,6 +40,7 @@ Module._load = original;
 
 (async () => {
   await flow.routeRosterPalette(defPath, actPath);
+  assert(panel.webview.html.includes('Preview new color 1,2'));
   assert(panel.webview.html.includes('Reversed Photoshop method (255 → 0)'));
   assert(panel.webview.html.includes('flipTable" type="checkbox" checked'), 'remembered reversed order should be visible before staging');
   await panelHandler({ type: 'preview', flipTable: true, rememberOrder: false });

@@ -1,0 +1,10 @@
+IKEMaker 0.79.11 — Clear palette add and replacement choices
+
+- Player Palette Workshop now separates Add New Palette Slot from every replacement choice.
+- Add New appears first and explicitly states that it preserves all existing palettes.
+- Every occupied palette is labeled Replace Existing before its preview opens.
+- Replacement previews identify the operation, the palette being replaced, and that no write has occurred.
+- The final replacement button and confirmation warning use replacement-specific wording.
+- Previewing, canceling, or declining the warning changes neither the SFF nor the remembered ACT order.
+- Confirmed replacement performs one guarded transactional SFF write.
+- The complete 331-file source test suite passes.
