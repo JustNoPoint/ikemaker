@@ -34,7 +34,7 @@ assert(timingOverview.problems.every(item=>item.members[0].target==='field'&&ite
 
 const page = workspace.html({ character: 'Ryu', files: {}, moves: [{ id: 'normal.slp', prefix: 'normal.slp', values: { moveID: 200, firstActiveElement: 2, idleElement: 3, damage: 30, groundHitTime: 10, guardHitTime: 7, sparkX: 0, sparkY: -50 }, fields: [{ suffix: 'damage', category: 'Damage', label: 'Damage', type: 'integer', value: 30, present: true }], timeline: { actionNumber: 200, state: 'ready', frames: [{ group: 200, index: 0, time: 2, clsnActive: false }] }, images: {}, reactionImage: null, contactProfile: [{ label: 'Ground hit velocity X', name: 'JNP_SF6_cfg_normal_light_ground_velocity_x', value: -4.8, filename: 'options.zss', line: 10, sourceHash: 'abc', sharedLabel: 'light normal profile' }], reactions: { normal: {}, counter: {}, punish: {} } }] });
 assert.match(page, /<b>Move Lab<\/b>/); assert.match(page, /Constants integration/); assert.match(page, /Moves \/ Overview/); assert.doesNotThrow(() => new Function(page.match(/<script>([\s\S]*)<\/script>/)[1]));
-assert.match(page, /id="overviewDrawer"/); assert.match(page, /All character files/); assert.match(page, /Direct code · open exact HitDef/);
+assert.match(page, /id="overviewDrawer"/); assert.match(page, /All character files/); assert.match(page, /Direct code · inspect exact HitDef/);
 assert.match(page, /overviewProfile/); assert.match(page, /overviewAttack/); assert.match(page, /overviewProblem/); assert.match(page, /focusBeforeRefresh/);
 assert.match(page, /Opponent reaction preview/);
 assert.match(page, /Drag the darkened P2 directly in the AIR canvas/);

@@ -13,6 +13,7 @@ const { chooseCharacterDef } = require('./character_picker');
 const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
 const { fieldExplanation, timingProblems, connectedCode, diagnosticProblems } = require('./attack_workspace_model');
 const { attackLibrary, validAttackReference } = require('./move_lab_model');
+const { componentReference, validComponentReference, directComponentModel } = require('./move_lab_component_model');
 
 let session = null;
 let formDrafts=new (require('./form_drafts').FormDrafts)();
@@ -80,6 +81,10 @@ function characterAssets(defPath) {
   const assigned = require('./related_work').resolveAssigned(defPath);
   return { ...assigned, defPath, folder, constants, air, sff, code: assigned.code || [] };
 }
+function characterShellAssets(defPath) {
+  const assigned=require('./related_work').resolveAssigned(defPath),folder=path.dirname(defPath);
+  return {...assigned,defPath,folder,constants:assigned.constants||'',air:assigned.air||'',sff:assigned.sff||'',code:assigned.code||[]};
+}
 
 async function chooseDef(uri) {
   return chooseCharacterDef(uri, { title: 'Move Lab — Constants Character' });
@@ -88,6 +93,15 @@ async function chooseDef(uri) {
 async function currentText(filename) {
   const open = vscode.workspace.textDocuments.find((document) => path.resolve(document.fileName).toLowerCase() === path.resolve(filename).toLowerCase());
   return open ? open.getText() : fs.readFileSync(filename, 'utf8');
+}
+
+function sourceDiagnostics(files) {
+  const wanted=new Set((files||[]).filter(Boolean).map(identity)),diagnostics=[];
+  for(const [uri,items]of(vscode.languages?.getDiagnostics?.()||[])){
+    if(!uri?.fsPath||!wanted.has(identity(uri.fsPath)))continue;
+    for(const item of items)diagnostics.push({filename:uri.fsPath,line:item.range.start.line,character:item.range.start.character,endLine:item.range.end.line,endCharacter:item.range.end.character,diagnosticCode:String(item.code??''),severity:item.severity,message:item.message,source:item.source||'IKEMEN'});
+  }
+  return diagnostics;
 }
 
 function contactProfile(assignments, move) {
@@ -120,7 +134,7 @@ async function modelFor(assets) {
     });
     return { ...spec, frames, loopStart: action.loopStart, totalTicks: frames.reduce((sum, frame) => sum + Math.max(1, Number(frame.time) || 1), 0) };
   }).filter(Boolean);
-  const output = [], openDocuments = vscode.workspace.textDocuments || [], wanted = new Set([assets.constants, assets.air, ...(assets.code || [])].filter(Boolean).map(file => path.resolve(file).toLowerCase())), diagnostics = [], sharedAssignments = new Map(), sharedProfile = require('./move_constants_shared_profile'), sourceHashes = new Map([[identity(assets.constants), hash(constantsText)], [identity(assets.air), hash(airText)]]);
+  const output = [], openDocuments = vscode.workspace.textDocuments || [], diagnostics = sourceDiagnostics([assets.constants, assets.air, ...(assets.code || [])]), sharedAssignments = new Map(), sharedProfile = require('./move_constants_shared_profile'), sourceHashes = new Map([[identity(assets.constants), hash(constantsText)], [identity(assets.air), hash(airText)]]);
   for (const filename of assets.code || []) {
     let text = ''; try { text = await currentText(filename); } catch (_) { continue; }
     sourceHashes.set(identity(filename), hash(text)); const lines = text.split(/\r?\n/);
@@ -129,7 +143,6 @@ async function modelFor(assets) {
       if (assignment) sharedAssignments.set(assignment.name.toLowerCase(), { name: assignment.name, value: assignment.value, filename, line, sourceHash: hash(text) });
     }
   }
-  for (const [uri, items] of (vscode.languages?.getDiagnostics?.() || [])) if (uri?.fsPath && wanted.has(path.resolve(uri.fsPath).toLowerCase())) for (const item of items) diagnostics.push({ filename: uri.fsPath, line: item.range.start.line, character: item.range.start.character, endLine: item.range.end.line, endCharacter: item.range.end.character, diagnosticCode: String(item.code ?? ''), severity: item.severity, message: item.message, source: item.source || 'IKEMEN' });
   for (const move of moves) {
     const timeline = actionTimeline(airText, move), images = {};
     if (timeline.state === 'ready') for (const frame of timeline.frames) {
@@ -144,6 +157,14 @@ async function modelFor(assets) {
   const codePrefix=codeDraftKey(assets.defPath,''),codeDrafts={};
   for(const [key,value] of Object.entries(codeFormDrafts.entries||{}))if(key.startsWith(codePrefix)&&value&&Object.keys(value).length)codeDrafts[key.slice(codePrefix.length)]=value;
   return { character: path.basename(assets.folder), files: assets, fileStatus, timingSources:{constants:hash(constantsText),air:hash(airText)}, moves: output, overview: overviewFor(assets, output, diagnostics, openDocuments, sourceHashes), codeDrafts, formDrafts:Object.fromEntries(output.map(move=>[move.id,formDrafts.read(draftKey(assets.defPath,move.id))||{}])) };
+}
+async function shellModelFor(assets) {
+  const ready=[assets.constants,assets.air,assets.sff].every(filename=>filename&&fs.existsSync(filename));
+  const openDocuments=vscode.workspace.textDocuments||[],diagnostics=sourceDiagnostics([assets.constants,assets.air,...(assets.code||[])]);
+  let unavailable='No assigned AIR/SFF preview is available. Direct source inspection remains fully available.';
+  if(ready)try{const model=await modelFor(assets),direct=directComponentModel(assets,openDocuments,diagnostics);model.directComponents=direct.components;model.overview.controllers=model.overview.controllers.map(item=>({...item,reference:componentReference(item,assets.defPath)}));return model;}catch(error){unavailable=`The optional constants/preview component is unavailable: ${error.message}. Direct source inspection remains fully available.`;}
+  const direct=directComponentModel(assets,openDocuments,diagnostics),fileStatus=(assets.code||[]).filter(filename=>filename&&fs.existsSync(filename)).map(filename=>{const document=openDocuments.find(item=>identity(item.fileName)===identity(filename));return{filename,label:path.basename(filename),dirty:Boolean(document?.isDirty)}});
+  return{character:path.basename(assets.folder),files:assets,fileStatus,timingSources:{},moves:[],overview:{controllers:direct.components.map(item=>({...item,reference:item.reference})),constantProfiles:(direct.constantProfiles||[]).map(item=>({...item,defPath:assets.defPath,supported:false})),problems:[]},directComponents:direct.components,codeDrafts:{},formDrafts:{},previewUnavailable:unavailable};
 }
 
 function html(model) { const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
@@ -236,15 +257,19 @@ canvas.onwheel=e=>{e.preventDefault();setViewZoom(viewZoom*(e.deltaY<0?1.12:.89)
     .replace('<h3>Opponent reaction estimate</h3>', '<h3>Opponent reaction preview</h3><div class="opponent-controls"><label><input id="showOpponent" type="checkbox" checked> Show P2</label><select id="reactionAction" title="Choose an authored get-hit AIR action"></select><button id="resetOpponent" title="Return P2 to the default authored preview position">Reset</button></div><div class="opponent-controls"><label>World X <input id="opponentX" type="number" step="any"></label><label>World Y <input id="opponentY" type="number" step="any"></label></div><p class="muted">Drag the darkened P2 directly in the AIR canvas. Its authored/world coordinates stay unchanged when zooming; only its screen distance from the zoom pivot scales. Select standing-high, standing-low, crouching, or airborne reactions when those standard actions exist.</p><h3>Contact result</h3>')
     .replace('<div class="reaction" id="reaction"><div class="spark" id="spark"></div></div>', '')
     .replace('Spark X is defender-relative, so the canvas estimates contact from the leading edge of the active Clsn1.', 'Spark X is defender-relative. With P2 visible it follows the draggable defender axis; without P2 the canvas estimates contact from the leading edge of active Clsn1.')
-    .replace('</style>', '.overview-drawer{position:fixed;z-index:20;top:46px;bottom:0;left:0;width:min(460px,92vw);overflow:auto;padding:12px;background:var(--vscode-editor-background);border-right:1px solid var(--vscode-panel-border);box-shadow:5px 0 18px rgba(0,0,0,.35)}.overview-drawer[hidden]{display:none}.overview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.overview-heading h2{margin:0}.overview-drawer>input{width:100%;margin:8px 0}.overview-entry{display:block;width:100%;text-align:left;margin:4px 0}.overview-entry:disabled{opacity:.62;cursor:not-allowed}.problem-scope{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px;border-top:1px solid var(--vscode-panel-border)}</style>')
+    .replace('</style>', '.overview-drawer{position:fixed;z-index:20;top:46px;bottom:0;left:0;width:min(460px,92vw);overflow:auto;padding:12px;background:var(--vscode-editor-background);border-right:1px solid var(--vscode-panel-border);box-shadow:5px 0 18px rgba(0,0,0,.35)}.overview-drawer[hidden],.direct-workspace[hidden],.layout[hidden]{display:none}.overview-heading,.direct-heading,.direct-actions{display:flex;align-items:center;justify-content:space-between;gap:8px}.overview-heading h2,.direct-heading h2{margin:0}.overview-drawer>input{width:100%;margin:8px 0}.overview-entry{display:block;width:100%;text-align:left;margin:4px 0}.overview-entry:disabled{opacity:.62;cursor:not-allowed}.problem-scope{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px;border-top:1px solid var(--vscode-panel-border)}.direct-workspace{flex:1;min-height:0;overflow:auto;padding:12px}.direct-heading{align-items:flex-start}.direct-actions{flex-wrap:wrap;justify-content:flex-end}.direct-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,340px);gap:10px}.direct-source{white-space:pre-wrap;overflow:auto;max-height:55vh;padding:10px;background:var(--vscode-textCodeBlock-background);font-family:var(--vscode-editor-font-family)}@media(max-width:800px){.direct-grid{grid-template-columns:1fr}}</style>')
     .replace('<button id="moveOverview">Overview / Related Tools</button>', '<button id="moveOverview" title="Browse all discovered constants profiles and exact HitDef controllers without leaving this panel">Moves / Overview</button>')
-    .replace('<main class="layout">', '<aside id="overviewDrawer" class="overview-drawer" hidden aria-label="Moves and overview"></aside><main class="layout">')
+    .replace('<main class="layout">', '<aside id="overviewDrawer" class="overview-drawer" hidden aria-label="Moves and overview"></aside><section id="directWorkspace" class="direct-workspace" hidden aria-label="Direct HitDef component"></section><main class="layout">')
+    .replace('function selectMove(id,restoredDraft,restoredFrame=0){stop();', 'function selectMove(id,restoredDraft,restoredFrame=0){moveDirectUi.clear();stop();')
+    .replace('function render(){if(!move)return;', 'function render(){if(moveDirectUi.beforeRender())return;if(!move){moveOverviewUi.render();return;}')
     .replace('renderMoveList();renderFields();renderTimeline();renderOpponentControls();renderProblems();renderCode();', 'renderMoveList();renderFields();moveOverviewUi.restoreCategories();renderTimeline();renderOpponentControls();moveOverviewUi.renderProblems();renderCode();moveOverviewUi.render();')
-    .replace('const initialSelection=initialMoveSelection();', `${require('./move_constants_overview').clientScript()}const initialSelection=initialMoveSelection();`)
-    .replace('</script></body>', `globalThis.ikemenNavigationSelection=()=>move?{id:move.id}:undefined;globalThis.ikemenCanRestoreNavigation=ref=>model.moves.some(item=>item.id===ref.id)&&Object.keys(draft).length===0&&Object.keys(profileDrafts).length===0;globalThis.ikemenRestoreNavigation=ref=>selectMove(ref.id);${launchControlsClientScript()}</script></body>`);
+    .replace("if(e.data.type==='model'){stop();const keep=move?.id,keepFrame=frame;model=e.data.model;imageCache.clear();selectMove(keep,undefined,keepFrame)}", "if(e.data.type==='model'){stop();const keep=move?.id,keepFrame=frame,direct=moveDirectUi.hasSelection();model=e.data.model;imageCache.clear();if(direct)moveDirectUi.modelChanged();else selectMove(keep,undefined,keepFrame)}")
+    .replace('const initialSelection=initialMoveSelection();', `${require('./move_constants_overview').clientScript()}${require('./move_lab_direct_component').clientScript()}const initialSelection=initialMoveSelection();`)
+    .replace('selectMove(initialSelection.id,initialSelection.draft,initialSelection.frame);', 'if(model.openReference?.profileId){moveDirectUi.clear();selectMove(initialSelection.id,initialSelection.draft,initialSelection.frame)}else if(!moveDirectUi.hasSelection()&&!model.openReference?.componentReference)selectMove(initialSelection.id,initialSelection.draft,initialSelection.frame);moveDirectUi.restoreInitial();')
+    .replace('</script></body>', `globalThis.ikemenNavigationSelection=()=>move?{kind:'constants',id:move.id}:moveDirectUi.current()?{kind:'direct',componentReference:moveDirectUi.current().reference}:undefined;globalThis.ikemenCanRestoreNavigation=ref=>ref?.kind==='direct'?Boolean((model.directComponents||[]).find(item=>moveDirectUi.matches(item,ref.componentReference))):Object.keys(draft).length===0&&Object.keys(profileDrafts).length===0&&model.moves.some(item=>item.id===ref?.id);globalThis.ikemenRestoreNavigation=ref=>{if(ref?.kind==='direct'){const item=(model.directComponents||[]).find(candidate=>moveDirectUi.matches(candidate,ref.componentReference));if(!item)return false;moveDirectUi.select(item.reference);return true}selectMove(ref.id);return true};${launchControlsClientScript()}</script></body>`);
 }
 
-async function refresh() { const owner=session,assets=owner?.assets;if(!owner)return;const model=await modelFor(assets);if(session!==owner||owner.assets!==assets)return;owner.model=model;owner.panel.webview.postMessage({type:'model',model}); }
+async function refresh() { const owner=session,assets=owner?.assets;if(!owner)return;const model=owner.shell?await shellModelFor(assets):await modelFor(assets);if(session!==owner||owner.assets!==assets)return;owner.model=model;owner.panel.webview.postMessage({type:'model',model}); }
 async function applyMoveValues(sourceId, values, statusText, owner=session, expectedText, expectedAir) {
   if(session!==owner)return;
   const current = await currentText(owner.assets.constants), moves = moveGroups(parseConstants(current)), move = moves.find((item) => item.id === String(sourceId).toLowerCase());
@@ -330,6 +355,7 @@ async function handle(message) {
   if (await handleLaunchMessage(message, assets.defPath, 'constants', owner.panel)) return;
   if(session!==owner||owner.assets!==assets)return;
   if(message.type==='moveIntegrationContext'){
+    if(message.componentReference){const component=validComponentReference(message.componentReference,{components:owner.model.directComponents||[]},assets.defPath);if(component)require('./move_lab_context').remember(assets.defPath,{kind:'direct',reference:componentReference(component,assets.defPath)});return;}
     const move=owner.model.moves.find(item=>item.id===message.sourceId),frameIndex=Number(message.frameIndex);
     if(!move||!Number.isInteger(frameIndex)||frameIndex<0||frameIndex>=(move.timeline?.frames?.length||0))return;
     require('./move_lab_context').remember(assets.defPath,{kind:'constants',reference:constantsReference(move,assets,owner.model,{frameIndex,overviewReference:owner.overviewReference})});return;
@@ -343,21 +369,31 @@ async function handle(message) {
   if(session!==owner||owner.assets!==assets)return;
   if(timing&&(owner.model.timingSources?.constants!==hash(expectedText)||owner.model.timingSources?.air!==hash(expectedAir)))throw new Error('The constants or AIR changed since this preview. Refresh before assigning timing.');
   if (message.type === 'refresh') return refresh();
+  if (message.type === 'selectDirectComponent'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic') {
+    const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const component=validComponentReference(message.reference,{components:current.directComponents||[]},assets.defPath);
+    if(!component)return vscode.window.showWarningMessage('That direct HitDef changed or moved. Refresh Moves / Overview and choose it again.');
+    owner.model=current;owner.shell=true;
+    if(message.type==='selectDirectComponent'){await owner.panel.webview.postMessage({type:'model',model:current});return owner.panel.webview.postMessage({type:'directComponentSelect',reference:component.reference});}
+    if(message.type==='editDirectComponent')return vscode.commands.executeCommand('ikemen.hitDef.openEditor',vscode.Uri.file(component.filename),{preset:true,reference:{sourceHash:component.sourceHash,index:component.index,defPath:assets.defPath}});
+    if(message.type==='openDirectComponent')return openSourceLocation(owner,component.filename,component.line);
+    const diagnostic=(component.diagnostics||[]).find(item=>item.line===Number(message.line));if(diagnostic)return openSourceLocation(owner,diagnostic.filename,diagnostic.line);return;
+  }
   if (message.type === 'overviewAttack') {
-    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const attack = validAttackReference(message.reference, current.overview);
     if (!attack) return vscode.window.showWarningMessage('That HitDef changed. Refresh the Moves / Overview drawer and choose it again.');
     return vscode.commands.executeCommand('ikemen.hitDef.openEditor', vscode.Uri.file(attack.filename), { preset: true, reference: { sourceHash: attack.sourceHash, index: attack.index, defPath: assets.defPath } });
   }
   if (message.type === 'overviewProfile') {
-    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const selected = validConstantsReference(message.reference, assets, current);
     if (!selected) return vscode.window.showWarningMessage('That constants profile changed. Refresh the Moves / Overview drawer and choose it again.');
     owner.model=current;await owner.panel.webview.postMessage({type:'model',model:current});
     return owner.panel.webview.postMessage({type:'moveLabSelect',reference:message.reference});
   }
   if (message.type === 'overviewProblem') {
-    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const validated = validOverviewProblem(message.reference, current);
     if (!validated) return vscode.window.showWarningMessage('That problem or its source changed. Refresh and review the current result.');
     owner.model=current;
@@ -368,7 +404,7 @@ async function handle(message) {
     return;
   }
   if (message.type === 'moveOverview') {
-    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const move = current.moves.find(item => item.id === message.sourceId), returnTo = constantsReference(move, assets, current, {frameIndex:Number(message.frameIndex),overviewReference:owner.overviewReference});
     if (!returnTo) return vscode.window.showWarningMessage('That move profile changed. Refresh and choose it again.');
     if(!validConstantsReference(returnTo,assets,current))return vscode.window.showWarningMessage('That move frame changed. Refresh and choose it again.');
@@ -489,7 +525,7 @@ async function handle(message) {
 
 async function openMoveConstantsWorkspace(uri, options = {}) {
   if(session?.busy){vscode.window.showInformationMessage('Wait for the current Move Lab edit to finish before switching context.');return session.panel;}
-  const previous=session,defPath = await chooseDef(uri), requested=options?.reference || null; if (!defPath||session!==previous||session?.busy) return;
+  const previous=session,defPath = await chooseDef(uri), requested=options?.reference || null,wantsShell=options?.integration==='shell'||Boolean(requested?.componentReference); if (!defPath||session!==previous||session?.busy) return;
   if(session && options.history){
     if(path.resolve(session.assets.defPath).toLowerCase()!==path.resolve(defPath).toLowerCase()){
       vscode.window.showInformationMessage('Another character is open in the Move Lab constants integration. Close that workspace before restoring this history item so its pending edits remain protected.');return;
@@ -497,26 +533,42 @@ async function openMoveConstantsWorkspace(uri, options = {}) {
     revealInViewerGroup(session.panel,false,vscode.ViewColumn.Active);return session.panel;
   }
   if(session&&path.resolve(session.assets.defPath).toLowerCase()===path.resolve(defPath).toLowerCase()){
-    if(requested){const owner=session,current=await modelFor(owner.assets);if(session!==owner||owner.busy)return owner.panel;if(!validConstantsReference(requested,owner.assets,current)){vscode.window.showWarningMessage('That constants profile or source changed. Refresh Move Lab and choose it again.');return owner.panel;}owner.model=current;owner.overviewReference=requested.overviewReference||owner.overviewReference;await owner.panel.webview.postMessage({type:'model',model:current});await owner.panel.webview.postMessage({type:'moveLabSelect',reference:requested});}
+    if(requested){
+      const owner=session,current=await shellModelFor(owner.assets);if(session!==owner||owner.busy)return owner.panel;
+      if(requested.componentReference){const component=validComponentReference(requested.componentReference,{components:current.directComponents||[]},owner.assets.defPath);if(!component){vscode.window.showWarningMessage('That direct HitDef changed or moved. Refresh Moves / Overview and choose it again.');return owner.panel;}owner.model=current;owner.shell=true;current.openReference={componentReference:component.reference};await owner.panel.webview.postMessage({type:'model',model:current});await owner.panel.webview.postMessage({type:'directComponentSelect',reference:component.reference});}
+      else {if(!validConstantsReference(requested,owner.assets,current)){vscode.window.showWarningMessage('That constants profile or source changed. Refresh Move Lab and choose it again.');return owner.panel;}owner.model=current;owner.shell=true;owner.overviewReference=requested.overviewReference||owner.overviewReference;await owner.panel.webview.postMessage({type:'model',model:current});await owner.panel.webview.postMessage({type:'moveLabSelect',reference:requested});}
+    }
     revealInViewerGroup(session.panel,false,vscode.ViewColumn.Active);return session.panel;
   }
-  let assets, model;
-  if(requested){try { assets = characterAssets(defPath); model = await modelFor(assets); } catch (error) { return vscode.window.showErrorMessage(`Move Lab — Constants: ${error.message}`); }if(!validConstantsReference(requested,assets,model)){vscode.window.showWarningMessage('That constants profile or source changed. Refresh Move Lab and choose it again.');return;}}
+  let assets, model,constantsFallback=false;
+  if(requested){
+    try { assets = wantsShell?characterShellAssets(defPath):characterAssets(defPath); model = await shellModelFor(assets); }
+    catch(error){if(wantsShell)return vscode.window.showErrorMessage(`Move Lab: ${error.message}`);const choice=await vscode.window.showWarningMessage(`Move Lab — Constants is unavailable: ${error.message}`,'Open Move Lab');if(choice!=='Open Move Lab')return;try{assets=characterShellAssets(defPath);model=await shellModelFor(assets);constantsFallback=true;}catch(shellError){return vscode.window.showErrorMessage(`Move Lab: ${shellError.message}`);}}
+    if(requested.componentReference){const component=validComponentReference(requested.componentReference,{components:model.directComponents||[]},assets.defPath);if(!component){vscode.window.showWarningMessage('That direct HitDef changed or moved. Refresh Moves / Overview and choose it again.');return;}model.openReference={componentReference:component.reference};}
+    else if(!constantsFallback&&!validConstantsReference(requested,assets,model)){vscode.window.showWarningMessage('That constants profile or source changed. Refresh Move Lab and choose it again.');return;}
+  }
   if(session&&path.resolve(session.assets.defPath).toLowerCase()!==path.resolve(defPath).toLowerCase()){if(!await require('./viewer_close').prepare([session.panel],vscode)||session!==previous)return;await Promise.all([formDrafts.flush(),codeFormDrafts.flush()]);}
-  if(!model){try { assets = characterAssets(defPath); model = await modelFor(assets); } catch (error) { return vscode.window.showErrorMessage(`Move Lab — Constants: ${error.message}`); }}
-  model.openReference=requested;
+  if(!model){
+    try { assets = wantsShell?characterShellAssets(defPath):characterAssets(defPath); model = await shellModelFor(assets); }
+    catch (error) {
+      if(wantsShell)return vscode.window.showErrorMessage(`Move Lab: ${error.message}`);
+      const choice=await vscode.window.showWarningMessage(`Move Lab — Constants is unavailable: ${error.message}`,'Open Move Lab');if(choice!=='Open Move Lab')return;
+      try{assets=characterShellAssets(defPath);model=await shellModelFor(assets);}catch(shellError){return vscode.window.showErrorMessage(`Move Lab: ${shellError.message}`);}
+    }
+  }
+  if(!model.openReference&&!constantsFallback)model.openReference=requested;
   if(session!==previous||session?.busy)return;
-  if (!model.moves.length) return vscode.window.showWarningMessage('No normal.*, special.*, or hyper.* move-constant groups were found in [Constants].');
-  if (session) { session.draftDefs.add(defPath.toLowerCase()); session.assets = assets; session.model = model; session.overviewReference=model.openReference?.overviewReference||null; registerCharacterToolPanel(session.panel, defPath, model.character, Object.values(assets).filter((item) => typeof item === 'string')); session.panel.title = `${model.character} — Move Lab · Constants`; session.panel.webview.html = require('./webview_policy').protect(html(model)); revealInViewerGroup(session.panel, false, vscode.ViewColumn.Active);return session.panel; }
-  const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenMoveConstants', `${model.character} — Move Lab · Constants`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
-  attachPanel(panel, assets, model);
+  if (!model.moves.length&&!(model.directComponents||[]).length) return vscode.window.showWarningMessage(wantsShell?'No constants profiles or direct HitDef controllers were found in the assigned character code.':'No normal.*, special.*, or hyper.* move-constant groups were found in [Constants].');
+  if (session) { session.draftDefs.add(defPath.toLowerCase()); session.assets = assets; session.model = model; session.shell=true; session.overviewReference=model.openReference?.overviewReference||null; registerCharacterToolPanel(session.panel, defPath, model.character, Object.values(assets).filter((item) => typeof item === 'string')); session.panel.title = `${model.character} — Move Lab`; session.panel.webview.html = require('./webview_policy').protect(html(model)); revealInViewerGroup(session.panel, false, vscode.ViewColumn.Active);return session.panel; }
+  const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenMoveConstants', `${model.character} — Move Lab`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
+  attachPanel(panel, assets, model, true);
   return panel;
 }
 
-function attachPanel(panel, assets, model) {
+function attachPanel(panel, assets, model, shell=false) {
   registerCharacterToolPanel(panel, assets.defPath, model.character, Object.values(assets).filter(item => typeof item === 'string'));
-  session = { panel, assets, model, overviewReference:model.openReference?.overviewReference||null, busy:false, draftDefs:new Set([assets.defPath.toLowerCase()]) };
-  panel.title = `${model.character} — Move Lab · Constants`;
+  session = { panel, assets, model, shell, overviewReference:model.openReference?.overviewReference||null, busy:false, draftDefs:new Set([assets.defPath.toLowerCase()]) };
+  panel.title = `${model.character} — Move Lab${shell?'':' · Constants'}`;
   panel.webview.options = { ...panel.webview.options, enableScripts: true };
   panel.webview.html = require('./webview_policy').protect(html(model));
   panel.webview.onDidReceiveMessage(message => session?.panel===panel&&handle(message).catch(error => { if(message?.type==='applyCodeSection')panel.webview.postMessage({type:'codeSectionFailed',requestId:message.requestId});return vscode.window.showErrorMessage(`Move Constants Editor: ${error.message}`); }));
@@ -532,9 +584,9 @@ async function restoreMoveConstantsWorkspace(panel, state) {
   try {
     if (!state || typeof state.defPath !== 'string' || !path.isAbsolute(state.defPath)) throw new Error('The saved character path is unavailable. Reopen Move Lab from the character.');
     if (session) throw new Error('Another Move Lab constants integration is already open.');
-    const assets = characterAssets(state.defPath), model = await modelFor(assets);
-    if (!model.moves.length) throw new Error('The saved character no longer contains move-constant groups.');
-    attachPanel(panel, assets, model);
+    const assets = characterShellAssets(state.defPath), model = await shellModelFor(assets);
+    if (!model.moves.length&&!(model.directComponents||[]).length) throw new Error('The saved character no longer contains move-constant groups or direct HitDef controllers.');
+    attachPanel(panel, assets, model, true);
   } catch (error) {
     panel.dispose();
     vscode.window.showWarningMessage(`Move Lab constants integration could not be restored: ${error.message}`);
@@ -547,4 +599,4 @@ function registerMoveConstantsWorkspace(context) {
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('ikemenMoveConstants', { deserializeWebviewPanel: restoreMoveConstantsWorkspace }));
 }
 
-module.exports = { registerMoveConstantsWorkspace, openMoveConstantsWorkspace, characterAssets, contactProfile, modelFor, html, constantsReference, validConstantsReference, validOverviewProblem, overviewFor };
+module.exports = { registerMoveConstantsWorkspace, openMoveConstantsWorkspace, characterAssets, characterShellAssets, contactProfile, modelFor, shellModelFor, html, constantsReference, validConstantsReference, validOverviewProblem, overviewFor };

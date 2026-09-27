@@ -1195,3 +1195,140 @@ Verify legacy entry points, exact controller -> component -> return, multiple
 same-type components, nested ownership, retained drafts, stale sources, optional
 windows and zero writes on view switching. Preserve all existing acceptance,
 35% usage reserve and no installation/publication/game-edit boundaries.
+
+## Phase 1 closeout and milestone scheduling — JNP clarification
+
+Authoritative scheduling update from JNP, 2026-09-26. This overrides earlier
+blanket deferral/scheduling wording for the four items below without reopening
+all deferred expansions. Keep Phase 1 focused on agreed workflows, integration,
+redundancy removal and concrete user needs; preserve the 35% usage reserve.
+
+1. Guided Flow Mode: needed when Ryu, Demitri, Morrigan and Goku are closer to
+   completion. Derive optional, game-specific flows for additional characters
+   from those proven authoring workflows. Do not design a generic mandatory
+   tutorial prematurely or treat the feature as cancelled. JNP's experience and
+   recognition-based working style remain the design basis. This is a milestone
+   dependency, not an instruction to start now or a scheduled automatic task.
+2. Broader Project Data browsers: needed as work moves into specials. Prioritize
+   the categories actually needed then (for example function calls, states,
+   helper/projectile IDs and values), using the existing reusable browser and
+   contextual pickers. Do not wait for an arbitrary usage-exhaustion window;
+   do not implement every category now. Preserve owner/project/game identity
+   and exact source links.
+3. Recognition/reuse tools: useful even at the current stage and eligible for
+   bounded near-term Phase 1 work when tied to an actual authoring task. The
+   existing personal example shelf is already implemented; improve access and
+   reuse rather than recreate it. Prefer searching existing project examples
+   by user labels/intent and comparing a selected block with a known working
+   reference in the existing coding/Move Lab UI. Show dependencies and source
+   ownership. Keep source editable and insertion explicit. No blanket approval
+   here for semantic/AI search infrastructure, automatic adaptation or a new
+   standalone browser; evaluate those only against a concrete need. Do not
+   interrupt a half-finished reviewed slice to start optional work.
+4. QA report website: needed when Ryu, Demitri, Morrigan and Goku are closer to
+   completion, supporting QA and repeatable work on additional characters for
+   each game. This milestone refines the prior 'after a future release' wording;
+   no immediate website build or deployment is requested. Use actual issues
+   and testing needs from those characters to shape the reporting/integration.
+
+These features remain recorded with explicit timing, not removed from the
+roadmap. The later character milestones and specials trigger do not silently
+become requirements for the current Phase 1 closeout checkpoint. Assess whether
+an individual recognition/reuse improvement is worth doing now based on a named
+workflow obstacle and a bounded acceptance check; retain current no-install/
+no-publication/no-game-edit boundaries. Phase 2 and tournament timing are
+unchanged by this clarification.
+
+## Phase 1 — AIR editor bulk Clsn2 access and transition classification
+
+Explicit JNP workflow request, 2026-09-26. Existing air.batchApplyClsn2 currently
+requires an active AIR text editor and selected Clsn2 text. Its action-heading
+filter is a substring match for crouch/jump, which can misclassify transitions.
+Expose the same reviewed bulk operation directly in the visual AIR editor's
+collision tools, with a visible Bulk Apply Clsn2 action and existing text entry
+kept compatible. Use the current selected frame's effective Clsn2 (including
+inherited defaults) or an explicitly selected source; require clear source and
+target previews. Reuse the mutation service; do not fabricate a text selection
+or rely on whichever text editor happens to be active.
+
+Classification must distinguish AIR action numbers from SFF sprite group numbers.
+Use explicit user/project action-role overrides ahead of optional known-number
+suggestions and name hints. Never require renaming animations. Show a compact
+review of transition/ambiguous action assignments before bulk Apply, allowing
+custom numbers, manual exclusions and alternative methods. Remember mappings
+only through an explicit preference choice, without creating project sidecars
+silently or repeatedly asking for mappings already confirmed for this scope.
+
+JNP's requested transition convention:
+- Stand -> crouch: crouching Clsn2 from animation element 1 onward.
+- Crouch -> stand: standing Clsn2 from animation element 1 onward.
+- Jump start: grounded startup, not part of the airborne/jump bulk set merely
+  because its name contains 'jump'. Offer standing/source-selected startup
+  boxes for review; custom projects may choose otherwise.
+
+The current local standard action-name table identifies 10 (crouch transition),
+12 (rise from crouch) and 40 (jump start). Present these as editable suggestions,
+not universal enforced ownership. 'Frame 1' here means first AIR element, not
+elapsed game tick. An assignment applies from that first element, not only to it.
+Named-filter matches must not override an explicit transition classification.
+
+Before explicit Apply, show source boxes, classified action numbers/names,
+element ranges, excluded/ambiguous actions, operation (replace/append/default/
+clear) and changed-action count. Cancel changes nothing. Respect inherited
+Clsn2Default semantics, preserve Clsn1 and unrelated timing/offset/flags, reject
+stale source and retain pending visual-editor drafts. Keep this available in
+applicable authoring modes without requiring text-mode navigation. Focused tests:
+misleading names, actions 10/12/40 and custom mappings, first-element transition
+rules, inherited boxes/default versus per-element behavior, exclusions, stale
+source, explicit Apply/Undo and no writes on opening/review. SF6 implements in
+a bounded slice after the current correction checkpoint, preserving the 35%
+reserve and existing no-install/no-publish/no-desktop-control boundaries.
+
+### Shared bulk Clsn2 rules across text and visual AIR editors
+
+Explicit JNP clarification, 2026-09-26: both text-editor and visual AIR-editor
+entry points must use the SAME classification, action-role overrides, transition
+exceptions, exclusions, target selection and reviewed mutation logic. This is
+not a visual-editor-only correction. Keep existing text-selected Clsn2 input
+and visual selected-frame input as source adapters into one shared operation.
+Given identical source boxes, action mappings, element scope and operation,
+both entry points must propose the same target actions/elements and exact AIR
+edit. Use the same scoped explicitly saved preferences and review explanations;
+neither path should require renaming animations or silently fall back to the
+old crouch/jump substring behavior when an override exists. Add parity fixtures
+covering actions 10/12/40, custom numbers and misleading names, explicit
+exclusions, inherited defaults, preview/cancel and stale-source rejection.
+
+## Phase 1 — Command editor access and Home-screen discoverability
+
+Explicit JNP approval, 2026-09-26, following tester difficulty finding the
+Command & Movelist editor. This is concrete closeout feedback, not a new editor.
+
+- Provide an obvious Open Command & Movelist Editor action from the CMD text
+  editor, not only a right-click menu or global command. Reuse the existing
+  command/editor through an editor-title action or equivalent visible affordance;
+  retain context-menu and Command Palette access. Audit existing contributions
+  first and improve their visibility/conditions rather than duplicate them.
+- Carry the actual CMD document and owning character/project into the editor;
+  select the command under the caret when unambiguously resolvable. Respect
+  unsaved document contents. If the CMD is shared across characters, resolve or
+  ask for the owner instead of guessing the nearest unrelated character.
+  Return to the same source location without losing visual or text drafts.
+- Keep Commands / Movelist easy to find in character tools and related-work
+  navigation, with consistent labeling. Apply in applicable authoring modes;
+  do not require Workspace mode just to find a tool already allowed in Simple.
+- Audit Home after mode selection/tool launch: the tester screenshot showed
+  Workspace mode already active and Home occupying a narrow editor split.
+  Home must not behave like an unfinished mandatory mode prompt or persistently
+  consume an unwanted split. Prefer revealing the chosen tool in the intended
+  editor group and an easy dismiss/return-to-Home route. Do not force-close
+  user-pinned Home or rearrange user layouts without explicit action/preferences.
+  Do not assume this older 0.78.0 screenshot reproduces in the current build.
+
+Focused acceptance: CMD title/context entry visibility by supported mode;
+correct current document/caret command; shared CMD owner ambiguity; dirty source;
+existing editor reuse/return and retained drafts; Home mode selection then tool
+launch without an extra forced split; no source writes from opening/navigation.
+Reuse established navigation/mutation owners. Finish the active B1 correction
+checkpoint first, preserve 35% reserve, and retain no-install/no-publication/
+no-desktop-control boundaries. Source inspection is not installed UI QA.

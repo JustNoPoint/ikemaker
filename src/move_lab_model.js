@@ -63,14 +63,18 @@ function lineAt(text, offset) { return text.slice(0, Math.max(0, offset)).split(
 function attackLibrary(assets, openDocuments = []) {
   const controllers = [];
   for (const filename of (assets.code || []).filter(exists)) {
-    const text = readCurrent(filename, openDocuments), syntax = hitDefSyntax(filename, text), blocks = parseHitDefs(text, syntax);
+    const text = readCurrent(filename, openDocuments), syntax = hitDefSyntax(filename, text), blocks = parseHitDefs(text, syntax), lines = text.split(/\r?\n/), nodes = flatten(parseCodeStructure(text, language(filename), filename));
     blocks.forEach((block, index) => {
-      const state = stateNumberAt(text, block.start), attr = block.values.attr || '', damage = block.values.damage || '';
+      const startLine = lineAt(text, block.start), endLine = lineAt(text, Math.max(block.start, block.end - 1)), state = stateNumberAt(text, block.start), attr = block.values.attr || '', damage = block.values.damage || '';
+      const owners = nodes.filter(item => ['state','function'].includes(item.kind) && startLine >= item.startLine && startLine <= item.endLine).sort((a,b)=>(a.endLine-a.startLine)-(b.endLine-b.startLine));
+      const owner = owners[0] ? { kind: owners[0].kind, signature: String(owners[0].signature || owners[0].title || ''), title: owners[0].title, startLine: owners[0].startLine, endLine: owners[0].endLine } : null;
       controllers.push({
         id: `${path.resolve(filename).toLowerCase()}#${index}`, filename, fileLabel: path.basename(filename), index,
-        line: lineAt(text, block.start), stateNumber: Number.isInteger(state) ? state : null,
+        line: startLine, endLine, start: block.start, end: block.end, rangeHash: hash(text.slice(block.start, block.end)), owner,
         label: `${Number.isInteger(state) ? `State ${state}` : path.basename(filename)} · HitDef ${index + 1}`,
-        detail: [attr && `attr ${attr}`, damage && `damage ${damage}`].filter(Boolean).join(' · '), sourceHash: hash(text), syntax
+        stateNumber: Number.isInteger(state) ? state : null,
+        detail: [attr && `attr ${attr}`, damage && `damage ${damage}`].filter(Boolean).join(' · '), sourceHash: hash(text), syntax,
+        sourceText: lines.slice(startLine, Math.min(lines.length, endLine + 1)).join('\n')
       });
     });
   }

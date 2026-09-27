@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "auditedAt": "2026-09-26",
-  "extensionVersion": "0.79.2",
+  "extensionVersion": "0.79.3",
   "requirements": [
     {
       "id": 1,

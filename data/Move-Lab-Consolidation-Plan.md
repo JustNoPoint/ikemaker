@@ -1,9 +1,9 @@
 # Unified Move Lab consolidation plan
 
-Plan revision: 2
-Source reviewed: IKEMaker 0.79.2 Stage A
+Plan revision: 3
+Source reviewed: IKEMaker 0.79.2 Stage A; IKEMaker 0.79.3 Stage B1
 Phase: 1  
-Status: routing/context foundation implemented and source-reviewed in 0.79.0; shared camera correction source-reviewed in 0.79.1; Stage A's in-place Moves / Overview drawer and selected/all-character Problems filter are implemented and source-reviewed locally in 0.79.2. Later component-view and generalized-shell stages remain planned. The ordinary installed Constants zoom report remains open pending exact-build user interaction verification.
+Status: routing/context foundation was source-reviewed in 0.79.0; shared camera correction in 0.79.1; Stage A's in-place Moves / Overview drawer and selected/all-character Problems filter in 0.79.2. Stage B1 is implemented and source-reviewed locally in 0.79.3: exact direct CNS/ZSS HitDefs can occupy the shared workspace without constants or preview assets while the established HitDef editor retains Apply ownership. Later mixed-component stages remain planned. The ordinary installed Constants zoom report remains open pending exact-build user interaction verification.
 
 ## Outcome and boundaries
 
@@ -73,5 +73,6 @@ After parity and recovery tests pass, make the common shell the sole default Mov
 - 0.79.0: shared Move Lab naming, exact profile/HitDef routing, return context, and per-character remembered integration context are source-reviewed.
 - 0.79.1: shared camera/world transform and stale-drag cancellation are source-reviewed. The ordinary installed Constants report is still open.
 - 0.79.2: Stage A adds a navigation-only in-place Moves / Overview drawer, exact direct-HitDef routes, same-panel constants-profile selection, and selected/all-character Problems scope while preserving the established mutation owners and retained drafts. Corrected implementation source sign-off is complete; the build is not released.
-- Stage A: implemented and source-reviewed locally in 0.79.2; not released. Stages B-E remain planned and not shipped. Revision 2 records the approved one-Move-Lab component-view architecture before any broader implementation.
+- 0.79.3: Stage B1 adds an exact, read-only direct-HitDef component view to the same workspace; direct CNS/ZSS source remains inspectable without constants, AIR, or SFF, stale identities are rejected, and editing delegates to the existing HitDef owner. Corrected implementation SOURCE SIGN OFF is complete and all 321 test files pass; installed visual QA remains pending.
+- Stage A is source-reviewed locally in 0.79.2. Stage B1 is implemented and source-reviewed locally in 0.79.3. Later Stage B component types and Stages C-E remain planned and not shipped. Revision 3 records this bounded implementation without claiming broader component parity.
 - This plan does not authorize installation, packaging, publication, engine/game edits, or Phase 2 work.

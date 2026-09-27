@@ -11,6 +11,7 @@ const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = 
 const { readSff } = require('./sff_reader');
 const { assignedDefault } = require('./palette_preview');
 const { previewModel } = require('./hitdef_preview_model');
+const { componentReference, validComponentReference } = require('./move_lab_component_model');
 
 const sessions = new Map();
 let activeSession = null;
@@ -85,11 +86,17 @@ async function openMoveLab(seed, options = {}) {
   if (!defPath) return;
   if (!options?.preset && !options?.integration) {
     const contexts = require('./move_lab_context'), remembered = contexts.current(defPath);
+    const current = model(defPath);
     if (remembered?.kind === 'constants') {
-      const current = model(defPath);
       if (validConstantsReference(remembered.reference, current, defPath)) return vscode.commands.executeCommand('ikemen.moveConstants.open', vscode.Uri.file(defPath), { integration: 'constants', reference: remembered.reference });
       contexts.clear(defPath, remembered);
     }
+    if (remembered?.kind === 'direct') {
+      const component=validComponentReference(remembered.reference,{components:current.attacks?.controllers||[]},defPath);
+      if(component)return vscode.commands.executeCommand('ikemen.moveConstants.open',vscode.Uri.file(defPath),{integration:'shell',reference:{componentReference:componentReference(component,defPath)}});
+      contexts.clear(defPath,remembered);
+    }
+    if((current.attacks?.controllers||[]).length||(current.attacks?.constantProfiles||[]).length)return vscode.commands.executeCommand('ikemen.moveConstants.open',vscode.Uri.file(defPath),{integration:'shell'});
   }
   const reference = options?.preset ? options.reference : null;
   if (reference?.defPath && sessionKey(reference.defPath) !== sessionKey(defPath)) return;

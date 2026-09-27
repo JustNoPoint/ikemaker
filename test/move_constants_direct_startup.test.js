@@ -1,0 +1,36 @@
+'use strict';
+
+const assert=require('assert');
+const vm=require('vm');
+const Module=require('module');
+const original=Module._load;Module._load=function(request,parent,main){if(request==='vscode')return{window:{},workspace:{},commands:{},ViewColumn:{},Position:class{},Range:class{},WorkspaceEdit:class{}};return original.call(this,request,parent,main);};
+const workspace=require('../src/move_constants_workspace'),directScript=require('../src/move_lab_direct_component').clientScript();Module._load=original;
+
+function reference(id,index,line){return{defPath:'C:/Hero/Hero.def',kind:'hitdef',id,filename:'C:/Hero/states.zss',index,line,endLine:line+3,sourceHash:'source-hash',rangeHash:'range-'+index,owner:{kind:'state',signature:'200',startLine:0,endLine:20}};}
+const first=reference('c:/hero/states.zss#0',0,2),second=reference('c:/hero/states.zss#1',1,8);
+const component=ref=>({...ref,label:'State 200 · HitDef '+(ref.index+1),syntax:'zss',fileLabel:'states.zss',sourceText:'hitDef { damage: 30; }',diagnostics:[],reference:ref});
+const constantMove={id:'normal.slp',prefix:'normal.sLP',timeline:{actionNumber:200,frames:[{},{},{},{}]}};
+const model={character:'Hero',files:{defPath:first.defPath,constants:'C:/Hero/constants.zss'},timingSources:{constants:'constants-hash'},moves:[constantMove],directComponents:[component(first),component(second)],overview:{constantProfiles:[],controllers:[],problems:[]},formDrafts:{},codeDrafts:{}};
+const generated=workspace.html(model).match(/<script>([\s\S]*)<\/script>/)[1],initStart=generated.indexOf('const initialSelection=initialMoveSelection();'),initEnd=generated.indexOf('moveDirectUi.restoreInitial();',initStart)+'moveDirectUi.restoreInitial();'.length,generatedInit=generated.slice(initStart,initEnd),navStart=generated.indexOf('globalThis.ikemenNavigationSelection='),navEnd=generated.indexOf("addEventListener('message',event=>{if(event.data.type==='viewerArchiveContext')",navStart),generatedNavigation=generated.slice(navStart,navEnd);
+assert(initStart>=0&&initEnd>initStart&&navStart>=0&&navEnd>navStart,'test executes the generated startup and navigation wiring');
+
+function harness(savedReference,openReference=null){
+ class Element{constructor(id=''){this.id=id;this.hidden=false;this.dataset={};this.classList={toggle(){}};}set innerHTML(value){this._html=value;for(const match of value.matchAll(/<button[^>]*id="([^"]+)"[^>]*>/g))elements[match[1]]=new Element(match[1]);}get innerHTML(){return this._html||''}}
+ const elements={directWorkspace:new Element('directWorkspace'),moveOverview:new Element('moveOverview'),status:new Element('status'),character:new Element('character'),moveTitle:new Element('moveTitle')},layout=new Element(),playback=new Element(),sent=[],selected=[];
+ const document={querySelector:selector=>selector==='.layout'?layout:selector==='.playback'?playback:null,querySelectorAll:()=>[],getElementById:id=>elements[id]||null};
+ let state={directComponent:savedReference,directReturnReference:{kind:'constants',defPath:model.files.defPath,profileId:constantMove.id,prefix:constantMove.prefix,sourceFilename:model.files.constants,sourceHash:model.timingSources.constants,actionNumber:200,frameIndex:3},moveFormDrafts:{keep:{damage:40}},moveCodeDrafts:{keep:{text:'draft'}}};
+ const activeModel={...structuredClone(model),openReference};
+ const context={saved:{...state},model:activeModel,move:null,frame:0,draft:{},profileDrafts:{},document,window:{addEventListener(){}},vscode:{getState:()=>state,setState:value=>state=value,postMessage:message=>sent.push(message)},moveDrafts:{stage(){}},stop(){},saveState(){state={...state,selectedMove:context.move?.id,selectedFrame:context.frame};},selectMove:(id,draft,frame)=>{selected.push({id,frame});context.move=context.model.moves.find(item=>item.id===id)||null;context.frame=frame||0;},moveOverviewUi:{render(){context.overviewRendered=true;}},renderHeader(){},initialMoveSelection:()=>({id:openReference?.profileId||constantMove.id,frame:openReference?.frameIndex||0}),$:id=>elements[id]||null,esc:value=>String(value??''),Number,String,Object,Array,Math,JSON,console};context.globalThis=context;vm.createContext(context);vm.runInContext(directScript,context);vm.runInContext(generatedInit,context);return{context,state:()=>state,sent,selected};
+}
+
+const restored=harness(second);assert.strictEqual(restored.selected.length,0,'generated startup does not initialize constants over a saved direct component');assert.strictEqual(vm.runInContext('moveDirectUi.current().id',restored.context),second.id,'generated startup restores the exact second HitDef');
+vm.runInContext(generatedNavigation,restored.context);const point=vm.runInContext('globalThis.ikemenNavigationSelection()',restored.context);assert.strictEqual(point.kind,'direct');assert.strictEqual(point.componentReference.id,second.id);assert.strictEqual(vm.runInContext('globalThis.ikemenCanRestoreNavigation',restored.context)(point),true,'direct history validates exact current identity');
+restored.context.draft={damage:40};assert.strictEqual(vm.runInContext('globalThis.ikemenCanRestoreNavigation',restored.context)(point),true,'an independent staged constants draft does not prevent return to the same exact read-only direct component');
+restored.context.model={...restored.context.model,files:{...restored.context.model.files,defPath:'C:/Other/Hero.def'},directComponents:restored.context.model.directComponents.map(item=>({...item,reference:{...item.reference,defPath:'C:/Other/Hero.def'}}))};assert.strictEqual(vm.runInContext('globalThis.ikemenCanRestoreNavigation',restored.context)(point),false,'an identical shared controller cannot restore across a different owner DEF');
+restored.context.model=structuredClone(model);
+restored.context.model={...restored.context.model,directComponents:[component(first)]};assert.strictEqual(vm.runInContext('globalThis.ikemenCanRestoreNavigation',restored.context)(point),false,'deleted direct history target cannot silently retarget');
+
+const explicitConstants=harness(second,{profileId:constantMove.id,frameIndex:2});assert.deepStrictEqual(explicitConstants.selected,[{id:constantMove.id,frame:2}],'an explicit constants route takes priority over remembered direct selection');assert.strictEqual(explicitConstants.context.move.id,constantMove.id);assert.strictEqual(vm.runInContext('moveDirectUi.current()',explicitConstants.context),null);
+
+const stale=harness({...second,rangeHash:'stale'});assert.strictEqual(stale.selected.length,0);assert.strictEqual(vm.runInContext('moveDirectUi.current()',stale.context),null);assert.match(stale.context.$('status').textContent,/changed or was removed/);assert.strictEqual(stale.context.overviewRendered,true,'stale saved direct identity returns to explicit discovery');
+console.log('Generated Move Lab startup and history restore exact direct components without default-profile fallback');

@@ -56,12 +56,12 @@ const ui = vm.runInContext('moveOverviewUi', context);
 ui.render();
 elements.moveOverview.onclick();
 assert.strictEqual(elements.overviewDrawer.hidden, false, 'drawer opens in place');
-assert.match(elements.overviewDrawer.innerHTML, /Direct code · open exact HitDef/);
+assert.match(elements.overviewDrawer.innerHTML, /Direct code · inspect exact HitDef/);
 document.querySelectorAll('[data-overview-profile]')[0].onclick();
 assert.strictEqual(sent.at(-1).type, 'overviewProfile');
 assert.strictEqual(sent.at(-1).reference.profileId, 'normal.slp');
 document.querySelectorAll('[data-overview-attack]')[0].onclick();
-assert.strictEqual(sent.at(-1).type, 'overviewAttack');
+assert.strictEqual(sent.at(-1).type, 'selectDirectComponent');
 assert.strictEqual(sent.at(-1).reference.sourceHash, 'code-hash');
 
 ui.renderProblems();
