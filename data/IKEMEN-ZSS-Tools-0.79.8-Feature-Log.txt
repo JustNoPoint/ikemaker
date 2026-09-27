@@ -27,6 +27,9 @@ IKEMaker 0.79.8 — Exact Helper, Explod, and Projectile component checkpoint
   blue, stage ochre, screenpack indigo, Maps cyan, and Help silver identities.
   Universal viewer routes and recognized specialist command buttons adopt it;
   forced-colors mode falls back to system button borders.
+- `IKEMaker: Destination Colors` can switch the complete shared accent layer
+  between `subtle` and `off`. Off keeps labels, tooltips, keyboard focus,
+  destination routing, and file behavior intact; it only removes the accents.
 - The Stage Workspace now resolves each selected static or animated background
   to its exact preview sprite and can open that group/index in the existing SFF
   workspace. Embedded Begin Actions open at their exact stage-DEF source line.

@@ -221,6 +221,8 @@ function enhanceCommandHtml(page, experience = workspaceExperience('commands', '
   `;
   return page
     .replace('</style>', `${css}</style>`)
+    .replace('<button id="openSource">', '<button id="openSource" data-ikemen-destination="code">')
+    .replace('<button id="openDef">', '<button id="openDef" data-ikemen-destination="code">')
     .replace('<b>Command & Movelist</b>', `<b>Command & Movelist</b><span title="Change this with IKEMEN: Configure Learning / Advanced Experience">${experience.label}</span>`)
     .replace('</header>', `${launchControlsHtml('command_movelist')}</header>`)
     .replace(oldSidebar, newSidebar)

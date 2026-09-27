@@ -19,6 +19,6 @@ const original=Module._load;Module._load=function(name,...args){return name==='v
  destination=vscode.Uri.file(file);await assert.rejects(controls.makeBackup(file),/different filename/);assert.strictEqual(fs.readFileSync(file,'utf8'),'changed');
  dispose();let before=messages.length;await controls.toggle();assert.strictEqual(messages.length,before,'Disposed panels receive no updates');
  const policy=require('../src/mutation_safety');policy.transactionalWrite(fs,file,'next',{backup:true});assert(!fs.existsSync(path.join(root,'.ikemen-tools')),'Legacy backup requests create neither backups nor default history');
- const shared=require('../src/launch_controls');assert(shared.launchControlsHtml('sff').includes('Make Backup'));assert.doesNotThrow(()=>new Function(shared.launchControlsClientScript()));
+ const shared=require('../src/launch_controls');assert(shared.launchControlsHtml('sff').includes('Make Backup'));const client=shared.launchControlsClientScript();assert.doesNotThrow(()=>new Function(client));assert(client.includes("openSource:'code'"));assert(client.includes("openMoveLab:'move_lab'"));assert(client.includes("openExplodComposer:'move_lab'"));
  console.log('Save controls: defaults, live toggle, cancellation, byte-exact backup, collision protection, disposal and no automatic backup passed');
 }finally{Module._load=original;fs.rmSync(root,{recursive:true,force:true});}})().catch(error=>{console.error(error);process.exitCode=1;});

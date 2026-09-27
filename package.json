@@ -2338,6 +2338,20 @@
     "configuration": {
       "title": "IKEMaker",
       "properties": {
+        "ikemenZss.destinationColors": {
+          "type": "string",
+          "enum": [
+            "subtle",
+            "off"
+          ],
+          "enumDescriptions": [
+            "Use the shared restrained destination accents on navigation controls.",
+            "Keep navigation controls neutral while retaining their text labels, tooltips, focus states, and behavior."
+          ],
+          "default": "subtle",
+          "scope": "window",
+          "description": "Shared IKEMaker destination-color presentation. This changes navigation appearance only and never changes files, routing, or action semantics."
+        },
         "ikemenZss.paletteBackgroundColor": {
           "type": "string",
           "default": "#00F5BA",

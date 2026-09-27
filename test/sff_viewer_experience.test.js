@@ -32,6 +32,8 @@ assert(learning.includes('details class="task-recipes" open'));
 assert(learning.includes('Protect and assign palettes'));
 assert(learning.includes('[Next] Load and identify the sprite archive'));
 assert(learning.includes('data-workflow-action="panel:palettePanel"'));
+assert(learning.includes('data-ikemen-destination="palette" data-panel="palettePanel"'));
+assert(learning.includes('data-ikemen-destination="air" data-panel="referencesPanel"'));
 assert(learning.includes("closest('[data-workflow-action]')"));
 assert(!learning.includes('Advanced shortcuts'));
 

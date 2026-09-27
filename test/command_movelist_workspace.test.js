@@ -109,6 +109,8 @@ assert(!advanced.includes('details class="task-recipes" open'));
 assert(advanced.includes('class="guided-workflow"'));
 assert(advanced.includes('Advanced shortcuts'));
 assert(advanced.includes('data-workflow-action="control:applyCommand"'));
+assert(advanced.includes('id="openSource" data-ikemen-destination="code"'));
+assert(advanced.includes('id="openDef" data-ikemen-destination="code"'));
 
 console.log('Command workspace organization tests passed');
 

@@ -1570,6 +1570,13 @@ forced-colors mode. Screen-specific buttons that do not yet expose a command or
 destination attribute remain follow-up coverage; this checkpoint does not
 claim every legacy button was recolored.
 
+The required neutral/off preference is implemented centrally as
+`ikemenZss.destinationColors`. `subtle` is the default; `off` emits no
+destination accent rules while retaining destination metadata, labels,
+tooltips, keyboard focus and routing. The preference is presentation-only and
+does not rewrite source, alter an editor's save owner, or change action
+semantics. All adopting workspaces read the same window setting when rendered.
+
 The Stage Workspace now has the first bounded contextual-asset handoff. A
 selected normal, parallax, or animated background resolves to the exact sprite
 used by its preview and can open that group/index in the established SFF
