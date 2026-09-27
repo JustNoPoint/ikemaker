@@ -1,4 +1,4 @@
-IKEMAKER 0.79.8 — TESTER FEEDBACK
+IKEMAKER 0.79.9 — TESTER FEEDBACK
 Title:
 What happened:
 What should happen / suggested improvement:
@@ -8,7 +8,7 @@ Optional screenshot or reference:
 Project:
 Affected item type and name:
 Content version (or Unknown):
-IKEMaker version: 0.79.8
+IKEMaker version: 0.79.9
 Game/engine version:
 Tool/screen:
 Windows / VS Code version:

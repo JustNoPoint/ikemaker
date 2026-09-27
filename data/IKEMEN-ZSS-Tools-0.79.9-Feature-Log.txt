@@ -1,0 +1,15 @@
+IKEMaker 0.79.9 — Critical AIR viewer initialization hotfix
+
+- Corrects the 0.79.8 AIR page-assembly order that could omit required AIR-only
+  controls after destination-color attributes were applied.
+- AIR viewer startup now completes and applies its animation model instead of
+  stopping on a missing-control binding.
+- Open SFF retains its AIR viewer click binding and the approved green SFF
+  destination identity.
+- Generated-page regression coverage now requires the shared viewer toolbar,
+  AIR connected-viewer route, GIF-to-AIR and AIR Log controls, and Open SFF
+  binding to exist together.
+- No AIR, SFF, character, stage, or game content migration is required.
+- The complete 325-file source test suite passes.
+- Resizable viewer height and universal whole-editor vertical scrolling are
+  recorded future requirements and are not claimed by this hotfix.

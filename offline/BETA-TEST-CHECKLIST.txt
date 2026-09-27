@@ -1,13 +1,15 @@
-IKEMAKER 0.79.8 — FOCUSED TEST CHECKLIST
+IKEMAKER 0.79.9 — FOCUSED TEST CHECKLIST
 
 Use a disposable copy. Test one familiar workflow at a time.
 
-[ ] Extract the ZIP, install, reload, and confirm version 0.79.8.
+[ ] Extract the ZIP, install, reload, and confirm version 0.79.9.
 [ ] Confirm the standard package makes no LuaLS installation request.
 [ ] In a With-LuaLS package, decline once and opt in once; both paths must be clear.
 [ ] Open Help & Learning Center and locate the guide for the chosen workflow.
 [ ] Open the intended character/project and confirm the displayed context.
 [ ] Reopen the same file and report duplicate, empty, or misplaced viewers.
+[ ] Open an AIR viewer; confirm its animation displays and Open SFF opens the
+    exact current frame's sprite in the green SFF destination workspace.
 [ ] Make one small supported edit; inspect the exact saved source or asset.
 [ ] Exercise the documented Undo/Recovery path.
 [ ] Try the workflow at the usual width and at a narrower editor width.

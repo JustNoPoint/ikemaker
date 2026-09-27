@@ -1,4 +1,4 @@
-IKEMAKER 0.79.8 — TESTER BETA NOTES
+IKEMAKER 0.79.9 — TESTER BETA NOTES
 
 IKEMaker is designed and directed by JustNoPoint (JNP), with OpenAI
 Codex used extensively for coding, review, testing assistance, and documentation.
@@ -6,6 +6,9 @@ AI assistance does not mean every feature is verified. This file distinguishes
 current work from known limits and future plans.
 
 CURRENT HIGHLIGHTS
+- 0.79.9 fixes the critical 0.79.8 AIR viewer startup regression. AIR
+  animations display again, and Open SFF works with the approved green SFF
+  destination color. No AIR, SFF, character, or game file migration is needed.
 - Command & Movelist now preserves authored separators, whitespace, comments,
   unknown/custom parser fields, omitted defaults, neighboring definitions, and
   mixed CRLF/LF/CR line endings. Timeline and nested glyph edits change only the
@@ -42,6 +45,8 @@ CURRENT HIGHLIGHTS
   downloads or installs after the user reviews the exact release.
 
 KNOWN LIMITS / PLANNED FIXES
+- Viewer-height resizing and whole-editor vertical scrolling below every preview
+  are recorded future layout requirements; they are not included in 0.79.9.
 - Installed-package interaction testing remains open for the ordinary Constants
   zoom case, exact Move Lab component handoffs, AIR/Clsn workflows, shared-source
   warnings, and package-specific optional LuaLS choices.
@@ -64,7 +69,7 @@ INSTALL / UPDATE
   "Install IKEMEN Creator Tools.cmd".
 - First-time user: extract the Online Bootstrap ZIP and run
   "Install IKEMaker Online.cmd". VS Code is downloaded only if absent.
-- Restart or reload VS Code, then confirm IKEMaker 0.79.8.
+- Restart or reload VS Code, then confirm IKEMaker 0.79.9.
 - Future beta updates appear under IKEMaker > Personal Workspace and Preferences.
   Review the version, notes, size, and SHA-256 before choosing install.
 - Downloaded update packages are retained outside game/project folders in VS Code's
