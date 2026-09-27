@@ -1241,6 +1241,14 @@ unchanged by this clarification.
 
 ## Phase 1 — AIR editor bulk Clsn2 access and transition classification
 
+Implemented and source-reviewed locally in IKEMaker 0.79.4. Both entry routes
+now share one proposal/review/Apply owner with effective-default semantics,
+editable transition/custom roles, explicit exclusions, scoped remembered
+assignments and stale-source rejection. All 324 test files passed on the final
+source contents. Installed UI/engine/Undo verification remains pending. Owner
+discovery is deliberately bounded to nearby/ancestor on-disk DEF files rather
+than claiming exhaustive project-wide or unsaved-DEF ownership discovery.
+
 Explicit JNP workflow request, 2026-09-26. Existing air.batchApplyClsn2 currently
 requires an active AIR text editor and selected Clsn2 text. Its action-heading
 filter is a substring match for crouch/jump, which can misclassify transitions.
@@ -1332,3 +1340,55 @@ launch without an extra forced split; no source writes from opening/navigation.
 Reuse established navigation/mutation owners. Finish the active B1 correction
 checkpoint first, preserve 35% reserve, and retain no-install/no-publication/
 no-desktop-control boundaries. Source inspection is not installed UI QA.
+
+## Phase 1 clarification — Move Lab covers all character behavior
+
+JNP clarification, September 26, 2026: Move Lab is the centralized character
+coding workspace, not an attacks-only editor. This supersedes the older basic
+movement deferral for Phase 1 scope. Flow Mode remains a separate deferred
+feature that supplies an optional production order; its deferral must not defer
+ordinary non-attack authoring in Move Lab.
+
+Cover standing/idle, turning, walking, crouching/transitions, jumping/landing,
+running/dashing, guarding, gethit/recovery and attacks, plus custom states and
+associated functions/components. A state must not require a HitDef, JNP
+constants, a standard state number or an inferred matching AIR number to be
+opened and edited. Respect existing user coding styles and explicit ownership.
+
+Reuse the unified workspace's connected code, source navigation, animation and
+Clsn editing, constants/maps access, diagnostics and applicable component tools.
+Show relevant inspectors for the selected behavior; collapse or omit attack-only
+controls for non-attacks. Users should be able to inspect and edit the connected
+behavior without routinely opening separate editor tabs. Keep optional separate
+editors available. Preserve independent drafts, exact source ownership, explicit
+Apply, undo and return context; reuse established mutation services.
+
+This extends the existing Move Lab consolidation, not a new parallel lab or a
+requirement to emulate the entire engine. Identify unsupported/dynamic behavior
+honestly. Before final Help and release, SF6 must include this scope in the finite
+closeout inventory and distinguish implemented capability from remaining work.
+Do not call direct-HitDef inspection full coverage. Use representative non-attack
+fixtures and mixed/custom state cases to verify no-HitDef entry, editing and
+context retention. Preserve the 35% usage reserve; report scope/budget constraints
+rather than silently deferring this requirement or starting unrelated backlog.
+
+### Flow Mode clarification — user-defined production flows
+
+JNP clarification, September 26, 2026: Flow Mode lets users define their own
+production flow. JNP will create a flow for his team to help keep development
+on course; that flow also serves as an editable example, not a mandatory or
+universal sequence. Users can create, reorder, adapt and reuse their own steps
+and choose the appropriate flow for their game/project or team.
+
+Steps should connect to the existing authoring tools and relevant project work,
+with optional instructions/checklists and completion criteria. Keep reusable
+flow definitions separate from each character's progress. Support sharing a
+team flow and explicitly adopting revisions without silently replacing local
+customizations or resetting progress. Users remain free to skip steps, work
+out of order, or work without a flow; do not gate editing or enforce a coding
+method. Any saved/shared flow files require an explicit user action.
+
+This refines the previously approved deferred Flow Mode scope and supersedes
+wording suggesting a fixed built-in production order. JNP's example should be
+derived from the proven Ryu/Demitri/Morrigan/Goku workflows at the agreed later
+milestone. It does not add Flow Mode implementation to current Phase 1 closeout.

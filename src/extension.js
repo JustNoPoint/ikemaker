@@ -8,13 +8,8 @@ const { parseZss, displayName } = require('./parser');
 const controllerCatalog = require('../data/sctrl.json');
 const { controllerAuthoringPlan, controllerAuthoringText, cnsControllerAuthoringText } = require('./controller_authoring');
 const { leadingWhitespace, wrapText } = require('./wrappers');
-const {
-  parseNumberSet,
-  parseSelectedClsn2,
-  batchApplyClsn2,
-  generateGuardProximity,
-  updateGuardHelperZss
-} = require('./air');
+const { generateGuardProximity, updateGuardHelperZss } = require('./air');
+const { createAirClsn2BatchService } = require('./air_clsn2_batch_service');
 const { analyzeZss } = require('./analyzer');
 const { createUpdateMonitor } = require('./updater');
 const { registerExtensionUpdater } = require('./extension_updater');
@@ -659,119 +654,12 @@ async function scaleSelectedSizebox() {
   }
 }
 
-async function validatedRangeInput(options) {
-  return vscode.window.showInputBox({
-    ...options,
-    validateInput: (value) => {
-      try {
-        parseNumberSet(value);
-        return undefined;
-      } catch (error) {
-        return error.message;
-      }
-    }
-  });
-}
-
+let airClsn2BatchService = null;
 async function batchEditClsn2() {
-  const editor = vscode.window.activeTextEditor;
-  if (!editor || path.extname(editor.document.fileName).toLowerCase() !== '.air') {
-    vscode.window.showWarningMessage('Open an AIR file before applying Clsn2 data.');
-    return;
-  }
-
-  const selectedClsn2 = editor.document.getText(editor.selection);
-
-  const actions = await validatedRangeInput({
-    title: 'AIR Clsn2 — Target actions',
-    prompt: 'Examples: 0-19, 40-49, 100, 105 or 0-999 !200-299',
-    value: '0'
-  });
-  if (actions === undefined) return;
-
-  const actionScopes = [
-    { label: 'All matching actions', description: 'Do not filter by the AIR action heading', headingFilter: '' },
-    { label: 'Crouch actions only', description: 'Only headings containing the word crouch', headingFilter: 'crouch' },
-    { label: 'Jump actions only', description: 'Only headings containing the word jump', headingFilter: 'jump' }
-  ];
-  const selectedScope = await vscode.window.showQuickPick(actionScopes, {
-    title: 'AIR Clsn2 — Action heading filter',
-    placeHolder: 'Choose which named actions may be changed'
-  });
-  if (!selectedScope) return;
-
-  const modes = [
-    { label: 'Replace per-element Clsn2', description: 'Replace boxes on selected animation elements', mode: 'replace' },
-    { label: 'Append per-element Clsn2', description: 'Keep existing boxes and append new boxes', mode: 'append' },
-    { label: 'Clear per-element Clsn2', description: 'Remove boxes from selected animation elements', mode: 'clear' },
-    { label: 'Replace with Clsn2Default', description: 'Clear all Clsn2 in each action and add one default block', mode: 'default' },
-    { label: 'Clear all Clsn2 in actions', description: 'Remove default and per-element Clsn2 blocks', mode: 'clearAll' }
-  ];
-  const selectedMode = await vscode.window.showQuickPick(modes, {
-    title: 'AIR Clsn2 — Operation',
-    placeHolder: 'Choose how existing Clsn2 data should be handled'
-  });
-  if (!selectedMode) return;
-
-  let elements = 'all';
-  if (!['default', 'clearAll'].includes(selectedMode.mode)) {
-    elements = await validatedRangeInput({
-      title: 'AIR Clsn2 — Target animation elements',
-      prompt: 'Element numbers are 1-based. Examples: all, 1, 1-3, 1-10 !4',
-      value: 'all'
-    });
-    if (elements === undefined) return;
-  }
-
-  let boxes = [];
-  if (!['clear', 'clearAll'].includes(selectedMode.mode)) {
-    try {
-      boxes = parseSelectedClsn2(selectedClsn2, false);
-    } catch (error) {
-      vscode.window.showErrorMessage(`AIR Clsn2 selection: ${error.message}`);
-      return;
-    }
-  }
-
-  const document = editor.document;
-  const result = batchApplyClsn2(document.getText(), {
-    actions,
-    elements,
-    boxes,
-    headingFilter: selectedScope.headingFilter,
-    mode: selectedMode.mode
-  });
-
-  if (!result.changedActions.length || result.text === document.getText()) {
-    vscode.window.showInformationMessage('No matching AIR collision data was changed.');
-    return;
-  }
-
-  const preview = await vscode.workspace.openTextDocument({
-    content: result.text,
-    language: document.languageId
-  });
-  await vscode.commands.executeCommand(
-    'vscode.diff',
-    document.uri,
-    preview.uri,
-    `Clsn2 Preview — ${path.basename(document.fileName)}`,
-    { preview: true }
-  );
-
-  const choice = await vscode.window.showInformationMessage(
-    `Apply Clsn2 changes to ${result.changedActions.length} action(s)?`,
-    { modal: true, detail: `Affected animation elements: ${result.changedElements}. Existing Clsn1 data is preserved.` },
-    'Apply Changes'
-  );
-  if (choice !== 'Apply Changes') return;
-
-  const lastLine = document.lineCount - 1;
-  const fullRange = new vscode.Range(0, 0, lastLine, document.lineAt(lastLine).text.length);
-  const edit = new vscode.WorkspaceEdit();
-  edit.replace(document.uri, fullRange, result.text);
-  await vscode.workspace.applyEdit(edit);
-  await vscode.window.showTextDocument(document, { preview: false });
+  try {
+    const source = await airClsn2BatchService.textSource(vscode.window.activeTextEditor);
+    return await airClsn2BatchService.run(source);
+  } catch (error) { vscode.window.showErrorMessage(`AIR Clsn2 batch: ${error.message}`); }
 }
 
 async function readOptionalText(uri) {
@@ -1114,6 +1002,7 @@ async function auditWorkspace(registry) {
 }
 
 function activate(context) {
+  airClsn2BatchService = createAirClsn2BatchService(vscode, context);
   const modeExistingKeys=context.globalState.keys?.()||[];
   require('./interface_mode').register(vscode,context);
   require('./workspace_setup').register(vscode,context);
@@ -1175,7 +1064,7 @@ function activate(context) {
   const updates = createUpdateMonitor(vscode, context, controllerCatalog, (catalog) => controllers.setCatalog(catalog));
   registerSffCommands(context);
   registerSffViewer(context);
-  registerAirViewer(context);
+  registerAirViewer(context, airClsn2BatchService);
   registerSndViewer(context);
   registerDirectAssetOpening(vscode, context);
   registerAssetGroupLogs(context);

@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.79.3",
+  "version": "0.79.4",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {

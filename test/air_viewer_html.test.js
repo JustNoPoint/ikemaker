@@ -56,6 +56,10 @@ assert(html.includes("event.target.closest('.frame')"), 'Delete on a timeline fr
 assert(html.includes("event.ctrlKey||event.metaKey"));
 assert(html.includes('event.shiftKey&&actionAnchor!==null'));
 assert(html.includes("type:'actionThumbnails'"));
+assert(html.includes("type:'batchClsn2'"), 'visual AIR bulk Clsn2 must use its own source-bound host request');
+assert(html.includes('pendingGuardPassed:true'), 'visual AIR bulk Clsn2 must pass the shared pending-edit guard first');
+assert(html.includes('actionText:action.sourceText'), 'visual AIR bulk Clsn2 must send the displayed action snapshot for host validation');
+assert(!html.includes("getElementById('batchClsn2').onclick=()=>vscode.postMessage({type:'command',command:'air.batchApplyClsn2'})"), 'visual bulk Clsn2 must not borrow the active text editor command');
 const client = scripts[0][1], mutationStart = client.indexOf('function beginActionMutation(message)'), mutationEnd = client.indexOf("document.getElementById('markVisibleActions')", mutationStart);
 assert(mutationStart >= 0 && mutationEnd > mutationStart, 'action lifecycle dispatch block must be present in the generated client');
 const lifecycleElements = new Map(), lifecycleMessages = [], lifecycleContext = {
@@ -173,6 +177,8 @@ const airViewerSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'air_v
 assert(airViewerSource.includes("openConnected(session.airPath,'sff'"), 'AIR must use selection-aware shared viewer navigation');
 assert(airViewerSource.includes('viewColumn = session.panel.viewColumn'), 'AIR source opened from its viewer must become a tab in that viewer group');
 assert(airViewerSource.includes("message.type === 'updateFrame'"));
+assert(airViewerSource.includes("message.type === 'batchClsn2'"));
+assert(airViewerSource.includes('batchService.visualSource(session, message)'));
 for (const id of ['timelineEditor', 'timelineGroup', 'timelineIndex', 'timelineX', 'timelineY', 'timelineTime', 'timelineFlags', 'timelineBlend', 'timelineScaleX', 'timelineScaleY', 'timelineAngle', 'timelineApply', 'timelineAdd', 'timelineDuplicate', 'timelineMoveEarlier', 'timelineMoveLater', 'timelineDelete', 'timelineOpenSource']) assert(html.includes(`id="${id}"`), `missing always-visible AIR timeline editor control ${id}`);
 assert(html.includes("previousIssue.id='previousAirIssue'"));
 assert(html.includes("nextIssue.id='nextAirIssue'"));

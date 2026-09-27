@@ -19,6 +19,8 @@ Upgrading IKEMaker does not remove or disable a Lua extension already installed,
 
 The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Versions 0.78.1 through 0.78.4 are separate normal source commits; future release tags should identify their actual source commits.
 
+Version 0.79.4 gives the AIR text command and visual AIR collision tools one reviewed **Batch Apply Clsn2** workflow. Text selection and the visual frame's host-validated effective boxes now feed the same action-role classification, target proposal, untitled diff and final guarded Apply. Append includes inherited defaults; **Make effectively empty** is distinct from **Remove per-element override**, which may reveal a default. Standard suggestions treat Action 10 as crouching and Action 12 as standing from displayed element 1, and keep Action 40 grounded-start out of airborne name matching. Custom roles, exclusions and explicit owner-scoped remembered assignments remain editable. The exact dirty AIR document is rechecked immediately before one Undo edit; visual use no longer reveals line 1 or borrows the active text editor. Nearby/ancestor on-disk DEF discovery is bounded rather than a complete project dependency index, and unsaved DEF ownership changes are not discovered by this slice. Source review and automated tests are complete; installed UI/engine/Undo testing remains pending, and no package or release is claimed.
+
 Version 0.79.3 makes exact direct CNS/ZSS HitDefs first-class components in the same Move Lab workspace. A character no longer needs the optional constants profile, AIR, or SFF to inspect a real HitDef. Selection is bound to the character DEF, source file and hash, exact controller range and hash, controller index, and contextual owning StateDef/function; duplicate states and multiple HitDefs remain distinct, and changed or deleted targets stop instead of silently retargeting. Direct inspection is read-only, while **Edit HitDef** delegates to the established guarded HitDef editor and **Open source** navigates to the exact block. Mixed characters can switch between constants profiles and direct HitDefs without losing move/shared/code drafts or the selected preview frame. Ordinary Move Lab entry now converges on this shared component workspace when attacks are discovered; legacy explicit/history routes remain compatible. Installed visual QA is still pending, and no package or release is claimed.
 
 Version 0.79.2 begins the signed Move Lab consolidation inside the rich Constants workspace. Its optional in-place Moves / Overview drawer lists every discovered constants profile and every real HitDef controller without replacing the active canvas, drafts, or editor. Supported profiles stay in the same panel; direct-code entries are explicitly labeled and open the exact existing HitDef editor after file, controller index, line, and source-hash revalidation. Problems can now be filtered between the selected move and all assigned character files, with deduped source navigation. Drawer state, filters, open field groups, focus, camera, frame, shared-value drafts, and connected-code drafts survive refreshes. The drawer is navigation-only: established editors retain all Apply and Undo ownership.
@@ -1206,33 +1208,34 @@ AIR files use dedicated collision-box colors matching IKEMEN's debug display:
 - Clsn1 hitbox identifiers are red.
 - Clsn2 hurtbox identifiers are blue.
 
-Select one complete `Clsn2` or `Clsn2Default` block in an `.air` file,
-right-click in the editor, and choose **AIR: Batch Apply Selected Clsn2…**.
-The selected rectangles are used directly; coordinate entry is no longer
-required. The editor supports:
-
-- Action-heading filters for all matching actions, headings containing
-  `crouch`, or headings containing `jump`
+Select one complete `Clsn2` or `Clsn2Default` block in an `.air` text editor
+and choose **AIR: Batch Apply Selected Clsn2…**, or select a frame in the
+visual AIR editor and choose **Batch Apply Clsn2…**. Both routes use the same
+review and exact mutation service. The text route uses the selected block; the
+visual route resolves the selected frame's current effective Clsn2 from the
+host, including inherited defaults. The editor supports:
 
 - Action ranges: `0-19, 40-49, 100, 105`
 - Range exclusions: `0-999 !200-299`
 - One-based animation-element ranges: `all`, `1`, `1-3`, `1-10 !4`
-- Multiple rectangles separated by semicolons
-- Replace, append, per-element clear, action-wide clear, and `Clsn2Default`
-- Optional coordinate normalization
-- Structural preservation of `Clsn1` data
-- Missing-action skips
-- Diff preview before applying
+- Reviewed standing, crouching, airborne, grounded-start, custom and unknown roles
+- Editable standard suggestions for Actions 10, 12 and 40; names never override explicit assignments
+- Replace, append-to-effective, make-effectively-empty, remove-override,
+  action-wide clear, and `Clsn2Default` operations with their different
+  inheritance effects stated before Apply
+- Normalized finite coordinates and structural preservation of `Clsn1`,
+  comments, `LoopStart`, frame timing, offsets, flags and untouched actions
+- Exact target/skip review, custom assignment and exclusion controls
+- Optional remembered assignments scoped to an explicitly resolved owner DEF
+  or disclosed AIR-only scope; shared nearby owners require an explicit choice
+- Untitled diff preview before a separate final Apply
 - A single workspace edit, allowing one-step Undo
 
-Example rectangle input:
-
-```text
--13,-79,16,0; -7,-93,5,-79
-```
-
-The tool parses AIR action and animation-element boundaries rather than using
-global regular-expression replacement.
+The service captures the current dirty AIR text before any prompts and rejects
+the operation if its URI, version or contents change before Apply. Cancel and
+no-op reviews write neither the AIR nor preferences. Owner discovery in this
+slice checks nearby and ancestor on-disk DEF files; it is not an exhaustive
+project-wide dependency index and does not observe unsaved DEF ownership edits.
 
 ## Visual AIR collision editor
 
