@@ -3,9 +3,10 @@
 function embeddedActions(text) {
   const lines = String(text || '').split(/\r?\n/), result = {};
   let action = null;
-  for (const raw of lines) {
+  for (let line = 0; line < lines.length; line += 1) {
+    const raw = lines[line];
     const heading = /^\s*\[\s*Begin\s+Action\s+(-?\d+)\s*\]/i.exec(raw);
-    if (heading) { action = Number(heading[1]); if (!result[action]) result[action] = { frames: [] }; continue; }
+    if (heading) { action = Number(heading[1]); if (!result[action]) result[action] = { frames: [], line }; continue; }
     if (action === null) continue;
     const code = raw.replace(/;.*$/, '').trim();
     const frame = /^(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+)/.exec(code);

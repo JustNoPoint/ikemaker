@@ -1,0 +1,46 @@
+IKEMaker 0.79.8 — Exact Helper, Explod, and Projectile component checkpoint
+
+- Move Lab lists exact Helper, Explod, and native Projectile creation sites
+  from assigned CNS/ZSS sources, including shared files and unsaved editor text.
+- Identity includes the character DEF, source file/hash, exact controller
+  range/hash, kind, index, and enclosing StateDef or Function.
+- Nested ZSS conditions/loops and literal Root, Parent, and P2 names are shown
+  as context without claiming runtime ownership.
+- Selecting a creation site is read-only. It never creates, converts, or
+  rewrites source.
+- Helper and Explod routes open their established specialist tools separately.
+  Native Projectile retains exact-source navigation until a dedicated guarded
+  editor exists.
+- Changed or moved controllers stop on stale identity rather than silently
+  selecting a different creation site.
+- Arbitrary Helpers are not guessed to be projectiles; helper-projectile
+  semantics remain author-defined.
+- Any exact component can choose one action from the assigned AIR and open it
+  in the established AIR/Clsn workspace. The chooser reads current unsaved AIR
+  text and never treats a StateDef/controller number as an animation number.
+- Direct HitDefs show their authored classic damage, pause, stun, slide,
+  velocity, acceleration, and spark fields, followed by every other authored
+  or custom option. This summary is read-only; Edit HitDef retains the single
+  guarded Apply owner.
+- One shared accessible destination-color registry now supplies the approved
+  SFF green, AIR blue, palette violet, SND amber, Move Lab teal, code slate
+  blue, stage ochre, screenpack indigo, Maps cyan, and Help silver identities.
+  Universal viewer routes and recognized specialist command buttons adopt it;
+  forced-colors mode falls back to system button borders.
+- The Stage Workspace now resolves each selected static or animated background
+  to its exact preview sprite and can open that group/index in the existing SFF
+  workspace. Embedded Begin Actions open at their exact stage-DEF source line.
+  These are navigation-only handoffs; the destination workspace owns edits.
+- Stage source changed after display is refreshed before an SFF handoff rather
+  than allowing an old selection to silently target another asset.
+- Screenpack and Character Select layout elements have the same exact handoff:
+  direct sprites and the first frame of embedded animations can open in SFF,
+  while embedded Begin Actions open at their defining motif source line.
+  Changed motif source is refreshed before navigation.
+
+Verification
+
+- Focused discovery, identity, nested-context, client, overview, and host-route
+  checks pass.
+- Complete source suite: all 325 test files pass.
+- No package/install/runtime claim; no live game or character content changed.

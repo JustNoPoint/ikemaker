@@ -9,7 +9,7 @@ const Module = require('module');
 
 const load = Module._load;
 Module._load = function patched(request, parent, main) { if (request === 'vscode') return {}; return load.call(this, request, parent, main); };
-const { uiPayload, uiHtml, embeddedActions } = require('../src/screenpack_workspace');
+const { uiPayload, uiHtml, screenpackSpriteHandoff, embeddedActions } = require('../src/screenpack_workspace');
 const { workspaceExperience } = require('../src/experience_model');
 Module._load = load;
 
@@ -21,7 +21,13 @@ try {
   assert.strictEqual(payload.type, 'screenpack');
   assert.strictEqual(payload.model.screens.length, 2);
   assert.ok(payload.sffError);
-  assert.deepStrictEqual(payload.animations[500], { frames: [{ sprite: [101, 2], offset: [3, -4], time: 5 }], sprite: [101, 2], offset: [3, -4], time: 5 });
+  assert.deepStrictEqual(payload.animations[500], { frames: [{ sprite: [101, 2], offset: [3, -4], time: 5 }], line: 14, sprite: [101, 2], offset: [3, -4], time: 5 });
+  assert.deepStrictEqual(payload.model.screens[0].elements.find((item) => item.name === 'logo').assetSprite, [101, 2]);
+  assert.strictEqual(payload.model.screens[0].elements.find((item) => item.name === 'logo').actionLine, 14);
+  const logo = payload.model.screens[0].elements.find((item) => item.name === 'logo'), screenIdentity = payload.model.screens[0].normalized || payload.model.screens[0].name;
+  assert.deepStrictEqual(screenpackSpriteHandoff(payload, { screen: screenIdentity, name: 'logo', group: 101, number: 2 }), { sffPath: payload.sffPath, group: 101, number: 2, screen: payload.model.screens[0], selected: logo });
+  assert.strictEqual(screenpackSpriteHandoff(payload, { screen: screenIdentity, name: 'logo', group: 101, number: 3 }), null, 'changed sprite identity must not retarget');
+  assert.strictEqual(screenpackSpriteHandoff(payload, { screen: 'select info', name: 'logo', group: 101, number: 2 }), null, 'changed screen identity must not retarget');
   assert.deepStrictEqual(payload.model.selectGrid.position, [100, 120]);
   const html = uiHtml(payload);
   assert(html.includes('aria-label="Screenpack section"'));
@@ -35,6 +41,10 @@ try {
   assert.match(html, /Screenpack \/ Fight UI/);
   assert.match(html, /Mirror P1/);
   assert.match(html, /Apply reviewed position/);
+  assert.match(html, /Open sprite in SFF/);
+  assert.match(html, /Open embedded action/);
+  assert.match(html, /openScreenpackSprite/);
+  assert.match(html, /data-ikemen-destination="screenpack"/);
   assert.match(html, /safeArea/);
   assert.match(html, /data-layer="2"/);
   assert.match(html, /data\.animations/);

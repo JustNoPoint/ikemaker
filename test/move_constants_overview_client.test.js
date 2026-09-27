@@ -43,6 +43,7 @@ const context = {
   model: { files: { defPath: 'C:/Game/Ryu/Ryu.def' }, moves: [{ id: 'normal.slp', prefix: 'normal.sLP', timeline: { actionNumber: 200, frames: [{}] } }], overview: {
     constantProfiles: [{ id: 'normal.slp', prefix: 'normal.sLP', moveID: 200, sourceFilename: 'C:/Game/Ryu/constants.zss', sourceHash: 'profile-hash', supported: true }],
     controllers: [{ id: 'c:/game/ryu/normals.zss#0', filename: 'C:/Game/Ryu/normals.zss', fileLabel: 'normals.zss', index: 0, line: 7, label: 'State 200 · HitDef 1', detail: 'damage 30', sourceHash: 'code-hash' }],
+    specialists: [{ id: 'helper-one', filename: 'C:/Game/Ryu/normals.zss', fileLabel: 'normals.zss', index: 0, line: 12, label: 'Helper creation site 1', kind: 'helper', reference: { defPath: 'C:/Game/Ryu/Ryu.def', kind: 'helper', id: 'helper-one', sourceHash: 'helper-hash' } }],
     problems: [{ id: 'overview-one', level: 'warning', title: 'Review timing', detail: 'AIR mismatch', members: [{key:'member-one',problemId:'timing-1',sourceId:'normal.slp',moveLabel:'normal.sLP',target:'source',filename:'C:/Game/Ryu/Anim.air',line:20,sourceHash:'air-hash'}] }]
   } },
   move: { id: 'normal.slp', timeline: { frames: [{}] } }, frame, savedFrame: 0,
@@ -65,6 +66,9 @@ assert.strictEqual(sent.at(-1).reference.profileId, 'normal.slp');
 document.querySelectorAll('[data-overview-attack]')[0].onclick();
 assert.strictEqual(sent.at(-1).type, 'selectDirectComponent');
 assert.strictEqual(sent.at(-1).reference.sourceHash, 'code-hash');
+document.querySelectorAll('[data-overview-specialist]')[0].onclick();
+assert.strictEqual(sent.at(-1).type, 'selectDirectComponent');
+assert.strictEqual(sent.at(-1).reference.sourceHash, 'helper-hash');
 orphaned=[{sectionId:'old-state',draft:{filename:'C:/Game/Ryu/normals.zss',signature:'200',kind:'state',baseStartLine:4,baseEndLine:8,value:'[StateDef 200]\nctrl: 0;'}}];ui.render();assert.match(elements.overviewDrawer.innerHTML,/Retained code drafts/);assert.match(elements.overviewDrawer.innerHTML,/StateDef 200/);document.querySelectorAll('[data-overview-discard-orphan]')[0].onclick();assert.deepStrictEqual(discarded,['old-state'],'orphaned behavior text remains visible and explicitly discardable from Overview');orphaned=[];
 
 ui.renderProblems();

@@ -9,7 +9,7 @@ function client() {
     const element = document.activeElement;
     if (!element || element === document.body) return null;
     const token = { id: element.id || '', start: element.selectionStart, end: element.selectionEnd };
-    for (const name of ['field', 'code', 'profileValue', 'move', 'overviewProfile', 'overviewAttack', 'overviewBehavior']) if (element.dataset?.[name] !== undefined) { token.data = name; token.value = element.dataset[name]; break; }
+    for (const name of ['field', 'code', 'profileValue', 'move', 'overviewProfile', 'overviewAttack', 'overviewBehavior', 'overviewSpecialist']) if (element.dataset?.[name] !== undefined) { token.data = name; token.value = element.dataset[name]; break; }
     return token;
   }
   function restoreFocus(token) {
@@ -27,18 +27,20 @@ function client() {
   function filtered() {
     const needle = query.trim().toLowerCase(), overview = model.overview || {};
     const matches = item => !needle || [item.label, item.detail, item.fileLabel, item.prefix, item.moveID, item.stateNumber].some(value => String(value ?? '').toLowerCase().includes(needle));
-    return { profiles: (overview.constantProfiles || []).filter(matches), attacks: (overview.controllers || []).filter(matches), behaviors: (overview.behaviors || []).filter(matches) };
+    return { profiles: (overview.constantProfiles || []).filter(matches), attacks: (overview.controllers || []).filter(matches), behaviors: (overview.behaviors || []).filter(matches), specialists:(overview.specialists||[]).filter(matches) };
   }
   function render() {
     const drawer = $('overviewDrawer'); if (!drawer) return;
     drawer.hidden = !open; $('moveOverview').classList.toggle('active', open);
-    const { profiles, attacks, behaviors } = filtered(), totalProfiles = model.overview?.constantProfiles?.length || 0, totalAttacks = model.overview?.controllers?.length || 0, totalBehaviors=model.overview?.behaviors?.length||0,known=[...model.moves.flatMap(item=>item.codeSections||[]),...(model.behaviorComponents||[])],orphans=codeDraftStore.orphaned(known);
+    const { profiles, attacks, behaviors, specialists } = filtered(), totalProfiles = model.overview?.constantProfiles?.length || 0, totalAttacks = model.overview?.controllers?.length || 0, totalBehaviors=model.overview?.behaviors?.length||0,totalSpecialists=model.overview?.specialists?.length||0,known=[...model.moves.flatMap(item=>item.codeSections||[]),...(model.behaviorComponents||[])],orphans=codeDraftStore.orphaned(known);
     drawer.innerHTML = '<div class="overview-heading"><h2>Moves / Overview</h2><button id="closeOverview" title="Close this drawer without changing the current move">Close</button></div>' +
-      '<p class="muted">Browse exact assigned StateDefs, ZSS Functions, HitDefs, and optional constants profiles. Selection never guesses behavior or animation from a state number.</p>' +
+      '<p class="muted">Browse exact assigned StateDefs, ZSS Functions, HitDefs, Helper/Explod/projectile creation sites, and optional constants profiles. Selection never guesses behavior or animation from a state number.</p>' +
       '<input id="overviewSearch" type="search" value="' + esc(query) + '" placeholder="Filter moves, states, files, or HitDefs…" aria-label="Filter all discovered moves">' +
-      '<p class="muted">Showing ' + behaviors.length + '/' + totalBehaviors + ' state/function blocks, ' + profiles.length + '/' + totalProfiles + ' constants profiles, and ' + attacks.length + '/' + totalAttacks + ' HitDefs.</p>' +
+      '<p class="muted">Showing ' + behaviors.length + '/' + totalBehaviors + ' state/function blocks, ' + specialists.length + '/' + totalSpecialists + ' creation sites, ' + profiles.length + '/' + totalProfiles + ' constants profiles, and ' + attacks.length + '/' + totalAttacks + ' HitDefs.</p>' +
       '<h3>States and functions</h3><p class="muted">Edit the exact assigned source block. Familiar numbers and comments are search hints only; IKEMaker does not infer an AIR action or behavior category.</p>' +
       (behaviors.length ? behaviors.map(item => '<button class="overview-entry" data-overview-behavior="' + esc(item.id) + '"><b>' + esc(item.label) + '</b>' + (item.shared?' · shared':'') + '<br><span class="muted">' + esc(item.kind) + ' · ' + esc(item.fileLabel) + ':' + (item.line + 1) + '</span></button>').join('') : '<p class="muted">No matching StateDefs or ZSS Functions.</p>') +
+      '<h3>Helper, Explod, and projectile creation sites</h3><p class="muted">Selecting one only inspects the exact controller. It does not create, convert, or rewrite code. Existing specialist tools remain responsible for authored changes.</p>' +
+      (specialists.length ? specialists.map(item => '<button class="overview-entry" data-overview-specialist="' + esc(item.id) + '"><b>' + esc(item.label) + '</b>' + (item.shared?' · shared':'') + '<br><span class="muted">' + esc(item.kind) + ' · ' + esc(item.fileLabel) + ':' + (item.line + 1) + '</span></button>').join('') : '<p class="muted">No matching Helper, Explod, or native Projectile creation sites.</p>') +
       '<h3>Constants profiles</h3>' + (profiles.length ? profiles.map(profile => '<button class="overview-entry" data-overview-profile="' + esc(profile.id) + '" ' + (!profile.supported ? 'disabled title="This profile is not supported by the rich constants editor"' : 'title="Select this profile in the current panel"') + '><b>' + esc(profile.prefix) + '</b>' + (Number.isInteger(profile.moveID) ? ' · State ' + profile.moveID : '') + '<br><span class="muted">' + (profile.supported ? 'Rich constants profile · stay in this panel' : 'Discovered profile · unsupported here') + '</span></button>').join('') : '<p class="muted">No matching constants profiles.</p>') +
       '<h3>Direct code HitDefs</h3><p class="muted">These are exact controllers, not inferred from a matching state number. Select one for read-only inspection; Edit HitDef continues through the established guarded editor.</p>' +
       (attacks.length ? attacks.map(attack => '<button class="overview-entry" data-overview-attack="' + esc(attack.id) + '"><b>' + esc(attack.label) + '</b>' + (attack.detail ? ' · ' + esc(attack.detail) : '') + '<br><span class="muted">Direct code · inspect exact HitDef · ' + esc(attack.fileLabel) + ':' + (attack.line + 1) + '</span></button>').join('') : '<p class="muted">No matching direct HitDefs.</p>')+
@@ -48,6 +50,7 @@ function client() {
     document.querySelectorAll('[data-overview-profile]').forEach(button => button.onclick = () => { const profile = (model.overview?.constantProfiles || []).find(item => item.id === button.dataset.overviewProfile); if (profile?.supported) vscode.postMessage({ type: 'overviewProfile', reference: profileReference(profile) }); });
     document.querySelectorAll('[data-overview-attack]').forEach(button => button.onclick = () => { const attack = (model.overview?.controllers || []).find(item => item.id === button.dataset.overviewAttack); if (attack) vscode.postMessage({ type: 'selectDirectComponent', reference: attack.reference || attack }); });
     document.querySelectorAll('[data-overview-behavior]').forEach(button => button.onclick = () => { const item = (model.overview?.behaviors || []).find(candidate => candidate.id === button.dataset.overviewBehavior); if (item) vscode.postMessage({ type: 'selectDirectComponent', reference: item.reference }); });
+    document.querySelectorAll('[data-overview-specialist]').forEach(button => button.onclick = () => { const item = (model.overview?.specialists || []).find(candidate => candidate.id === button.dataset.overviewSpecialist); if (item) vscode.postMessage({ type: 'selectDirectComponent', reference: item.reference }); });
     document.querySelectorAll('[data-overview-discard-orphan]').forEach(button=>button.onclick=()=>{codeDraftStore.discardId(orphans[Number(button.dataset.overviewDiscardOrphan)].sectionId);render();renderHeader();});
   }
   function activateProblem(item, member) {

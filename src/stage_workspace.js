@@ -100,7 +100,8 @@ function stagePayload(filename, experience = workspaceExperience('stage', 'learn
   const backgrounds = model.backgrounds.map((item) => {
     const reference = item.sprite || (item.action !== null && animations[item.action] && animations[item.action].sprite);
     const info = reference && spriteInfo[reference.join(',')];
-    return { ...item, parallax: parallaxDimensions(item, info && info.width), parallaxAnalysis: analyzeParallax(model, item, info) };
+    const embeddedAction = item.action !== null && animations[item.action];
+    return { ...item, assetSprite: reference ? [...reference] : null, actionLine: embeddedAction ? embeddedAction.line : null, parallax: parallaxDimensions(item, info && info.width), parallaxAnalysis: analyzeParallax(model, item, info) };
   });
   const interactionScans = [];
   for (const attached of model.attachedChars) {
@@ -132,6 +133,13 @@ function stagePayload(filename, experience = workspaceExperience('stage', 'learn
 
 function safeJson(value) { return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026'); }
 
+function stageSpriteHandoff(payload, request) {
+  const selected = payload?.model?.backgrounds?.find((item) => item.line === Number(request?.line) && item.name === request?.name);
+  const reference = selected && selected.assetSprite;
+  if (!selected || !reference || reference[0] !== Number(request?.group) || reference[1] !== Number(request?.number)) return null;
+  return { sffPath: payload.sffPath, group: reference[0], number: reference[1], selected };
+}
+
 function stageHtml(payload) {
   const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
   <style>
@@ -144,6 +152,7 @@ function stageHtml(payload) {
   <div class="status" id="status"></div></div>
   <script>
   const vscode=acquireVsCodeApi(),data=${safeJson(payload)},model=data.model,canvas=document.getElementById('canvas'),ctx=canvas.getContext('2d'),viewport=document.getElementById('viewport'),pan=document.getElementById('pan');
+  document.getElementById('source').insertAdjacentHTML('afterend','<div class="guide" style="margin-top:5px"><button id="assetSprite" data-ikemen-destination="sff" disabled>Open sprite in SFF</button><button id="assetAction" data-ikemen-destination="stage" disabled>Open embedded action</button></div><p class="small">Asset buttons navigate to the exact authored destination. Editing remains owned by that destination workspace.</p>');document.getElementById('source').dataset.ikemenDestination='stage';
   const images={},visible={[-1]:true,0:true,1:true};let selected=0,viewScale=1,panX=0,panY=0,guides=true,drag=null,previewStarts=model.backgrounds.map(x=>[...x.start]),bounds=[],captureA='',captureB='',sweepTimer=null,sweepDirection=1;
   canvas.width=model.localCoord[0];canvas.height=model.localCoord[1];document.getElementById('title').textContent=model.name;document.getElementById('coord').textContent=model.localCoord.join(' × ');
   for(const [key,src] of Object.entries(data.images)){const image=new Image();image.onload=render;image.src=src;images[key]=image}
@@ -183,6 +192,7 @@ function stageHtml(payload) {
       if(item.parallaxAnalysis)rows.push(['Camera sweep',item.parallaxAnalysis.coverage],['Failing samples',item.parallaxAnalysis.failing],['Largest gap',Math.round(item.parallaxAnalysis.maxGap*100)/100]);
     }
     document.getElementById('inspector').innerHTML=rows.map(x=>'<div class="row"><span>'+x[0]+'</span><span class="value">'+escapeHtml(String(x[1]))+'</span></div>').join('')+(item.parallaxAnalysis?'<p class="small">'+escapeHtml(item.parallaxAnalysis.note)+'</p>':'');
+    const spriteButton=document.getElementById('assetSprite'),actionButton=document.getElementById('assetAction');spriteButton.disabled=!item.assetSprite||!data.sffPath||Boolean(data.sffError);spriteButton.title=item.assetSprite?'Open sprite '+item.assetSprite.join(',')+' in '+(data.sffPath||'the stage SFF'):'This background has no resolvable sprite';actionButton.disabled=item.actionLine===null;actionButton.title=item.actionLine===null?'This background does not use an embedded Begin Action':'Open Begin Action '+item.action+' in the stage DEF';
     document.getElementById('startX').value=previewStarts[selected][0];document.getElementById('startY').value=previewStarts[selected][1];patch()
   }
   function patch(){const item=model.backgrounds[selected],s=previewStarts[selected];document.getElementById('patch').value='[BG '+item.name+']\\nstart = '+round(s[0])+', '+round(s[1])}
@@ -190,6 +200,7 @@ function stageHtml(payload) {
   function escapeHtml(x){return x.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}function round(x){return Math.round(x*1000)/1000}
   document.querySelectorAll('[data-layer]').forEach(button=>button.onclick=()=>{const layer=Number(button.dataset.layer);visible[layer]=!visible[layer];button.classList.toggle('active',visible[layer]);render()});cameraX.oninput=cameraY.oninput=cameraZoom.oninput=render;document.getElementById('cameraPreset').onchange=e=>cameraPreset(e.target.value);document.getElementById('previewSweep').onclick=toggleSweep;document.getElementById('timeline').oninput=e=>{document.getElementById('timelineValue').textContent=e.target.value;services()};document.getElementById('captureA').onclick=()=>capture('A');document.getElementById('captureB').onclick=()=>capture('B');document.getElementById('compare').onclick=showCompare;document.getElementById('closeCompare').onclick=()=>document.getElementById('comparePanel').classList.remove('open');document.getElementById('guides').onclick=e=>{guides=!guides;e.target.classList.toggle('active',guides);render()};document.getElementById('fit').onclick=fit;document.getElementById('reset').onclick=()=>{cameraX.value=model.camera.start[0];cameraY.value=model.camera.start[1];cameraZoom.value=model.camera.zoom[0];fit()};document.getElementById('startX').oninput=document.getElementById('startY').oninput=setStart;document.getElementById('discard').onclick=()=>{previewStarts[selected]=[...model.backgrounds[selected].start];inspect();render()};document.getElementById('copy').onclick=()=>vscode.postMessage({type:'copyPatch',text:document.getElementById('patch').value});document.getElementById('apply').onclick=()=>vscode.postMessage({type:'applyStart',sectionLine:model.backgrounds[selected].line,value:round(previewStarts[selected][0])+', '+round(previewStarts[selected][1]),name:model.backgrounds[selected].name});
   document.getElementById('source').onclick=()=>{const item=model.backgrounds[selected];if(item)vscode.postMessage({type:'openSource',line:item.line,navigationSelection:globalThis.ikemenNavigationSelection()})};
+  document.getElementById('assetSprite').onclick=()=>{const item=model.backgrounds[selected];if(item&&item.assetSprite)vscode.postMessage({type:'openStageSprite',line:item.line,name:item.name,group:item.assetSprite[0],number:item.assetSprite[1]})};document.getElementById('assetAction').onclick=()=>{const item=model.backgrounds[selected];if(item&&item.actionLine!==null)vscode.postMessage({type:'openSource',line:item.actionLine,navigationSelection:globalThis.ikemenNavigationSelection()})};
   document.getElementById('addBg').onclick=()=>vscode.postMessage({type:'addBackground'});document.getElementById('duplicateBg').onclick=()=>{const item=model.backgrounds[selected];if(item)vscode.postMessage({type:'duplicateBackground',line:item.line,name:item.name})};document.getElementById('removeBg').onclick=()=>{const item=model.backgrounds[selected];if(item)vscode.postMessage({type:'removeBackground',line:item.line,name:item.name})};
   function launchRig(){vscode.postMessage({type:'launchStageRig',speed:Number(document.getElementById('rigSpeed').value),fineSpeed:Number(document.getElementById('rigFine').value),fastSpeed:Number(document.getElementById('rigFast').value)})}document.getElementById('stageRig').onclick=launchRig;document.getElementById('stageRigPanel').onclick=launchRig;
   canvas.onmousedown=e=>{const item=model.backgrounds[selected];if(!item)return;drag={x:e.clientX,y:e.clientY,start:[...previewStarts[selected]]};canvas.classList.add('drag')};window.onmousemove=e=>{if(!drag)return;const rect=canvas.getBoundingClientRect(),zoom=Number(cameraZoom.value),dx=(e.clientX-drag.x)*canvas.width/rect.width/zoom,dy=(e.clientY-drag.y)*canvas.height/rect.height/zoom;previewStarts[selected]=[round(drag.start[0]+dx),round(drag.start[1]+dy)];inspect();render()};window.onmouseup=()=>{drag=null;canvas.classList.remove('drag')};viewport.onwheel=e=>{e.preventDefault();viewScale=Math.max(.1,Math.min(6,viewScale*(e.deltaY<0?1.1:.9)));transform()};
@@ -214,6 +225,14 @@ async function populate(panel, filename) {
     }
     if (message.type === 'openSource') {
       await openViewerSource(filename, message.line, currentPoint(filename, 'stage', message, panel));
+      return;
+    }
+    if (message.type === 'openStageSprite') {
+      const target = stageSpriteHandoff(payload, message);
+      if (!target) return vscode.window.showWarningMessage('The selected stage background changed. Refresh the Stage Workspace and choose it again.');
+      if (!payload.sffPath || payload.sffError || !fs.existsSync(payload.sffPath)) return vscode.window.showWarningMessage('The stage SFF is not currently available. Review the Stage Workspace validation details.');
+      if (hash(fs.readFileSync(filename, 'utf8')) !== payload.sourceHash) { await populate(panel, filename); return vscode.window.showWarningMessage('The stage changed on disk. The Stage Workspace was refreshed; choose the background again.'); }
+      await vscode.commands.executeCommand('sff.openViewer', vscode.Uri.file(target.sffPath), undefined, { group: target.group, number: target.number });
       return;
     }
     if (message.type === 'copyPatch') { await vscode.env.clipboard.writeText(String(message.text || '')); return vscode.window.showInformationMessage('Stage position patch copied.'); }
@@ -326,4 +345,4 @@ function registerStageWorkspace(context) {
   );
 }
 
-module.exports = { registerStageWorkspace, openStageWorkspace, createStageInteraction, stagePayload, stageHtml, resolveAsset, gameRoot };
+module.exports = { registerStageWorkspace, openStageWorkspace, createStageInteraction, stagePayload, stageHtml, stageSpriteHandoff, resolveAsset, gameRoot };

@@ -1528,3 +1528,75 @@ Tournament Player Mode remains second-lowest priority immediately above the
 website, with research/GIF conversion immediately above those. Deferred work
 still requires an explicit decision to begin; this checkpoint does not schedule
 desktop control, installed QA, publication, or a new feature batch by itself.
+
+### Phase 1 continuation checkpoint — 0.79.8
+
+Recorded September 27, 2026. Move Lab now discovers exact Helper, Explod, and
+native Projectile creation controllers in every assigned CNS/ZSS source,
+including unsaved editor text and shared files. Each selection retains the DEF,
+source and range hashes, exact lines, controller kind/index, and enclosing
+StateDef/function. Nested ZSS conditions/loops and literal Root, Parent, and P2
+receiver names are visible as context only; IKEMaker does not infer runtime
+ownership from those names.
+
+Creation-site selection is read-only and cannot create, convert, or rewrite
+source. Helper and Explod buttons open their established specialist tools as
+separate authoring surfaces; the selected source remains unchanged until the
+user explicitly applies work in the owning tool. Native Projectile offers exact
+source navigation rather than pretending a dedicated editor exists. Changed or
+moved controllers fail their full identity check instead of retargeting.
+
+Every exact component can also invoke **Choose AIR action…**. The host reads the
+current assigned AIR, including unsaved text, presents only complete real
+actions, and opens the selected action in the established AIR/Clsn workspace.
+No StateDef, Helper, Explod, Projectile, or HitDef number is inferred as an AIR
+action. AIR editing, Clsn editing, retained drafts, Apply, Undo, and Save remain
+owned by the existing AIR workspace.
+
+Direct HitDef selections now present the exact controller's explicitly authored
+classic contact values (damage, pause, hit/guard stun, slide, velocities,
+acceleration, sparks) and then every other authored/custom option. The summary
+is deliberately read-only. **Edit HitDef** continues into the existing guarded
+HitDef editor, which remains the only field-level Apply owner; duplicate option
+names stay visible and must be resolved in source before guarded editing.
+
+The approved destination colors now have a single shared registry. Universal
+viewer routes use AIR blue, SFF green, SND amber, code slate blue, and Maps
+cyan; recognized specialist command buttons receive their mapped destination
+color dynamically. Move Lab's exact-component actions use Move Lab teal, AIR
+blue, or code slate blue by destination. The styling is a border/underline cue
+that preserves neutral artwork surfaces and falls back to system borders in
+forced-colors mode. Screen-specific buttons that do not yet expose a command or
+destination attribute remain follow-up coverage; this checkpoint does not
+claim every legacy button was recolored.
+
+The Stage Workspace now has the first bounded contextual-asset handoff. A
+selected normal, parallax, or animated background resolves to the exact sprite
+used by its preview and can open that group/index in the established SFF
+workspace. An animated background can also open its embedded Begin Action at
+the exact stage-DEF source line. These controls navigate only: SFF and stage
+source retain their existing edit owners. If the stage changes between display
+and an SFF request, the workspace refreshes and requires a new selection rather
+than silently opening a stale target.
+
+The Screenpack / Fight UI and Character Select Layout workspaces now use the
+same bounded contract. A selected direct sprite or resolvable embedded
+animation frame can open its exact group/index in SFF, and an embedded Begin
+Action can open at its motif source line. Motif changes invalidate the displayed
+selection and refresh the workspace before navigation. Text/font elements and
+unresolvable expressions remain source-only rather than being guessed.
+
+Focused component discovery, nested-context, client routing, overview, stale
+identity, and host-routing checks pass. The complete 325-file source suite also
+passes. No package was built or installed, no live game or character was
+edited, no desktop UI was controlled, and no runtime behavior is claimed.
+
+Remaining Phase 1 order: deeper compact AIR/Clsn and HitDef embedding only
+where each can reuse its existing mutation owner;
+deeper Stage/Screenpack contextual asset editing; remaining destination-color
+coverage; final contextual Help/screenshots; then explicitly
+authorized installed-package QA. Helper-projectile semantic classification
+remains separate: Helper creation sites are shown exactly, but IKEMaker does not
+guess that an arbitrary Helper is a projectile. Phase 2, research, GIF
+conversion, Tournament Player Mode, and the website remain deferred under the
+existing priority rules.

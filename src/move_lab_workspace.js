@@ -59,7 +59,7 @@ function model(defPath, requestedP1, requestedP2) {
   try{
     const assets=require('./related_work').resolveAssigned(defPath),direct=directComponentModel(assets,vscode.workspace.textDocuments||[],diagnostics);
     result.attacks={...(result.attacks||{}),controllers:direct.components,constantProfiles:result.attacks?.constantProfiles||direct.constantProfiles||[]};
-    result.components=[...direct.components,...direct.behaviors];result.componentFailures=direct.failures;
+    result.components=[...direct.components,...direct.behaviors,...direct.specialists];result.componentFailures=direct.failures;
   }catch(error){result.components=result.attacks?.controllers||[];result.componentFailures=[{filename:defPath,message:error.message}];}
   return { ...result, defLabel: vscode.workspace.asRelativePath?.(defPath, true) || path.basename(defPath), visual: visualModel(defPath, requestedP1, requestedP2) };
 }

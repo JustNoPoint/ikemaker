@@ -74,6 +74,7 @@ function attackLibrary(assets, openDocuments = []) {
         label: `${Number.isInteger(state) ? `State ${state}` : path.basename(filename)} · HitDef ${index + 1}`,
         stateNumber: Number.isInteger(state) ? state : null,
         detail: [attr && `attr ${attr}`, damage && `damage ${damage}`].filter(Boolean).join(' · '), sourceHash: hash(text), syntax,
+        hitdefValues: {...block.values}, hitdefDuplicates: [...block.duplicates],
         sourceText: lines.slice(startLine, Math.min(lines.length, endLine + 1)).join('\n')
       });
     });

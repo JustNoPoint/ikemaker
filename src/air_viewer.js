@@ -565,7 +565,7 @@ function registerAirViewer(context, sharedClsn2BatchService = null) {
   clsn2BatchService = sharedClsn2BatchService;
   runtimeDraftStore = new RuntimeDraftStore(context.workspaceState);
   context.subscriptions.push(
-    vscode.commands.registerCommand('air.openAnimationPreview', (uri) => openAirPreview(uri, { preserveFocus: true })),
+    vscode.commands.registerCommand('air.openAnimationPreview', (uri, options = {}) => openAirPreview(uri, { ...options, preserveFocus: options.preserveFocus !== false })),
     vscode.commands.registerCommand('air.deleteSelectedFromViewer', () => { const session = [...openPanels.values()].find((item) => item.panel.active) || [...openPanels.values()].find((item) => item.panel.visible); if (session) session.panel.webview.postMessage({ type: 'requestDelete' }); }),
     vscode.window.onDidChangeActiveTextEditor((editor) => { if (editor && /\.air$/i.test(editor.document.fileName) && !isClosingFile(editor.document.fileName) && vscode.workspace.getConfiguration('ikemenZss').get('airAutoOpenWorkspace', true)) openAirPreview(editor.document.uri, { automatic: true, preserveFocus: true, sourceColumn: editor.viewColumn }); }),
     vscode.window.onDidChangeTextEditorSelection((event) => { if (!/\.air$/i.test(event.textEditor.document.fileName) || !event.selections.length) return; const session = openPanels.get(airPanelKey(event.textEditor.document.fileName)); if (!session) return; const selection = selectionAtLine(event.textEditor.document.getText(), event.selections[0].active.line); if (selection) session.panel.webview.postMessage({ type: 'selectAction', ...selection }); }),

@@ -20,7 +20,7 @@ let formDrafts=new (require('./form_drafts').FormDrafts)();
 let codeFormDrafts=new (require('./form_drafts').FormDrafts)();
 const draftKey=(def,id)=>'move-constants:'+def.toLowerCase()+'#'+id;
 const codeDraftKey=(def,id)=>'move-code:'+def.toLowerCase()+'#'+id;
-const componentPool=model=>[...(model?.directComponents||[]),...(model?.behaviorComponents||[])];
+const componentPool=model=>[...(model?.directComponents||[]),...(model?.behaviorComponents||[]),...(model?.specialistComponents||[])];
 function clean(value) { return String(value || '').replace(/\s*;.*/, '').trim().replace(/^['"]|['"]$/g, ''); }
 function safe(value) { return JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026'); }
 const identity = filename => path.resolve(filename || '').toLowerCase();
@@ -163,10 +163,10 @@ async function shellModelFor(assets) {
   const ready=[assets.constants,assets.air,assets.sff].every(filename=>filename&&fs.existsSync(filename));
   const openDocuments=vscode.workspace.textDocuments||[],diagnostics=sourceDiagnostics([assets.constants,assets.air,...(assets.code||[])]);
   let unavailable='No assigned AIR/SFF preview is available. Direct source inspection remains fully available.';
-  if(ready)try{const model=await modelFor(assets),direct=directComponentModel(assets,openDocuments,diagnostics);model.directComponents=direct.components;model.behaviorComponents=direct.behaviors;model.componentFailures=direct.failures;model.overview.controllers=direct.components;model.overview.behaviors=direct.behaviors;return model;}catch(error){unavailable=`The optional constants/preview component is unavailable: ${error.message}. Direct source inspection remains fully available.`;}
+  if(ready)try{const model=await modelFor(assets),direct=directComponentModel(assets,openDocuments,diagnostics);model.directComponents=direct.components;model.behaviorComponents=direct.behaviors;model.specialistComponents=direct.specialists;model.componentFailures=direct.failures;model.overview.controllers=direct.components;model.overview.behaviors=direct.behaviors;model.overview.specialists=direct.specialists;return model;}catch(error){unavailable=`The optional constants/preview component is unavailable: ${error.message}. Direct source inspection remains fully available.`;}
   const direct=directComponentModel(assets,openDocuments,diagnostics),fileStatus=(assets.code||[]).filter(filename=>filename&&fs.existsSync(filename)).map(filename=>{const document=openDocuments.find(item=>identity(item.fileName)===identity(filename));return{filename,label:path.basename(filename),dirty:Boolean(document?.isDirty)}});
   const codePrefix=codeDraftKey(assets.defPath,''),codeDrafts={};for(const [key,value]of Object.entries(codeFormDrafts.entries||{}))if(key.startsWith(codePrefix)&&value&&Object.keys(value).length)codeDrafts[key.slice(codePrefix.length)]=value;
-  return{character:path.basename(assets.folder),files:assets,fileStatus,timingSources:{},moves:[],overview:{controllers:direct.components.map(item=>({...item,reference:item.reference})),behaviors:direct.behaviors,constantProfiles:(direct.constantProfiles||[]).map(item=>({...item,defPath:assets.defPath,supported:false})),problems:[]},directComponents:direct.components,behaviorComponents:direct.behaviors,componentFailures:direct.failures,codeDrafts,formDrafts:{},previewUnavailable:unavailable};
+  return{character:path.basename(assets.folder),files:assets,fileStatus,timingSources:{},moves:[],overview:{controllers:direct.components.map(item=>({...item,reference:item.reference})),behaviors:direct.behaviors,specialists:direct.specialists,constantProfiles:(direct.constantProfiles||[]).map(item=>({...item,defPath:assets.defPath,supported:false})),problems:[]},directComponents:direct.components,behaviorComponents:direct.behaviors,specialistComponents:direct.specialists,componentFailures:direct.failures,codeDrafts,formDrafts:{},previewUnavailable:unavailable};
 }
 
 function html(model) { const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
@@ -268,7 +268,7 @@ canvas.onwheel=e=>{e.preventDefault();setViewZoom(viewZoom*(e.deltaY<0?1.12:.89)
     .replace("if(e.data.type==='model'){stop();const keep=move?.id,keepFrame=frame;model=e.data.model;imageCache.clear();selectMove(keep,undefined,keepFrame)}", "if(e.data.type==='model'){stop();const keep=move?.id,keepFrame=frame,direct=moveDirectUi.hasSelection();model=e.data.model;imageCache.clear();if(direct)moveDirectUi.modelChanged();else selectMove(keep,undefined,keepFrame)}")
     .replace('const initialSelection=initialMoveSelection();', `${require('./move_constants_overview').clientScript()}${require('./move_lab_direct_component').clientScript()}const initialSelection=initialMoveSelection();`)
     .replace('selectMove(initialSelection.id,initialSelection.draft,initialSelection.frame);', 'if(model.openReference?.profileId){moveDirectUi.clear();selectMove(initialSelection.id,initialSelection.draft,initialSelection.frame)}else if(!moveDirectUi.hasSelection()&&!model.openReference?.componentReference)selectMove(initialSelection.id,initialSelection.draft,initialSelection.frame);moveDirectUi.restoreInitial();')
-    .replace('</script></body>', `globalThis.ikemenNavigationSelection=()=>move?{kind:'constants',id:move.id}:moveDirectUi.current()?{kind:'direct',componentReference:moveDirectUi.current().reference}:undefined;globalThis.ikemenCanRestoreNavigation=ref=>ref?.kind==='direct'?Boolean([...(model.directComponents||[]),...(model.behaviorComponents||[])].find(item=>moveDirectUi.matches(item,ref.componentReference))):Object.keys(draft).length===0&&Object.keys(profileDrafts).length===0&&model.moves.some(item=>item.id===ref?.id);globalThis.ikemenRestoreNavigation=ref=>{if(ref?.kind==='direct'){const item=[...(model.directComponents||[]),...(model.behaviorComponents||[])].find(candidate=>moveDirectUi.matches(candidate,ref.componentReference));if(!item)return false;moveDirectUi.select(item.reference);return true}selectMove(ref.id);return true};${launchControlsClientScript()}</script></body>`);
+    .replace('</script></body>', `globalThis.ikemenNavigationSelection=()=>move?{kind:'constants',id:move.id}:moveDirectUi.current()?{kind:'direct',componentReference:moveDirectUi.current().reference}:undefined;globalThis.ikemenCanRestoreNavigation=ref=>ref?.kind==='direct'?Boolean([...(model.directComponents||[]),...(model.behaviorComponents||[]),...(model.specialistComponents||[])].find(item=>moveDirectUi.matches(item,ref.componentReference))):Object.keys(draft).length===0&&Object.keys(profileDrafts).length===0&&model.moves.some(item=>item.id===ref?.id);globalThis.ikemenRestoreNavigation=ref=>{if(ref?.kind==='direct'){const item=[...(model.directComponents||[]),...(model.behaviorComponents||[]),...(model.specialistComponents||[])].find(candidate=>moveDirectUi.matches(candidate,ref.componentReference));if(!item)return false;moveDirectUi.select(item.reference);return true}selectMove(ref.id);return true};${launchControlsClientScript()}</script></body>`);
 }
 
 async function refresh() { const owner=session,assets=owner?.assets;if(!owner)return;const model=owner.shell?await shellModelFor(assets):await modelFor(assets);if(session!==owner||owner.assets!==assets)return;owner.model=model;owner.panel.webview.postMessage({type:'model',model}); }
@@ -342,7 +342,7 @@ async function openSourceLocation(owner, filename, line = 0) {
 }
 
 async function handle(message) {
-  const pool=model=>[...(model?.directComponents||[]),...(model?.behaviorComponents||[])];
+  const pool=model=>[...(model?.directComponents||[]),...(model?.behaviorComponents||[]),...(model?.specialistComponents||[])];
   if(message.type==='moveFormDraft'){
     if(!session?.draftDefs.has(message.defPath?.toLowerCase())||typeof message.sourceId!=='string'||!message.draft||typeof message.draft!=='object')return;
     await formDrafts.stage(draftKey(message.defPath,message.sourceId),message.draft);return;
@@ -372,13 +372,23 @@ async function handle(message) {
   if(session!==owner||owner.assets!==assets)return;
   if(timing&&(owner.model.timingSources?.constants!==hash(expectedText)||owner.model.timingSources?.air!==hash(expectedAir)))throw new Error('The constants or AIR changed since this preview. Refresh before assigning timing.');
   if (message.type === 'refresh') return refresh();
-  if (message.type === 'selectDirectComponent'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic') {
+  if (message.type === 'selectDirectComponent'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic'||message.type==='openSpecialistComponent'||message.type==='openComponentAir') {
     const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const component=validComponentReference(message.reference,{components:pool(current)},assets.defPath);
     if(!component)return vscode.window.showWarningMessage('That direct component changed or moved. Refresh Moves / Overview and choose it again.');
     owner.model=current;owner.shell=true;
     if(message.type==='selectDirectComponent'){await owner.panel.webview.postMessage({type:'model',model:current});return owner.panel.webview.postMessage({type:'directComponentSelect',reference:component.reference});}
     if(message.type==='editDirectComponent'&&component.kind==='hitdef')return vscode.commands.executeCommand('ikemen.hitDef.openEditor',vscode.Uri.file(component.filename),{preset:true,reference:{sourceHash:component.sourceHash,index:component.index,defPath:assets.defPath}});
+    if(message.type==='openSpecialistComponent'&&component.kind==='helper')return vscode.commands.executeCommand('ikemen.helperLab.open',vscode.Uri.file(assets.defPath));
+    if(message.type==='openSpecialistComponent'&&component.kind==='explod')return vscode.commands.executeCommand('ikemen.explodComposer.open',vscode.Uri.file(assets.defPath));
+    if(message.type==='openSpecialistComponent')return openSourceLocation(owner,component.filename,component.line);
+    if(message.type==='openComponentAir'){
+      if(!assets.air||!fs.existsSync(assets.air))return vscode.window.showWarningMessage('This character has no available assigned AIR file. IKEMaker will not guess another animation source.');
+      const actions=require('./air_preview_model').parseAir(await currentText(assets.air));
+      if(!actions.length)return vscode.window.showWarningMessage('The assigned AIR file has no complete animation actions to choose.');
+      const picked=await vscode.window.showQuickPick(actions.map(action=>({label:`Action ${action.number}`,description:`${action.frames.length} frame${action.frames.length===1?'':'s'}`,detail:`AIR line ${action.line}`,action:action.number})),{title:'Choose the exact AIR action for this component',placeHolder:'No StateDef, Helper, Explod, Projectile, or HitDef number is inferred as an AIR action'});
+      if(!picked)return;return vscode.commands.executeCommand('air.openAnimationPreview',vscode.Uri.file(assets.air),{action:picked.action});
+    }
     if(message.type==='openDirectComponent')return openSourceLocation(owner,component.filename,component.line);
     const diagnostic=(component.diagnostics||[]).find(item=>item.line===Number(message.line));if(diagnostic)return openSourceLocation(owner,diagnostic.filename,diagnostic.line);return;
   }

@@ -11,7 +11,7 @@ Module._load = function patched(request, parent, main) {
   if (request === 'vscode') return {};
   return load.call(this, request, parent, main);
 };
-const { stagePayload, stageHtml, gameRoot } = require('../src/stage_workspace');
+const { stagePayload, stageHtml, stageSpriteHandoff, gameRoot } = require('../src/stage_workspace');
 const { workspaceExperience } = require('../src/experience_model');
 Module._load = load;
 
@@ -31,6 +31,11 @@ try {
   const payload = stagePayload(filename);
   assert.strictEqual(payload.model.name, 'Sample');
   assert.strictEqual(payload.model.backgrounds[0].parallax.mode, 'width');
+  assert.deepStrictEqual(payload.model.backgrounds[0].assetSprite, [1, 0]);
+  assert.strictEqual(payload.model.backgrounds[0].actionLine, null);
+  assert.deepStrictEqual(stageSpriteHandoff(payload, { line: payload.model.backgrounds[0].line, name: 'Floor', group: 1, number: 0 }), { sffPath: payload.sffPath, group: 1, number: 0, selected: payload.model.backgrounds[0] });
+  assert.strictEqual(stageSpriteHandoff(payload, { line: payload.model.backgrounds[0].line, name: 'Floor', group: 1, number: 1 }), null, 'changed sprite identity must not retarget');
+  assert.strictEqual(stageSpriteHandoff(payload, { line: payload.model.backgrounds[0].line + 1, name: 'Floor', group: 1, number: 0 }), null, 'changed source location must not retarget');
   assert.ok(payload.sffError);
   const html = stageHtml(payload);
   const clientScript = html.match(/<script>([\s\S]*)<\/script>/);
@@ -44,6 +49,10 @@ try {
   assert.match(html, /Launch with these speeds/);
   assert.match(html, /launchStageRig/);
   assert.match(html, /Apply reviewed position/);
+  assert.match(html, /Open sprite in SFF/);
+  assert.match(html, /Open embedded action/);
+  assert.match(html, /openStageSprite/);
+  assert.match(html, /data-ikemen-destination="sff"/);
   assert.match(html, /cameraZoom/);
   assert.match(html, /drawParallax/);
   assert.match(html, /attached character/);
