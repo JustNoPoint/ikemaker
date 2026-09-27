@@ -177,7 +177,7 @@ async function openCharacterSession(profile, context, provider) {
   }
   if (selected.has('attacks')) {
     await open(constants);
-    await vscode.commands.executeCommand('ikemen.moveConstants.open', vscode.Uri.file(profile.defPath));
+    await vscode.commands.executeCommand('ikemen.moveLab.open', vscode.Uri.file(profile.defPath), { preset: true, reference: { defPath: profile.defPath, mode: 'attack' } });
   }
   if (selected.has('throws')) {
     await open(air); await open(sprite);

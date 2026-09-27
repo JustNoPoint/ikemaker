@@ -61,7 +61,7 @@ function currentItems(kind, seed, assets, root) {
   if (assets.def) {
     entries.push(separator('Character authoring'));
     add(item('$(home) Character work session', 'Choose a focused set of connected character tools', 'character', assets.def));
-    add(item('$(dashboard) Universal Move Lab', 'Moves, throws, assets, code, diagnostics, tests, and recovery in one shell', 'moves', assets.def));
+    add(item('$(dashboard) Move Lab', 'Moves, throws, assets, code, diagnostics, tests, and recovery in one shell', 'moves', assets.def));
     add(item('$(type-hierarchy) Character connection tree', 'DEF assignments, code relationships, and missing dependencies', 'connections', assets.def));
     add(item('$(symbol-structure) Visual code structure', 'Open a connected ZSS, CNS, CMD, or DEF file as a visual tree', 'code', assets.code.find(exists) || assets.def));
     add(item('$(replace-all) CNS → ZSS converter', 'Review and convert one CNS state file or every CNS state file assigned by this character', 'converter', assets.code.find((file) => /\.cns$/i.test(file)) || assets.def));

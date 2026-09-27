@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.78.9",
+  "version": "0.79.0",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -455,12 +455,12 @@
       },
       {
         "command": "ikemen.moveConstants.open",
-        "title": "IKEMEN: Open JNP Move Constants Editor",
+        "title": "IKEMEN: Open Move Lab — Constants Integration",
         "icon": "$(graph)"
       },
       {
         "command": "ikemen.moveLab.open",
-        "title": "IKEMEN: Open Universal Move Lab",
+        "title": "IKEMEN: Open Move Lab",
         "icon": "$(dashboard)"
       },
       {

@@ -77,9 +77,11 @@ function attackLibrary(assets, openDocuments = []) {
   let constantProfiles = [];
   if (assets.constants && exists(assets.constants)) {
     try {
-      constantProfiles = moveGroups(parseConstants(readCurrent(assets.constants, openDocuments))).map((move) => ({
+      const constantsText = readCurrent(assets.constants, openDocuments), sourceHash = hash(constantsText);
+      constantProfiles = moveGroups(parseConstants(constantsText)).map((move) => ({
         id: move.id, prefix: move.prefix, moveID: Number.isFinite(Number(move.values.moveID)) ? Number(move.values.moveID) : null,
-        linkedControllerIds: controllers.filter((item) => Number.isInteger(item.stateNumber) && item.stateNumber === Number(move.values.moveID)).map((item) => item.id)
+        linkedControllerIds: controllers.filter((item) => Number.isInteger(item.stateNumber) && item.stateNumber === Number(move.values.moveID)).map((item) => item.id),
+        defPath: assets.def, sourceFilename: assets.constants, sourceHash
       }));
     } catch (_) { constantProfiles = []; }
   }

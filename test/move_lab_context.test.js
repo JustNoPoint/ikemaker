@@ -1,0 +1,10 @@
+'use strict';
+const assert = require('assert');
+const context = require('../src/move_lab_context');
+const a = 'C:/Game/chars/A/A.def', b = 'C:/Game/chars/B/B.def';
+context.remember(a, { kind: 'constants', reference: { profileId: 'normal.lp' } });
+assert.strictEqual(context.current(a).reference.profileId, 'normal.lp');
+assert.strictEqual(context.current(b), null);
+const retained = context.current(a); context.clear(a, {}); assert.strictEqual(context.current(a), retained);
+context.clear(a, retained); assert.strictEqual(context.current(a), null);
+console.log('Move Lab per-character integration context tests passed');

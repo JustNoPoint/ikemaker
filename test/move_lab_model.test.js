@@ -35,6 +35,9 @@ assert(disk.attacks.controllers[0].detail.includes('damage 30'));
 assert.strictEqual(disk.attacks.constantProfiles.length, 1);
 assert.strictEqual(disk.attacks.constantProfiles[0].prefix, 'normal.sLP');
 assert.strictEqual(disk.attacks.constantProfiles[0].linkedControllerIds.length, 1);
+assert.strictEqual(disk.attacks.constantProfiles[0].defPath, def);
+assert.strictEqual(disk.attacks.constantProfiles[0].sourceFilename, constants);
+assert.strictEqual(typeof disk.attacks.constantProfiles[0].sourceHash, 'string');
 
 const planFolder = path.join(character, '.ikemen-tools', 'throw-plans'); fs.mkdirSync(planFolder, { recursive: true });
 fs.writeFileSync(path.join(planFolder, 'test.json'), JSON.stringify({ name: 'Test Throw', p1Action: 0, p2Action: 0, events: [] }), 'utf8');
@@ -49,4 +52,4 @@ assert(unsaved.sources[0].states.some((state) => state.title.includes('220')));
 assert.strictEqual(unsaved.attacks.controllers.length, 0, 'unsaved editor text should also drive the attack library');
 
 fs.rmSync(root, { recursive: true, force: true });
-console.log('Universal Move Lab model tests passed');
+console.log('Move Lab model tests passed');

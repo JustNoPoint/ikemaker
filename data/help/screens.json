@@ -221,9 +221,9 @@
   },
   {
     "id": "constants",
-    "title": "Move Constants",
+    "title": "Move Lab — Constants integration",
     "command": "ikemen.moveConstants.open",
-    "purpose": "Review configured move constants alongside animations. Pinned Sources in the shared toolbar keeps chosen constants, common code, and functions in a separate tabbed preview. Hide it with Customize or find it in More. The preview follows direct text matches for the selected JNP move when Follow selected move is enabled; turn it off to keep inspecting another source. Source line buttons open the text editor with navigation history. Unsaved text updates the preview automatically.",
+    "purpose": "Review an optional constants-based move profile alongside animations as one Move Lab integration. Pinned Sources in the shared toolbar keeps chosen constants, common code, and functions in a separate tabbed preview. Hide it with Customize or find it in More. The preview follows direct text matches for the selected profile when Follow selected move is enabled; turn it off to keep inspecting another source. Source line buttons open the text editor with navigation history. Unsaved text updates the preview automatically.",
     "firstAction": "Choose the character and move you want to inspect.",
     "source": "Uses the selected character’s configured conventions.",
     "safety": "Review the preview and affected constants before saving.",

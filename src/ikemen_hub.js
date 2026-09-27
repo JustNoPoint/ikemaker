@@ -42,7 +42,7 @@ function buildAllHubItems() {
   return [
       new HubItem('Quick Start', [
         new HubItem('Open Character…', null, 'ikemen.character.open', 'start here'),
-        new HubItem('Open Universal Move Lab…', null, 'ikemen.moveLab.open', 'moves, throws, animation, assets, code, diagnostics, and tests'),
+        new HubItem('Open Move Lab…', null, 'ikemen.moveLab.open', 'moves, throws, animation, assets, code, diagnostics, and tests'),
         new HubItem('Create New Character…', null, 'ikemen.character.createNew', 'complete playable character scaffold'),
         new HubItem('Create New Stage…', null, 'ikemen.stage.createNew', 'stage files and visual workspace'),
         new HubItem('Create New Screenpack / Fight UI…', null, 'ikemen.ui.createNew', 'screenpack files and visual workspace'),
@@ -88,7 +88,7 @@ function buildAllHubItems() {
         new HubItem('Character Select Preview…', null, 'ikemen.selectDef.openLayoutBuilder')
       ]),
       new HubItem('Character Authoring', [
-        new HubItem('Open Universal Move Lab…', null, 'ikemen.moveLab.open', 'one visual shell for moves, throws, assets, code, diagnostics, and tests'),
+        new HubItem('Open Move Lab…', null, 'ikemen.moveLab.open', 'one visual shell for moves, throws, assets, code, diagnostics, and tests'),
         new HubItem('Open Explod Composer…', null, 'ikemen.explodComposer.open', 'place effects on fighters, the stage, or the screen'),
         new HubItem('Open Position & Camera…', null, 'ikemen.positionCamera.open', 'position fighters, targets, helpers, bounds, and camera-sensitive movement'),
         new HubItem('Open Helper Lab…', null, 'ikemen.helperLab.open', 'create helpers, inspect nested helper trees, and map data flow'),
@@ -103,7 +103,7 @@ function buildAllHubItems() {
         new HubItem('Create Workbench from Existing Character…', null, 'ikemen.workbench.create'),
         new HubItem('Open Character Connection Tree…', null, 'ikemen.characterDependencies.open'),
         new HubItem('Open Visual Character DEF Editor…', null, 'ikemen.def.openVisualWorkspace'),
-        new HubItem('Open Move Constants Editor…', null, 'ikemen.moveConstants.open'),
+        new HubItem('Move Lab — Constants Integration…', null, 'ikemen.moveConstants.open', 'legacy direct route retained for compatible workflows'),
         new HubItem('Open Universal HitDef Editor…', null, 'ikemen.hitDef.openEditor', 'edit the current HitDef or create a new controller'),
         new HubItem('Open Throw Creator…', null, 'ikemen.throwCreator.open'),
         new HubItem('Open Throw Creator Guide', null, 'ikemen.throwCreator.openGuide'),
@@ -168,7 +168,7 @@ function buildAllHubItems() {
         new HubItem('Generate Character UI Bridge…', null, 'ikemen.ui.generateCharacterBridge')
       ]),
       new HubItem('ZSS, CNS, and Lua', [
-        new HubItem('Open Universal Move Lab…', null, 'ikemen.moveLab.open', 'compose code, controllers, animation, resources, diagnostics, and testing'),
+        new HubItem('Open Move Lab…', null, 'ikemen.moveLab.open', 'compose code, controllers, animation, resources, diagnostics, and testing'),
         new HubItem('Browse Maps…', null, 'ikemen.maps.openBrowser', 'browse project maps and insert only when a supported ZSS/CNS destination is captured'),
         new HubItem('Create New ZSS File…', null, 'zss.createNew'),
         new HubItem('Create New CNS File…', null, 'cns.createNew'),

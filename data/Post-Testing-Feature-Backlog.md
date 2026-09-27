@@ -933,3 +933,26 @@ other screens would benefit from them, existing connections, and gaps. Rank
 small improvements by reduced context switching and repeated work in JNP's
 actual authoring flow. Avoid filling every screen with every control; show
 relevant capabilities on demand and preserve visibility preferences.
+
+### Phase 1 regression report — P2 shifts when zooming out
+
+JNP reports that zooming out still causes P2 to move in both JNP Move Constants
+and the screen described as "universal movelist" (likely Universal Move Lab
+from the current comparison; confirm the exact surface during reproduction).
+Reported after the earlier 0.78.2 correction: do not treat that source fix as
+proof the installed/user-visible issue is resolved. Track both affected paths
+until verified, even though their interfaces are planned for consolidation.
+
+Investigate whether zoom changes authored/preview world coordinates, recomputes
+P2 from canvas dimensions, or applies a different origin/scale than P1. Screen
+pixels naturally change under zoom; the defect to resolve is unintended P2
+placement drift relative to the scene/axes/contact setup, not a requirement to
+pin P2 to fixed screen pixels. Preserve intentional P2 positioning through
+zoom-out/in, Fit, resize and restored view state. Reuse a consistent coordinate
+transform in the consolidated Move Lab rather than hiding the issue by merging
+screens. Check the installed version versus source without assuming user error.
+
+User report is logged; no fresh reproduction or desktop-control test performed.
+Use focused source/fixture checks first. Any manual control of the user's app
+requires the previously requested test coordination. Keep this open until the
+reported behavior is verified corrected in the relevant build.
