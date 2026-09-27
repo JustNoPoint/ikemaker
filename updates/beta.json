@@ -3,23 +3,23 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.6",
+      "version": "0.79.8",
       "channel": "beta",
-      "publishedAt": "2026-09-27T10:44:24Z",
+      "publishedAt": "2026-09-27T12:33:33Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Exact CNS/ZSS StateDef and ZSS Function editing in Move Lab",
-        "Retained stale/orphan draft recovery with explicit copy/discard",
-        "AIR lifecycle, frame ordering, and shared batch Clsn2 workflows",
-        "Command/movelist, Player Palette Workshop, and CNS Explod parity updates"
+        "Convention-preserving Command & Movelist timeline and nested glyph/source editing",
+        "Exact Move Lab StateDef, function, HitDef, Helper, Explod, Projectile, and assigned-AIR context",
+        "Shared destination colors plus exact Stage and Screenpack asset navigation",
+        "All 325 source test files and all five release artifacts verified"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.6/ikemen-zss-tools-0.79.6.vsix",
-        "sha256": "e56b884c742ad667db20f2529544738abcb74dacfa961cea01215aa007270d9c",
-        "bytes": 20358035
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.8/ikemen-zss-tools-0.79.8.vsix",
+        "sha256": "9e3993e483e535e705c23fb72a35b4e8ddb90a104345a225ed4c0663676fc5ef",
+        "bytes": 20377289
       }
     }
   ]
