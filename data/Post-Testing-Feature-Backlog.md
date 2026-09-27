@@ -440,6 +440,35 @@ basis. IKEMaker's normal tools remain classification-neutral; the JNP source
 acquisition lab is confined to hobby/non-commercial fan-project profiles and
 must reject transfers into any project classified as commercial/original.
 
+#### Jesuszilla Cheat Engine tables and Caddie Machine reference
+
+Deferred reference: <https://github.com/Jesuszilla/cheatengine-scripts>. A
+read-only README/repository-listing review found tables for Vampire Savior,
+CvS2, MvC2, MSH, and SS6. The documented capabilities include selected-object
+hitbox/data display, 240p-normalized display values while retaining raw table
+data, and Caddie Machine animation logging in MUGEN AIR format using source-game
+sprite indices. This is a promising optional input source, not a required
+dependency or a validated integration.
+
+When Phase 2 begins, evaluate a source-backed import session that retains source
+game, region/build, emulator/version, table revision, game speed, raw versus
+normalized coordinate units, object identity, and capture tick. User-reviewed
+start/end markers should split logged streams into named moves; source sprite
+indices must map explicitly to destination SFF entries. Measured data and artist
+annotations may coexist for P1, P2, FX, bind intervals, wall impact, and release-
+to-velocity events, with a complete preview before any explicit project Apply.
+
+The documented limitations are material: Caddie Machine does not split
+animations, timing follows the running speed, and Capcom turbo frame skipping
+can alter the log. Vampire Savior's default selectable Normal is documented as
+Turbo 1; true Normal requires the options menu. Emulator and game-version
+compatibility must be profiled. Do not equate 60 fps GIF resampling with measured
+game ticks or infer velocity, damage, meter, hit pause, binding export, or other
+unsupported fields from the README. Inspect the actual table/export paths under
+controlled capture when this deferred work starts. Check the repository's
+license and author permission before any reuse or redistribution. Never download,
+attach to a process, or execute a table merely because it is referenced here.
+
 ### Animated GIF data collection bridge
 
 Status: PHASE 2 RESEARCH. GIF conversion, including further development of the
@@ -899,8 +928,9 @@ optional separate windows/tabs for users who prefer them; simplify the default
 experience rather than prohibiting advanced workflows. Respect Player,
 Simple and Workspace modes without exposing irrelevant authoring controls.
 
-First deliverable: a bounded Move Lab consolidation design and capability
-comparison with a staged migration plan. Follow with focused checks for
+First deliverable: the bounded capability comparison and staged migration plan
+is recorded in `data/Move-Lab-Consolidation-Plan.md` (plan revision 1, reviewed
+against source 0.79.1). Follow with focused checks for
 legacy entry points, direct-code and constants/maps-based characters,
 compound moves, draft retention, explicit Apply/Undo, navigation and hidden
 panel preferences. Do not undertake an unbounded all-screen rewrite.
