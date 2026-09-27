@@ -1452,6 +1452,29 @@ Explod/Spatial, Throw, SFF/SND, Stage, and Screenpack—when each surface is tou
 Verify upward/downward dragging, minimum and reset behavior, persistence, narrow
 editor widths, scrolling, keyboard focus, and no draft or selection loss.
 
+### Whole-editor vertical scrolling below the viewer
+
+Universal JNP viewer requirement clarified September 27, 2026 from the SFF
+workspace. Every viewer's custom-editor page as a whole must scroll vertically.
+The preview/canvas must be allowed to move above the visible editor area so the
+user can scroll down and bring all controls, timelines, Groups, Sprites,
+palettes/preview controls, Inspector, Tools, guidance, and other lower sections
+into a comfortable working position. Lower features must never be trapped in the
+short remainder of a fixed-height viewport beneath a permanently visible canvas.
+
+This is an outer editor-page scrollbar, separate from internal list or inspector
+scrollbars. Avoid nested wheel traps: ordinary wheel, trackpad, Page Up/Down,
+Home/End, and keyboard focus movement must allow the outer page to reach all
+lower content. Focusing a lower control should reveal it without changing canvas
+zoom, camera position, selected sprite, drafts, or authored data. Coordinate this
+with the planned viewer-height splitter: expanding the viewer increases the page
+height and pushes lower features down, while the outer editor remains scrollable
+past the viewer. This must be implemented and verified across all viewers,
+including SFF, AIR, SND, Move Lab/Constants, HitDef, Helper, Explod/Spatial,
+Throw, Stage, Screenpack, and any present or future preview-based workspace. Do
+not claim shared viewer coverage while any viewer remains fixed-height or traps
+its lower controls.
+
 ### Approved destination-color mapping — JNP sign-off
 
 September 26, 2026: JNP explicitly signed off this mapping, superseding the
