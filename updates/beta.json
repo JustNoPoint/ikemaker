@@ -3,23 +3,23 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.8",
+      "version": "0.79.9",
       "channel": "beta",
-      "publishedAt": "2026-09-27T12:33:33Z",
+      "publishedAt": "2026-09-27T13:41:30Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Convention-preserving Command & Movelist timeline and nested glyph/source editing",
-        "Exact Move Lab StateDef, function, HitDef, Helper, Explod, Projectile, and assigned-AIR context",
-        "Shared destination colors plus exact Stage and Screenpack asset navigation",
+        "Critical AIR viewer startup regression fixed; animations display again",
+        "Open SFF restored with its approved green SFF destination identity",
+        "No AIR, SFF, character, stage, or game-file migration required",
         "All 325 source test files and all five release artifacts verified"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.8/ikemen-zss-tools-0.79.8.vsix",
-        "sha256": "9e3993e483e535e705c23fb72a35b4e8ddb90a104345a225ed4c0663676fc5ef",
-        "bytes": 20377289
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.9/ikemen-zss-tools-0.79.9.vsix",
+        "sha256": "2448175daff54db5536e1b841333a8106a6f4a4e87a42c1db599d468a6a4f136",
+        "bytes": 20278305
       }
     }
   ]
