@@ -29,6 +29,9 @@ for(const [,command]of SCREEN_LINKS)assert(page.includes('data-run-command="'+co
 assert(page.includes('reviewed and incremental'));
 assert(page.includes('IKEMEN GO 1.0'));
 assert(page.includes('MUGEN remains supported'));
+assert(page.includes('AIR / Clsn context'),'Move Lab help explains the explicit assigned-action catalog');
+assert(page.includes('Selection and summaries are read-only'),'Move Lab help preserves specialist mutation ownership');
+assert(page.includes('Constants are optional'),'the optional constants integration is not presented as universal policy');
 assert(page.includes('@media(max-width:700px)'));
 assert(!/Uproar/i.test(page), 'public help must not expose private project material');
 

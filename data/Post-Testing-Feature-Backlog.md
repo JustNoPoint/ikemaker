@@ -1579,6 +1579,11 @@ Tab** and the SND viewer's **Open Build Manifest** / **Open Any SndMaker Text**
 buttons as code destinations. These legacy IDs use the same shared registry;
 their action semantics and owning editors are unchanged.
 
+The bundled Move Lab screen guide now describes the exact component browser,
+explicit AIR/Clsn catalog, stale-target behavior, optional constants profile,
+and specialist mutation ownership. Screenshot replacement remains deferred
+until an installed build is explicitly authorized and visually verified.
+
 The required neutral/off preference is implemented centrally as
 `ikemenZss.destinationColors`. `subtle` is the default; `off` emits no
 destination accent rules while retaining destination metadata, labels,
@@ -1632,7 +1637,8 @@ changed.
 Remaining Phase 1 order: deeper visual AIR/Clsn interaction and optional HitDef
 presentation only where each can reuse its existing mutation owner;
 deeper Stage/Screenpack contextual asset editing; remaining destination-color
-coverage; final contextual Help/screenshots; then explicitly
+coverage for newly touched routes; installed screenshot refresh and remaining
+surface-specific Help; then explicitly
 authorized installed-package QA. Helper-projectile semantic classification
 remains separate: Helper creation sites are shown exactly, but IKEMaker does not
 guess that an arbitrary Helper is a projectile. Phase 2, research, GIF
