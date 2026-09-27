@@ -1574,6 +1574,11 @@ forced-colors mode. Screen-specific buttons that do not yet expose a command or
 destination attribute remain follow-up coverage; this checkpoint does not
 claim every legacy button was recolored.
 
+A bounded final pass also classifies the AIR dialog's nested **Open AIR Source
+Tab** and the SND viewer's **Open Build Manifest** / **Open Any SndMaker Text**
+buttons as code destinations. These legacy IDs use the same shared registry;
+their action semantics and owning editors are unchanged.
+
 The required neutral/off preference is implemented centrally as
 `ikemenZss.destinationColors`. `subtle` is the default; `off` emits no
 destination accent rules while retaining destination metadata, labels,
