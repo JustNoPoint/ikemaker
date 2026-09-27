@@ -12,6 +12,7 @@ const { parseConstants, moveGroups, fieldsFor, actionTimeline, reactionSummary, 
 const { chooseCharacterDef } = require('./character_picker');
 const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
 const { fieldExplanation, timingProblems, connectedCode, diagnosticProblems } = require('./attack_workspace_model');
+const { attackLibrary, validAttackReference } = require('./move_lab_model');
 
 let session = null;
 let formDrafts=new (require('./form_drafts').FormDrafts)();
@@ -31,6 +32,44 @@ function validConstantsReference(reference, assets, model) {
   if (reference.actionNumber !== undefined && reference.actionNumber !== move.timeline?.actionNumber) return null;
   if (reference.frameIndex !== undefined && (!Number.isInteger(reference.frameIndex) || reference.frameIndex < 0 || reference.frameIndex >= (move.timeline?.frames?.length || 0))) return null;
   return move;
+}
+function validOverviewProblem(reference, model) {
+  if (!reference || typeof reference.id !== 'string') return null;
+  const problem = model?.overview?.problems?.find(item => item.id === reference.id);
+  if (!problem) return null;
+  const member = (problem.members || []).find(item => item.key === reference.memberKey);
+  if (!member) return null;
+  const sameFile = identity(member.filename) === identity(reference.filename);
+  return sameFile && member.line === reference.line && member.sourceHash === reference.sourceHash && member.sourceId === reference.sourceId ? { problem, member } : null;
+}
+
+function overviewFor(assets, moves, diagnostics, openDocuments, sourceHashes) {
+  const discovered = attackLibrary(assets, openDocuments), problems = [], byKey = new Map();
+  const add = (problem, sourceId = '', moveLabel = '') => {
+    const filename = problem.field ? assets.constants : problem.filename || (problem.source === 'AIR timing' ? assets.air : '');
+    const line = Number.isInteger(problem.line) ? problem.line : null, title = problem.title || problem.message || 'Review';
+    const actionNumber = moves.find(move => move.id === sourceId)?.timeline?.actionNumber ?? null;
+    const specificity = [problem.source || '', problem.diagnosticCode || '', problem.endLine ?? '', problem.endCharacter ?? '', problem.field || '', problem.source === 'AIR timing' ? actionNumber ?? '' : '', problem.frameIndex ?? ''].join(':');
+    const key = filename ? `source:${identity(filename)}:${line}:${title}:${specificity}` : `move:${title}:${specificity}`;
+    const sourceHash = filename ? (sourceHashes.get(identity(filename)) || '') : '';
+    const target = problem.field ? 'field' : Number.isInteger(problem.frameIndex) && problem.source === 'AIR timing' ? 'air-frame' : problem.sectionId ? 'section' : filename ? 'source' : 'none';
+    const member = { key: `member-${hash(JSON.stringify([key, sourceId, problem.id || '', problem.sectionId || '', target, filename, line, sourceHash]))}`, sourceId, moveLabel, problemId: problem.id || '', filename, line, sourceHash, target, field: problem.field || '', frameIndex: Number.isInteger(problem.frameIndex) ? problem.frameIndex : null, sectionId: problem.sectionId || '', actionNumber };
+    const existing = byKey.get(key);
+    if (existing) { if (!existing.members.some(item => item.key === member.key)) existing.members.push(member); return; }
+    const id = `overview-${hash(JSON.stringify([key, sourceHash]))}`, item = { ...problem, id, members: [member] };
+    problems.push(item); byKey.set(key, item);
+  };
+  for (const move of moves) for (const problem of move.problems || []) add(problem, move.id, move.prefix);
+  for (const diagnostic of diagnostics) add({
+    source: diagnostic.source || 'IKEMEN lint', level: diagnostic.severity === 0 ? 'error' : diagnostic.severity === 1 ? 'warning' : 'info',
+    title: diagnostic.message || 'Source diagnostic', detail: `${path.basename(diagnostic.filename || 'source')}:${Number(diagnostic.line || 0) + 1}`,
+    filename: diagnostic.filename, line: diagnostic.line, endLine: diagnostic.endLine, endCharacter: diagnostic.endCharacter, diagnosticCode: diagnostic.diagnosticCode || diagnostic.code || ''
+  });
+  return {
+    controllers: discovered.controllers,
+    constantProfiles: discovered.constantProfiles.map(profile => ({ ...profile, defPath: assets.defPath, supported: moves.some(move => move.id === profile.id) })),
+    problems
+  };
 }
 
 function characterAssets(defPath) {
@@ -81,16 +120,16 @@ async function modelFor(assets) {
     });
     return { ...spec, frames, loopStart: action.loopStart, totalTicks: frames.reduce((sum, frame) => sum + Math.max(1, Number(frame.time) || 1), 0) };
   }).filter(Boolean);
-  const output = [], openDocuments = vscode.workspace.textDocuments || [], wanted = new Set([assets.constants, assets.air, ...(assets.code || [])].filter(Boolean).map(file => path.resolve(file).toLowerCase())), diagnostics = [], sharedAssignments = new Map(), sharedProfile = require('./move_constants_shared_profile');
+  const output = [], openDocuments = vscode.workspace.textDocuments || [], wanted = new Set([assets.constants, assets.air, ...(assets.code || [])].filter(Boolean).map(file => path.resolve(file).toLowerCase())), diagnostics = [], sharedAssignments = new Map(), sharedProfile = require('./move_constants_shared_profile'), sourceHashes = new Map([[identity(assets.constants), hash(constantsText)], [identity(assets.air), hash(airText)]]);
   for (const filename of assets.code || []) {
     let text = ''; try { text = await currentText(filename); } catch (_) { continue; }
-    const lines = text.split(/\r?\n/);
+    sourceHashes.set(identity(filename), hash(text)); const lines = text.split(/\r?\n/);
     for (let line = 0; line < lines.length; line++) {
       const assignment = sharedProfile.parseAssignmentLine(lines[line]);
       if (assignment) sharedAssignments.set(assignment.name.toLowerCase(), { name: assignment.name, value: assignment.value, filename, line, sourceHash: hash(text) });
     }
   }
-  for (const [uri, items] of (vscode.languages?.getDiagnostics?.() || [])) if (uri?.fsPath && wanted.has(path.resolve(uri.fsPath).toLowerCase())) for (const item of items) diagnostics.push({ filename: uri.fsPath, line: item.range.start.line, character: item.range.start.character, severity: item.severity, message: item.message, source: item.source || 'IKEMEN' });
+  for (const [uri, items] of (vscode.languages?.getDiagnostics?.() || [])) if (uri?.fsPath && wanted.has(path.resolve(uri.fsPath).toLowerCase())) for (const item of items) diagnostics.push({ filename: uri.fsPath, line: item.range.start.line, character: item.range.start.character, endLine: item.range.end.line, endCharacter: item.range.end.character, diagnosticCode: String(item.code ?? ''), severity: item.severity, message: item.message, source: item.source || 'IKEMEN' });
   for (const move of moves) {
     const timeline = actionTimeline(airText, move), images = {};
     if (timeline.state === 'ready') for (const frame of timeline.frames) {
@@ -104,7 +143,7 @@ async function modelFor(assets) {
   const fileStatus = [assets.constants, assets.air, ...(assets.code || [])].filter(Boolean).map(filename => { const document=openDocuments.find(item=>path.resolve(item.fileName).toLowerCase()===path.resolve(filename).toLowerCase()); return { filename, label:path.basename(filename), dirty:Boolean(document?.isDirty) }; });
   const codePrefix=codeDraftKey(assets.defPath,''),codeDrafts={};
   for(const [key,value] of Object.entries(codeFormDrafts.entries||{}))if(key.startsWith(codePrefix)&&value&&Object.keys(value).length)codeDrafts[key.slice(codePrefix.length)]=value;
-  return { character: path.basename(assets.folder), files: assets, fileStatus, timingSources:{constants:hash(constantsText),air:hash(airText)}, moves: output, codeDrafts, formDrafts:Object.fromEntries(output.map(move=>[move.id,formDrafts.read(draftKey(assets.defPath,move.id))||{}])) };
+  return { character: path.basename(assets.folder), files: assets, fileStatus, timingSources:{constants:hash(constantsText),air:hash(airText)}, moves: output, overview: overviewFor(assets, output, diagnostics, openDocuments, sourceHashes), codeDrafts, formDrafts:Object.fromEntries(output.map(move=>[move.id,formDrafts.read(draftKey(assets.defPath,move.id))||{}])) };
 }
 
 function html(model) { const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
@@ -197,6 +236,11 @@ canvas.onwheel=e=>{e.preventDefault();setViewZoom(viewZoom*(e.deltaY<0?1.12:.89)
     .replace('<h3>Opponent reaction estimate</h3>', '<h3>Opponent reaction preview</h3><div class="opponent-controls"><label><input id="showOpponent" type="checkbox" checked> Show P2</label><select id="reactionAction" title="Choose an authored get-hit AIR action"></select><button id="resetOpponent" title="Return P2 to the default authored preview position">Reset</button></div><div class="opponent-controls"><label>World X <input id="opponentX" type="number" step="any"></label><label>World Y <input id="opponentY" type="number" step="any"></label></div><p class="muted">Drag the darkened P2 directly in the AIR canvas. Its authored/world coordinates stay unchanged when zooming; only its screen distance from the zoom pivot scales. Select standing-high, standing-low, crouching, or airborne reactions when those standard actions exist.</p><h3>Contact result</h3>')
     .replace('<div class="reaction" id="reaction"><div class="spark" id="spark"></div></div>', '')
     .replace('Spark X is defender-relative, so the canvas estimates contact from the leading edge of the active Clsn1.', 'Spark X is defender-relative. With P2 visible it follows the draggable defender axis; without P2 the canvas estimates contact from the leading edge of active Clsn1.')
+    .replace('</style>', '.overview-drawer{position:fixed;z-index:20;top:46px;bottom:0;left:0;width:min(460px,92vw);overflow:auto;padding:12px;background:var(--vscode-editor-background);border-right:1px solid var(--vscode-panel-border);box-shadow:5px 0 18px rgba(0,0,0,.35)}.overview-drawer[hidden]{display:none}.overview-heading{display:flex;align-items:center;justify-content:space-between;gap:8px}.overview-heading h2{margin:0}.overview-drawer>input{width:100%;margin:8px 0}.overview-entry{display:block;width:100%;text-align:left;margin:4px 0}.overview-entry:disabled{opacity:.62;cursor:not-allowed}.problem-scope{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:7px;border-top:1px solid var(--vscode-panel-border)}</style>')
+    .replace('<button id="moveOverview">Overview / Related Tools</button>', '<button id="moveOverview" title="Browse all discovered constants profiles and exact HitDef controllers without leaving this panel">Moves / Overview</button>')
+    .replace('<main class="layout">', '<aside id="overviewDrawer" class="overview-drawer" hidden aria-label="Moves and overview"></aside><main class="layout">')
+    .replace('renderMoveList();renderFields();renderTimeline();renderOpponentControls();renderProblems();renderCode();', 'renderMoveList();renderFields();moveOverviewUi.restoreCategories();renderTimeline();renderOpponentControls();moveOverviewUi.renderProblems();renderCode();moveOverviewUi.render();')
+    .replace('const initialSelection=initialMoveSelection();', `${require('./move_constants_overview').clientScript()}const initialSelection=initialMoveSelection();`)
     .replace('</script></body>', `globalThis.ikemenNavigationSelection=()=>move?{id:move.id}:undefined;globalThis.ikemenCanRestoreNavigation=ref=>model.moves.some(item=>item.id===ref.id)&&Object.keys(draft).length===0&&Object.keys(profileDrafts).length===0;globalThis.ikemenRestoreNavigation=ref=>selectMove(ref.id);${launchControlsClientScript()}</script></body>`);
 }
 
@@ -249,6 +293,14 @@ async function openMoveSource(message) {
   return navigation.openReferenceSource({filename,line,character:0,text:document.lineAt(line).text},navigation.currentPoint(assets.defPath,'constants',{navigationSelection:{id:move.id}},owner.panel));
 }
 
+async function openAirProblem(owner, member) {
+  const move = owner.model.moves.find(item => item.id === member.sourceId);
+  if (!move || !Number.isInteger(member.frameIndex) || member.actionNumber !== move.timeline?.actionNumber) return;
+  const document = await vscode.workspace.openTextDocument(owner.assets.constants), parsed = parseConstants(document.getText()), declaration = parsed.byName.get((move.prefix + '.moveID').toLowerCase());
+  if (!declaration || session !== owner) return;
+  return require('./viewer_navigation').openConnected(owner.assets.constants, 'air', { group: member.actionNumber, frameIndex: member.frameIndex }, { filename: owner.assets.constants, line: declaration.line, character: 0, text: document.lineAt(declaration.line).text }, require('./viewer_navigation').currentPoint(owner.assets.defPath, 'constants', { navigationSelection: { id: move.id } }, owner.panel));
+}
+
 function codeSectionFor(owner, sourceId, id) {
   const move = owner.model.moves.find(item => item.id === sourceId);
   return move?.codeSections?.find(item => item.id === id);
@@ -291,6 +343,30 @@ async function handle(message) {
   if(session!==owner||owner.assets!==assets)return;
   if(timing&&(owner.model.timingSources?.constants!==hash(expectedText)||owner.model.timingSources?.air!==hash(expectedAir)))throw new Error('The constants or AIR changed since this preview. Refresh before assigning timing.');
   if (message.type === 'refresh') return refresh();
+  if (message.type === 'overviewAttack') {
+    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const attack = validAttackReference(message.reference, current.overview);
+    if (!attack) return vscode.window.showWarningMessage('That HitDef changed. Refresh the Moves / Overview drawer and choose it again.');
+    return vscode.commands.executeCommand('ikemen.hitDef.openEditor', vscode.Uri.file(attack.filename), { preset: true, reference: { sourceHash: attack.sourceHash, index: attack.index, defPath: assets.defPath } });
+  }
+  if (message.type === 'overviewProfile') {
+    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const selected = validConstantsReference(message.reference, assets, current);
+    if (!selected) return vscode.window.showWarningMessage('That constants profile changed. Refresh the Moves / Overview drawer and choose it again.');
+    owner.model=current;await owner.panel.webview.postMessage({type:'model',model:current});
+    return owner.panel.webview.postMessage({type:'moveLabSelect',reference:message.reference});
+  }
+  if (message.type === 'overviewProblem') {
+    const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
+    const validated = validOverviewProblem(message.reference, current);
+    if (!validated) return vscode.window.showWarningMessage('That problem or its source changed. Refresh and review the current result.');
+    owner.model=current;
+    const member=validated.member;
+    if(member.target==='field')return openMoveSource({type:'open',file:'constants',sourceId:member.sourceId,suffix:member.field});
+    if(member.target==='air-frame')return openAirProblem(owner,member);
+    if(member.filename)return openSourceLocation(owner,member.filename,member.line);
+    return;
+  }
   if (message.type === 'moveOverview') {
     const current = await modelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const move = current.moves.find(item => item.id === message.sourceId), returnTo = constantsReference(move, assets, current, {frameIndex:Number(message.frameIndex),overviewReference:owner.overviewReference});
@@ -471,4 +547,4 @@ function registerMoveConstantsWorkspace(context) {
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('ikemenMoveConstants', { deserializeWebviewPanel: restoreMoveConstantsWorkspace }));
 }
 
-module.exports = { registerMoveConstantsWorkspace, openMoveConstantsWorkspace, characterAssets, contactProfile, modelFor, html, constantsReference, validConstantsReference };
+module.exports = { registerMoveConstantsWorkspace, openMoveConstantsWorkspace, characterAssets, contactProfile, modelFor, html, constantsReference, validConstantsReference, validOverviewProblem, overviewFor };

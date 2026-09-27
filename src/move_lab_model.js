@@ -87,6 +87,13 @@ function attackLibrary(assets, openDocuments = []) {
   }
   return { controllers, constantProfiles };
 }
+function validAttackReference(reference, library) {
+  if (!reference || typeof reference.id !== 'string') return null;
+  const item = (library?.controllers || []).find((candidate) => candidate.id === reference.id);
+  if (!item) return null;
+  const sameFile = path.resolve(item.filename || '').toLowerCase() === path.resolve(reference.filename || '').toLowerCase();
+  return sameFile && item.index === reference.index && item.line === reference.line && item.sourceHash === reference.sourceHash ? item : null;
+}
 function buildMoveLabModel(defPath, openDocuments = [], diagnostics = []) {
   const assets = resolveAssigned(defPath), sources = (assets.code || []).filter(exists).map((filename) => sourceOutline(filename, openDocuments)).filter(Boolean);
   const airText = assets.air && exists(assets.air) ? readCurrent(assets.air, openDocuments) : '';
@@ -112,4 +119,4 @@ function buildMoveLabModel(defPath, openDocuments = [], diagnostics = []) {
   };
 }
 
-module.exports = { language, readCurrent, sourceOutline, contextLabel, throwPlans, hitDefSyntax, attackLibrary, buildMoveLabModel };
+module.exports = { language, readCurrent, sourceOutline, contextLabel, throwPlans, hitDefSyntax, attackLibrary, validAttackReference, buildMoveLabModel };

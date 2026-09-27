@@ -120,7 +120,7 @@ function diagnosticProblems(diagnostics = [], sections = []) {
     const section = sections.find(item => path.resolve(item.filename).toLowerCase() === path.resolve(filename || '.').toLowerCase() && line >= item.startLine && line <= item.endLine);
     const severity = diagnostic.severity;
     if (!section) return null;
-    return { id: `lint-${index + 1}`, source: diagnostic.source || 'IKEMEN lint', level: severity === 0 ? 'error' : severity === 1 ? 'warning' : 'info', title: diagnostic.message || 'Source diagnostic', detail: `${path.basename(filename || 'source')}:${line + 1}`, filename, line, sectionId: section.id };
+    return { id: `lint-${index + 1}`, source: diagnostic.source || 'IKEMEN lint', diagnosticCode: String(diagnostic.diagnosticCode ?? diagnostic.code ?? ''), level: severity === 0 ? 'error' : severity === 1 ? 'warning' : 'info', title: diagnostic.message || 'Source diagnostic', detail: `${path.basename(filename || 'source')}:${line + 1}`, filename, line, endLine: diagnostic.endLine ?? line, endCharacter: diagnostic.endCharacter ?? diagnostic.character ?? 0, sectionId: section.id };
   }).filter(Boolean);
 }
 

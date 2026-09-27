@@ -986,3 +986,212 @@ User report is logged; no fresh reproduction or desktop-control test performed.
 Use focused source/fixture checks first. Any manual control of the user's app
 requires the previously requested test coordination. Keep this open until the
 reported behavior is verified corrected in the relevant build.
+
+## Phase 1 — Character-owned UI through Helper and Explod tools
+
+Status: explicitly added to Phase 1 by JNP on 2026-09-26. Implement in bounded,
+reviewed slices after the current Move Lab checkpoint; SF6 is the primary coder.
+Preserve the 35% usage reserve. No installation, release, push/upload, desktop
+control, or real character/game edits are authorized by this backlog entry.
+
+Provide an optional Character UI workflow within the existing Helper Lab,
+Explod Composer and UI tools. Reuse their visual controls, source navigation,
+drafts and mutation services rather than adding another competing editor.
+Helpers remain optional; support direct Explods, helper-owned visuals and
+custom code without forcing maps, constants, naming conventions or conversion.
+
+### First slice: generator consistency
+
+The current CNS Explod generator omits settings emitted by its ZSS counterpart,
+including own palette/remapping, transparency, facing and hit-pause/removal
+options; timeline event coverage also differs. Compare every exposed setting
+and supported event against both output paths. Emit valid equivalents for the
+selected engine/syntax, or clearly identify unsupported settings before Apply;
+never silently drop them. Keep classic MUGEN versus IKEMEN engine support
+separate from the choice of CNS versus ZSS syntax. Preserve user-authored code
+and require explicit reviewed Apply. Add focused output/parse tests using
+nondefault settings and event sequences. This is a source-inspection finding,
+not a verified installed-build defect report.
+
+### Character UI composition and integration
+
+- Compose character-owned icons, meters and multi-part overlays using existing
+  sprite/palette/AIR selection and Explod positioning, layers and animation
+  controls. Provide optional reusable starting examples with editable code.
+- Expose screen-space versus character/world-relative placement clearly, with
+  local-coordinate scaling and sample player/team layouts. Preview multiple
+  owners, mirrored sides and camera changes; do not assume a two-player match.
+- Connect display values and visibility conditions to existing maps, vars,
+  constants or functions. Retain source expressions and owner context; a visual
+  binding is not permission to create storage or rewrite the user's logic.
+- Make create/update/remove lifetime, owner identity, duplicate-spawn guards,
+  round reset, KO/state transitions and pause behavior reviewable. Avoid
+  imposing ordinary move-state cleanup on a persistent HUD.
+- Offer exact contextual routes among Helper Lab, Explod Composer, AIR, SFF,
+  palette and the visual UI editor. Preserve source block/action/frame/archive,
+  selected UI element, independent drafts and return location. Reuse the
+  stage/screenpack asset integration where applicable, while distinguishing
+  character-owned visuals from screenpack-owned elements.
+- Retain the screenpack character-UI bridge as an optional integration path;
+  it is not yet a complete helper/Explod HUD designer. Refresh dependent
+  previews after explicit edits without replacing unrelated layout drafts.
+- Keep advanced options collapsible, remember visibility, support keyboard
+  use, and respect Player/Simple/Workspace availability. Experienced authors
+  must retain full source access and their preferred implementation method.
+
+Acceptance: fixtures for direct Explod UI and helper-owned UI; CNS/ZSS output
+with nondefault supported properties; exact archive/action routing; owner/team
+selection; localcoord/facing/camera preview; explicit Apply/Undo, stale-source
+rejection and draft retention; no automatic source/project/backup creation.
+Any necessary temporary workflow must notify the user. Engine behavior and
+installed visual QA must be recorded separately from source/fixture checks.
+Do not claim a full runtime simulation or ship all slices as one large rewrite.
+
+## Phase 1 — Cohesion and shared capabilities across all labs
+
+Status: explicit JNP requirement, 2026-09-26. Apply incrementally to every lab,
+including Move, Helper, Explod/Spatial, Throw, AIR/SFF/Palette/SND, Stage and
+Screenpack/UI workspaces. Extend this inventory when another lab is touched.
+This is not an instruction to rebuild every screen at once or place every
+option in every lab. SF6 remains primary coder; preserve the 35% reserve and
+existing local-only/review boundaries.
+
+- Use consistent names, placement and behavior for selection, search, preview,
+  playback/frame stepping, zoom/reset, source access, Problems, Apply/Undo,
+  draft/conflict status and related-tool navigation wherever applicable.
+  Share tested controls/services rather than maintaining lookalike copies.
+- Carry exact project/character or stage/UI owner, source identity/version,
+  component, action/frame, sprite/palette/sound and return location between
+  relevant tools. Never substitute an unrelated active editor, guessed archive
+  or same-numbered object. Show unresolved/ambiguous targets for selection.
+- Let capabilities benefit other labs in context: map/value/function pickers,
+  usage information, sprite/palette selection, animation preview, sound audition,
+  diagnostics and connected-code editing. Prefer compact inspectors/internal
+  sections with optional full specialist access over repeated top-level screens.
+- Apply general UI preferences consistently (labels, keyboard conventions,
+  applicable visibility choices). Retain task-specific camera/playback/layout
+  state per owner/view; do not blindly copy coordinates, zoom or hidden sections
+  between incompatible tools. Honor Player/Simple/Workspace access.
+- Preserve independent drafts, focus, selection and history on navigation.
+  Explicit applied changes and Undo refresh affected previews/diagnostics
+  without overwriting other drafts; source changes surface conflicts. Shared
+  context never authorizes writes or means all editors share one mutable draft.
+- Keep one mutation owner for each data type, explicit reviewed Apply and
+  existing user Auto Save preferences. Opening, selecting, previewing or switching
+  labs must not silently create/modify project files; notify necessary temporary
+  workflows. Preserve advanced source access and alternative coding methods.
+
+For each bounded implementation, record a small capability/ownership matrix:
+what the lab owns, what it reuses, what it exposes to others, exact selection
+and draft authority, and remaining gaps. Prioritize the user's active workflow
+and existing correctness gaps before adding features. Validate at least one
+real cross-lab round trip with unsaved drafts and exact return selection, plus
+stale targets, owner changes and applicable keyboard/visibility behavior.
+Track installed visual/engine QA separately; no blanket all-labs completion
+claim from isolated helper tests. This requirement supplements the Move Lab
+consolidation plan and character/stage/screenpack UI integration scope.
+
+### Move Lab as the reference for lab integration — JNP expansion
+
+Explicit JNP direction, 2026-09-26: the combined JNP Constants/Move Lab should
+be the strongest example of cohesive editing, and its useful capabilities
+should improve the other labs as they are extended. Treat its intended rich
+workflow as the reference, not a claim that consolidation or installed QA is
+already complete. Reuse proven parts; fix known preview issues before copying.
+
+Concrete Phase 1 requirements:
+
+- Helper creation includes the existing map browser/picker directly in its
+  creation form, with reviewed insertion/initialization in the generated-code
+  preview. Support existing maps and explicitly requested new entries, values
+  or expressions, project/author/game scope, and selected helper versus
+  parent/root ownership. Distinguish reading an existing map, initializing a
+  helper-local map, inheriting data and writing to another owner. Do not create
+  registry entries or modify shared code as a side effect of selecting a map.
+  Maps remain optional; preserve vars/constants/custom code alternatives.
+- Provide the same contextual map insertion in embedded code editors as in
+  full coding screens. Preserve caret/selection, language syntax and draft
+  revision; insertion first changes the draft, with source changes only on
+  explicit Apply. Reuse existing searchable descriptions, examples and usage
+  references rather than another map catalog. No unrelated SF6/DvS/DS4/HDBZ
+  namespace leakage or forced naming conversion.
+- Helper and Explod previews show their position relative to root, with
+  clearly labeled root/parent/self/target axes as applicable. Root and parent
+  must remain distinct for nested helpers. Display authored offset and derived
+  world/screen position separately; respect facing, bind ownership/duration,
+  coordinate space and localcoord. Switching the comparison overlay must not
+  rewrite authored placement. Allow selecting the relevant root/owner in
+  multi-player/team scenes; unresolved dynamic bindings stay visibly unresolved.
+- Reuse HitDef information, selected/shared source attribution, diagnostics and
+  exact editing routes for helpers or other components that actually attack.
+  Preserve multiple HitDefs and conditional/shared-function relationships.
+  Visual-only Explods must not gain a fictional HitDef; show the connected
+  helper/controller's contact information when explicitly associated.
+- Bring Move Lab-style P2/reaction preview into applicable helper/projectile
+  workflows: choose attacker/root/helper and opponent, AIR action/frame,
+  placement and contact/reaction settings. Reuse the shared scene transform,
+  sprite/palette lookup and timing controls. Keep P1/P2 positions stable in
+  world coordinates through zoom/pan/resize and retain scene state on return.
+  Clearly label static/authored reaction estimates and unresolved behavior;
+  do not present this as execution of arbitrary game code or accurate engine
+  collision/AI/simul simulation without separate evidence.
+- Reuse connected editable code sections, problem navigation, explicit Apply,
+  shared-value impact and optional full specialist access. Retain independent
+  drafts when selecting another helper, Explod, move or opponent. Default to
+  only relevant sections, with advanced controls available and hideable.
+
+Order within bounded follow-on slices: map selection/insertion at helper
+creation and embedded editors; root-relative position overlays; contextual
+HitDef sections; shared P2/reaction preview. Reuse the combined Move Lab's
+services and contracts rather than copying its whole screen. Each slice must
+include focused tests for the actual host/client interaction: correct map
+owner/namespace and insertion target, nested helper parent versus root,
+screen/stage placement and facing, no source writes on preview, stale source
+rejection, draft retention and exact return, then applicable P2 zoom/contact
+fixtures. Installed/engine QA remains separately tracked. Continue current
+reviewed work first; preserve the 35% reserve and no-release boundaries.
+
+### Preferred architecture: one Move Lab with component views
+
+Status: explicitly approved by JNP for Phase 1, 2026-09-26. This refines and
+supersedes earlier wording that could imply expanding several overlapping
+Helper/Explod/Projectile labs independently. Preserve the capability inventory
+and staged migration, but target one user-facing Move Lab with selectable
+component views. Existing specialist code/services may remain separate behind
+the interface; do not undertake a wholesale rewrite to achieve shared UI.
+
+- A move/component list presents its main state and associated helpers,
+  Explods, projectiles and functions. Select a component through an in-workspace
+  button/list or an Edit in Move Lab action on its creation controller.
+- Selecting a component changes the relevant inspector and connected code,
+  retaining the shared scene, timeline, map picker, diagnostics and opponent
+  context where applicable. Helper controls cover ownership/state/maps/binds/
+  attacks; Explod controls cover animation/placement/palette/layers/lifetime;
+  projectile controls cover supported movement/contact/collision/removal.
+- Keep Add Component separate from selecting an existing component. Changing
+  the view is navigation only: never convert helper to projectile, rewrite code,
+  create files or change ownership merely because a button/tab was selected.
+- Existing lab commands become compatible entry points into the appropriate
+  component view as parity is achieved. Keep optional separate windows for
+  authors who prefer them; retain genuinely distinct full asset/UI/graph tools.
+  Do not remove a specialist route before its unique capabilities, drafts and
+  deep links are preserved in the shared workflow.
+- A move can contain multiple components of the same type and mix code styles.
+  Resolve by exact owner/source/controller identity, never type or numeric ID
+  alone. A helper may create another helper or Explod; show root, parent and
+  creator separately. Dynamic or shared associations remain explicit candidates,
+  not automatically inferred ownership.
+- Existing mutation services retain authority, conflict checks and independent
+  drafts. Select/create/apply remain distinct actions. Each component remembers
+  its selection/view state without replacing the common scene or another draft.
+
+Migration refinement: finish/review the current bounded Stage A checkpoint.
+Then extend the shared shell/selection contract to component views, reusing
+existing helper/spatial/HitDef services in small slices instead of building
+parallel new screens. The direct-code/mixed-source Stage B requirements remain.
+Review how this affects data/Move-Lab-Consolidation-Plan.md before broadening
+implementation; do not declare the current routing foundation a completed merge.
+Verify legacy entry points, exact controller -> component -> return, multiple
+same-type components, nested ownership, retained drafts, stale sources, optional
+windows and zero writes on view switching. Preserve all existing acceptance,
+35% usage reserve and no installation/publication/game-edit boundaries.

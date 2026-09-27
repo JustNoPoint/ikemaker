@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const vscode = require('vscode');
 const { chooseCharacterDef, nearestCharacterDef } = require('./character_picker');
-const { buildMoveLabModel } = require('./move_lab_model');
+const { buildMoveLabModel, validAttackReference } = require('./move_lab_model');
 const { preferredViewerColumn, trackViewerPanel } = require('./viewer_group');
 const { registerCharacterToolPanel } = require('./authoring_context_registry');
 const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = require('./launch_controls');
@@ -25,11 +25,6 @@ function validConstantsReference(reference, data, defPath) {
   if (!profile || profile.prefix !== reference.prefix || sessionKey(profile.sourceFilename || '') !== sessionKey(reference.sourceFilename || '') || profile.sourceHash !== reference.sourceHash) return false;
   if (reference.actionNumber !== undefined && (!Number.isInteger(reference.actionNumber) || reference.actionNumber !== profile.moveID)) return false;
   return reference.frameIndex === undefined || (Number.isInteger(reference.frameIndex) && reference.frameIndex >= 0);
-}
-function validAttackReference(reference, data) {
-  if (!reference || typeof reference.id !== 'string') return null;
-  const attack = (data.attacks?.controllers || []).find(item => item.id === reference.id);
-  return attack && attack.filename === reference.filename && attack.index === reference.index && attack.line === reference.line && attack.sourceHash === reference.sourceHash ? attack : null;
 }
 function validMoveReference(reference, data, defPath) {
   if (!reference || sessionKey(reference.defPath || '') !== sessionKey(defPath) || !MOVE_MODES.has(reference.mode)) return false;
@@ -113,7 +108,7 @@ async function openMoveLab(seed, options = {}) {
     if (message.type === 'openFile') return openLine(message.filename);
     if (message.type === 'openLine') return openLine(message.filename, message.line, message.character);
     if (message.type === 'openAttack') {
-      const current = model(owner.defPath, owner.p1Action, owner.p2Action), attack = validAttackReference(message.reference, current);
+      const current = model(owner.defPath, owner.p1Action, owner.p2Action), attack = validAttackReference(message.reference, current.attacks);
       if (!attack) return vscode.window.showWarningMessage('That HitDef changed. Refresh Move Lab and choose it again.');
       return vscode.commands.executeCommand('ikemen.hitDef.openEditor', vscode.Uri.file(attack.filename), { preset: true, reference: { sourceHash: attack.sourceHash, index: attack.index, defPath: owner.defPath, p2Action: owner.p2Action } });
     }

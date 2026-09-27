@@ -19,7 +19,7 @@ Module._load = function(request, parent, isMain) {
   if (request === 'vscode') return { window: {}, workspace: {} };
   return original.call(this, request, parent, isMain);
 };
-const { buildMoveLabModel } = require('../src/move_lab_model');
+const { buildMoveLabModel, validAttackReference } = require('../src/move_lab_model');
 Module._load = original;
 
 const disk = buildMoveLabModel(def, [], [{ filename: code, line: 1, character: 0, severity: 1, message: 'Review this', source: 'test' }]);
@@ -38,6 +38,9 @@ assert.strictEqual(disk.attacks.constantProfiles[0].linkedControllerIds.length, 
 assert.strictEqual(disk.attacks.constantProfiles[0].defPath, def);
 assert.strictEqual(disk.attacks.constantProfiles[0].sourceFilename, constants);
 assert.strictEqual(typeof disk.attacks.constantProfiles[0].sourceHash, 'string');
+assert.strictEqual(validAttackReference({ ...disk.attacks.controllers[0], filename: disk.attacks.controllers[0].filename.toUpperCase() }, disk.attacks), disk.attacks.controllers[0], 'exact HitDef identity accepts path case differences');
+assert.strictEqual(validAttackReference({ ...disk.attacks.controllers[0], sourceHash: 'stale' }, disk.attacks), null, 'stale direct-code routes are rejected');
+assert.strictEqual(validAttackReference({ ...disk.attacks.controllers[0], index: 1 }, disk.attacks), null, 'a neighboring HitDef cannot satisfy the displayed route');
 
 const planFolder = path.join(character, '.ikemen-tools', 'throw-plans'); fs.mkdirSync(planFolder, { recursive: true });
 fs.writeFileSync(path.join(planFolder, 'test.json'), JSON.stringify({ name: 'Test Throw', p1Action: 0, p2Action: 0, events: [] }), 'utf8');
