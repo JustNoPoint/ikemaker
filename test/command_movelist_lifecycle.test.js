@@ -7,7 +7,7 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
  const movelist=path.join(root,'moves.dat'),otherCommand=path.join(root,'other.cmd');
  const stage='[Info]\nname=Test\n[Files]\ncmd=commands.cmd\nmovelist=moves.dat\n';
  fs.writeFileSync(movelist,'Test move\n');
- fs.writeFileSync(first,stage);fs.writeFileSync(second,stage);fs.writeFileSync(command,'[Command]\nname="test"\ncommand=x\ntime=15\n');
+ fs.writeFileSync(first,stage);fs.writeFileSync(second,stage);fs.writeFileSync(command,'[Command]\nname="test"\ncommand=x\ntime=15\n\n[Command]\nname="second"\ncommand=y\ntime=15\n');
  fs.copyFileSync(command,otherCommand);
  const commands=new Map(),panels=[],sourceVisits=[],restores=[];let activeEditorChanged,nav,serializer;
  const uri=filename=>({fsPath:filename,toString:()=>filename});
@@ -19,11 +19,11 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
    postMessage(message){if(message.type==='viewerHistoryRestore'){restores.push(message);queueMicrotask(()=>panel.receive({type:'viewerHistoryRestored',requestId:message.requestId,ok:true}));}return true;}
   }};panels.push(panel);return panel;
  }
- const vscode={Uri:{file:uri},Range:class{constructor(line){this.line=line;}},ViewColumn:{Active:1,Beside:2},workspace:{textDocuments:[],openTextDocument:async target=>docs.get(target.fsPath||target),getConfiguration:()=>({get:(name,fallback)=>fallback}),onDidChangeTextDocument:()=>({dispose(){}})},window:{registerWebviewPanelSerializer:(name,value)=>{serializer=value;return{dispose(){}};},createWebviewPanel:createPanel,showTextDocument:async(doc,options)=>{sourceVisits.push({doc,options});return{};},onDidChangeActiveTextEditor:fn=>{activeEditorChanged=fn;return{dispose(){}};},onDidChangeTextEditorSelection:()=>({dispose(){}}),showWarningMessage:message=>{throw Error(message);},showInformationMessage:()=>{},showErrorMessage:message=>{throw Error(message);}},commands:{registerCommand:(name,fn)=>{commands.set(name,fn);return{dispose(){}};},executeCommand:async(name,...args)=>{assert(commands.has(name),name);return commands.get(name)(...args);}}};
+ const vscode={Uri:{file:uri},Range:class{constructor(line){this.line=line;}},ViewColumn:{Active:1,Beside:2},workspace:{textDocuments:[],openTextDocument:async target=>docs.get(target.fsPath||target),getConfiguration:()=>({get:(name,fallback)=>fallback}),onDidChangeTextDocument:()=>({dispose(){}})},window:{activeTextEditor:{document:docs.get(command),selection:{active:{line:6}}},registerWebviewPanelSerializer:(name,value)=>{serializer=value;return{dispose(){}};},createWebviewPanel:createPanel,showTextDocument:async(doc,options)=>{sourceVisits.push({doc,options});return{};},onDidChangeActiveTextEditor:fn=>{activeEditorChanged=fn;return{dispose(){}};},onDidChangeTextEditorSelection:()=>({dispose(){}}),showWarningMessage:message=>{throw Error(message);},showInformationMessage:()=>{},showErrorMessage:message=>{throw Error(message);}},commands:{registerCommand:(name,fn)=>{commands.set(name,fn);return{dispose(){}};},executeCommand:async(name,...args)=>{assert(commands.has(name),name);return commands.get(name)(...args);}}};
  const original=Module._load;
  Module._load=function(name,parent,main){
   if(name==='vscode')return vscode;
-  if(name==='./character_context')return{owningCharacterDefs:()=>[]};
+  if(name==='./character_context')return{owningCharacterDefs:seed=>path.resolve(seed)===path.resolve(command)?[first]:[]};
   if(name==='./viewer_group')return{preferredViewerColumn:()=>2,trackViewerPanel:p=>p,revealInViewerGroup:p=>p.reveal()};
   if(name==='./viewer_toolbar')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};
   if(name==='./viewer_layout')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};
@@ -34,7 +34,7 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
   const api=require('../src/command_movelist_workspace');
   api.registerCommandMovelistWorkspace({subscriptions:[]});
   const open=()=>vscode.commands.executeCommand('ikemen.commandMovelist.openEditor',uri(first));
-  const panel=await open();assert.strictEqual(panel,panels[0]);assert.equal(panels.length,1);
+  const panel=await vscode.commands.executeCommand('ikemen.commandMovelist.openEditor',uri(command));assert.strictEqual(panel,panels[0]);assert.equal(panels.length,1);assert(panel.webview.html.includes('"initialCommandIndex":1'),'direct CMD caret selects the containing command while retaining the chosen owner');vscode.window.activeTextEditor=undefined;
   panel.webview.html+='<!-- live form marker -->';
   assert.strictEqual(await open(),panel);assert.equal(panels.length,1);assert(panel.reveals>0);assert(panel.webview.html.endsWith('<!-- live form marker -->'),'reuse must not regenerate the live form');
   const ref={tab:'command',file:command,command:require('../src/command_movelist_navigation').commandValues(api.payload(first).commands[0])};

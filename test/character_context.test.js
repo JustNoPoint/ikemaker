@@ -25,7 +25,8 @@ try {
   assert(discovered.includes(path.join(ryu, 'Ryu.def')));
   assert(discovered.includes(path.join(nested, 'FarmerZ2.def')), 'legitimate nested bonus characters remain discoverable');
   assert.strictEqual(discovered.some((filename) => /Duplicate\.def$/i.test(filename)), false, 'generated, archive, and backup trees are ignored');
-  assert.deepStrictEqual(owningCharacterDefs(path.join(shared, 'template.jnp'), 'chars/Ryu/Ryu.def'), [path.join(ryu, 'Ryu.def')]);
+  assert.deepStrictEqual(owningCharacterDefs(path.join(shared, 'template.jnp'), 'chars/Ryu/Ryu.def'), [path.join(ryu, 'Ryu.def'), path.join(shared, 'template.def')].sort((a,b)=>a.localeCompare(b)), 'every real shared owner is returned even when one has no displayed movelist');
+  assert.deepStrictEqual(owningCharacterDefs(path.join(ryu, 'Ryu_movelist.dat'), ''), [path.join(ryu, 'Ryu.def')], 'a direct DAT resolves through the movelist assignment rather than the command assignment');
   assert.deepStrictEqual(owningCharacterDefs(path.join(ryu, 'Ryu.def'), ''), [path.join(ryu, 'Ryu.def')]);
 } finally { fs.rmSync(root, { recursive: true, force: true }); }
 

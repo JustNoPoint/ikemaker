@@ -26,5 +26,14 @@ function clientScript(){return `
   }
   showTab(ref.tab);
  };
+ globalThis.addEventListener?.('message',event=>{
+  const message=event.data;if(message?.type!=='commandSourceLine')return;
+  if(String(message.file||'').toLowerCase()!==String(data.files.commandFile||'').toLowerCase())return;
+  const matches=message.command?data.commands.filter(c=>Object.entries(historyCommandValues(c)).every(([key,value])=>message.command[key]===value)):[];
+  const target=matches[Number(message.occurrence)||0]||(!message.command?data.commands.find(c=>message.line>=c.startLine&&message.line<c.endLine):null);if(!target)return;
+  if(target!==selectedCommand()&&JSON.stringify(values())!==commandBaseline){byId('status').textContent='The command under the caret was not selected because the current visual command has unapplied edits.';return;}
+  if(target!==selectedCommand()){selected=data.commands.indexOf(target);byId('commandSearch').value='';byId('commandView').value='all';list();inspect();saveCommandState();}
+  showTab('command');
+ });
  `;}
 module.exports={commandValues,findCommand,clientScript};

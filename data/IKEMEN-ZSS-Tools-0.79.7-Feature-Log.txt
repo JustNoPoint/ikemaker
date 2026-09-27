@@ -1,0 +1,24 @@
+IKEMaker 0.79.7 — Command & Movelist preservation checkpoint
+
+- Input timeline operations patch only the selected command step. Existing
+  tabs, compact commas, custom spacing and outer whitespace remain authored.
+- Reviewed command Apply changes only edited fields and preserves comments,
+  unknown/custom parser options, omitted defaults, neighboring definitions and
+  mixed line endings.
+- L/R insertion remains explicitly absolute; B/F remains facing-relative. The
+  choice affects only the new step and never converts existing directions.
+- Nested displayed-movelist glyph editing retains one shared source draft.
+  Missing/unmapped glyph warnings remain navigable, advisory and non-blocking.
+- Visible CMD/INP/JNP entry selects the command under the caret from the actual
+  open document, including unsaved text, without discarding visual drafts.
+- Shared command files present every owning character for choice, including
+  owners without a movelist, rather than silently preferring one project.
+- Commands & Movelist is discoverable from Simple and Workspace Home and from
+  CMD/INP/JNP editor title actions. Player mode remains code-free.
+
+Verification
+
+- Focused model, workspace, lifecycle, conflict, navigation, ownership, mode
+  and menu-contract checks pass.
+- Complete source suite: all 325 test files pass.
+- No package/install/runtime claim; no live game or character content changed.

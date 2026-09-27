@@ -1491,6 +1491,34 @@ Resume Phase 1 next week in this order:
    zoom interaction. Log observed installed/engine results separately from
    source-test claims.
 
+### Phase 1 continuation checkpoint — 0.79.7
+
+Recorded September 27, 2026. The Command & Movelist priority is source-complete
+at this checkpoint. Timeline operations preserve pre-existing separator and
+outer whitespace conventions; changing one visible step patches only that step.
+Reviewed command Apply preserves comments, unknown/custom parser fields,
+omitted defaults, mixed line endings and neighboring definitions. Diagnostics
+and glyph warnings remain advisory and do not impose a parser or input policy.
+
+CMD, INP and JNP editor-title entry now carries the actual open document and
+caret into the existing visual editor. Dirty text is parsed without requiring a
+save. Exact duplicate definitions use caret occurrence identity. Reused panels
+switch only when their current visual form has no unapplied changes. Shared
+command ownership returns every real DEF owner, including characters without a
+movelist assignment, and asks instead of silently choosing the configured
+character. Unrelated nearby DEF files are no longer guessed as owners. Simple
+and Workspace Home expose Commands & Movelist; Player remains code-free.
+
+Focused command/model/workspace/lifecycle/navigation/mode/menu tests and the
+complete 325-file suite pass. This is source verification only: no package was
+built or installed, no live game or character was edited, and no desktop UI was
+controlled. Remaining Phase 1 order resumes with specialized Move Lab Helper,
+Explod and projectile component views, then embedded AIR/Clsn and remaining
+field-level HitDef presentation, Stage/Screenpack contextual assets, shared
+destination colors, and final Help/screenshots. Installed-package QA remains a
+separate explicitly authorized activity. Phase 2, research and GIF conversion
+remain deferred.
+
 Phase 2 research and GIF conversion research remain deferred until Phase 1 is
 complete, and completion does not start them automatically. Do not begin a
 Phase 2 shell early. Preserve the separate milestone schedule above: user-defined

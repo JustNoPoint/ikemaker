@@ -58,19 +58,20 @@ function characterDefs(root) {
 
 function owningCharacterDefs(seed, preferred = '') {
   const root = gameRoot(seed), extension = path.extname(seed || '').toLowerCase(), initial = extension === '.def' ? defContext(seed) : null;
-  if (initial && initial.hasMovelist) return [initial.filename];
+  if (initial && (initial.commandFile || initial.movelistFile)) return [initial.filename];
   if (!root) return [];
   const configured = preferred ? path.resolve(root, preferred) : '';
   const configuredContext = defContext(configured);
-  const targetCommand = extension !== '.def' && fs.existsSync(seed) && fs.statSync(seed).isFile() ? path.resolve(seed) : initial && initial.commandFile;
-  const contexts = characterDefs(root).map(defContext).filter((item) => item && item.hasMovelist);
-  const owners = targetCommand ? contexts.filter((item) => item.commandFile && path.resolve(item.commandFile).toLowerCase() === path.resolve(targetCommand).toLowerCase()) : [];
-  if (owners.length) {
-    const preferredOwner = configuredContext && owners.find((item) => path.resolve(item.filename).toLowerCase() === path.resolve(configuredContext.filename).toLowerCase());
-    return preferredOwner ? [preferredOwner.filename] : owners.map((item) => item.filename);
-  }
-  if (configuredContext && configuredContext.hasMovelist) return [configuredContext.filename];
-  return contexts.map((item) => item.filename);
+  const targetFile = extension !== '.def' && fs.existsSync(seed) && fs.statSync(seed).isFile() ? path.resolve(seed) : initial && initial.commandFile;
+  const contexts = characterDefs(root).map(defContext).filter((item) => item && (item.commandFile || item.movelistFile));
+  const owners = targetFile ? contexts.filter((item) => {
+    const assigned = extension === '.dat' ? item.movelistFile : item.commandFile;
+    return assigned && path.resolve(assigned).toLowerCase() === path.resolve(targetFile).toLowerCase();
+  }) : [];
+  if (owners.length) return owners.map((item) => item.filename).sort((a, b) => a.localeCompare(b));
+  if (['.cmd', '.inp', '.jnp', '.dat'].includes(extension)) return [];
+  if (configuredContext && (configuredContext.commandFile || configuredContext.movelistFile)) return [configuredContext.filename];
+  return contexts.map((item) => item.filename).sort((a, b) => a.localeCompare(b));
 }
 
 module.exports = { gameRoot, defContext, ignoredCharacterDirectory, characterDefs, owningCharacterDefs };

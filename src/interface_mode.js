@@ -48,6 +48,7 @@ const HOME_ACTIONS=[
  ['ikemen.storyDialogue.openPlayer','Stories','View player story routes.'],
  ['ikemen.launchGame','Play','Launch your game.'],
  ['ikemen.character.open','Open Character','Open a character to work on.'],
+ ['ikemen.commandMovelist.openEditor','Commands & Movelist','Edit character input definitions and the displayed pause-menu movelist.'],
  ['ikemen.file.createNew','Create Something','Start a new asset or project item.'],
  ['ikemen.productionWorkflow.open','Production Workflow','Coordinate project work and feedback.']
 ];

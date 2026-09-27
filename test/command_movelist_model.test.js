@@ -53,5 +53,33 @@ assert.strictEqual(model.editCommandSteps(authored, 'duplicate', 2), '/D, ~45$L,
 assert.strictEqual(model.editCommandSteps(authored, 'moveLeft', 2), '/D, R+x, ~45$L, >F|DF');
 assert.strictEqual(model.editCommandSteps(authored, 'remove', 1), '/D, R+x, >F|DF');
 assert.strictEqual(model.editCommandSteps('', 'insertAfter', 0, 'L'), 'L');
+const customSpacing = '\t/D,~45$L ,  R+x,\t>F|DF  ';
+assert.strictEqual(model.editCommandSteps(customSpacing, 'insertAfter', 1, 'B'), '\t/D,~45$L ,  B, R+x,\t>F|DF  ', 'insertion preserves every pre-existing separator and outer whitespace');
+assert.strictEqual(model.editCommandSteps(customSpacing, 'replace', 2, 'F+y'), '\t/D,~45$L ,  F+y,\t>F|DF  ', 'field editing changes only the selected step core');
+assert.strictEqual(model.editCommandSteps(customSpacing, 'moveLeft', 2), '\t/D,R+x ,  ~45$L,\t>F|DF  ', 'reordering swaps only step cores and keeps positional spacing conventions');
+assert.strictEqual(model.editCommandSteps(customSpacing, 'remove', 1), '\t/D,R+x,\t>F|DF  ', 'removal preserves the preceding positional separator and every untouched step');
+
+const extendedSource = `[Command] ; authored header
+  name="qcf_x" ; keep name note
+command\t=\tD,DF,F,x   ; keep sequence note
+custom.parser.option = exact
+; trailing authored note
+
+[Command]
+name = "next"
+command = y`;
+const extendedDocument = model.parseCommands(extendedSource, 'extended.cmd');
+const patched = model.patchCommandBlock(extendedDocument, extendedDocument.commands[0], {
+  name: 'qcf_x', command: 'D,DF,F,y', time: 15, steptime: -1, autogreater: 1,
+  bufferTime: 1, bufferHitpause: 1, bufferPauseend: 1, bufferShared: 1
+});
+assert(patched.includes('command\t=\tD,DF,F,y   ; keep sequence note'), 'Apply patches only the changed assignment value');
+assert(patched.includes('custom.parser.option = exact\n; trailing authored note'), 'custom parser fields and authored comments survive Apply');
+assert(!patched.includes('\ntime = 15'), 'resolved defaults are not inserted when the author did not change them');
+assert(patched.endsWith('[Command]\nname = "next"\ncommand = y'), 'neighboring command blocks remain byte-identical');
+const mixedExtended = extendedSource.replace('command\t=\tD,DF,F,x   ; keep sequence note\n', 'command\t=\tD,DF,F,x   ; keep sequence note\r\n');
+const mixedDocument = model.parseCommands(mixedExtended, 'mixed.cmd');
+const mixedPatched = model.patchCommandBlock(mixedDocument, mixedDocument.commands[0], { ...mixedDocument.commands[0], command: 'D,DF,F,z', steptime: mixedDocument.commands[0].declaredStepTime });
+assert(mixedPatched.includes('command\t=\tD,DF,F,z   ; keep sequence note\r\ncustom.parser.option'), 'field patching preserves mixed line endings around untouched source');
 
 console.log('Command and movelist model tests passed');

@@ -60,6 +60,28 @@ function splitSteps(command) {
   return result.filter((step) => step.length);
 }
 
+function commandStepLayout(command) {
+  const source = String(command || ''), steps = [];
+  let start = 0;
+  for (let cursor = 0; cursor <= source.length; cursor += 1) {
+    if (cursor < source.length && source[cursor] !== ',') continue;
+    const raw = source.slice(start, cursor), leading = (raw.match(/^\s*/) || [''])[0].length;
+    const trailing = (raw.match(/\s*$/) || [''])[0].length;
+    const coreStart = start + leading, coreEnd = cursor - trailing;
+    if (coreEnd > coreStart) steps.push({ coreStart, coreEnd, core: source.slice(coreStart, coreEnd) });
+    start = cursor + 1;
+  }
+  return { source, steps };
+}
+
+function replaceStepCores(source, replacements) {
+  let next = source;
+  for (const replacement of [...replacements].sort((a, b) => b.start - a.start)) {
+    next = next.slice(0, replacement.start) + replacement.text + next.slice(replacement.end);
+  }
+  return next;
+}
+
 const INSERTABLE_INPUTS = Object.freeze([
   { value: 'L', label: 'Left — absolute screen direction', basis: 'absolute' },
   { value: 'R', label: 'Right — absolute screen direction', basis: 'absolute' },
@@ -72,16 +94,28 @@ const INSERTABLE_INPUTS = Object.freeze([
 ]);
 
 function editCommandSteps(command, operation, index, value = '?') {
-  const steps = splitSteps(command);
+  const layout = commandStepLayout(command), { source, steps } = layout;
   const at = Number.isInteger(index) ? Math.max(0, Math.min(index, Math.max(steps.length - 1, 0))) : Math.max(steps.length - 1, 0);
   const token = String(value == null ? '?' : value).trim() || '?';
-  if (operation === 'insertBefore') steps.splice(steps.length ? at : 0, 0, token);
-  else if (operation === 'insertAfter') steps.splice(steps.length ? at + 1 : 0, 0, token);
-  else if (operation === 'duplicate' && steps.length) steps.splice(at + 1, 0, steps[at]);
-  else if (operation === 'remove' && steps.length) steps.splice(at, 1);
-  else if (operation === 'moveLeft' && at > 0) [steps[at - 1], steps[at]] = [steps[at], steps[at - 1]];
-  else if (operation === 'moveRight' && at < steps.length - 1) [steps[at], steps[at + 1]] = [steps[at + 1], steps[at]];
-  return steps.join(', ');
+  if (!steps.length) return operation === 'insertBefore' || operation === 'insertAfter' ? token : source;
+  if (operation === 'replace') return replaceStepCores(source, [{ start: steps[at].coreStart, end: steps[at].coreEnd, text: token }]);
+  if (operation === 'insertBefore') return source.slice(0, steps[at].coreStart) + token + ', ' + source.slice(steps[at].coreStart);
+  if (operation === 'insertAfter' || operation === 'duplicate') {
+    const inserted = operation === 'duplicate' ? steps[at].core : token;
+    if (at + 1 < steps.length) return source.slice(0, steps[at + 1].coreStart) + inserted + ', ' + source.slice(steps[at + 1].coreStart);
+    return source.slice(0, steps[at].coreEnd) + ', ' + inserted + source.slice(steps[at].coreEnd);
+  }
+  if (operation === 'remove') {
+    if (at + 1 < steps.length) return source.slice(0, steps[at].coreStart) + source.slice(steps[at + 1].coreStart);
+    if (at > 0) return source.slice(0, steps[at - 1].coreEnd) + source.slice(steps[at].coreEnd);
+    return source.slice(0, steps[at].coreStart) + source.slice(steps[at].coreEnd);
+  }
+  const other = operation === 'moveLeft' ? at - 1 : operation === 'moveRight' ? at + 1 : at;
+  if (other < 0 || other >= steps.length || other === at) return source;
+  return replaceStepCores(source, [
+    { start: steps[at].coreStart, end: steps[at].coreEnd, text: steps[other].core },
+    { start: steps[other].coreStart, end: steps[other].coreEnd, text: steps[at].core }
+  ]);
 }
 
 function stepModel(raw, index) {
@@ -177,6 +211,46 @@ function replaceCommandBlock(document, command, nextBlock) {
   return lines.join(eol);
 }
 
+function assignmentValue(line, value) {
+  const source = String(line || ''), code = uncomment(source), suffix = source.slice(code.length);
+  const match = code.match(/^(\s*[^=]+?)(\s*=\s*)(.*?)(\s*)$/);
+  return match ? `${match[1]}${match[2]}${value}${match[4]}${suffix}` : source;
+}
+
+function patchCommandBlock(document, command, values = {}) {
+  const source = String(document.text || ''), records = [];
+  const expression = /([^\r\n]*)(\r\n|\n|$)/g;
+  for (let match = expression.exec(source); match && match[0]; match = expression.exec(source)) records.push({ body: match[1], eol: match[2] });
+  const replacements = [], additions = [];
+  const fields = [
+    ['name', 'name', String(values.name == null ? command.name : values.name).replace(/"/g, ''), command.name, value => `"${value}"`],
+    ['command', 'command', String(values.command == null ? command.command : values.command), command.command, value => value],
+    ['time', 'time', numeric(values.time, command.time), command.time, value => String(value)],
+    ['steptime', 'steptime', numeric(values.steptime, command.declaredStepTime), command.declaredStepTime, value => String(value)],
+    ['autogreater', 'autogreater', numeric(values.autogreater, command.autoGreater), command.autoGreater, value => String(value)],
+    ['buffer.time', 'bufferTime', numeric(values.bufferTime, command.bufferTime), command.bufferTime, value => String(value)],
+    ['buffer.hitpause', 'bufferHitpause', numeric(values.bufferHitpause, command.bufferHitpause), command.bufferHitpause, value => String(value)],
+    ['buffer.pauseend', 'bufferPauseend', numeric(values.bufferPauseend, command.bufferPauseend), command.bufferPauseend, value => String(value)],
+    ['buffer.shared', 'bufferShared', numeric(values.bufferShared, command.bufferShared), command.bufferShared, value => String(value)]
+  ];
+  for (const [key, _property, next, before, format] of fields) {
+    if (next === before) continue;
+    const entry = command.entries[key], rendered = format(next);
+    if (entry) replacements.push({ line: entry.line, text: assignmentValue(records[entry.line]?.body || '', rendered) });
+    else additions.push(`${key} = ${rendered}`);
+  }
+  for (const replacement of replacements) records[replacement.line].body = replacement.text;
+  if (additions.length) {
+    let insertion = Math.min(command.endLine, records.length);
+    while (insertion > command.startLine + 1 && /^\s*(?:;.*)?$/.test(records[insertion - 1]?.body || '')) insertion -= 1;
+    const defaultEol = records.find(record => record.eol)?.eol || '\n', endedWithEol = /(?:\r\n|\n)$/.test(source);
+    if (insertion === records.length && records.length && !records[records.length - 1].eol) records[records.length - 1].eol = defaultEol;
+    const added = additions.map((body, index) => ({ body, eol: insertion < records.length || index < additions.length - 1 || endedWithEol ? defaultEol : '' }));
+    records.splice(insertion, 0, ...added);
+  }
+  return records.map(record => record.body + record.eol).join('');
+}
+
 function parseMovelistAssignments(text, filename = '') {
   const lines = String(text || '').split(/\r?\n/); let inFiles = false; const entries = [];
   lines.forEach((raw, line) => {
@@ -202,7 +276,7 @@ function movelistPreview(text) {
 function changeMovelistSnippet(slot) { return `[State Change Movelist]\ntype = ChangeMovelist\ntrigger1 = 1\nvalue = ${Number(slot) || 0}`; }
 
 module.exports = {
-  uncomment, parseCommands, splitSteps, stepModel, diagnosticsFor, commandBlock, replaceCommandBlock,
+  uncomment, parseCommands, splitSteps, stepModel, diagnosticsFor, commandBlock, replaceCommandBlock, patchCommandBlock,
   parseMovelistAssignments, movelistPreview, changeMovelistSnippet, isMotion, finalButtons,
-  INSERTABLE_INPUTS, editCommandSteps
+  INSERTABLE_INPUTS, commandStepLayout, replaceStepCores, editCommandSteps
 };

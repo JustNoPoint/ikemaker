@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.79.6",
+  "version": "0.79.7",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -1377,7 +1377,7 @@
         },
         {
           "command": "ikemen.commandMovelist.openEditor",
-          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .dat) && ikemen.interfaceMode != player",
+          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .inp || resourceExtname == .jnp || resourceExtname == .dat) && ikemen.interfaceMode != player",
           "group": "navigation@0"
         },
         {
@@ -1459,7 +1459,7 @@
         },
         {
           "command": "ikemen.commandMovelist.openEditor",
-          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .dat) && ikemen.interfaceMode != player",
+          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .inp || resourceExtname == .jnp || resourceExtname == .dat) && ikemen.interfaceMode != player",
           "group": "navigation@17"
         },
         {
@@ -1630,7 +1630,7 @@
         },
         {
           "command": "ikemen.commandMovelist.openEditor",
-          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .jnp || resourceExtname == .dat || editorLangId == zss) && ikemen.interfaceMode != player",
+          "when": "(resourceExtname == .def || resourceExtname == .cmd || resourceExtname == .inp || resourceExtname == .jnp || resourceExtname == .dat || editorLangId == zss) && ikemen.interfaceMode != player",
           "group": "navigation@17"
         },
         {

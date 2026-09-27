@@ -24,6 +24,8 @@ for (const [menuName, entries] of Object.entries(packageJson.contributes.menus |
 const requiredCreation = ['ikemen.character.createNew', 'ikemen.stage.createNew', 'ikemen.ui.createNew', 'sff.createNew', 'air.createNew', 'snd.createNew', 'zss.createNew', 'cns.createNew', 'inp.createNew', 'cmd.createNew', 'ikemen.def.createNew', 'ikemen.lua.createNew', 'ikemen.text.createNew'];
 const requiredOpen = ['ikemen.character.open', 'ikemen.stage.openWorkspace', 'ikemen.ui.openWorkspace', 'sff.openViewer', 'air.openAnimationPreview', 'snd.openViewer', 'ikemen.projectManager.open'];
 for (const command of [...requiredCreation, ...requiredOpen]) assert(declared.includes(command), `missing open/create command: ${command}`);
+const commandTitleEntry = packageJson.contributes.menus['editor/title'].find(item => item.command === 'ikemen.commandMovelist.openEditor');
+assert(commandTitleEntry && commandTitleEntry.when.includes('resourceExtname == .inp') && commandTitleEntry.when.includes('ikemen.interfaceMode != player'), 'CMD/INP title access remains visible in both Simple and Workspace authoring modes');
 
 for (const { name, text } of sources.filter((item) => /(?:viewer|workspace)\.js$/i.test(item.name))) {
   const ids = [...text.matchAll(/<button\b[^>]*\bid=["']([^"']+)["']/gi)].map((match) => match[1]);
