@@ -11,7 +11,7 @@ const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = 
 const { readSff } = require('./sff_reader');
 const { assignedDefault } = require('./palette_preview');
 const { previewModel } = require('./hitdef_preview_model');
-const { componentReference, validComponentReference } = require('./move_lab_component_model');
+const { componentReference, validComponentReference, directComponentModel } = require('./move_lab_component_model');
 
 const sessions = new Map();
 let activeSession = null;
@@ -55,7 +55,13 @@ function visualModel(defPath, requestedP1, requestedP2) {
 }
 function model(defPath, requestedP1, requestedP2) {
   const first = buildMoveLabModel(defPath, vscode.workspace.textDocuments || [], []);
-  return { ...buildMoveLabModel(defPath, vscode.workspace.textDocuments || [], diagnosticsFor(first.files.map((item) => item.filename))), defLabel: vscode.workspace.asRelativePath?.(defPath, true) || path.basename(defPath), visual: visualModel(defPath, requestedP1, requestedP2) };
+  const diagnostics=diagnosticsFor(first.files.map((item) => item.filename)),result=buildMoveLabModel(defPath, vscode.workspace.textDocuments || [], diagnostics);
+  try{
+    const assets=require('./related_work').resolveAssigned(defPath),direct=directComponentModel(assets,vscode.workspace.textDocuments||[],diagnostics);
+    result.attacks={...(result.attacks||{}),controllers:direct.components,constantProfiles:result.attacks?.constantProfiles||direct.constantProfiles||[]};
+    result.components=[...direct.components,...direct.behaviors];result.componentFailures=direct.failures;
+  }catch(error){result.components=result.attacks?.controllers||[];result.componentFailures=[{filename:defPath,message:error.message}];}
+  return { ...result, defLabel: vscode.workspace.asRelativePath?.(defPath, true) || path.basename(defPath), visual: visualModel(defPath, requestedP1, requestedP2) };
 }
 function page(data) { return `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
 :root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;height:100vh;overflow:hidden;font:12px var(--vscode-font-family);color:var(--vscode-foreground);background:var(--vscode-editor-background)}button,select{font:inherit;color:inherit;background:var(--vscode-button-secondaryBackground);border:1px solid var(--vscode-button-border,var(--vscode-panel-border));padding:5px 8px}button{cursor:pointer}header{min-height:48px;display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:8px;border-bottom:1px solid var(--vscode-panel-border)}.grow{flex:1}.context{background:var(--vscode-badge-background);color:var(--vscode-badge-foreground);padding:4px 8px;border-radius:10px}.tabs{display:flex;gap:4px;padding:7px 8px;border-bottom:1px solid var(--vscode-panel-border);overflow:auto}.tabs button.active{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}main{height:calc(100vh - 91px);display:grid;grid-template-columns:minmax(220px,300px) 1fr minmax(250px,340px)}aside,.content{overflow:auto;padding:10px}.left{border-right:1px solid var(--vscode-panel-border)}.right{border-left:1px solid var(--vscode-panel-border)}.card{border:1px solid var(--vscode-panel-border);padding:10px;margin-bottom:9px}.file,.node,.issue{display:block;width:100%;text-align:left;margin:4px 0}.missing{color:var(--vscode-errorForeground)}.muted{color:var(--vscode-descriptionForeground)}.stat{display:inline-block;margin:3px;padding:5px 8px;background:var(--vscode-sideBar-background)}details{border:1px solid var(--vscode-panel-border);margin:7px 0}summary{cursor:pointer;padding:8px;font-weight:700}details>div{padding:0 8px 8px}.issue[data-severity="0"]{border-left:3px solid var(--vscode-errorForeground)}.issue[data-severity="1"]{border-left:3px solid var(--vscode-editorWarning-foreground)}.visual-tools{display:flex;gap:5px;align-items:center;flex-wrap:wrap;margin-bottom:6px}.stage{position:relative;height:330px;background:#152033;border:1px solid var(--vscode-panel-border)}canvas{position:absolute;inset:0;display:block;width:100%;height:100%;image-rendering:pixelated;cursor:grab}.timeline{display:flex;gap:4px;overflow:auto;padding:6px 0}.frame{min-width:62px;text-align:center}.frame img{width:48px;height:46px;object-fit:contain;image-rendering:pixelated}aside,.content{min-width:0}.visual-tools{flex-wrap:wrap}main{grid-template-columns:minmax(220px,300px) minmax(0,1fr) minmax(250px,340px)}@media(max-width:1100px){body{height:auto;min-height:100vh;overflow:auto}main{height:auto;grid-template-columns:minmax(0,1fr)}.content{grid-row:1;overflow:visible}.left{grid-row:2;max-height:360px}.right{grid-row:3;display:block}.tabs{flex-wrap:wrap}.context{max-width:100%;overflow-wrap:anywhere}}</style></head><body>
@@ -92,11 +98,11 @@ async function openMoveLab(seed, options = {}) {
       contexts.clear(defPath, remembered);
     }
     if (remembered?.kind === 'direct') {
-      const component=validComponentReference(remembered.reference,{components:current.attacks?.controllers||[]},defPath);
+      const component=validComponentReference(remembered.reference,{components:current.components||[]},defPath);
       if(component)return vscode.commands.executeCommand('ikemen.moveConstants.open',vscode.Uri.file(defPath),{integration:'shell',reference:{componentReference:componentReference(component,defPath)}});
       contexts.clear(defPath,remembered);
     }
-    if((current.attacks?.controllers||[]).length||(current.attacks?.constantProfiles||[]).length)return vscode.commands.executeCommand('ikemen.moveConstants.open',vscode.Uri.file(defPath),{integration:'shell'});
+    if((current.components||[]).length||(current.attacks?.constantProfiles||[]).length)return vscode.commands.executeCommand('ikemen.moveConstants.open',vscode.Uri.file(defPath),{integration:'shell'});
   }
   const reference = options?.preset ? options.reference : null;
   if (reference?.defPath && sessionKey(reference.defPath) !== sessionKey(defPath)) return;

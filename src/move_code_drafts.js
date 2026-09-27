@@ -39,11 +39,11 @@ function client() {
     const next = { ...previous, baseHash: section.sourceHash, baseText: section.text, baseStartLine: section.startLine, baseEndLine: section.endLine, revision: Number(previous.revision || 0) + 1 };
     local[key(section)] = next; persist(); send(section, next);
   }
-  function apply(section) {
+  function apply(section, componentReference) {
     const draft = entry(section); if (!draft || conflict(section)) return null;
     const requestId = ++sequence;
     pending.set(requestId, { key: key(section), sectionId: section.stableId, revision: draft.revision, value: draft.value });
-    vscode.postMessage({ type: 'applyCodeSection', sourceId: move.id, id: section.stableId, baseHash: draft.baseHash, text: draft.value, requestId });
+    vscode.postMessage({ type: 'applyCodeSection', sourceId: move?.id, componentReference, id: section.stableId, baseHash: draft.baseHash, text: draft.value, requestId });
     return requestId;
   }
   function isPending(section) { const id = key(section); return [...pending.values()].some(request => request.key === id); }

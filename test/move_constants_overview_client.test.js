@@ -36,6 +36,7 @@ const document = {
 };
 const sent = [], states = [], initialState = { moveFormDrafts: { keep: { damage: 50 } }, moveCodeDrafts: { keep: { value: 'draft' } }, categoryOpen: ['Damage'] };
 let currentState = initialState, selected = [], frame = 0;
+let orphaned=[],discarded=[];
 const context = {
   saved: { ...initialState }, document, window: { addEventListener(type, callback, capture) { (listeners[type] ||= []).push({ callback, capture }); } },
   queueMicrotask: callback => callback(), vscode: { getState: () => currentState, setState: value => { currentState = value; states.push(value); }, postMessage: message => sent.push(message) },
@@ -46,6 +47,7 @@ const context = {
   } },
   move: { id: 'normal.slp', timeline: { frames: [{}] } }, frame, savedFrame: 0,
   $: id => document.getElementById(id), esc: value => String(value ?? ''),
+  codeDraftStore:{orphaned:()=>orphaned,discardId:id=>discarded.push(id)},
   selectMove: id => selected.push(id), renderTimeline() {}, renderHeader() {}, draw() {}, saveState() {},
   Number, String, Object, Array, Set, Math, JSON, console
 };
@@ -63,6 +65,7 @@ assert.strictEqual(sent.at(-1).reference.profileId, 'normal.slp');
 document.querySelectorAll('[data-overview-attack]')[0].onclick();
 assert.strictEqual(sent.at(-1).type, 'selectDirectComponent');
 assert.strictEqual(sent.at(-1).reference.sourceHash, 'code-hash');
+orphaned=[{sectionId:'old-state',draft:{filename:'C:/Game/Ryu/normals.zss',signature:'200',kind:'state',baseStartLine:4,baseEndLine:8,value:'[StateDef 200]\nctrl: 0;'}}];ui.render();assert.match(elements.overviewDrawer.innerHTML,/Retained code drafts/);assert.match(elements.overviewDrawer.innerHTML,/StateDef 200/);document.querySelectorAll('[data-overview-discard-orphan]')[0].onclick();assert.deepStrictEqual(discarded,['old-state'],'orphaned behavior text remains visible and explicitly discardable from Overview');orphaned=[];
 
 ui.renderProblems();
 elements.problemScope.value = 'all'; elements.problemScope.onchange({ target: elements.problemScope });

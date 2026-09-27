@@ -1451,3 +1451,52 @@ not destination colors. Exact accessible shades remain implementation judgment.
 All previously recorded neutral-canvas, optional-off, theme, focus and Help
 screenshot sequencing requirements still apply. No further design approval is
 needed for this mapping.
+
+## Phase 1 checkpoint and next-week handoff — 0.79.6
+
+Checkpoint recorded September 26, 2026. Move Lab Stage B2 now lists and opens
+the exact assigned CNS/ZSS StateDefs and ZSS Functions as first-class behavior
+components, including non-attacks with no HitDef or constants profile. Editing
+uses the existing retained connected-code draft service, explicit Apply,
+discard/rebase conflict handling, the normal open-document Undo/Save flow,
+shared-source disclosure, contextual Maps access, and exact source identity.
+It does not infer AIR actions or behavior ownership from state numbers. The full
+325-file automated suite passes. Installed visual interaction is still manual
+QA and is not implied by source tests.
+
+Resume Phase 1 next week in this order:
+
+1. Finish specialized Move Lab component views for exact Helper, Explod and
+   native/Helper projectile creation sites, including root/parent/P2 context.
+   Reuse each established specialist mutation owner; selection must not create
+   or convert code.
+2. Add embedded exact AIR/Clsn access and the remaining field-level HitDef
+   presentation only after their current guarded edit services can be reused.
+   Missing or dynamic assets remain explicit and never guessed.
+3. Complete Stage and Screenpack contextual asset editing without replacing
+   their existing save/draft owners.
+4. Correct CMD entry from the current document/caret, shared-owner ambiguity,
+   selection restoration and Home routing. Preserve dirty documents and reuse
+   the existing editor.
+5. Implement the approved shared destination-color registry: SFF green, AIR
+   blue, palettes violet, SND amber, Move Lab teal, code slate blue, stage
+   ochre, screenpack/UI indigo, Project Data/maps cyan and Help neutral silver.
+   Verify narrow layouts, themes, focus and neutral artwork surfaces.
+6. Finish contextual Help, direct navigation and refreshed screenshots only
+   after destination colors and layouts stop changing.
+7. Run installed-package QA for the five release artifacts: launch and version,
+   StateDef/Function selection and retained draft Apply/Undo, shared-source
+   warning, Maps route, code-only characters, optional LuaLS choices, CNS Explod
+   runtime behavior, AIR Clsn2 workflow, and the still-open ordinary Constants
+   zoom interaction. Log observed installed/engine results separately from
+   source-test claims.
+
+Phase 2 research and GIF conversion research remain deferred until Phase 1 is
+complete, and completion does not start them automatically. Do not begin a
+Phase 2 shell early. Preserve the separate milestone schedule above: user-defined
+Flow Mode and the QA website wait until Ryu, Demitri, Morrigan and Goku are
+closer to completion; broader Project Data grows when work reaches specials.
+Tournament Player Mode remains second-lowest priority immediately above the
+website, with research/GIF conversion immediately above those. Deferred work
+still requires an explicit decision to begin; this checkpoint does not schedule
+desktop control, installed QA, publication, or a new feature batch by itself.

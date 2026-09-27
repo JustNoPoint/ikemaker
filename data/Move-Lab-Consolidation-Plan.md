@@ -1,9 +1,9 @@
 # Unified Move Lab consolidation plan
 
-Plan revision: 3
-Source reviewed: IKEMaker 0.79.2 Stage A; IKEMaker 0.79.3 Stage B1
+Plan revision: 4
+Source reviewed: IKEMaker 0.79.2 Stage A; IKEMaker 0.79.3 Stage B1; IKEMaker 0.79.6 Stage B2
 Phase: 1  
-Status: routing/context foundation was source-reviewed in 0.79.0; shared camera correction in 0.79.1; Stage A's in-place Moves / Overview drawer and selected/all-character Problems filter in 0.79.2. Stage B1 is implemented and source-reviewed locally in 0.79.3: exact direct CNS/ZSS HitDefs can occupy the shared workspace without constants or preview assets while the established HitDef editor retains Apply ownership. Later mixed-component stages remain planned. The ordinary installed Constants zoom report remains open pending exact-build user interaction verification.
+Status: routing/context foundation was source-reviewed in 0.79.0; shared camera correction in 0.79.1; Stage A's in-place Moves / Overview drawer and selected/all-character Problems filter in 0.79.2. Stage B1 was source-reviewed in 0.79.3. Stage B2 is implemented in 0.79.6: exact assigned CNS/ZSS StateDefs and ZSS Functions can occupy the shared workspace without a HitDef, constants profile, AIR, or SFF, and use the retained connected-code draft/Apply owner. Specialized nested component inspectors and installed interaction QA remain planned. The ordinary installed Constants zoom report remains open pending exact-build user interaction verification.
 
 ## Outcome and boundaries
 
@@ -74,5 +74,6 @@ After parity and recovery tests pass, make the common shell the sole default Mov
 - 0.79.1: shared camera/world transform and stale-drag cancellation are source-reviewed. The ordinary installed Constants report is still open.
 - 0.79.2: Stage A adds a navigation-only in-place Moves / Overview drawer, exact direct-HitDef routes, same-panel constants-profile selection, and selected/all-character Problems scope while preserving the established mutation owners and retained drafts. Corrected implementation source sign-off is complete; the build is not released.
 - 0.79.3: Stage B1 adds an exact, read-only direct-HitDef component view to the same workspace; direct CNS/ZSS source remains inspectable without constants, AIR, or SFF, stale identities are rejected, and editing delegates to the existing HitDef owner. Corrected implementation SOURCE SIGN OFF is complete and all 321 test files pass; installed visual QA remains pending.
-- Stage A is source-reviewed locally in 0.79.2. Stage B1 is implemented and source-reviewed locally in 0.79.3. Later Stage B component types and Stages C-E remain planned and not shipped. Revision 3 records this bounded implementation without claiming broader component parity.
-- This plan does not authorize installation, packaging, publication, engine/game edits, or Phase 2 work.
+- 0.79.6: Stage B2 adds exact assigned CNS/ZSS StateDef and ZSS Function selection/editing with source-bound retained drafts, explicit Apply/discard/rebase, shared-source warning, contextual Maps entry, and no state-number-to-AIR inference. All 325 automated test files pass; installed interaction QA remains pending.
+- Stage A, Stage B1, and bounded Stage B2 are source-reviewed checkpoints. Specialized Helper, Explod, projectile, embedded AIR/Clsn and field-level HitDef component views, plus Stages C-E, remain planned and are not claimed. Revision 4 records this boundary.
+- Packaging and publication of this tested checkpoint were separately authorized by JNP on September 26, 2026. Installation, engine/game edits, Phase 2, and any unlisted feature expansion remain outside this plan.
