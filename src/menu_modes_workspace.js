@@ -11,6 +11,7 @@ const { gameRoot } = require('./select_roster_preview');
 const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = require('./launch_controls');
 const { chooseFileOrFolder } = require('./open_target_picker');
 const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
+const { sourceState, saveSourceDocument } = require('./source_document_save');
 
 const sessions = new Map();
 const sessionKey = filename => path.resolve(filename).toLowerCase();
@@ -45,7 +46,7 @@ async function loadModel(files) {
   const selectDocument = await vscode.workspace.openTextDocument(vscode.Uri.file(files.selectFile));
   const root = gameRoot(files.systemFile), mainLua = root && path.join(root, 'external', 'script', 'main.lua');
   const actions = mainLua && fs.existsSync(mainLua) ? installedActionIds(fs.readFileSync(mainLua, 'utf8')) : [];
-  return { systemDocument, selectDocument, model: buildMenuModesModel(parseDef(systemDocument.getText(), files.systemFile), parseSelectDef(selectDocument.getText()), { ...files, verificationFile: mainLua || '' }, actions) };
+  return { systemDocument, selectDocument, model: { ...buildMenuModesModel(parseDef(systemDocument.getText(), files.systemFile), parseSelectDef(selectDocument.getText()), { ...files, verificationFile: mainLua || '' }, actions), sourceStates: { system: sourceState(systemDocument, path.basename(systemDocument.fileName)), select: sourceState(selectDocument, path.basename(selectDocument.fileName)) } } };
 }
 
 function rawHtml(model, initialView = 'player') {
@@ -56,7 +57,7 @@ function rawHtml(model, initialView = 'player') {
 <section id="player" class="panel"><h1>Modes players can configure safely</h1><p class="muted">These recipes keep normal roster editing approachable. They use native IKEMEN behavior unless a card explicitly says that a module is required.</p><div class="grid" id="recipes"></div><h2>Current fight order</h2><div id="playerOrders"></div></section>
 <section id="creator" class="panel"><h1>Complete menu and roster-mode configuration</h1><div class="evidence"><b>Capability boundary</b><p>${model.evidence.screenpack}<br>${model.evidence.roster}<br>${model.evidence.behavior}</p><p class="muted">Installed action verification: ${model.files.verificationFile || 'fallback catalog (engine script not located)'}</p></div><div class="actions"><button id="addNative">Add built-in action…</button><button id="addSubmenu">Add submenu…</button></div><h2>Screenpack menu tree</h2><div id="menu"></div><h2>Built-in action catalog</h2><div class="grid" id="catalog"></div><h2>Mode-specific select.def configuration</h2><div id="creatorOrders"></div><div id="options"></div></section>
 </main><script>
-const vscode=acquireVsCodeApi(),data=${safe(model)};let view=vscode.getState()?.view||'${initialView}';const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const vscode=acquireVsCodeApi(),data=${safe(model)},savePending=new Set();let view=vscode.getState()?.view||'${initialView}';const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));for(const [key,label] of [['system','Save system.def'],['select','Save select.def']]){const button=document.createElement('button'),status=document.createElement('span');button.id='save-'+key;button.textContent=label;button.title='Save the complete open '+key+' document to disk.';status.id='save-status-'+key;status.className='muted';document.getElementById('reload').before(button,status);button.onclick=()=>{savePending.add(key);renderSourceSave(key,data.sourceStates[key],'Saving complete document…');vscode.postMessage({type:key==='system'?'saveSystem':'saveSelect'})}}function renderSourceSave(key,state,message=''){const button=$('save-'+key),status=$('save-status-'+key);status.textContent=message||(!state?.available?'Source unavailable':state.dirty?'Unsaved document changes':'Saved to disk');status.title=state?.filename||'';button.disabled=savePending.has(key)||!state?.available||!state?.dirty}renderSourceSave('system',data.sourceStates.system);renderSourceSave('select',data.sourceStates.select);window.addEventListener('message',event=>{const message=event.data;if(message.type==='sourceSaveStatus'){savePending.delete(message.key);renderSourceSave(message.key,message.state,message.message||'')}});
 function setView(next){if(!['player','creator'].includes(next))return;view=next;document.querySelectorAll('.panel').forEach(x=>x.classList.toggle('active',x.id===view));document.querySelectorAll('[data-view]').forEach(x=>x.classList.toggle('active',x.dataset.view===view));vscode.setState({view,systemFile:data.files.systemFile})}
 function badge(status){const module=status==='module';return '<span class="badge">'+(module?'MODULE REQUIRED':status==='native-config'?'NATIVE + SELECT.DEF':'NATIVE')+'</span>'}
 function orders(){const render=target=>{target.innerHTML=data.orders.map(mode=>'<div class="card"><h3>'+esc(mode.mode==='default'?'Default order':mode.mode+' order')+'</h3><div class="counts">'+mode.counts.map(x=>'<span class="badge">Order '+x.order+': '+x.count+'</span>').join('')+'</div></div>').join('')||'<p class="muted">No positive roster order assignments were found.</p>'};render($('playerOrders'));render($('creatorOrders'))}
@@ -79,7 +80,7 @@ async function replaceDocument(document, next) {
   const edit = new vscode.WorkspaceEdit();
   const last = document.lineAt(document.lineCount - 1);
   edit.replace(document.uri, new vscode.Range(0, 0, last.lineNumber, last.text.length), next);
-  await vscode.workspace.applyEdit(edit);
+  if (!await vscode.workspace.applyEdit(edit)) throw new Error(`VS Code did not apply changes to ${path.basename(document.fileName)}. Nothing was saved.`);
 }
 
 async function setDefValue(document, sectionName, key, value) {
@@ -115,6 +116,11 @@ async function refresh(owner, requestedView = owner?.view) {
 async function handle(owner, message) {
   if (!owner || sessions.get(sessionKey(owner.files.systemFile)) !== owner) return;
   if (await handleLaunchMessage(message, owner.files.systemFile, 'menus', owner.panel)) return;
+  if (message.type === 'saveSystem' || message.type === 'saveSelect') {
+    const key = message.type === 'saveSystem' ? 'system' : 'select', document = key === 'system' ? owner.systemDocument : owner.selectDocument;
+    const result = await saveSourceDocument(document, path.basename(document.fileName));
+    return owner.panel.webview.postMessage({ type: 'sourceSaveStatus', key, state: sourceState(document, path.basename(document.fileName)), message: result.message });
+  }
   if (message.type === 'reload') return refresh(owner);
   if (message.type === 'source') return reveal(message.file === 'select' ? owner.selectDocument : owner.systemDocument, message.line);
   if (message.type === 'rename') {
@@ -157,9 +163,9 @@ async function openMenuModesWorkspace(uri, initialView = 'player') {
   if (existing) { await refresh(existing, initialView); revealInViewerGroup(existing.panel, false, vscode.ViewColumn.Active); return existing.panel; }
   const loaded = await loadModel(files);
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenMenuModesWorkspace', 'IKEMEN Menu & Modes', preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
-  const owner = { panel, files, systemDocument: loaded.systemDocument, selectDocument: loaded.selectDocument, view: initialView }; sessions.set(key, owner); panel.webview.html = require('./webview_policy').protect(html(loaded.model, initialView), panel.webview.cspSource);
+  const owner = { panel, files, systemDocument: loaded.systemDocument, selectDocument: loaded.selectDocument, view: initialView, busy: 0 }; sessions.set(key, owner); panel.webview.html = require('./webview_policy').protect(html(loaded.model, initialView), panel.webview.cspSource);
   require('./viewer_sessions').register(panel, files.systemFile, 'menu_modes');
-  panel.webview.onDidReceiveMessage((message) => handle(owner, message).catch((error) => vscode.window.showErrorMessage(`Menu & Modes: ${error.message}`)));
+  panel.webview.onDidReceiveMessage((message) => { if(owner.busy)return owner.panel.webview.postMessage({type:'sourceSaveStatus',key:message.type==='saveSelect'?'select':'system',state:sourceState(message.type==='saveSelect'?owner.selectDocument:owner.systemDocument),message:'Wait for the current menu edit or save to finish.'}); owner.busy++; return handle(owner, message).catch((error) => vscode.window.showErrorMessage(`Menu & Modes: ${error.message}`)).finally(()=>owner.busy--); });
   panel.onDidDispose(() => { if (sessions.get(key) === owner) sessions.delete(key); });
   return panel;
 }
@@ -168,9 +174,12 @@ function registerMenuModesWorkspace(context) {
   context.subscriptions.push(
     vscode.commands.registerCommand('ikemen.menuModes.openPlayer', (uri, options) => openMenuModesWorkspace(uri, options?.preset ? options.reference?.view : 'player')),
     vscode.commands.registerCommand('ikemen.menuModes.openCreator', (uri, options) => openMenuModesWorkspace(uri, options?.preset ? options.reference?.view : 'creator')),
-    vscode.workspace.onDidChangeTextDocument((event) => { for (const owner of sessions.values()) if ([owner.systemDocument.uri.toString(), owner.selectDocument.uri.toString()].includes(event.document.uri.toString())) refresh(owner).catch(() => {}); }),
+    vscode.workspace.onDidChangeTextDocument(handleMenuDocumentChange),
+    vscode.workspace.onDidSaveTextDocument((document) => { for (const owner of sessions.values()) { const key = owner.systemDocument.uri.toString() === document.uri.toString() ? 'system' : owner.selectDocument.uri.toString() === document.uri.toString() ? 'select' : ''; if (key) owner.panel.webview.postMessage({ type: 'sourceSaveStatus', key, state: sourceState(document, path.basename(document.fileName)) }); } }),
     vscode.window.registerWebviewPanelSerializer('ikemenMenuModesWorkspace', { async deserializeWebviewPanel(panel, state) { panel.dispose(); if (state?.systemFile) await openMenuModesWorkspace(vscode.Uri.file(state.systemFile), state.view || 'player'); } })
   );
 }
 
-module.exports = { registerMenuModesWorkspace, openMenuModesWorkspace, resolveFiles, findSelect, html, setSelectOption };
+function handleMenuDocumentChange(event, owners = sessions.values()) { for (const owner of owners) { const key=owner.systemDocument.uri.toString()===event.document.uri.toString()?'system':owner.selectDocument.uri.toString()===event.document.uri.toString()?'select':'';if(!key)continue;if(Array.isArray(event.contentChanges)&&event.contentChanges.length===0){owner.panel.webview.postMessage({type:'sourceSaveStatus',key,state:sourceState(event.document,path.basename(event.document.fileName))});continue}refresh(owner).catch(()=>{}); } }
+
+module.exports = { registerMenuModesWorkspace, openMenuModesWorkspace, resolveFiles, findSelect, html, setSelectOption, handleMenuDocumentChange };

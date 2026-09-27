@@ -92,6 +92,30 @@ function clientFunctionSource(source, name) {
   }
   throw new Error(`unterminated generated client function ${name}`);
 }
+const saveClientElements = new Map([
+  ['airSaveStatus', { textContent: '', title: '' }],
+  ['saveAir', { disabled: true }],
+  ['frameGroup', { value: 'newer unapplied value' }]
+]);
+let saveStatusListener;
+const saveClientContext = {
+  model: { airPath: 'Anim.air' }, airSavePending: true,
+  document: { getElementById(id) { return saveClientElements.get(id); } },
+  window: { addEventListener(_type, callback) { saveStatusListener = callback; } },
+  visibleActions: () => [], navigationAllowed: () => true
+};
+vm.createContext(saveClientContext);
+vm.runInContext(clientFunctionSource(client, 'renderAirSaveState') + clientFunctionSource(client, 'stepAction') + "window.addEventListener('message',event=>{const message=event.data;if(message.type==='sourceSaveStatus'){airSavePending=false;renderAirSaveState(message.state,message.message||'')}if(message.type==='model'&&message.model?.sourceState)renderAirSaveState(message.model.sourceState)});", saveClientContext);
+saveStatusListener({ data: { type: 'sourceSaveStatus', state: { available: true, dirty: false, filename: 'Anim.air' }, message: 'Anim.air saved to disk.' } });
+assert.strictEqual(saveClientElements.get('frameGroup').value, 'newer unapplied value', 'a save-only status update must not rebuild or overwrite newer AIR frame fields');
+assert.strictEqual(saveClientContext.airSavePending, false, 'the matching save acknowledgment releases the client save button');
+
+const actionStatus = { textContent: '' };
+const stepContext = { actionMutationBusy: true, action: { number: 0 }, document: { getElementById: () => actionStatus } };
+vm.createContext(stepContext); vm.runInContext(clientFunctionSource(client, 'stepAction'), stepContext); stepContext.stepAction(1);
+assert.match(actionStatus.textContent, /current animation edit/, 'Previous/Next Animation reports and blocks pending action mutations');
+stepContext.actionMutationBusy = false; stepContext.navigationAllowed = () => false; stepContext.stepAction(1);
+assert.match(actionStatus.textContent, /Finish or revert/, 'Previous/Next Animation gives actionable feedback for unfinished frame, box, or runtime drafts');
 const finishSource = clientFunctionSource(client, 'finishActionMutation');
 function finishFixture({ actions, currentAction, response }) {
   const elements = new Map([['search', { value: 'filtered' }], ['newAction', { focusCount: 0, focus() { this.focusCount += 1; } }]]), selected = [], focused = [], calls = { clear: 0, renderActions: 0, renderStrip: 0, updates: 0 };

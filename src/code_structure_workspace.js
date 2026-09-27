@@ -7,6 +7,7 @@ const { describeOption } = require('./controller_option_guidance');
 const controllerCatalog = require('../data/sctrl.json');
 const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = require('./launch_controls');
 const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
+const { sourceState, saveSourceDocument } = require('./source_document_save');
 const controllerDocs = new Map(controllerCatalog.map((item) => [item.name.toLowerCase(), item]));
 const DOCS_URL = 'https://potsmugen.github.io/ikemen-merged-docs/';
 const WIKI_URL = 'https://github.com/ikemen-engine/Ikemen-GO/wiki';
@@ -30,7 +31,7 @@ function rawHtml(model) {
   details{border:1px solid var(--vscode-panel-border);margin:10px 0;padding:8px}details summary{cursor:pointer;font-weight:600}.source{white-space:pre-wrap;padding:10px;background:var(--vscode-textCodeBlock-background);border-left:3px solid var(--vscode-focusBorder)}.muted{color:var(--vscode-descriptionForeground)}.option-list{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(210px,100%),1fr));gap:5px;margin:8px 0}.option{display:block;text-align:left;width:100%;border:1px solid var(--vscode-panel-border);border-radius:4px;padding:7px;color:var(--vscode-descriptionForeground);background:transparent}.option:not(.used):hover{border-color:var(--vscode-focusBorder);background:var(--vscode-list-hoverBackground)}.option b{color:var(--vscode-foreground)}.option.used{border-color:var(--vscode-charts-green);background:color-mix(in srgb,var(--vscode-charts-green) 22%,transparent);color:var(--vscode-foreground);font-weight:700;cursor:default}.option.unknown{border-color:var(--vscode-charts-yellow);color:var(--vscode-charts-yellow)}
   @media(max-width:760px){.shell{grid-template-columns:1fr}.explain{border-top:1px solid var(--vscode-panel-border)}aside{border-right:0}.compactHide{display:none}}
   </style></head><body><header><b>Visual Code Structure</b><span id="lang"></span><span id="experience"></span><span class="grow"></span><input id="search" placeholder="Search structure"><select id="filter"><option value="all">All blocks</option><option value="function">Functions</option><option value="state">States</option><option value="controller">Controllers</option><option value="flow">Conditions & loops</option></select><button id="collapse">Collapse all</button><button id="onlineDocs" title="Open the current IKEMEN merged documentation in your browser.">Online Docs</button><button id="wiki" title="Open the official IKEMEN GO wiki in your browser.">Wiki</button></header><div class="shell"><aside><div class="summary" id="fileSummary"></div><ul class="tree" id="tree"></ul></aside><main class="explain"><h2 id="title">Select a block</h2><div id="risk"></div><p id="modeNote" class="muted"></p>${languageGuidanceHtml(model.language, model.experience)}<p id="description" class="muted">Choose a structure card to see its purpose and source context.</p><details open><summary>Source context</summary><pre class="source" id="source"></pre></details><details><summary>What is this?</summary><div id="docs"></div></details><details id="controllerDocs"><summary>Controller documentation (offline)</summary><div id="controllerDocsBody"></div></details><details id="boundary"><summary>Online / rollback boundary</summary><div id="boundaryText"></div></details><button id="reveal">Reveal in code editor</button></main></div><script>
-  const vscode=acquireVsCodeApi();let model=${safeJson(model)},selected=null,collapsed=new Set(vscode.getState()?.collapsed||[]);const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const vscode=acquireVsCodeApi();let model=${safeJson(model)},selected=null,collapsed=new Set(vscode.getState()?.collapsed||[]),sourceSavePending=false;const $=id=>document.getElementById(id),esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));const saveCode=document.createElement('button'),saveStatus=document.createElement('span');saveCode.id='saveCode';saveCode.textContent='Save Code';saveCode.title='Save the complete open code document to disk.';saveStatus.id='saveStatus';saveStatus.className='muted';document.getElementById('collapse').before(saveCode,saveStatus);function renderSourceSave(state,message=''){saveStatus.textContent=message||(!state?.available?'Source unavailable':state.dirty?'Unsaved document changes':'Saved to disk');saveStatus.title=state?.filename||model.file;saveCode.disabled=sourceSavePending||!state?.available||!state?.dirty}renderSourceSave(model.sourceState);saveCode.onclick=()=>{sourceSavePending=true;renderSourceSave(model.sourceState,'Saving complete code document…');vscode.postMessage({type:'saveCode',sourceUri:model.uri})};window.addEventListener('message',event=>{const message=event.data;if(message.sourceUri&&message.sourceUri!==model.uri)return;if(message.type==='sourceSaveStatus'){sourceSavePending=false;renderSourceSave(message.state,message.message||'')}if(message.type==='sourceEditStatus')saveStatus.textContent=message.text;if(message.type==='model'&&message.model?.sourceState){sourceSavePending=false;model=message.model;renderSourceSave(message.model.sourceState)}});
   function idFor(n){return n.kind+':'+n.startLine+':'+n.title}function risk(n){return n.risk||model.risk}function save(){vscode.setState({...vscode.getState(),collapsed:[...collapsed],selected:selected&&idFor(selected)})}
   function matches(n){const q=$('search').value.toLowerCase(),f=$('filter').value,flow=['condition','loop'].includes(n.kind),kind=f==='all'||f===n.kind||(f==='flow'&&flow);return kind&&(!q||(n.title+' '+(n.signature||'')+' '+n.kind).toLowerCase().includes(q))}
   function nodeHtml(n){const id=idFor(n),children=n.children||[],visible=matches(n)||children.some(deepMatch),closed=collapsed.has(id);if(!visible)return'';return '<li class="card" data-id="'+esc(id)+'"><div class="row'+(selected&&idFor(selected)===id?' active':'')+'"><span class="toggle">'+(children.length?(closed?'▶':'▼'):'·')+'</span><span class="kind">'+esc(n.kind)+'</span><span>'+esc(n.title)+'</span>'+(risk(n)?'<span class="risk '+esc(risk(n).level)+'">'+esc(risk(n).label)+'</span>':'')+'<span class="line">L'+(n.startLine+1)+'</span></div>'+(children.length?'<ul class="'+(closed?'hidden':'')+'">'+children.map(nodeHtml).join('')+'</ul>':'')+'</li>'}
@@ -61,7 +62,7 @@ function clientModel(document, experience = 'learning') {
       if (entry) item.doc = { title: entry.name, summary: entry.description, params: (entry.params || []).map((parameter) => ({ name: parameter.name, placeholder: parameter.placeholder, required: Boolean(parameter.required), description: describeOption(parameter.name, entry.name) })), source: 'Bundled IKEMEN 1.0 controller documentation' };
     }
   }
-  return { ...root, file: path.basename(document.fileName), uri: document.uri.toString(), total: flatten(root).length, experience: experience === 'advanced' ? 'advanced' : 'learning' };
+  return { ...root, file: path.basename(document.fileName), uri: document.uri.toString(), sourceState: sourceState(document, path.basename(document.fileName)), total: flatten(root).length, experience: experience === 'advanced' ? 'advanced' : 'learning' };
 }
 
 async function reveal(vscode, document, line, panel, message) {
@@ -95,7 +96,8 @@ async function insertControllerOption(vscode, session, message) {
     const closing = zssControllerClose(document, controller.startLine), indentMatch = /^(\s*)/.exec(document.lineAt(controller.startLine).text), indent = `${indentMatch ? indentMatch[1] : ''}\t`;
     edit.insert(document.uri, new vscode.Position(closing, 0), `${indent}${name}: ${value.trim()};\n`);
   }
-  await vscode.workspace.applyEdit(edit);
+  if (!await vscode.workspace.applyEdit(edit)) throw new Error('VS Code did not insert the controller option. Nothing was saved.');
+  session.panel.webview.postMessage({ type: 'sourceEditStatus', text: `${name} applied to the open document—not saved to disk yet.` });
 }
 
 function bindSession(vscode, session, document) {
@@ -116,8 +118,22 @@ async function openCodeStructureWorkspace(vscode, context, uri) {
   const session = { panel, document, experience }; activeSession = session; panel.webview.html = require('./webview_policy').protect(html(clientModel(document, experience)), panel.webview.cspSource);
   panel.webview.onDidReceiveMessage(async (message) => {
     if (await handleLaunchMessage(message, session.document.fileName, 'code', panel)) return;
+    if (message.type === 'saveCode') {
+      const document = session.document, sourceUri = document.uri.toString();
+      if (message.sourceUri && message.sourceUri !== sourceUri) return;
+      if (session.busy) return panel.webview.postMessage({ type: 'sourceSaveStatus', sourceUri, state: sourceState(document, path.basename(document.fileName)), message: 'Wait for the current code edit to finish before saving.' });
+      session.busy = true;
+      try {
+        const result = await saveSourceDocument(document, path.basename(document.fileName));
+        if (session.document.uri.toString() !== sourceUri) return;
+        return panel.webview.postMessage({ type: 'sourceSaveStatus', sourceUri, state: sourceState(document, path.basename(document.fileName)), message: result.message });
+      } finally { session.busy = false; }
+    }
     if (message.type === 'reveal') await reveal(vscode, session.document, message.line, panel, message);
-    else if (message.type === 'insertOption') await insertControllerOption(vscode, session, message);
+    else if (message.type === 'insertOption') {
+      if (session.busy) return panel.webview.postMessage({ type: 'sourceEditStatus', text: 'Wait for the current code edit or save to finish.' });
+      session.busy = true; try { await insertControllerOption(vscode, session, message); } finally { session.busy = false; }
+    }
     else if (message.type === 'external') {
       const target = message.target === 'wiki' ? WIKI_URL : DOCS_URL;
       await vscode.env.openExternal(vscode.Uri.parse(target));
@@ -130,10 +146,11 @@ async function openCodeStructureWorkspace(vscode, context, uri) {
 function registerCodeStructureWorkspace(vscode, context) {
   context.subscriptions.push(
     vscode.commands.registerCommand('ikemen.codeStructure.openWorkspace', (uri) => openCodeStructureWorkspace(vscode, context, uri)),
-    vscode.workspace.onDidChangeTextDocument((event) => { const session = activeSession; if (!session || key(event.document.uri) !== key(session.document.uri)) return; clearTimeout(session.refreshTimer); session.refreshTimer = setTimeout(() => { if (activeSession === session) session.panel.webview.postMessage({ type: 'model', model: clientModel(event.document, session.experience) }); }, 180); }),
+    vscode.workspace.onDidChangeTextDocument((event) => { const session = activeSession, sourceUri = event.document.uri.toString(); if (!session || key(event.document.uri) !== key(session.document.uri)) return; if(Array.isArray(event.contentChanges)&&event.contentChanges.length===0)return session.panel.webview.postMessage({type:'sourceSaveStatus',sourceUri,state:sourceState(event.document,path.basename(event.document.fileName))}); clearTimeout(session.refreshTimer); session.refreshTimer = setTimeout(() => { if (activeSession === session && session.document.uri.toString() === sourceUri) session.panel.webview.postMessage({ type: 'model', model: clientModel(event.document, session.experience) }); }, 180); }),
     vscode.window.onDidChangeActiveTextEditor((editor) => { if (activeSession && editor && supported(editor.document)) bindSession(vscode, activeSession, editor.document); }),
     vscode.window.onDidChangeTextEditorSelection((event) => { const session = activeSession; if (session && key(event.textEditor.document.uri) === key(session.document.uri)) session.panel.webview.postMessage({ type: 'selection', line: event.selections[0].active.line }); })
   );
+  if(vscode.workspace.onDidSaveTextDocument)context.subscriptions.push(vscode.workspace.onDidSaveTextDocument((document) => { const session = activeSession, sourceUri = document.uri.toString(); if (session && key(document.uri) === key(session.document.uri)) session.panel.webview.postMessage({ type: 'sourceSaveStatus', sourceUri, state: sourceState(document, path.basename(document.fileName)) }); }));
 }
 
 module.exports = { registerCodeStructureWorkspace, openCodeStructureWorkspace, clientModel, html, insertControllerOption, zssControllerClose, supported, DOCS_URL, WIKI_URL };
