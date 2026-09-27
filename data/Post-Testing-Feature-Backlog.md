@@ -1546,12 +1546,16 @@ user explicitly applies work in the owning tool. Native Projectile offers exact
 source navigation rather than pretending a dedicated editor exists. Changed or
 moved controllers fail their full identity check instead of retargeting.
 
-Every exact component can also invoke **Choose AIR action…**. The host reads the
-current assigned AIR, including unsaved text, presents only complete real
-actions, and opens the selected action in the established AIR/Clsn workspace.
-No StateDef, Helper, Explod, Projectile, or HitDef number is inferred as an AIR
-action. AIR editing, Clsn editing, retained drafts, Apply, Undo, and Save remain
-owned by the existing AIR workspace.
+Every exact component now includes a compact read-only **AIR / Clsn context**
+catalog. It reads the current assigned AIR, including unsaved text, and lists
+only complete real actions with their AIR line, frame and tick totals, explicit
+LoopStart position, and effective Clsn1/Clsn2 frame and box coverage. The user
+must choose an action explicitly; the choice is remembered against that exact
+component source/range revision. Opening revalidates both the full component
+identity and the selected action in the current AIR before handing it to the
+established AIR/Clsn workspace. No StateDef, Helper, Explod, Projectile, or
+HitDef number is inferred as an AIR action. AIR editing, Clsn editing, retained
+drafts, Apply, Undo, and Save remain owned by the existing AIR workspace.
 
 Direct HitDef selections now present the exact controller's explicitly authored
 classic contact values (damage, pause, hit/guard stun, slide, velocities,
@@ -1608,18 +1612,20 @@ edited, no desktop UI was controlled, and no runtime behavior is claimed.
 | Helper component | Exact creation site and separate Helper Lab handoff | Helper Lab | Exact creation-controller identity; Helper semantics are not inferred | Root/parent overlays, contextual contact/reaction preview, and richer map ownership controls |
 | Explod component | Exact creation site and separate Spatial/Explod handoff | Spatial Composer / Explod Composer | Exact creation-controller identity; visual Explods never gain fictional HitDefs | Deeper contextual placement/palette/layer editing through the existing owner |
 | Native Projectile component | Exact creation site and source navigation | Source editor | Exact creation-controller identity | Dedicated guarded editing only if a real owner is designed; do not redirect to Helper Lab |
-| AIR / Clsn handoff | Explicit chooser containing only real assigned AIR actions | Existing AIR/Clsn workspace | Current assigned AIR text, including unsaved text; no number guessing | Compact embedded access and installed interaction QA, while retaining AIR as sole Apply owner |
+| AIR / Clsn context | Compact real-action catalog with AIR line, frame/tick totals, explicit loop point, effective Clsn coverage, remembered explicit selection, and exact handoff | Existing AIR/Clsn workspace | Exact component source/range revision plus current assigned AIR text, including unsaved text; no number guessing | Embedded visual frame/collision interaction only if it continues to reuse AIR's sole Apply owner; installed interaction QA |
 | Stage / Screenpack assets | Exact selected sprite-to-SFF and embedded-action-to-source handoffs | SFF or owning Stage/Screenpack source editor | Selected element plus current source fingerprint; stale sources refresh instead of retargeting | Deeper contextual editing and final Help/screenshots |
 | Destination accents | Shared registry, forced-colors fallback, and one `subtle` / `off` preference across universal and recognized specialist routes | Presentation only; no mutation owner | Window preference; labels, focus, routing, and files are invariant | Audit remaining legacy direct-navigation buttons as their screens are touched |
 
 Implementation commits for this continuation are `88e010c` (Command &
 Movelist convention preservation), `cf32bc4` (exact Move Lab component
-context), and `1d0587a` (shared destination-color controls). These are local
-source commits only; no release feed, package, installation, or live project
-was changed.
+context), `1d0587a` (shared destination-color controls), `590a84b` (legacy
+destination-route coverage), and `745a4a0` (compact exact AIR/Clsn context).
+Commit `1057627` records the ownership checkpoint. These are local source
+commits only; no release feed, package, installation, or live project was
+changed.
 
-Remaining Phase 1 order: deeper compact AIR/Clsn and HitDef embedding only
-where each can reuse its existing mutation owner;
+Remaining Phase 1 order: deeper visual AIR/Clsn interaction and optional HitDef
+presentation only where each can reuse its existing mutation owner;
 deeper Stage/Screenpack contextual asset editing; remaining destination-color
 coverage; final contextual Help/screenshots; then explicitly
 authorized installed-package QA. Helper-projectile semantic classification
