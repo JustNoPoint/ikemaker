@@ -22,6 +22,31 @@ function zoomPan(oldZoom, nextZoom, panX, panY, pointerX, pointerY, pivotX, pivo
   };
 }
 
+function normalizePreviewScene(value = {}) {
+  const finite = (candidate, fallback) => Number.isFinite(Number(candidate)) ? Number(candidate) : fallback;
+  return {
+    zoom: clampZoom(value.zoom ?? 2),
+    panX: finite(value.panX, 0),
+    panY: finite(value.panY, 0),
+    p1WorldX: finite(value.p1WorldX, -40),
+    p1WorldY: finite(value.p1WorldY, 0),
+    p2WorldX: finite(value.p2WorldX, 40),
+    p2WorldY: finite(value.p2WorldY, 0)
+  };
+}
+
+function previewAxes(width, height, value = {}) {
+  const scene = normalizePreviewScene(value), origin = {
+    x: Number(width) / 2 + scene.panX,
+    y: Number(height) * .78 + scene.panY
+  };
+  return {
+    origin,
+    p1: screenPoint(origin.x, origin.y, scene.p1WorldX, scene.p1WorldY, scene.zoom),
+    p2: screenPoint(origin.x, origin.y, scene.p2WorldX, scene.p2WorldY, scene.zoom)
+  };
+}
+
 function migrateOpponent(saved = {}, zoom = 2, viewportWidth = 960, viewportHeight = 540) {
   if (Number.isFinite(Number(saved.opponentWorldX)) && Number.isFinite(Number(saved.opponentWorldY))) {
     return { x: Number(saved.opponentWorldX), y: Number(saved.opponentWorldY) };
@@ -32,7 +57,7 @@ function migrateOpponent(saved = {}, zoom = 2, viewportWidth = 960, viewportHeig
 }
 
 function clientScript() {
-  return `const moveView=(()=>{const clampZoom=${clampZoom.toString()},screenPoint=${screenPoint.toString()},worldPoint=${worldPoint.toString()},zoomPan=${zoomPan.toString()},migrateOpponent=${migrateOpponent.toString()};return{clampZoom,screenPoint,worldPoint,zoomPan,migrateOpponent}})();`;
+  return `const moveView=(()=>{const clampZoom=${clampZoom.toString()},screenPoint=${screenPoint.toString()},worldPoint=${worldPoint.toString()},zoomPan=${zoomPan.toString()},normalizePreviewScene=${normalizePreviewScene.toString()},previewAxes=${previewAxes.toString()},migrateOpponent=${migrateOpponent.toString()};return{clampZoom,screenPoint,worldPoint,zoomPan,normalizePreviewScene,previewAxes,migrateOpponent}})();`;
 }
 
-module.exports = { clampZoom, screenPoint, worldPoint, zoomPan, migrateOpponent, clientScript };
+module.exports = { clampZoom, screenPoint, worldPoint, zoomPan, normalizePreviewScene, previewAxes, migrateOpponent, clientScript };
