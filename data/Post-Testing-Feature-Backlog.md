@@ -1598,6 +1598,26 @@ identity, and host-routing checks pass. The complete 325-file source suite also
 passes. No package was built or installed, no live game or character was
 edited, no desktop UI was controlled, and no runtime behavior is claimed.
 
+#### 0.79.8 capability and ownership matrix
+
+| Surface or component | What this checkpoint exposes | Mutation owner | Draft / identity boundary | Remaining Phase 1 work |
+| --- | --- | --- | --- | --- |
+| Command & Movelist | Editable command steps, explicit absolute L/R versus relative B/F insertion, and nested source/visual movelist glyph editing | Command & Movelist's existing reviewed Apply paths | Exact CMD/INP/JNP or movelist file, current source fingerprint, retained visual/source draft | Installed interaction QA only when separately authorized; source scope is complete at 0.79.7 |
+| Move Lab component browser | Exact StateDef, Function, HitDef, Helper, Explod, and native Projectile discovery plus Problems/source navigation | Navigation-only; never writes component source | Character DEF, source/range hashes, controller kind/index, enclosing block, and current unsaved documents | Deeper compact component inspectors only when they reuse the established owner below |
+| Direct HitDef component | Read-only authored classic/contact/custom values and exact Edit HitDef handoff | Universal HitDef Editor | Exact controller identity; duplicate options remain source-only | Optional compact embedded presentation; no second Apply implementation |
+| Helper component | Exact creation site and separate Helper Lab handoff | Helper Lab | Exact creation-controller identity; Helper semantics are not inferred | Root/parent overlays, contextual contact/reaction preview, and richer map ownership controls |
+| Explod component | Exact creation site and separate Spatial/Explod handoff | Spatial Composer / Explod Composer | Exact creation-controller identity; visual Explods never gain fictional HitDefs | Deeper contextual placement/palette/layer editing through the existing owner |
+| Native Projectile component | Exact creation site and source navigation | Source editor | Exact creation-controller identity | Dedicated guarded editing only if a real owner is designed; do not redirect to Helper Lab |
+| AIR / Clsn handoff | Explicit chooser containing only real assigned AIR actions | Existing AIR/Clsn workspace | Current assigned AIR text, including unsaved text; no number guessing | Compact embedded access and installed interaction QA, while retaining AIR as sole Apply owner |
+| Stage / Screenpack assets | Exact selected sprite-to-SFF and embedded-action-to-source handoffs | SFF or owning Stage/Screenpack source editor | Selected element plus current source fingerprint; stale sources refresh instead of retargeting | Deeper contextual editing and final Help/screenshots |
+| Destination accents | Shared registry, forced-colors fallback, and one `subtle` / `off` preference across universal and recognized specialist routes | Presentation only; no mutation owner | Window preference; labels, focus, routing, and files are invariant | Audit remaining legacy direct-navigation buttons as their screens are touched |
+
+Implementation commits for this continuation are `88e010c` (Command &
+Movelist convention preservation), `cf32bc4` (exact Move Lab component
+context), and `1d0587a` (shared destination-color controls). These are local
+source commits only; no release feed, package, installation, or live project
+was changed.
+
 Remaining Phase 1 order: deeper compact AIR/Clsn and HitDef embedding only
 where each can reuse its existing mutation owner;
 deeper Stage/Screenpack contextual asset editing; remaining destination-color
