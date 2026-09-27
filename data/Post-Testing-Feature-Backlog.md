@@ -1418,6 +1418,37 @@ warning and success styling. Keep sprite/palette/code preview surfaces neutral
 so displayed artwork colors remain reliable. Retain text labels and visible
 keyboard focus; no information may depend on color alone.
 
+September 27 visual clarification from the installed SFF and especially SND
+viewers: the large non-preview areas surrounding the viewer should also receive
+the destination's extremely dark, low-saturation tint. This includes outer
+workspace gutters, toolbar bands, column backgrounds, inspector/help regions,
+and the otherwise broad gray/near-black areas between controls. SND should read
+as a subtly warm amber-charcoal workspace, SFF as a dark green-charcoal, AIR as
+a dark blue-charcoal, and other mapped destinations should follow the same
+family. Use layered near-black values rather than a flat saturated fill so
+panels remain distinguishable and the hue is felt more than noticed.
+
+The surrounding chrome follows the identity of the viewer currently open;
+cross-workspace buttons still follow their destination. Therefore an SFF viewer
+uses green-charcoal chrome while its Animations button remains blue, and an AIR
+viewer uses blue-charcoal chrome while its Sprites button remains green. Apply
+this ownership rule consistently to every mapped viewer family.
+
+The intended usability outcomes are immediate recognition of which workspace is
+currently open and less gray monotony during long authoring sessions. A user
+should be able to identify AIR, SFF, SND, palette and other mapped viewers from
+their peripheral chrome without reading the tab title, while the restrained
+near-black treatment remains comfortable for hours of work. Review prolonged
+use and rapid viewer switching as acceptance checks, not merely screenshots.
+
+Do not tint the actual visual evidence: sprite/animation canvases, checker or
+proof backgrounds, palette swatches, waveforms and other media previews remain
+neutral or retain their authored/configured background. Inputs, validation,
+selection, Save/Apply/Delete and warning/error states also retain their semantic
+contrast. The `off` preference must restore the surrounding chrome to neutral.
+Judge the result at ordinary brightness and in long sessions; reduce saturation
+before reducing legibility if a destination family becomes distracting.
+
 Use shared styling/navigation infrastructure, support a neutral/off preference,
 and respect light/high-contrast themes. Do not override user theme globally or
 change editor-group layouts. Verify representative narrow layouts, text/focus
