@@ -118,6 +118,29 @@ function editCommandSteps(command, operation, index, value = '?') {
   ]);
 }
 
+function mergeNormalizedEditorText(original, editorText, fallbackEol = '\n') {
+  const source = String(original ?? ''), next = String(editorText ?? ''), normalized = source.replace(/\r\n|\r/g, '\n');
+  if (next === normalized) return source;
+  let prefix = 0;
+  while (prefix < normalized.length && prefix < next.length && normalized[prefix] === next[prefix]) prefix += 1;
+  let suffix = 0;
+  while (suffix < normalized.length - prefix && suffix < next.length - prefix && normalized[normalized.length - 1 - suffix] === next[next.length - 1 - suffix]) suffix += 1;
+  const rawOffset = target => {
+    let raw = 0, logical = 0;
+    while (raw < source.length && logical < target) {
+      if (source[raw] === '\r' && source[raw + 1] === '\n') raw += 2;
+      else raw += 1;
+      logical += 1;
+    }
+    return raw;
+  };
+  const rawStart = rawOffset(prefix), rawEnd = rawOffset(normalized.length - suffix);
+  const after = source.slice(rawStart).match(/\r\n|\r|\n/), before = [...source.slice(0, rawStart).matchAll(/\r\n|\r|\n/g)].at(-1);
+  const localEol = after?.[0] || before?.[0] || (fallbackEol === '\r\n' || fallbackEol === '\r' ? fallbackEol : '\n');
+  const insertion = next.slice(prefix, next.length - suffix).replace(/\n/g, localEol);
+  return source.slice(0, rawStart) + insertion + source.slice(rawEnd);
+}
+
 function stepModel(raw, index) {
   const value = String(raw || '').trim();
   const operators = [...value].filter((character) => character === '+' || character === '|');
@@ -278,5 +301,5 @@ function changeMovelistSnippet(slot) { return `[State Change Movelist]\ntype = C
 module.exports = {
   uncomment, parseCommands, splitSteps, stepModel, diagnosticsFor, commandBlock, replaceCommandBlock, patchCommandBlock,
   parseMovelistAssignments, movelistPreview, changeMovelistSnippet, isMotion, finalButtons,
-  INSERTABLE_INPUTS, commandStepLayout, replaceStepCores, editCommandSteps
+  INSERTABLE_INPUTS, commandStepLayout, replaceStepCores, editCommandSteps, mergeNormalizedEditorText
 };

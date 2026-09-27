@@ -1499,6 +1499,11 @@ outer whitespace conventions; changing one visible step patches only that step.
 Reviewed command Apply preserves comments, unknown/custom parser fields,
 omitted defaults, mixed line endings and neighboring definitions. Diagnostics
 and glyph warnings remain advisory and do not impose a parser or input policy.
+The final source-side audit also corrects the nested movelist Source subtab:
+browser textarea normalization no longer converts untouched CRLF, LF, or CR
+lines. Each typed edit is reconciled against the retained raw draft, preserving
+unchanged mixed line endings while newly inserted lines follow the nearest
+authored local convention.
 
 CMD, INP and JNP editor-title entry now carries the actual open document and
 caret into the existing visual editor. Dirty text is parsed without requiring a

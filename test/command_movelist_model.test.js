@@ -58,6 +58,10 @@ assert.strictEqual(model.editCommandSteps(customSpacing, 'insertAfter', 1, 'B'),
 assert.strictEqual(model.editCommandSteps(customSpacing, 'replace', 2, 'F+y'), '\t/D,~45$L ,  F+y,\t>F|DF  ', 'field editing changes only the selected step core');
 assert.strictEqual(model.editCommandSteps(customSpacing, 'moveLeft', 2), '\t/D,R+x ,  ~45$L,\t>F|DF  ', 'reordering swaps only step cores and keeps positional spacing conventions');
 assert.strictEqual(model.editCommandSteps(customSpacing, 'remove', 1), '\t/D,R+x,\t>F|DF  ', 'removal preserves the preceding positional separator and every untouched step');
+const mixedMovelist='First\r\nSecond\nThird\rFourth';
+assert.strictEqual(model.mergeNormalizedEditorText(mixedMovelist,'First\nSecond changed\nThird\nFourth','\r\n'),'First\r\nSecond changed\nThird\rFourth','source typing changes only the edited text and preserves every untouched mixed line ending');
+assert.strictEqual(model.mergeNormalizedEditorText('First\r\nSecond\nThird','First\nSecond\nInserted\nThird','\r\n'),'First\r\nSecond\nInserted\nThird','a newly typed newline follows the nearest authored local convention without normalizing other lines');
+assert.strictEqual(model.mergeNormalizedEditorText(mixedMovelist,mixedMovelist.replace(/\r\n|\r/g,'\n'),'\r\n'),mixedMovelist,'textarea newline normalization alone is a byte-exact no-op');
 
 const extendedSource = `[Command] ; authored header
   name="qcf_x" ; keep name note
