@@ -71,6 +71,21 @@ async function insertCode(owner, filename, code) {
   await editor.edit((edit) => edit.insert(editor.selection.active, `${editor.selection.active.character ? '\n' : ''}${code}\n`));
   vscode.window.showInformationMessage('Controller code inserted. VS Code Undo can remove it. Your Auto Save setting still applies.');
 }
+function generatedInsertion(mode, plan) {
+  return mode === 'position' ? spatial.generatePosition(plan) : spatial.generateExplod(plan);
+}
+async function insertReviewedGeneration(owner, message, services = {}) {
+  const generated = generatedInsertion(owner.mode, owner.plan);
+  const warn = services.warn || ((text) => vscode.window.showWarningMessage(text));
+  if (!generated.valid) { await warn('Fix the reported generator errors before inserting controller code.'); return false; }
+  if (typeof message.code !== 'string' || message.code !== generated.code) {
+    await warn('The plan changed after the displayed code was generated. Review the refreshed controller code, then choose Insert again.');
+    update(owner, owner.mode, owner.plan, owner.action, Boolean(owner.model?.recoveredDraft));
+    return false;
+  }
+  await (services.insert || insertCode)(owner, message.source, generated.code);
+  return true;
+}
 function update(owner, mode, plan, action, recoveredDraft = false) { if (!owner || owner.disposed) return; owner.mode = mode || owner.mode; owner.plan = plan || (owner.mode === 'position' ? spatial.newPosition() : spatial.newExplod()); if (action !== undefined) owner.action = action; owner.model = workspaceModel(owner.defPath, owner.mode, owner.plan, owner.action); owner.model.reference = spatialReference(owner.defPath, owner.mode, owner.action); owner.model.recoveredDraft = recoveredDraft; owner.panel.webview.postMessage({ type: 'model', model: owner.model }); }
 async function openSpatialComposer(seed, initialMode = 'explod', options = {}) {
   let defPath = nearestCharacterDef(seed?.fsPath || vscode.window.activeTextEditor?.document.fileName || ''); if (!defPath) defPath = await chooseCharacterDef(seed, { title: initialMode === 'position' ? 'Position & Camera — Choose Character' : 'Explod Composer — Choose Character' }); if (!defPath) return;
@@ -91,7 +106,7 @@ async function openSpatialComposer(seed, initialMode = 'explod', options = {}) {
     if (message.type === 'copy') return vscode.env.clipboard.writeText(message.code || '');
     if (message.type === 'openSource') return insertionEditor(message.source);
     if (message.type === 'recheck') { await reportInsertionContext(owner, message.source); return revealInViewerGroup(owner.panel, false); }
-    if (message.type === 'insert') return insertCode(owner, message.source, message.code || '');
+    if (message.type === 'insert') return insertReviewedGeneration(owner, message);
     if (message.type === 'openMoveLab') return vscode.commands.executeCommand('ikemen.moveLab.open', vscode.Uri.file(owner.defPath));
     if (message.type === 'throw') return vscode.commands.executeCommand('ikemen.throwCreator.open', vscode.Uri.file(owner.defPath));
     } finally { owner.busy--; }
@@ -100,4 +115,4 @@ async function openSpatialComposer(seed, initialMode = 'explod', options = {}) {
 }
 function registerSpatialComposer(context) { formDrafts = new FormDrafts(context.workspaceState, 'ikemaker.spatialDrafts.v1'); context.subscriptions.push(vscode.commands.registerCommand('ikemen.explodComposer.open', (uri, options) => openSpatialComposer(uri, 'explod', options)), vscode.commands.registerCommand('ikemen.positionCamera.open', (uri, options) => openSpatialComposer(uri, 'position', options)), vscode.commands.registerCommand('ikemen.spatialComposer.inspectCurrent', () => activeSession ? { title: activeSession.panel.title, defPath: activeSession.defPath, mode: activeSession.mode, context: activeSession.model.context, visualState: activeSession.model.visual?.state, sources: activeSession.model.sources, valid: activeSession.model.generated.valid, code: activeSession.model.generated.code } : null)); }
 
-module.exports = { registerSpatialComposer, openSpatialComposer, workspaceModel, page, insertionIssue, safeSpatialDraft, spatialReference, validSpatialReference };
+module.exports = { registerSpatialComposer, openSpatialComposer, workspaceModel, page, insertionIssue, generatedInsertion, insertReviewedGeneration, safeSpatialDraft, spatialReference, validSpatialReference };

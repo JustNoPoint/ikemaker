@@ -4,6 +4,7 @@ const SPACES = ['stage', 'screen'];
 const ANCHORS = ['p1', 'p2', 'front', 'back', 'left', 'right', 'none'];
 const SUBJECTS = ['self', 'target', 'parent', 'root', 'helper'];
 const POSITION_MODES = ['world', 'relative', 'screen-once', 'screen-lock'];
+const TRANSPARENCY_MODES = new Set(['default', 'none', 'add', 'addalpha', 'add1', 'sub', 'subadd']);
 
 function number(value, fallback = 0) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
 function integer(value, fallback = 0) { return Math.trunc(number(value, fallback)); }
@@ -45,7 +46,7 @@ function normalizeExplod(input = {}) {
     scale: pair(input.scale, [1, 1]), angle: number(input.angle), facing: number(input.facing, 1) < 0 ? -1 : 1,
     spritePriority: integer(input.spritePriority), layerNo: integer(input.layerNo), onTop: bool(input.onTop),
     ownPalette: bool(input.ownPalette), palette: pair(input.palette).map((v) => integer(v)),
-    transparency: cleanName(input.transparency, 'default'), ignoreHitPause: bool(input.ignoreHitPause),
+    transparency: cleanName(input.transparency, 'default').toLowerCase(), ignoreHitPause: bool(input.ignoreHitPause),
     removeOnGetHit: bool(input.removeOnGetHit), localCoord: pair(input.localCoord, [320, 240]),
     timeline: Array.isArray(input.timeline) ? input.timeline.map(normalizeEvent).sort((a, b) => a.tick - b.tick) : []
   };
@@ -58,8 +59,11 @@ function validateExplod(input) {
   if (p.localCoord[0] <= 0 || p.localCoord[1] <= 0) issues.push({ level: 'error', field: 'localCoord', message: 'Local coordinate width and height must be positive.' });
   if (p.scale.some((v) => v === 0)) issues.push({ level: 'warning', field: 'scale', message: 'A zero scale hides the Explod.' });
   if (p.removeTime === -1) issues.push({ level: 'warning', field: 'removeTime', message: 'This Explod has no timed removal. Add a RemoveExplod event or verify every state exit removes it.' });
+  if (!TRANSPARENCY_MODES.has(p.transparency.toLowerCase()) || /[\r\n{};]/.test(p.transparency)) issues.push({ level: 'error', field: 'transparency', message: 'Choose a supported transparency mode: Default, None, Add, AddAlpha, Add1, Sub, or SubAdd.' });
+  if ((p.palette[0] || p.palette[1]) && !p.ownPalette) issues.push({ level: 'warning', field: 'ownPalette', message: 'A palette remap is set while Own palette is off. The remap may not take effect; review the intended palette ownership.' });
   const creates = p.timeline.filter((e) => e.type === 'create').length;
-  if (creates > 1) issues.push({ level: 'warning', field: 'timeline', message: 'Multiple create events use the same ID. Verify replacement and ownership behavior.' });
+  if (creates) issues.push({ level: 'warning', field: 'timeline', message: `${creates} timeline create event${creates === 1 ? '' : 's'} will create an additional Explod with the same ID after the initial creation. Verify replacement and ownership behavior.` });
+  if (p.timeline.some((e) => e.angle !== 0 || e.scale[0] !== 1 || e.scale[1] !== 1)) issues.push({ level: 'suggestion', field: 'timeline', message: 'This timeline contract does not apply per-event scale or angle values. Use the generated controller as a starting point and add those changes explicitly.' });
   return { valid: !issues.some((i) => i.level === 'error'), plan: p, issues };
 }
 
@@ -90,18 +94,33 @@ function zssExplod(input) {
 function cnsBlock(label, type, trigger, params) {
   return [`[State ${label}, ${type}]`, `type = ${type}`, `trigger1 = ${trigger}`, ...params].join('\n');
 }
-function cnsExplod(input) {
-  const p = normalizeExplod(input), base = [
+function cnsExplodParams(p, event = null) {
+  const src = event || p;
+  const params = [
     `anim = ${p.anim}`, `ID = ${p.id}`, `space = ${p.space}`, `postype = ${p.anchor}`,
-    `pos = ${p.position.map(compact).join(', ')}`, `vel = ${p.velocity.map(compact).join(', ')}`,
-    `accel = ${p.acceleration.map(compact).join(', ')}`, `bindid = ${p.bindId}`, `bindtime = ${p.bindTime}`,
+    `pos = ${src.position.map(compact).join(', ')}`, `vel = ${src.velocity.map(compact).join(', ')}`,
+    `accel = ${src.acceleration.map(compact).join(', ')}`, `bindid = ${p.bindId}`, `bindtime = ${p.bindTime}`,
     `removetime = ${p.removeTime}`, `scale = ${p.scale.map(compact).join(', ')}`, `angle = ${compact(p.angle)}`,
-    `sprpriority = ${p.spritePriority}`, `layerno = ${p.layerNo}`, `ontop = ${p.onTop ? 1 : 0}`
+    `facing = ${p.facing}`, `sprpriority = ${p.spritePriority}`, `layerno = ${p.layerNo}`,
+    `ontop = ${p.onTop ? 1 : 0}`, `ownpal = ${p.ownPalette ? 1 : 0}`,
+    `ignorehitpause = ${p.ignoreHitPause ? 1 : 0}`, `removeongethit = ${p.removeOnGetHit ? 1 : 0}`
   ];
-  const out = [cnsBlock(p.name, 'Explod', p.trigger, base)];
+  if (p.palette[0] || p.palette[1]) params.push(`remappal = ${p.palette[0]}, ${p.palette[1]}`);
+  if (p.transparency.toLowerCase() !== 'default') params.push(`trans = ${p.transparency}`);
+  return params;
+}
+function cnsExplod(input) {
+  const p = normalizeExplod(input);
+  const out = [cnsBlock(p.name, 'Explod', p.trigger, cnsExplodParams(p))];
   for (const e of p.timeline) {
     const trigger = `time = ${e.tick}`;
-    if (e.type === 'modify') out.push(cnsBlock(p.name, 'ModifyExplod', trigger, [`ID = ${p.id}`, `pos = ${e.position.map(compact).join(', ')}`, `vel = ${e.velocity.map(compact).join(', ')}`, `accel = ${e.acceleration.map(compact).join(', ')}`]));
+    if (e.type === 'create') out.push(cnsBlock(p.name, 'Explod', trigger, cnsExplodParams(p, e)));
+    if (e.type === 'modify') {
+      const params = [`ID = ${p.id}`, `pos = ${e.position.map(compact).join(', ')}`, `vel = ${e.velocity.map(compact).join(', ')}`, `accel = ${e.acceleration.map(compact).join(', ')}`];
+      if (p.palette[0] || p.palette[1]) params.push(`remappal = ${p.palette[0]}, ${p.palette[1]}`);
+      if (p.transparency.toLowerCase() !== 'default') params.push(`trans = ${p.transparency}`);
+      out.push(cnsBlock(p.name, 'ModifyExplod', trigger, params));
+    }
     if (e.type === 'bind') out.push(cnsBlock(p.name, 'ExplodBindTime', trigger, [`ID = ${p.id}`, `time = ${e.bindTime}`]));
     if (e.type === 'remove') out.push(cnsBlock(p.name, 'RemoveExplod', trigger, [`ID = ${p.id}`]));
   }
@@ -158,4 +177,4 @@ function snapPosition(position, guides = {}, threshold = 6) {
 }
 function explodFromThrowPart(part = {}) { return newExplod({ name: part.name || 'Throw part', id: part.explodId, anim: part.anim, anchor: 'p1', spritePriority: part.sprPriority, layerNo: part.layerNo, timeline: Number.isFinite(part.removeTick) && part.removeTick >= 0 ? [{ tick: part.removeTick, type: 'remove' }] : [] }); }
 
-module.exports = { SPACES, ANCHORS, SUBJECTS, POSITION_MODES, newExplod, normalizeExplod, validateExplod, generateExplod, newPosition, normalizePosition, validatePosition, generatePosition, screenToLocal, snapPosition, explodFromThrowPart };
+module.exports = { SPACES, ANCHORS, SUBJECTS, POSITION_MODES, TRANSPARENCY_MODES, newExplod, normalizeExplod, validateExplod, generateExplod, newPosition, normalizePosition, validatePosition, generatePosition, screenToLocal, snapPosition, explodFromThrowPart };

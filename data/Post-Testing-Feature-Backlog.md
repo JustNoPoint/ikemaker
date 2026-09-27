@@ -1002,7 +1002,12 @@ custom code without forcing maps, constants, naming conventions or conversion.
 
 ### First slice: generator consistency
 
-The current CNS Explod generator omits settings emitted by its ZSS counterpart,
+The 0.79.5 CNS Explod generator parity correction now preserves the supported
+facing, palette, transparency, hit-pause, remove-on-hit and timeline-create
+settings emitted by its ZSS counterpart. Installed engine behavior remains a
+runtime test boundary. The broader character-owned UI work below remains open;
+it must not regress this shared generator contract. Previously the generator omitted
+settings emitted by its ZSS counterpart,
 including own palette/remapping, transparency, facing and hit-pause/removal
 options; timeline event coverage also differs. Compare every exposed setting
 and supported event against both output paths. Emit valid equivalents for the
@@ -1392,3 +1397,57 @@ This refines the previously approved deferred Flow Mode scope and supersedes
 wording suggesting a fixed built-in production order. JNP's example should be
 derived from the proven Ryu/Demitri/Morrigan/Goku workflows at the agreed later
 milestone. It does not add Flow Mode implementation to current Phase 1 closeout.
+
+## Phase 1 closeout — consistent viewer and destination colors
+
+JNP approved this presentation update September 26, 2026 and delegates color
+choices to implementation judgment; no mockup/example approval is required.
+Keep the preferred dark appearance with subtle identity accents, not saturated
+full-screen backgrounds. Use one shared destination-color registry so a button
+leading to Sprites/SFF is green everywhere and matches the destination viewer.
+Start with restrained families: sprites/SFF green, AIR/animation blue, palettes
+violet, sound amber, Move Lab/code teal, stage/layout ochre and screenpack/UI
+indigo. Tune actual shades for contrast and distinguishability; related views
+may share a family. Do not create unique arbitrary colors for every utility.
+
+Apply light tinting to headers, selected tabs, borders and section accents;
+use stronger accessible accents for important destination buttons. Keep
+secondary actions quiet. Color reflects destination, not the originating
+screen. Preserve consistent Save/Apply/Cancel behavior and reserved error,
+warning and success styling. Keep sprite/palette/code preview surfaces neutral
+so displayed artwork colors remain reliable. Retain text labels and visible
+keyboard focus; no information may depend on color alone.
+
+Use shared styling/navigation infrastructure, support a neutral/off preference,
+and respect light/high-contrast themes. Do not override user theme globally or
+change editor-group layouts. Verify representative narrow layouts, text/focus
+contrast, destination consistency and neutral artwork rendering. Refresh Help
+screenshots after this presentation change, before the release. This is a
+finite Phase 1 visual-cohesion item, not a redesign or new screen family.
+
+### Approved destination-color mapping — JNP sign-off
+
+September 26, 2026: JNP explicitly signed off this mapping, superseding the
+initial suggested families above:
+
+| Destination | Identity color |
+| --- | --- |
+| Sprites / SFF | Green |
+| Animations / AIR | Blue |
+| Palettes | Violet |
+| Sounds / SND | Amber |
+| Move Lab | Teal |
+| Code editors | Slate blue |
+| Stage editor | Ochre |
+| Screenpack / UI editor | Indigo |
+| Project Data / Maps | Cyan |
+| Help | Neutral silver |
+
+Destination determines the accent everywhere: every button opening AIR uses
+prominent blue regardless of its originating screen; AIR itself uses a subtle
+dark-blue identity tint. Apply the same rule to all mapped destinations.
+Save/Apply/Delete and warning/error semantics remain consistent action styling,
+not destination colors. Exact accessible shades remain implementation judgment.
+All previously recorded neutral-canvas, optional-off, theme, focus and Help
+screenshot sequencing requirements still apply. No further design approval is
+needed for this mapping.
