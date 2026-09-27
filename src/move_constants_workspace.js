@@ -105,6 +105,22 @@ function sourceDiagnostics(files) {
   return diagnostics;
 }
 
+function compactAirCatalog(text) {
+  const lines = String(text || '').split(/\r?\n/), actions = require('./air_preview_model').parseAir(text);
+  return actions.map((action, index) => ({
+    number: action.number,
+    line: action.line,
+    frames: action.frames.length,
+    ticks: action.frames.reduce((sum, frame) => sum + Math.max(1, Number(frame.time) || 1), 0),
+    loopStart: action.loopStart,
+    hasLoopStart: lines.slice(action.line, (actions[index + 1]?.line || (lines.length + 1)) - 1).some((line) => /^\s*LoopStart\s*(?:;.*)?$/i.test(line)),
+    clsn1Frames: action.frames.filter((frame) => (frame.clsn1 || []).length).length,
+    clsn2Frames: action.frames.filter((frame) => (frame.clsn2 || []).length).length,
+    clsn1Boxes: action.frames.reduce((sum, frame) => sum + (frame.clsn1 || []).length, 0),
+    clsn2Boxes: action.frames.reduce((sum, frame) => sum + (frame.clsn2 || []).length, 0)
+  }));
+}
+
 function contactProfile(assignments, move) {
   const strength = ['', 'light', 'medium', 'heavy'][Number(move.values.attackStrength)] || '';
   if (!strength) return [];
@@ -157,7 +173,7 @@ async function modelFor(assets) {
   const fileStatus = [assets.constants, assets.air, ...(assets.code || [])].filter(Boolean).map(filename => { const document=openDocuments.find(item=>path.resolve(item.fileName).toLowerCase()===path.resolve(filename).toLowerCase()); return { filename, label:path.basename(filename), dirty:Boolean(document?.isDirty) }; });
   const codePrefix=codeDraftKey(assets.defPath,''),codeDrafts={};
   for(const [key,value] of Object.entries(codeFormDrafts.entries||{}))if(key.startsWith(codePrefix)&&value&&Object.keys(value).length)codeDrafts[key.slice(codePrefix.length)]=value;
-  return { character: path.basename(assets.folder), files: assets, fileStatus, timingSources:{constants:hash(constantsText),air:hash(airText)}, moves: output, overview: overviewFor(assets, output, diagnostics, openDocuments, sourceHashes), codeDrafts, formDrafts:Object.fromEntries(output.map(move=>[move.id,formDrafts.read(draftKey(assets.defPath,move.id))||{}])) };
+  return { character: path.basename(assets.folder), files: assets, fileStatus, timingSources:{constants:hash(constantsText),air:hash(airText)}, airActions:compactAirCatalog(airText), moves: output, overview: overviewFor(assets, output, diagnostics, openDocuments, sourceHashes), codeDrafts, formDrafts:Object.fromEntries(output.map(move=>[move.id,formDrafts.read(draftKey(assets.defPath,move.id))||{}])) };
 }
 async function shellModelFor(assets) {
   const ready=[assets.constants,assets.air,assets.sff].every(filename=>filename&&fs.existsSync(filename));
@@ -165,8 +181,9 @@ async function shellModelFor(assets) {
   let unavailable='No assigned AIR/SFF preview is available. Direct source inspection remains fully available.';
   if(ready)try{const model=await modelFor(assets),direct=directComponentModel(assets,openDocuments,diagnostics);model.directComponents=direct.components;model.behaviorComponents=direct.behaviors;model.specialistComponents=direct.specialists;model.componentFailures=direct.failures;model.overview.controllers=direct.components;model.overview.behaviors=direct.behaviors;model.overview.specialists=direct.specialists;return model;}catch(error){unavailable=`The optional constants/preview component is unavailable: ${error.message}. Direct source inspection remains fully available.`;}
   const direct=directComponentModel(assets,openDocuments,diagnostics),fileStatus=(assets.code||[]).filter(filename=>filename&&fs.existsSync(filename)).map(filename=>{const document=openDocuments.find(item=>identity(item.fileName)===identity(filename));return{filename,label:path.basename(filename),dirty:Boolean(document?.isDirty)}});
+  let airText='',airActions=[];if(assets.air&&fs.existsSync(assets.air))try{airText=await currentText(assets.air);airActions=compactAirCatalog(airText);}catch(_){}
   const codePrefix=codeDraftKey(assets.defPath,''),codeDrafts={};for(const [key,value]of Object.entries(codeFormDrafts.entries||{}))if(key.startsWith(codePrefix)&&value&&Object.keys(value).length)codeDrafts[key.slice(codePrefix.length)]=value;
-  return{character:path.basename(assets.folder),files:assets,fileStatus,timingSources:{},moves:[],overview:{controllers:direct.components.map(item=>({...item,reference:item.reference})),behaviors:direct.behaviors,specialists:direct.specialists,constantProfiles:(direct.constantProfiles||[]).map(item=>({...item,defPath:assets.defPath,supported:false})),problems:[]},directComponents:direct.components,behaviorComponents:direct.behaviors,specialistComponents:direct.specialists,componentFailures:direct.failures,codeDrafts,formDrafts:{},previewUnavailable:unavailable};
+  return{character:path.basename(assets.folder),files:assets,fileStatus,timingSources:{air:airText?hash(airText):''},airActions,moves:[],overview:{controllers:direct.components.map(item=>({...item,reference:item.reference})),behaviors:direct.behaviors,specialists:direct.specialists,constantProfiles:(direct.constantProfiles||[]).map(item=>({...item,defPath:assets.defPath,supported:false})),problems:[]},directComponents:direct.components,behaviorComponents:direct.behaviors,specialistComponents:direct.specialists,componentFailures:direct.failures,codeDrafts,formDrafts:{},previewUnavailable:unavailable};
 }
 
 function html(model) { const page = `<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
@@ -372,7 +389,7 @@ async function handle(message) {
   if(session!==owner||owner.assets!==assets)return;
   if(timing&&(owner.model.timingSources?.constants!==hash(expectedText)||owner.model.timingSources?.air!==hash(expectedAir)))throw new Error('The constants or AIR changed since this preview. Refresh before assigning timing.');
   if (message.type === 'refresh') return refresh();
-  if (message.type === 'selectDirectComponent'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic'||message.type==='openSpecialistComponent'||message.type==='openComponentAir') {
+  if (message.type === 'selectDirectComponent'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic'||message.type==='openSpecialistComponent'||message.type==='openComponentAir'||message.type==='openComponentAirAction') {
     const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const component=validComponentReference(message.reference,{components:pool(current)},assets.defPath);
     if(!component)return vscode.window.showWarningMessage('That direct component changed or moved. Refresh Moves / Overview and choose it again.');
@@ -388,6 +405,12 @@ async function handle(message) {
       if(!actions.length)return vscode.window.showWarningMessage('The assigned AIR file has no complete animation actions to choose.');
       const picked=await vscode.window.showQuickPick(actions.map(action=>({label:`Action ${action.number}`,description:`${action.frames.length} frame${action.frames.length===1?'':'s'}`,detail:`AIR line ${action.line}`,action:action.number})),{title:'Choose the exact AIR action for this component',placeHolder:'No StateDef, Helper, Explod, Projectile, or HitDef number is inferred as an AIR action'});
       if(!picked)return;return vscode.commands.executeCommand('air.openAnimationPreview',vscode.Uri.file(assets.air),{action:picked.action});
+    }
+    if(message.type==='openComponentAirAction'){
+      if(!assets.air||!fs.existsSync(assets.air))return vscode.window.showWarningMessage('This character has no available assigned AIR file. IKEMaker will not guess another animation source.');
+      const action=Number(message.action),currentAir=await currentText(assets.air),found=require('./air_preview_model').parseAir(currentAir).find(item=>item.number===action);
+      if(!Number.isInteger(action)||!found)return vscode.window.showWarningMessage('That AIR action changed or was removed. Refresh Move Lab and choose a current action.');
+      return vscode.commands.executeCommand('air.openAnimationPreview',vscode.Uri.file(assets.air),{action});
     }
     if(message.type==='openDirectComponent')return openSourceLocation(owner,component.filename,component.line);
     const diagnostic=(component.diagnostics||[]).find(item=>item.line===Number(message.line));if(diagnostic)return openSourceLocation(owner,diagnostic.filename,diagnostic.line);return;
@@ -626,4 +649,4 @@ function registerMoveConstantsWorkspace(context) {
   context.subscriptions.push(vscode.window.registerWebviewPanelSerializer('ikemenMoveConstants', { deserializeWebviewPanel: restoreMoveConstantsWorkspace }));
 }
 
-module.exports = { registerMoveConstantsWorkspace, openMoveConstantsWorkspace, characterAssets, characterShellAssets, contactProfile, modelFor, shellModelFor, html, constantsReference, validConstantsReference, validOverviewProblem, overviewFor };
+module.exports = { registerMoveConstantsWorkspace, openMoveConstantsWorkspace, characterAssets, characterShellAssets, contactProfile, compactAirCatalog, modelFor, shellModelFor, html, constantsReference, validConstantsReference, validOverviewProblem, overviewFor };
