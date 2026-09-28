@@ -1,0 +1,8 @@
+IKEMaker 0.79.13 — AIR animation selection correction
+
+- Untouched AIR frame fields no longer falsely block selecting another animation.
+- The viewer now tracks actual user input instead of inferring edits from rendered-value comparisons.
+- Clicking an action and using Previous/Next Animation share the corrected navigation path.
+- Real partial field input and pending automatic AIR updates remain protected.
+- Active Runtime saves and unapplied collision-box edits still serialize navigation safely.
+- Regression coverage verifies untouched, touched, and pending-update frame states separately.

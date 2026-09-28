@@ -1,0 +1,7 @@
+IKEMaker 0.79.18 — Screenpack generated-pattern correction
+
+- Corrected generated Fight UI section classification patterns.
+- Corrected generated player-slot sample recognition.
+- Corrected generated P1-to-P2 mirror matching.
+- Added generated-output regression checks for all three Screenpack/Fight UI patterns.
+- Retains the AIR numeric edit and Auto Save corrections from 0.79.17.

@@ -1,0 +1,7 @@
+IKEMaker 0.79.12 — AIR animation navigation recovery
+
+- AIR actions and frames can be selected while recoverable Runtime-frame drafts exist.
+- Those drafts remain stored against their original AIR action and frame; navigation does not discard or move them.
+- An actively saving Runtime plan still temporarily blocks navigation to prevent overlapping changes.
+- Genuine unfinished frame-field and collision-box edits retain their existing protections.
+- Regression coverage verifies that saved Runtime drafts cannot trap the viewer on one animation.

@@ -69,7 +69,7 @@ const personalLabels = (root('Personal Workspace and Preferences')?.children || 
 assert(!quick.includes('ikemen.windowsFileAssociations.configure'), 'one-time file-association setup must not occupy Quick Start');
 assert(personalLabels.includes('Set .SFF / .AIR / .SND / Code File Opening…'), 'file-opening setup should remain explicit under personal preferences');
 const playerSetup = commands('Player Setup');
-assert(playerSetup.includes('ikemen.palettePlayer.open'), 'Player Setup should expose the focused Palette Workshop');
+assert(playerSetup.includes('ikemen.palette.openWorkspace'), 'Player Setup should expose the canonical Palette Workspace');
 const hubSource = require('fs').readFileSync(require('path').join(__dirname, '..', 'src', 'ikemen_hub.js'), 'utf8');
 assert.match(hubSource, /setTimeout\(\(\) => vscode\.commands\.executeCommand\('workbench\.view\.extension\.ikemen'\), 1500\)/, 'IKEMaker startup focus should run after VS Code restores Explorer');
 
@@ -98,6 +98,6 @@ for(const mode of ['player','simple']){
 }
 require('../src/interface_mode').configure({workspace:{getConfiguration:()=>({get:()=> 'player'})}},{});
 const playerCommands=visit(buildHubItems()).map(item=>item.command?.command).filter(Boolean);
-assert(playerCommands.includes('ikemen.palettePlayer.open'),'Player Tools should expose Palette Workshop');
+assert(playerCommands.includes('ikemen.palette.openWorkspace'),'Player Tools should expose the canonical Palette Workspace');
 for(const command of ['sff.openViewer','ikemen.paletteImport.open','ikemen.paletteOrganizer.open','ikemen.character.createNew'])assert(!playerCommands.includes(command),`Player Tools leaked broader authoring command ${command}`);
 console.log('Player and Simple Tools trees contain only their permitted commands');

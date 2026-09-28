@@ -38,6 +38,9 @@ try {
   const clientScript = html.match(/<script>([\s\S]*)<\/script>/);
   assert.ok(clientScript, 'screenpack workspace should contain a client script');
   assert.doesNotThrow(() => new vm.Script(clientScript[1], { filename: 'screenpack-client.js' }), 'generated screenpack workspace JavaScript should compile');
+  assert(html.includes('/(^|\\s)p[1-8](\\.|\\s)|life|power|combo|round|time|win|guard|stun|score/'), 'generated Fight UI categorization must preserve whitespace and literal-dot regex escapes');
+  assert(html.includes('/p([1-8])(?:\\.|$)/'), 'generated player-slot recognition must preserve its literal-dot escape');
+  assert(html.includes('/^p1(?:\\.|$)/'), 'generated P1 mirror matching must preserve its literal-dot escape');
   assert.match(html, /Screenpack \/ Fight UI/);
   assert.match(html, /Mirror P1/);
   assert.match(html, /Apply reviewed position/);

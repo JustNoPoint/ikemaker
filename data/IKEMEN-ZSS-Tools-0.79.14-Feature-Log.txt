@@ -1,0 +1,9 @@
+IKEMaker 0.79.14 — AIR frame selection and disk persistence
+
+- Selecting an AIR timeline frame now pauses playback and retains the chosen frame.
+- Previous Frame and Next Frame use the same guarded selection path.
+- Genuine partial frame edits and pending writes remain protected.
+- With IKEMaker Auto Save enabled, accepted visual AIR edits save the exact AIR document to disk once.
+- The viewer reports confirmed disk persistence or an actionable save failure.
+- With IKEMaker Auto Save disabled, Save AIR remains the explicit disk-write control.
+- Saving AIR does not claim that a running IKEMEN match has reloaded the character.

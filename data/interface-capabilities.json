@@ -23,6 +23,7 @@
     "ikemen.extensionUpdates.check",
     "ikemen.extensionUpdates.settings",
     "ikemen.openPaletteFolder",
+    "ikemen.palette.openWorkspace",
     "ikemen.palettePlayer.open",
     "ikemen.palettePlayer.organize",
     "ikemen.palettePlayer.finishStaged",

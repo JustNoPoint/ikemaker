@@ -41,6 +41,7 @@ try {
 } finally { fs.rmSync(sharedFx, { recursive: true, force: true }); }
 
 const html = viewerHtml({ title: 'Anim.air', airPath: 'Anim.air', sffPath: 'Sprite.sff', palettes: [{ index: 0, group: 1, number: 1 }], actions: [{ number: 0, line: 1, loopStart: 0, frames: [{ group: 0, index: 0, x: 0, y: 0, time: 1, flags: '', line: 2, clsn1: [], clsn2: [], clsn1Source: 'none', clsn2Source: 'none', clsn1Line: null, clsn2Line: null }] }] });
+assert(html.includes('/^-?\\d+$/'), 'generated AIR viewer must preserve the numeric-validation regex backslash');
 const allowedStyleNonce = /style-src 'nonce-([^']+)'/.exec(html)[1];
   for (const [, attrs] of html.matchAll(/<style\b([^>]*)>/g)) assert(attrs.includes('nonce=\"' + allowedStyleNonce + '\"'), 'shared styles must satisfy the rendered content security policy');
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];
@@ -116,6 +117,44 @@ vm.createContext(stepContext); vm.runInContext(clientFunctionSource(client, 'ste
 assert.match(actionStatus.textContent, /current animation edit/, 'Previous/Next Animation reports and blocks pending action mutations');
 stepContext.actionMutationBusy = false; stepContext.navigationAllowed = () => false; stepContext.stepAction(1);
 assert.match(actionStatus.textContent, /Finish or revert/, 'Previous/Next Animation gives actionable feedback for unfinished frame, box, or runtime drafts');
+const navigationSource = clientFunctionSource(client, 'navigationAllowed'), navigationElements = new Map();
+const navigationContext = {
+  frameFormsDirty: () => false, frameFieldsTouched: false, frameAutoTimer: null,
+  runtimeDrafts: { busy: () => false, dirty: () => true },
+  runtimePrefix: () => 'anim.air|',
+  editRequests: { busy: () => false },
+  edit: null,
+  document: { getElementById(id) { if (!navigationElements.has(id)) navigationElements.set(id, {}); return navigationElements.get(id); } }
+};
+vm.createContext(navigationContext); vm.runInContext(navigationSource, navigationContext);
+assert.strictEqual(navigationContext.navigationAllowed(), true, 'recoverable saved frame-plan drafts must not trap the AIR viewer on one animation');
+navigationContext.runtimeDrafts.busy = () => true;
+assert.strictEqual(navigationContext.navigationAllowed(), false, 'an actively saving frame plan still serializes AIR navigation');
+assert.match(navigationElements.get('runtimeInfo').textContent, /finish saving/, 'a genuinely busy frame-plan save explains the temporary navigation block');
+const frameDirtyContext = { frameFieldsTouched: false, frameAutoTimer: null };
+vm.createContext(frameDirtyContext); vm.runInContext(clientFunctionSource(client, 'frameFormsDirty'), frameDirtyContext);
+assert.strictEqual(frameDirtyContext.frameFormsDirty(), false, 'an untouched rendered AIR frame never blocks animation navigation');
+frameDirtyContext.frameFieldsTouched = true;
+assert.strictEqual(frameDirtyContext.frameFormsDirty(), true, 'actual user frame-field input blocks navigation until applied or reverted');
+frameDirtyContext.frameFieldsTouched = false; frameDirtyContext.frameAutoTimer = 1;
+assert.strictEqual(frameDirtyContext.frameFormsDirty(), true, 'a pending automatic frame update serializes navigation');
+const frameSelectionElements = new Map([['play', { textContent: 'Pause' }]]), frameSelectionCalls = { strip: 0, request: 0, schedule: 0 };
+const frameSelectionContext = {
+  action: { frames: [{}, {}, {}] }, frameIndex: 0, playing: true, edit: { dirty: false },
+  navigationAllowed: () => true,
+  document: { getElementById(id) { return frameSelectionElements.get(id); } },
+  canvas: { classList: { remove() {} } },
+  renderStrip() { frameSelectionCalls.strip += 1; }, requestFrame() { frameSelectionCalls.request += 1; }, schedule() { frameSelectionCalls.schedule += 1; }
+};
+vm.createContext(frameSelectionContext); vm.runInContext(clientFunctionSource(client, 'selectFrame'), frameSelectionContext);
+assert.strictEqual(frameSelectionContext.selectFrame(2), true);
+assert.strictEqual(frameSelectionContext.frameIndex, 2, 'manual timeline selection changes to the requested AIR frame');
+assert.strictEqual(frameSelectionContext.playing, false, 'manual frame selection pauses playback so it remains visibly selected');
+assert.strictEqual(frameSelectionElements.get('play').textContent, 'Play');
+assert.deepStrictEqual(frameSelectionCalls, { strip: 1, request: 1, schedule: 1 });
+frameSelectionContext.navigationAllowed = () => false;
+assert.strictEqual(frameSelectionContext.selectFrame(1), false);
+assert.strictEqual(frameSelectionContext.frameIndex, 2, 'a genuine pending edit still prevents destructive frame navigation');
 const finishSource = clientFunctionSource(client, 'finishActionMutation');
 function finishFixture({ actions, currentAction, response }) {
   const elements = new Map([['search', { value: 'filtered' }], ['newAction', { focusCount: 0, focus() { this.focusCount += 1; } }]]), selected = [], focused = [], calls = { clear: 0, renderActions: 0, renderStrip: 0, updates: 0 };
@@ -207,12 +246,16 @@ const airViewerSource = fs.readFileSync(path.join(__dirname, '..', 'src', 'air_v
 assert(airViewerSource.includes("openConnected(session.airPath,'sff'"), 'AIR must use selection-aware shared viewer navigation');
 assert(airViewerSource.includes('viewColumn = session.panel.viewColumn'), 'AIR source opened from its viewer must become a tab in that viewer group');
 assert(airViewerSource.includes("message.type === 'updateFrame'"));
+assert(airViewerSource.includes("frameFieldsTouched=false;status.textContent='AIR update submitted"), 'a complete submitted frame edit must release the local navigation guard without waiting on disk persistence');
 assert(airViewerSource.includes("message.type === 'batchClsn2'"));
 assert(airViewerSource.includes('batchService.visualSource(session, message)'));
 for (const id of ['timelineEditor', 'timelineGroup', 'timelineIndex', 'timelineX', 'timelineY', 'timelineTime', 'timelineFlags', 'timelineBlend', 'timelineScaleX', 'timelineScaleY', 'timelineAngle', 'timelineApply', 'timelineAdd', 'timelineDuplicate', 'timelineMoveEarlier', 'timelineMoveLater', 'timelineDelete', 'timelineOpenSource']) assert(html.includes(`id="${id}"`), `missing always-visible AIR timeline editor control ${id}`);
 assert(html.includes("previousIssue.id='previousAirIssue'"));
 assert(html.includes("nextIssue.id='nextAirIssue'"));
 assert(html.includes('queueFrameAutoApply'));
+assert(html.includes('frameFieldsTouched=true'), 'only actual AIR frame-field input marks the navigation guard dirty');
+assert(html.includes('function frameFormsDirty(){return frameFieldsTouched||frameAutoTimer!==null}'), 'AIR navigation must not infer false edits by comparing rendered field values');
+assert(html.includes('function populateFrameFields(f){if(!f)return;frameFieldsTouched=false;'), 'loading an AIR frame establishes a clean form baseline');
 assert(html.includes("document.getElementById('timelineApply').hidden=true"), 'AIR frame fields must not require a manual Apply click');
 assert(airViewerSource.includes('runtimeDraftStore.read(session.airPath)'), 'AIR models must restore host-backed frame-plan drafts');
 assert(airViewerSource.includes("type === 'runtimeDraftSync'"), 'AIR input changes must persist frame-plan drafts outside webview state');

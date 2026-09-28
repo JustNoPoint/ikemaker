@@ -1,0 +1,7 @@
+IKEMaker 0.79.16 — submitted AIR edit guard correction
+
+- Valid AIR frame values remain protected during the short typing debounce.
+- The local navigation guard clears when the complete edit is submitted to the extension.
+- Incomplete numeric values continue to block navigation so partial typing is not lost.
+- Applying the document edit and saving it to disk report their status separately.
+- A delayed host acknowledgment can no longer leave frame or animation selection locked.

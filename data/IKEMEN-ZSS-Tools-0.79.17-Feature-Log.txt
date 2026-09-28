@@ -1,0 +1,7 @@
+IKEMaker 0.79.17 — AIR numeric edit submission correction
+
+- Corrected the numeric validator embedded in the generated AIR viewer.
+- Valid Group, Index, X, Y, and Time values now enter the automatic edit pipeline.
+- The generated viewer test now verifies that the required regular-expression backslash survives HTML generation.
+- Frame and animation navigation unlock after a valid submitted edit.
+- Auto Save can now receive and persist the visual frame edit.

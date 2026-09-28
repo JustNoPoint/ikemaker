@@ -3,7 +3,7 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.11';
+const PACKAGE_VERSION = '0.79.19';
 
 const FALLBACK_COMMANDS = [
   'air.assignClsn2HitReactionRegion', 'air.batchApplyClsn2', 'air.createNew', 'air.deleteSelectedFromViewer', 'air.generateGuardProximityHelper', 'air.openActionLog', 'air.refreshActionLog', 'air.openAnimationPreview',
@@ -26,7 +26,7 @@ const FALLBACK_COMMANDS = [
   'ikemen.menuModes.openPlayer', 'ikemen.menuModes.openCreator',
   'ikemen.storyDialogue.openPlayer', 'ikemen.storyDialogue.openCreator',
   'ikemen.storyboard.create', 'ikemen.storyboard.createOpening', 'ikemen.storyboard.createEnding', 'ikemen.storyboard.open',
-  'ikemen.paletteOrganizer.open', 'ikemen.palettePlayer.open', 'ikemen.palettePlayer.organize', 'ikemen.palettePlayer.finishStaged',
+  'ikemen.paletteOrganizer.open', 'ikemen.palette.openWorkspace', 'ikemen.palettePlayer.open', 'ikemen.palettePlayer.organize', 'ikemen.palettePlayer.finishStaged',
   'ikemen.moveConstants.open', 'ikemen.moveLab.open', 'ikemen.hitDef.openEditor', 'ikemen.throwCreator.open', 'ikemen.throwCreator.openGuide', 'ikemen.explodComposer.open', 'ikemen.positionCamera.open', 'ikemen.helperLab.open', 'ikemen.paletteImport.open', 'ikemen.artistIntake.open',
   'ikemen.changeMode', 'ikemen.openHome', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
   'ikemen.productionWorkflow.open', 'ikemen.productionWorkflow.editProfile', 'ikemen.productionWorkflow.openGuide',

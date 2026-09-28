@@ -1,0 +1,14 @@
+IKEMaker 0.79.19 — Palette Workspace and safe multi-palette insertion
+
+- Consolidates the primary palette route across Player Setup, IKEMaker Home, and IKEMaker Tools.
+- Opens exact palette contexts for characters, stages, screenpacks, fight/lifebar UI, SFF archives, and standalone ACT/indexed PNG sources without guessing ownership.
+- Adds reorderable multi-selection from the project palette library.
+- Adds arbitrary-count Append and Insert Before placement. Insertion shifts only later slots in the chosen group and preserves gaps, other groups, and palette links.
+- Detects exact normalized RGBA duplicates across embedded, staged, linked, and incoming palettes without automatically merging or deleting them.
+- Lists affected literal authored references and unresolved dynamic references for manual review; authored code is not guessed or silently rewritten.
+- Stages each batch as one source-hash-bound atomic plan. Validation or final-write failure leaves the prior plan unchanged.
+- Shows embedded/saved and staged/build-required states separately, with a direct Finish Reviewed Build action.
+- Verifies SprMaker2 output against the reviewed palette IDs, colors, linked aliases, and sprite palette assignments before accepting it.
+- Keeps the active SFF unchanged unless the user completes the separate reviewed output workflow.
+- Keeps older palette command IDs as hidden compatibility routes while presenting one canonical Palette Workspace.
+- New Dev approved the destructive-data safety slice. The complete automated source suite passes.

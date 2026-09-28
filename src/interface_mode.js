@@ -44,7 +44,7 @@ async function onboard(existingKeys){
 }
 const HOME_ACTIONS=[
   ['ikemen.selectDef.openWorkspace','Characters & Stages','Arrange your roster and stage choices.'],
-  ['ikemen.palettePlayer.open','Palette Workshop','Preview, create, edit, import, export, add, or replace character palettes without opening code tools.'],
+  ['ikemen.palette.openWorkspace','Palette Workspace','Preview, create, edit, import, export, add, insert, or replace character, stage, screenpack, and fight UI palettes without opening code tools.'],
  ['ikemen.storyDialogue.openPlayer','Stories','View player story routes.'],
  ['ikemen.launchGame','Play','Launch your game.'],
  ['ikemen.character.open','Open Character','Open a character to work on.'],

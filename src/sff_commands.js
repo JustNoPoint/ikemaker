@@ -416,6 +416,15 @@ function resolveStagedPalettes(plan, paletteArchive) {
   return plan.palettes.map((entry) => ({ ...entry, colors: resolve(entry) }));
 }
 
+function expectedPaletteContract(paletteArchive, stagedPalettes = [], paletteShifts = [], sharedPalette = null, readColors = paletteRgba) {
+  const expected = [];
+  if (sharedPalette) expected.push({ group: sharedPalette.group, number: sharedPalette.number, colors: sharedPalette.colors });
+  if (!paletteArchive) return expected;
+  for (const palette of paletteArchive.palettes) { const shifted = applyPaletteShifts(palette.group, palette.number, paletteShifts), linked = palette.dataSize === 0 ? paletteArchive.palettes[palette.link] : null, aliasOf = linked ? applyPaletteShifts(linked.group, linked.number, paletteShifts) : null; expected.push({ group: shifted.group, number: shifted.number, colors: readColors(paletteArchive, palette.index), aliasOf }); }
+  for (const palette of stagedPalettes) expected.push({ group: palette.group, number: palette.number, colors: palette.colors, aliasOf: palette.kind === 'alias' ? { group: palette.targetGroup, number: palette.targetNumber } : null });
+  return expected;
+}
+
 async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, outputSff, paletteSourceSff, sharedPalettePath, sharedPaletteId = '0,0', buildProfile, autocrop = false, autocropIdentities = null, includeStagedPalettes = true }) {
   const cropSet = Array.isArray(autocropIdentities) ? new Set(autocropIdentities.map(String)) : null;
   const rows = readManifest(manifestPath);
@@ -547,7 +556,8 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     `Layer sprites: ${mapping.filter((entry) => entry.layer > 0).length}`, `Embedded palettes preserved: ${paletteArchive ? paletteArchive.palettes.length : 0}`, `Shared provisional palette: ${sharedPalette ? `${sharedPalette.group},${sharedPalette.number}` : 'none'}`, `New palettes staged: ${stagedPalettes.filter((entry) => entry.kind !== 'alias').length}`, `Linked palette aliases staged: ${stagedPalettes.filter((entry) => entry.kind === 'alias').length}`, `Palette insert/shift operations: ${paletteShifts.length}`, `Protected template sprites preserved: ${mapping.filter((entry) => entry.protected).length}`, `Palette source: ${paletteSourceSff || sharedPalettePath || 'None — PNG palettes are used'}`, 'Duplicate palette handling: preserve IDs and link identical data', `Autocrop: ${cropSet ? `${cropSet.size} selected identity/identities` : (autocrop ? 'enabled for release output' : 'disabled for development')}`, 'Manifest validation errors: 0'
   ].join('\r\n'), 'utf8');
   fs.writeFileSync(path.join(outputDirectory, 'sff-build-profile.json'), `${JSON.stringify(profile, null, 2)}\n`, 'utf8');
-  return { definitionPath, batchPath, sprmake, mapping, profile };
+  const expectedPalettes = expectedPaletteContract(paletteArchive, stagedPalettes, paletteShifts, sharedPalette);
+  return { definitionPath, batchPath, sprmake, mapping, profile, expectedPalettes };
 }
 
 async function generateBuildFiles(request = {}) {
@@ -599,7 +609,7 @@ async function buildApprovedManifest(request = {}) {
       fs.writeFileSync(path.join(generated.outputDirectory, 'sprmake2.log'), output, 'utf8');
       if (code !== 0 || !fs.existsSync(generated.outputSff)) reject(new Error(`SprMaker2 failed with exit code ${code}.`));
       else {
-        try { assertBuiltArchive(generated.outputSff, generated.mapping); resolve(); }
+        try { assertBuiltArchive(generated.outputSff, generated.mapping, generated.expectedPalettes); resolve(); }
         catch (error) { reject(error); }
       }
     });
@@ -863,4 +873,4 @@ function registerSffCommands(context) {
   );
 }
 
-module.exports = { registerSffCommands, createBuildPackage, cropSffArchive, resolveStagedPalettes, readManifest, writeManifest, projectProfiles };
+module.exports = { registerSffCommands, createBuildPackage, cropSffArchive, resolveStagedPalettes, expectedPaletteContract, readManifest, writeManifest, projectProfiles };

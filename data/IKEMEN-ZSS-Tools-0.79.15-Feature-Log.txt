@@ -1,0 +1,7 @@
+IKEMaker 0.79.15 — AIR frame-edit navigation recovery
+
+- Accepted frame-field edits release the guarded AIR form before Auto Save begins.
+- A delayed or failed disk save can no longer permanently block frame or animation selection.
+- Successful frame edits explicitly clear the pending timer and touched-field state.
+- Failed frame edits remain visible and recoverable instead of silently discarding the typed value.
+- Auto Save still writes the exact open AIR document and reports confirmed disk persistence separately.

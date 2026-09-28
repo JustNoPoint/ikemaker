@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.79.11",
+  "version": "0.79.19",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -112,6 +112,7 @@
     "onCommand:ikemen.positionCamera.open",
     "onCommand:ikemen.helperLab.open",
     "onCommand:ikemen.paletteImport.open",
+    "onCommand:ikemen.palette.openWorkspace",
     "onCommand:ikemen.palettePlayer.open",
     "onCommand:ikemen.palettePlayer.organize",
     "onCommand:ikemen.palettePlayer.finishStaged",
@@ -511,6 +512,11 @@
       {
         "command": "ikemen.paletteImport.open",
         "title": "IKEMEN: Open Sprite & Palette Import Assistant",
+        "icon": "$(symbol-color)"
+      },
+      {
+        "command": "ikemen.palette.openWorkspace",
+        "title": "IKEMaker: Open Palette Workspace",
         "icon": "$(symbol-color)"
       },
       {
@@ -1901,13 +1907,19 @@
           "when": "ikemen.interfaceMode != player"
         },
         {
-          "command": "ikemen.palettePlayer.open"
+          "command": "ikemen.palette.openWorkspace"
         },
         {
-          "command": "ikemen.palettePlayer.organize"
+          "command": "ikemen.palettePlayer.open",
+          "when": "false"
         },
         {
-          "command": "ikemen.palettePlayer.finishStaged"
+          "command": "ikemen.palettePlayer.organize",
+          "when": "false"
+        },
+        {
+          "command": "ikemen.palettePlayer.finishStaged",
+          "when": "false"
         },
         {
           "command": "ikemen.paletteOrganizer.open",
@@ -2922,7 +2934,7 @@
           "type": "boolean",
           "default": false,
           "scope": "resource",
-          "description": "Automatically save sprite-axis edits and Workflow drafts. Off by default. Text editor autosave is configured separately with VS Code files.autoSave. Explicit Save and Apply actions still save."
+          "description": "Automatically save reviewed AIR visual edits, sprite-axis edits, and Workflow drafts. Off by default. Text editor autosave is configured separately with VS Code files.autoSave. Explicit Save and Apply actions still save."
         },
         "ikemenZss.multipleAssetWorkspaces": {
           "type": "boolean",
