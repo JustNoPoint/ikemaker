@@ -1,6 +1,7 @@
 'use strict';
 
 const vscode = require('vscode');
+const { configurationTarget } = require('./configuration_target');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
@@ -158,7 +159,7 @@ async function chooseProjectBuildProfile(startPath, title = 'Choose the project 
   choices.sort((a, b) => Number(b.id === configured) - Number(a.id === configured));
   const picked = choices.length === 1 ? choices[0] : await vscode.window.showQuickPick(choices, { title });
   if (!picked) return null;
-  const target = vscode.workspace.getWorkspaceFolder(resource) ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+  const target = configurationTarget(vscode, resource);
   await config.update('sffProjectProfile', picked.id, target);
   let managed = null;
   if (picked.custom) {

@@ -1,6 +1,7 @@
 'use strict';
 
 const vscode = require('vscode');
+const { configurationTarget } = require('./configuration_target');
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
@@ -90,7 +91,7 @@ async function chooseAudioEditor(resource) {
   const config = vscode.workspace.getConfiguration('ikemenZss', resource), current = config.get('audioEditorPath', '');
   const picked = await vscode.window.showOpenDialog({ title: 'Choose Audacity or another audio editor', canSelectMany: false, filters: { Applications: ['exe'] } });
   if (!picked || !picked[0]) return current;
-  const target = resource && vscode.workspace.getWorkspaceFolder(resource) ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
+  const target = configurationTarget(vscode, resource);
   await config.update('audioEditorPath', picked[0].fsPath, target);
   return picked[0].fsPath;
 }

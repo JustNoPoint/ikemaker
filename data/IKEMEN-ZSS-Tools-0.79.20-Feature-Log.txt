@@ -1,0 +1,12 @@
+IKEMaker 0.79.20 — Standalone palette-library settings fix
+
+- Fixes Choose Folder in Palette Workspace when no VS Code workspace is open.
+- Saves the palette library per workspace folder when the asset belongs to one.
+- Saves it at workspace level when a workspace is open but the asset is outside a folder.
+- Falls back to user settings for standalone files when no workspace is open.
+- Applies the same no-workspace-safe preference target to SFF naming/build-profile and external image/audio editor choices.
+- Remembers the last successfully used Load Palettes / Images source folder across VS Code restarts, including standalone-file use with no workspace open.
+- Cancelling that picker keeps the prior location; a missing folder is ignored safely and no palette is imported automatically.
+- Adds Choose Palette Files beside Choose Folder so any number of ACT/indexed-PNG files can enter the same reorderable Append/Insert review without changing the saved library folder.
+- Manually selected outside files are session-bound and exact-path checked; merely choosing them does not alter the SFF or staged build plan.
+- All 339 automated test files pass.

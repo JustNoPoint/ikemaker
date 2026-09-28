@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { paletteLibraryFiles, safeLibraryPalette, pngPaletteRgba } = require('../src/palette_library');
+const { paletteLibraryFiles, safeLibraryPalette, safePaletteSource, paletteSourceLabel, pngPaletteRgba } = require('../src/palette_library');
 
 function chunk(type, data) { const output = Buffer.alloc(data.length + 12); output.writeUInt32BE(data.length, 0); output.write(type, 4, 4, 'ascii'); data.copy(output, 8); return output; }
 
@@ -19,6 +19,12 @@ assert.strictEqual(safeLibraryPalette(root, second), second);
 assert.deepStrictEqual(pngPaletteRgba(fs.readFileSync(png))[0], [9, 8, 7, 0]);
 assert.throws(() => safeLibraryPalette(root, path.join(path.dirname(root), 'outside.act')), /outside/);
 assert.throws(() => safeLibraryPalette(root, path.join(root, 'ignore.txt')), /outside/);
+const outside = path.join(path.dirname(root), 'manually-selected.act'); fs.writeFileSync(outside, Buffer.alloc(768));
+assert.strictEqual(safePaletteSource(root, outside, [outside]), outside, 'an exact manually selected palette is accepted outside the configured folder');
+assert.throws(() => safePaletteSource(root, outside, []), /outside/, 'an unselected outside path is rejected');
+assert.match(paletteSourceLabel(root, outside, [outside]), /manually-selected\.act/, 'manual source labels identify the chosen file');
+fs.unlinkSync(outside);
+assert.throws(() => safePaletteSource(root, outside, [outside]), /no longer available/, 'a removed manually selected source is rejected before staging');
 fs.rmSync(root, { recursive: true, force: true });
 
 console.log('palette library tests passed');

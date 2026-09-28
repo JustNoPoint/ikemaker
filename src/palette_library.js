@@ -25,6 +25,25 @@ function safeLibraryPalette(root, filename) {
   return target;
 }
 
+function safePaletteSource(root, filename, manuallySelected = []) {
+  if (!filename) throw new Error('Choose an ACT or indexed PNG palette first.');
+  const target = path.resolve(filename);
+  const selected = new Map([...manuallySelected].map((item) => [path.resolve(item).toLowerCase(), path.resolve(item)]));
+  if (selected.has(target.toLowerCase())) {
+    const exact = selected.get(target.toLowerCase());
+    if (!/\.(?:act|png)$/i.test(exact)) throw new Error('The selected source is not an ACT or PNG palette.');
+    if (!fs.existsSync(exact) || !fs.statSync(exact).isFile()) throw new Error('The manually selected palette is no longer available.');
+    return exact;
+  }
+  return safeLibraryPalette(root, target);
+}
+
+function paletteSourceLabel(root, filename, manuallySelected = []) {
+  const target = path.resolve(filename), manual = new Set([...manuallySelected].map((item) => path.resolve(item).toLowerCase()));
+  if (manual.has(target.toLowerCase())) return `${path.basename(target)} — ${path.dirname(target)}`;
+  return root ? path.relative(path.resolve(root), target).replace(/\\/g, '/') : path.basename(target);
+}
+
 function pngPaletteRgba(buffer) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 8 || buffer.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error('Palette PNG has an invalid signature.');
   let offset = 8, rgb = null, alpha = null;
@@ -45,4 +64,4 @@ function pngPaletteRgba(buffer) {
 
 const actLibraryFiles = paletteLibraryFiles;
 const safeLibraryAct = safeLibraryPalette;
-module.exports = { paletteLibraryFiles, safeLibraryPalette, pngPaletteRgba, actLibraryFiles, safeLibraryAct };
+module.exports = { paletteLibraryFiles, safeLibraryPalette, safePaletteSource, paletteSourceLabel, pngPaletteRgba, actLibraryFiles, safeLibraryAct };

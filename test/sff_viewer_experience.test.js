@@ -6,6 +6,7 @@ const originalLoad = Module._load;
 Module._load = function patched(request, parent, isMain) {
   if (request === 'vscode') return {
     env: { uiKind: 1 }, UIKind: { Web: 2 },
+    Uri: { file: fsPath => ({ fsPath }) },
     workspace: { getConfiguration: () => ({ get: (_key, fallback) => fallback }) }
   };
   return originalLoad.call(this, request, parent, isMain);
@@ -63,6 +64,9 @@ assert(advanced.includes('Reference Palette Tray'));
 assert(advanced.includes('id="loadReferencePalettes"'));
 assert(advanced.includes("type:'exportReferenceBatch'"));
 assert(advanced.includes('Add Palette(s) from Project Library'));
+assert(advanced.includes('id="choosePaletteFiles"'));
+assert(advanced.includes("type:'choosePaletteFiles'"));
+assert(advanced.includes('manually selected file'));
 assert(advanced.includes('Add / Insert Palettes…'));
 assert(advanced.includes('multiple size="6"'));
 assert(advanced.includes("type:'stagePaletteBatch'"));
