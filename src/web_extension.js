@@ -3,16 +3,25 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.20';
+const PACKAGE_VERSION = '0.79.383';
 
 const FALLBACK_COMMANDS = [
-  'air.assignClsn2HitReactionRegion', 'air.batchApplyClsn2', 'air.createNew', 'air.deleteSelectedFromViewer', 'air.generateGuardProximityHelper', 'air.openActionLog', 'air.refreshActionLog', 'air.openAnimationPreview',
+  'ikemen.scaleReview.run', 'ikemen.scaleReview.toggleMonitoring', 'ikemen.scaleReview.configureConventions', 'ikemen.scaleReview.exportConventions', 'ikemen.scaleReview.importConventions',
+  'ikemen.palette.createTemplate', 'ikemen.palette.openCompanion', 'ikemen.visualBrowser.open',
+  'ikemen.lua.insertApi', 'ikemen.lua.goToFunction', 'ikemen.lua.openApiDocs',
+  'ikemen.authoring.saveScenario', 'ikemen.authoring.recordScenarioResult', 'ikemen.authoring.launchScenario', 'ikemen.authoring.setConditionValues',
+  'sff.browseLists', 'snd.browseLists', 'air.browseLists', 'snd.openBatchIntake',
+  'ikemen.extensionUpdates.restoreBackup', 'ikemen.updates.checkAll', 'ikemen.updates.configureFrequency',
+  'ikemen.trajectory.openAssist', 'ikemen.palette.createScratch', 'ikemen.palette.resumeScratch', 'ikemen.shader.openWorkshop', 'ikemen.comments.assist', 'ikemen.triggers.browseInsert', 'ikemen.triggers.editArguments', 'ikemen.functions.browseInsert', 'ikemen.statedef.create', 'ikemen.authoring.explainCurrentBlock', 'zssControllers.reviewChange', 'zssControllers.clearChangeGroup', 'ikemen.authoring.openCurrentSymbol', 'ikemen.authoring.browseVariables', 'ikemen.authoring.browseLocals', 'ikemen.authoring.browseRedirects', 'ikemen.authoring.browseControllerUses', 'ikemen.authoring.browseTriggerUses', 'ikemen.authoring.browseConstants', 'ikemen.authoring.browseCommands', 'ikemen.authoring.browseStates', 'ikemen.authoring.browseHelpers', 'ikemen.authoring.browseResources', 'air.focusActionsBrowser', 'air.closeSourceAndReturn', 'ikemen.codeStructure.focusCurrent', 'ikemen.quickLaunch.openSetup', 'ikemen.reviewRetryLoadOnError', 'ikemen.air.openSelectedAnimationReference',
+  'air.assignClsn2HitReactionRegion', 'air.batchApplyClsn2', 'air.createNew', 'air.deleteSelectedFromViewer', 'air.generateGuardProximityHelper', 'air.openActionLog', 'air.refreshActionLog', 'air.openAnimationPreview', 'air.openDockingWorkspaceExperimental', 'air.toggleBrowser',
   'ikemen.authoringBridge.install', 'ikemen.animationStandards.open', 'ikemen.authoringBridge.openGuide',
-  'cns.scaleSelectedSizebox', 'cns.createNew', 'inp.createNew', 'cmd.createNew', 'ikemen.character.createNew', 'ikemen.character.open', 'ikemen.character.close', 'ikemen.stage.close', 'ikemen.context.closeCurrent', 'ikemen.characterDependencies.open', 'ikemen.characterHealth.open', 'ikemen.cnsConverter.open', 'ikemen.cnsConverter.character', 'ikemen.relatedWork.open', 'ikemen.navigation.openDefinition', 'ikemen.viewer.openReference', 'ikemen.viewer.back', 'ikemen.viewer.forward', 'ikemen.launchGame', 'ikemen.launchMirrorCurrent', 'ikemen.launchTrainingConfigured', 'ikemen.launchTrainingCurrent', 'ikemen.mutations.openHistory', 'ikemen.openControls',
+  'cns.scaleSelectedSizebox', 'cns.createNew', 'inp.createNew', 'cmd.createNew', 'ikemen.character.createNew', 'ikemen.character.open', 'ikemen.character.close', 'ikemen.stage.close', 'ikemen.context.closeCurrent', 'ikemen.characterDependencies.open', 'ikemen.characterHealth.open', 'ikemen.cnsConverter.open', 'ikemen.cnsConverter.character', 'ikemen.relatedWork.open', 'ikemen.navigation.openDefinition', 'ikemen.viewer.openReference', 'ikemen.viewer.back', 'ikemen.viewer.forward', 'ikemen.launchGame', 'ikemen.launchMirrorCurrent', 'ikemen.launchTrainingConfigured', 'ikemen.launchTrainingCurrent', 'ikemen.restartRunning', 'ikemen.mutations.openHistory', 'ikemen.openControls',
   'ikemen.context.show', 'ikemen.context.openRegistry', 'ikemen.context.migrateRegistry', 'ikemen.context.indexMetadata', 'ikemen.projectProfile.create', 'ikemen.projectManager.open', 'ikemen.engineRegistry.open', 'ikemen.engineMigration.review', 'ikemen.engineMigration.installRetained', 'ikemen.chooseOpeningSidebar',
   'ikemen.workspacePreset.save', 'ikemen.workspacePreset.restore', 'ikemen.workspacePreset.delete',
+  'ikemen.dockingPrototype.open', 'ikemen.dockingPrototype.openEditor',
   'ikemen.impact.preview',
   'ikemen.maps.openBrowser', 'ikemen.maps.insert', 'ikemen.maps.configureTextGrammar',
+  'ikemen.authoring.openRecipes', 'ikemen.authoring.openSymbols', 'ikemen.authoring.browseFunctions', 'ikemen.authoring.openExamples', 'ikemen.authoring.openFavorites',
   'ikemen.ownership.auditDef',
   'ikemen.stage.openWorkspace', 'ikemen.stage.createNew', 'ikemen.stage.launchRig',
   'ikemen.def.createNew', 'ikemen.def.openVisualWorkspace', 'ikemen.file.createNew', 'ikemen.lua.createNew', 'ikemen.text.createNew',
@@ -28,7 +37,7 @@ const FALLBACK_COMMANDS = [
   'ikemen.storyboard.create', 'ikemen.storyboard.createOpening', 'ikemen.storyboard.createEnding', 'ikemen.storyboard.open',
   'ikemen.paletteOrganizer.open', 'ikemen.palette.openWorkspace', 'ikemen.palettePlayer.open', 'ikemen.palettePlayer.organize', 'ikemen.palettePlayer.finishStaged',
   'ikemen.moveConstants.open', 'ikemen.moveLab.open', 'ikemen.hitDef.openEditor', 'ikemen.throwCreator.open', 'ikemen.throwCreator.openGuide', 'ikemen.explodComposer.open', 'ikemen.positionCamera.open', 'ikemen.helperLab.open', 'ikemen.paletteImport.open', 'ikemen.artistIntake.open',
-  'ikemen.changeMode', 'ikemen.openHome', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
+  'ikemen.changeMode', 'ikemen.openHome', 'ikemen.switchToIkeMiner', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
   'ikemen.productionWorkflow.open', 'ikemen.productionWorkflow.editProfile', 'ikemen.productionWorkflow.openGuide',
   'ikemen.testSessions.open',
   'ikemen.release.captureDefaults', 'ikemen.release.openProfile', 'ikemen.release.audit', 'ikemen.release.complete',
@@ -36,12 +45,13 @@ const FALLBACK_COMMANDS = [
   'ikemen.openPaletteFolder', 'ikemen.setDefaultTrainingCharacter', 'ikemen.setDefaultTrainingStage',
   'ikemen.workbench.addCurrentFile', 'ikemen.workbench.create', 'ikemen.workbench.open', 'ikemen.workbench.openAllCode',
   'ikemen.workbench.refresh', 'ikemen.workbench.remove', 'sff.addCharacterRequirement', 'sff.auditCharacterRequirements',
-  'sff.applyProjectIndexing', 'sff.buildApprovedManifest', 'sff.cropArchive', 'sff.chooseImageEditor', 'sff.createMissingAxisCopies', 'sff.createNew', 'sff.createProjectBuildProfile', 'sff.generateBuildFiles', 'sff.openGroupLog', 'sff.refreshGroupLog',
-  'sff.deleteSelectedFromViewer', 'sff.importLayerFolder', 'sff.openAliasRegistry', 'sff.openAssembly', 'sff.openProjectBuildProfile', 'sff.openRequirementsProfile', 'sff.openSprMakerText', 'sff.openViewer',
+  'sff.applyProjectIndexing', 'sff.buildApprovedManifest', 'sff.compareSprMake2WithBuiltIn', 'sff.cropArchive', 'sff.suggestAxes', 'sff.chooseImageEditor', 'sff.createMissingAxisCopies', 'sff.createNew', 'sff.createProjectBuildProfile', 'sff.generateBuildFiles', 'sff.openGroupLog', 'sff.refreshGroupLog',
+  'sff.deleteSelectedFromViewer', 'sff.importLayerFolder', 'sff.openAliasRegistry', 'sff.openAssembly', 'sff.openBrowser', 'sff.toggleBrowser', 'sff.openAddSprites', 'sff.openCreator', 'sff.openProjectBuildProfile', 'sff.openRequirementsProfile', 'sff.openSprMakerText', 'sff.openViewer',
   'sff.reviewDismissedLayerWarnings', 'sff.reviewLayerParts', 'sff.reviewRedundantLayers', 'sff.reviewUnassignedSprites',
   'snd.chooseAudioEditor', 'snd.createNew', 'snd.deleteSelectedFromViewer', 'snd.openMakerText', 'snd.openViewer', 'zss.audit.currentFile', 'zss.audit.workspace', 'zss.openControllers',
-  'zss.createNew', 'zss.openPalFxEditor', 'zss.openProjectData', 'zss.updates.checkDefNow', 'zss.updates.checkNow',
+  'zss.contextualRecommendations', 'zss.createNew', 'zss.openPalFxEditor', 'zss.openProjectData', 'zss.updates.checkDefNow', 'zss.updates.checkNow',
   'zss.updates.showLastReport', 'zss.wrap.ignoreHitPause', 'zss.wrap.ignoreHitPausePersistent', 'zss.wrap.persistent',
+  'zssStructures.browse', 'zssStructures.insert', 'zss.wrap.if', 'zss.wrap.ifElse', 'zss.wrap.for', 'zss.wrap.targetGuard',
   'zssControllers.clearFilter', 'zssControllers.insert', 'zssControllers.openDocs', 'zssControllers.search',
   'zssNavigator.refresh', 'zssNavigator.reveal', 'zssRegistry.refresh'
 ];
@@ -270,12 +280,46 @@ async function activate(context) {
     vscode.commands.registerCommand('ikemen.openStageScreenpackSpec', () => openBundled(context, 'stage-screenpack-workspace-spec.md')),
     vscode.commands.registerCommand('ikemen.animationStandards.open', () => openBundled(context, 'animation-standards.json')),
     vscode.commands.registerCommand('ikemen.authoringBridge.openGuide', () => openBundled(context, 'authoring-bridge/README.md')),
+    vscode.commands.registerCommand('ikemen.help.credits', () => vscode.commands.executeCommand('markdown.showPreview', vscode.Uri.joinPath(context.extensionUri, 'data', 'CREDITS.md'))),
     vscode.commands.registerCommand('ikemen.help.open', () => openBundled(context, 'offline-docs/README.md')),
+    vscode.commands.registerCommand('ikemen.zssLearning.open', () => openBundled(context, 'zss-learning-criteria.md')),
     vscode.commands.registerCommand('ikemen.docs.openOffline', () => openBundled(context, 'offline-docs/README.md')),
     vscode.commands.registerCommand('sff.showNamingStandard', () => openBundled(context, 'sff-standard.md')),
     vscode.commands.registerCommand('sff.showArtistHandoffGuide', () => openBundled(context, 'sff-artist-guide.md')),
     vscode.commands.registerCommand('zss.goToLine', async () => { const editor = vscode.window.activeTextEditor; if (!editor) return; const value = await vscode.window.showInputBox({ title: 'Go to line', validateInput: (text) => /^\d+$/.test(text) ? undefined : 'Enter a line number.' }); if (!value) return; const line = Math.max(0, Math.min(editor.document.lineCount - 1, Number(value) - 1)); editor.selection = new vscode.Selection(line, 0, line, 0); editor.revealRange(new vscode.Range(line, 0, line, 0)); }),
     vscode.commands.registerCommand('zss.toggleLineComment', () => vscode.commands.executeCommand('editor.action.commentLine')),
+    vscode.commands.registerCommand('ikemen.textActions.open', async () => {
+      const picked = await vscode.window.showQuickPick([
+        { label: 'Go to Line…', command: 'zss.goToLine' },
+        { label: 'Comment / Uncomment Selected Lines', command: 'zss.toggleLineComment' },
+        { label: 'Code Structure', command: 'ikemen.codeStructure.openWorkspace' },
+        { label: 'Browse State Controllers', command: 'zss.openControllers' },
+        { label: 'Audit Current File', command: 'zss.audit.currentFile' }
+      ], { title: 'IKEMaker Text Editor Actions', placeHolder: 'Portable actions available in this browser editor' });
+      if (picked) return vscode.commands.executeCommand(picked.command);
+    }),
+    vscode.commands.registerCommand('ikemen.textViewers.open', async () => {
+      const picked = await vscode.window.showQuickPick([
+        { label: 'Open Connected SFF Viewer', command: 'sff.openViewer' },
+        { label: 'Open AIR Animation Viewer', command: 'air.openAnimationPreview' },
+        { label: 'Open Connected SND Viewer', command: 'snd.openViewer' }
+      ], { title: 'IKEMaker — Open Connected Viewer', placeHolder: 'Choose an existing character viewer (desktop/local support required)' });
+      if (picked) return vscode.commands.executeCommand(picked.command, vscode.window.activeTextEditor?.document?.uri);
+    }),
+    vscode.commands.registerCommand('ikemen.textToolbar.toggleCompanion', () => vscode.window.showInformationMessage('The docked Text Toolbar Companion is available in the desktop build. Use IKEMaker: Text Editor Actions in this browser.')),
+    vscode.commands.registerCommand('ikemen.textToolbar.restoreNativeLayout', () => vscode.window.showInformationMessage('Browser-hosted VS Code already keeps its native editor tabs and scrollbars enabled.')),
+    vscode.commands.registerCommand('ikemen.textToolbar.disableNativeLayout', () => vscode.window.showInformationMessage('Header-Only Text Layout is desktop-only. Browser-hosted VS Code keeps its native editor tabs and scrollbars as the permanent escape path.')),
+    vscode.commands.registerCommand('ikemen.textToolbar.toggleGroupedFiles', () => vscode.window.showInformationMessage('Grouped files is available in the desktop build. Browser-hosted VS Code keeps its native editor layout.')),
+    vscode.commands.registerCommand('ikemen.textToolbar.toggleHeaderOnlyLayout', () => vscode.window.showInformationMessage('Header-Only Text Layout is available in the desktop build. Browser-hosted VS Code keeps its native editor layout.')),
+    vscode.commands.registerCommand('ikemen.entity.previous', () => vscode.window.showInformationMessage('Synchronized entity switching is available in the desktop build.')),
+    vscode.commands.registerCommand('ikemen.authoringWorkspace.open', async () => {
+      const document = vscode.window.activeTextEditor?.document;
+      if (!document) return vscode.window.showInformationMessage('Open a supported IKEMEN text file first.');
+      await vscode.window.showTextDocument(document, { preview: false });
+      return vscode.window.showInformationMessage('The integrated Coding Viewer is available in the desktop build. This browser keeps the file in the native text editor.');
+    }),
+    vscode.commands.registerCommand('ikemen.authoringWorkspace.choosePresentation', () => vscode.window.showInformationMessage('Coding Viewer presentation preferences are available in the desktop build. Browser-hosted VS Code continues to use its native text editor.')),
+    vscode.commands.registerCommand('ikemen.authoringBrowser.open', () => vscode.window.showInformationMessage('The manual Authoring Browser is available in the desktop build. Browser-hosted VS Code keeps its portable code navigation in the side bar.')),
     vscode.commands.registerCommand('ikemen.codeStructure.openWorkspace', openPortableStructure),
     vscode.commands.registerCommand('zss.audit.currentFile', auditCurrentFile),
     vscode.commands.registerCommand('zss.openControllers', () => vscode.commands.executeCommand('zssStateControllers.focus')),
@@ -321,7 +365,7 @@ async function activate(context) {
       return entry ? new vscode.Hover(catalogHover(entry, document.languageId === 'lua' ? 'Lua API' : 'native symbol'), range) : undefined;
     }
   }));
-  const registered = new Set(['ikemen.openTools', 'ikemen.showVersion', 'ikemen.windowsFileAssociations.configure', 'ikemen.openLauncherSettings', 'ikemen.openExtensionSettings', 'ikemen.extensionUpdates.check', 'ikemen.extensionUpdates.settings', 'ikemen.experience.configure', 'ikemen.showPlatformCapabilities', 'ikemen.showBundledToolchain', 'ikemen.luaSupport.status', 'ikemen.luaSupport.installDefinitions', 'ikemen.openMobileFeatureMatrix', 'ikemen.openStageScreenpackSpec', 'ikemen.animationStandards.open', 'ikemen.authoringBridge.openGuide', 'ikemen.help.open', 'ikemen.docs.openOffline', 'sff.showNamingStandard', 'sff.showArtistHandoffGuide', 'zss.goToLine', 'zss.toggleLineComment', 'ikemen.codeStructure.openWorkspace', 'zss.audit.currentFile', 'zss.openControllers', 'zssControllers.insert', 'zssControllers.search', 'zssControllers.clearFilter', 'zssControllers.openDocs']);
+  const registered = new Set(['ikemen.openTools', 'ikemen.showVersion', 'ikemen.windowsFileAssociations.configure', 'ikemen.openLauncherSettings', 'ikemen.openExtensionSettings', 'ikemen.extensionUpdates.check', 'ikemen.extensionUpdates.settings', 'ikemen.experience.configure', 'ikemen.showPlatformCapabilities', 'ikemen.showBundledToolchain', 'ikemen.luaSupport.status', 'ikemen.luaSupport.installDefinitions', 'ikemen.openMobileFeatureMatrix', 'ikemen.openStageScreenpackSpec', 'ikemen.animationStandards.open', 'ikemen.authoringBridge.openGuide', 'ikemen.help.open', 'ikemen.help.credits', 'ikemen.docs.openOffline', 'sff.showNamingStandard', 'sff.showArtistHandoffGuide', 'zss.goToLine', 'zss.toggleLineComment', 'ikemen.codeStructure.openWorkspace', 'ikemen.authoringWorkspace.open', 'ikemen.authoringWorkspace.choosePresentation', 'ikemen.authoringBrowser.open', 'zss.audit.currentFile', 'zss.openControllers', 'zssControllers.insert', 'zssControllers.search', 'zssControllers.clearFilter', 'zssControllers.openDocs']);
   for (const command of FALLBACK_COMMANDS) if (!registered.has(command)) context.subscriptions.push(vscode.commands.registerCommand(command, () => unavailable(command)));
   registerPlaceholderEditor(context, 'ikemen.sffWorkspace', 'SFF');
   registerPlaceholderEditor(context, 'ikemen.sndWorkspace', 'SND');

@@ -1,0 +1,15 @@
+IKEMaker 0.79.98 feature log
+
+- Standardizes persistent SFF, AIR, and SND toolbar icons to one compact AIR-style size.
+- Adds semantic button color families and distinct shades for related actions.
+- Adds subtle unique SFF, AIR, and SND viewer background tints.
+- Adds IKEMaker > Viewer Color Coding in VS Code Settings; disabling it restores normal theme colors.
+- Explains in Actions search that Escape closes the window and returns focus to the viewer.
+- Adds persistent SND add, remove, replace, play, loop, pause, and stop icons.
+- Explicitly preserves the SND volume slider and waveform.
+- Selects the first available SND entry automatically so the waveform and playback-position slider populate immediately.
+
+Verification
+
+- All 408 automated test files passed on 2026-10-08.
+- No GitHub push or release publication was performed.

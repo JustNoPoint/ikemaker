@@ -1,0 +1,16 @@
+IKEMaker 0.79.164
+
+Palette Workshop retained source tray
+- ACT and indexed-PNG files chosen directly now persist as reusable Added sources in the retained Palette Workshop session.
+- Standard Add, Standard Replace, and Advanced Modify can reach the same source tray.
+- Added entries can be selected, removed, or cleared without deleting source files or staged build-plan rows.
+- Folder discoveries are read-only and remain visually distinct from Added entries.
+- Missing, staged, and active-preview states are shown per source.
+- Focus returns predictably after tray changes; Delete and Backspace work only from the focused tray list or row.
+- Added entries remain accessible ahead of bounded folder scans, while the exact active candidate is pinned by file identity under saturation.
+- Omitted Added and Folder counts are reported separately in narrow, wrapping layouts.
+
+Verification
+- Palette Workspace session, service, controller, view, reachability, candidate, preview-set, and selective-transfer suites pass.
+- The complete Palette-focused regression suite passes.
+- New Dev approved the implementation with no remaining P0/P1 release blocker.

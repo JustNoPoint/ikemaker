@@ -5,6 +5,9 @@ const path=require('path');
 const {attackLibrary,readCurrent,language}=require('./move_lab_model');
 const {parseCodeStructure,flatten}=require('./code_structure_model');
 const {hash}=require('./mutation_safety');
+const {buildProjectSymbolCatalog,CATEGORY_ORDER,CATEGORY_LABELS,CATALOG_LIMITS}=require('./project_symbol_catalog');
+const {buildResourceLifecycleProjection}=require('./resource_lifecycle_projection');
+const {existingBindings}=require('./helper_map_binding');
 
 const canonical=filename=>path.resolve(filename||'').toLowerCase();
 const COMPONENT_KINDS=new Set(['hitdef','state','function','helper','explod','projectile']);
@@ -21,6 +24,61 @@ function ownerSummary(item){return item?{kind:item.kind,title:item.title,signatu
 function receiverHints(text,syntax){
  const cleaned=String(text||'').split(/\r?\n/).map(line=>line.replace(syntax==='cns'?/;.*/:/#.*/,'').replace(/"(?:\\.|[^"\\])*"|'(?:\\.|[^'\\])*'/g,'')).join('\n');
  return [['root','Root'],['parent','Parent'],['p2','P2']].filter(([token])=>new RegExp(`\\b${token}\\b`,'i').test(cleaned)).map(([,label])=>label);
+}
+const KNOWLEDGE_LIMIT=64,KNOWLEDGE_SITE_LIMIT=8;
+const LIFECYCLE_GROUPS=Object.freeze([['creation','Creation'],['reference','References'],['mutation','Mutations'],['cleanup','Cleanup']]);
+function freeze(value){if(value&&typeof value==='object'&&!Object.isFrozen(value)){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
+function selectedComponentLifecycle(component,lifecycle,ownerIdentity){
+ const unavailable=reason=>freeze({schema:'ikemaker.move-lab.selected-lifecycle',version:1,status:'unavailable',complete:false,namespace:component?.kind||'',resourceId:'',literal:false,runtimeIdentity:'unproven',selectedSource:null,groups:[],counts:{sites:0,creations:0},limitations:[reason]});
+ if(!component||!['helper','explod','projectile'].includes(component.kind))return unavailable('Select an exact Helper, Explod, or Projectile creation controller.');
+ if(!lifecycle||String(lifecycle.ownerIdentity||'').replace(/\\/g,'/').toLowerCase()!==String(ownerIdentity||'').replace(/\\/g,'/').toLowerCase())return unavailable('Exact lifecycle ownership is unavailable for this character.');
+ const filename=canonical(component.filename),start=Number(component.startLine??component.line),end=Number(component.endLine??component.line),matches=[];
+ for(const item of lifecycle.items||[])if(item.namespace===component.kind)for(const site of item.sites||[])if(site.role==='creation'&&canonical(site.source?.filename)===filename&&Number(site.source?.line)>=start&&Number(site.source?.line)<=end)matches.push({item,site});
+ if(matches.length!==1)return unavailable(matches.length?'More than one lifecycle creation identity occurs inside this controller; no connection was inferred.':'This creation has no exact lifecycle identity.');
+ const {item,site:selected}=matches[0],baseLimitations=[...(lifecycle.limitations||[])];
+ if(!item.literal||item.resourceId==='(id omitted)')return freeze({schema:'ikemaker.move-lab.selected-lifecycle',version:1,status:'unresolved',complete:false,namespace:item.namespace,resourceId:item.resourceId,literal:false,runtimeIdentity:'unproven',selectedSource:selected.source,selectedRecipient:selected.recipient,groups:[],counts:{sites:0,creations:1},limitations:[...baseLimitations,'The selected creation uses a dynamic or omitted ID. Its lifecycle remains visible but is intentionally unlinked.']});
+ const groups=LIFECYCLE_GROUPS.map(([role,label])=>freeze({role,label,sites:freeze((item.sites||[]).filter(candidate=>candidate.role===role).map(candidate=>freeze({id:candidate.id,role:candidate.role,access:candidate.access,literal:candidate.literal,owner:candidate.owner,recipient:candidate.recipient,metadata:candidate.metadata,source:candidate.source,selected:candidate.id===selected.id})))})).filter(group=>group.sites.length);
+ const creations=groups.find(group=>group.role==='creation')?.sites.length||0,limitations=[...baseLimitations];if(creations>1)limitations.push(`${creations} literal creation sites use this ${item.namespace} ID. They are candidates, not proof of one runtime instance.`);
+ return freeze({schema:'ikemaker.move-lab.selected-lifecycle',version:1,status:lifecycle.complete?'ready':'incomplete',complete:Boolean(lifecycle.complete),namespace:item.namespace,resourceId:item.resourceId,literal:true,runtimeIdentity:'unproven',selectedSource:selected.source,selectedRecipient:selected.recipient,groups,counts:{sites:groups.reduce((sum,group)=>sum+group.sites.length,0),creations},limitations});
+}
+function selectedComponentKnowledge(component,catalog){
+ if(!component||!catalog)return{complete:false,items:[],truncated:false,limitations:['Project Knowledge is unavailable.']};
+ const filename=canonical(component.filename),start=Number(component.startLine??component.line),end=Number(component.endLine??component.line),items=[];
+ for(const entry of catalog.entries||[]){
+  const siteFilename=site=>site.filename||catalog.files?.[site.fileIndex]||'',selectedSites=(entry.sites||[]).filter(site=>canonical(siteFilename(site))===filename&&Number(site.line)>=start&&Number(site.line)<=end);
+  if(!selectedSites.length)continue;
+  const exact=(sites=[])=>sites.slice(0,KNOWLEDGE_SITE_LIMIT).map(site=>{const target=siteFilename(site);return{filename:target,file:site.file||path.basename(target),line:site.line,role:site.role,access:site.access||'',ownerKind:site.ownerKind||'',ownerName:site.ownerName||'',assigned:Boolean(site.assigned)}});
+  const destinations=(entry.sites||[]).filter(site=>['declaration','creation'].includes(site.role));
+  items.push({
+   id:entry.id,category:entry.category,categoryLabel:CATEGORY_LABELS[entry.category]||entry.category,
+   name:entry.name,status:entry.status,roles:[...new Set(selectedSites.map(site=>site.role||site.access||'reference'))],
+   selectedSites:exact(selectedSites),destinations:exact(destinations),totalSites:(entry.sites||[]).length,
+   declarations:Number(entry.declarations||0),references:Number(entry.references||0),reads:Number(entry.reads||0),writes:Number(entry.writes||0),assigned:Boolean(entry.assigned)
+  });
+ }
+ items.sort((left,right)=>CATEGORY_ORDER.indexOf(left.category)-CATEGORY_ORDER.indexOf(right.category)||String(left.name).localeCompare(String(right.name),undefined,{numeric:true,sensitivity:'base'}));
+ const limitations=[];
+ if(catalog.resolved===false)limitations.push('Assigned project ownership is incomplete.');
+ if(catalog.failures?.length)limitations.push(`${catalog.failures.length} assigned source file(s) could not be indexed.`);
+ if(items.length>KNOWLEDGE_LIMIT)limitations.push(`Only the first ${KNOWLEDGE_LIMIT} exact connections are shown here; use Project Symbols & Contracts for the complete result.`);
+ return{complete:catalog.resolved!==false&&!catalog.failures?.length,items:items.slice(0,KNOWLEDGE_LIMIT),truncated:items.length>KNOWLEDGE_LIMIT,limitations};
+}
+function assignedProjectKnowledge(assets,openDocuments=[]){
+ const files=[],failures=[],candidates=(assets.code||[]).filter(Boolean);let totalBytes=0;
+ if(candidates.length>CATALOG_LIMITS.files)failures.push({filename:'',reason:`assigned code exceeds the ${CATALOG_LIMITS.files}-file project-catalog limit`});
+ for(const filename of candidates.length>CATALOG_LIMITS.files?[]:candidates){
+  try{const open=openDocuments.find(item=>canonical(item.fileName)===canonical(filename)&&!item.isClosed),stat=open?null:fs.statSync(filename);if(stat&&!stat.isFile())throw new Error('not a regular file');if(stat&&stat.size>CATALOG_LIMITS.perSourceBytes)throw new Error('source exceeds the 4 MiB project-catalog admission limit');const text=readCurrent(filename,openDocuments),bytes=Buffer.byteLength(text,'utf8');if(bytes>CATALOG_LIMITS.perSourceBytes)throw new Error('source exceeds the 4 MiB project-catalog admission limit');if(totalBytes+bytes>CATALOG_LIMITS.sourceBytes)throw new Error('assigned sources exceed the 16 MiB project-catalog aggregate admission limit');totalBytes+=bytes;files.push({filename,text});}
+  catch(error){failures.push({filename,reason:error.message});}
+ }
+ const admitted=failures.length?[]:files,catalog=buildProjectSymbolCatalog(admitted,{assignedFiles:admitted.map(item=>item.filename),label:path.basename(path.dirname(assets.defPath||assets.def||'')),resolved:failures.length===0,ownerIdentity:assets.defPath||assets.def});
+ catalog.failures=[...(catalog.failures||[]),...failures];
+ if(failures.length)catalog.resolved=false;
+ return catalog;
+}
+function compactProjectKnowledge(catalog,resourceLifecycle){
+ const files=[...new Set((catalog?.entries||[]).flatMap(entry=>(entry.sites||[]).map(site=>site.filename)).filter(Boolean))],indices=new Map(files.map((filename,index)=>[canonical(filename),index])),exact=site=>({fileIndex:indices.get(canonical(site.filename)),line:site.line,start:Number.isInteger(site.start)?site.start:null,role:site.role,access:site.access||'',assigned:Boolean(site.assigned),ownerKind:site.ownerKind||'',ownerName:site.ownerName||'',runtimeOwner:site.runtimeOwner||'',valueKind:site.valueKind||'',catalogMatch:site.catalogMatch===true,metadata:site.metadata&&typeof site.metadata==='object'?{visibilityCapabilityId:site.metadata.visibilityCapabilityId||''}:{}});
+ const sources=Object.fromEntries(Object.values(catalog?.sources||{}).map(source=>[canonical(source.filename),{filename:source.filename,hash:source.hash||'',bytes:Number(source.bytes||0)}]));
+ return{resolved:catalog?.resolved!==false,ownerIdentity:catalog?.ownerIdentity||'',files,sources,failures:(catalog?.failures||[]).map(item=>({filename:item.filename||'',reason:item.reason||item.message||''})),entries:(catalog?.entries||[]).map(entry=>({id:entry.id,category:entry.category,categoryLabel:CATEGORY_LABELS[entry.category]||entry.category,name:entry.name,status:entry.status,sites:(entry.sites||[]).map(exact),declarations:Number(entry.declarations||0),references:Number(entry.references||0),reads:Number(entry.reads||0),writes:Number(entry.writes||0),assigned:Boolean(entry.assigned),runtimeOwners:[...(entry.runtimeOwners||[])]})),resourceLifecycle:resourceLifecycle||null};
 }
 function lexicalContextPath(lines,startLine,endLine,syntax){
  if(syntax==='cns')return[];
@@ -46,6 +104,12 @@ function controllerEndLine(lines,startLine,syntax,fallback){
  }
  return fallback;
 }
+function exactLineSlice(text,startLine,endLine){
+ const starts=[0];for(let at=0;at<text.length;at++)if(text[at]==='\n')starts.push(at+1);
+ const start=starts[startLine]??text.length,next=starts[endLine+1]??text.length;
+ let end=next;while(end>start&&(text[end-1]==='\n'||text[end-1]==='\r'))end--;
+ return text.slice(start,end);
+}
 function specialistComponentModel(assets,openDocuments=[],diagnostics=[]){
  const components=[],failures=[],wanted={helper:'helper',explod:'explod',projectile:'projectile'};
  for(const filename of (assets.code||[]).filter(file=>file&&fs.existsSync(file))){
@@ -55,8 +119,8 @@ function specialistComponentModel(assets,openDocuments=[],diagnostics=[]){
     for(const child of node.children||[]){
      const kind=child.kind==='controller'?wanted[String(child.title||'').trim().toLowerCase()]:null;
      if(kind){
-      const index=counts[kind]++,line=child.startLine,endLine=controllerEndLine(lines,line,syntax,child.endLine),sourceText=lines.slice(line,endLine+1).join('\n'),rangeHash=hash(sourceText),stableId=`${canonical(filename)}:${kind}:${line}:${endLine}:${rangeHash}`,owner=ancestors.slice().reverse().find(item=>['state','function'].includes(item.kind)),contextPath=lexicalContextPath(lines,(owner?.startLine??-1)+1,line,syntax),relevant=diagnostics.filter(problem=>canonical(problem.filename||problem.uri?.fsPath)===canonical(filename)&&Number(problem.line??problem.range?.start?.line??-1)>=line&&Number(problem.line??problem.range?.start?.line??-1)<=endLine).map(problem=>({filename:problem.filename||problem.uri?.fsPath,line:problem.line??problem.range?.start?.line??line,character:problem.character??problem.range?.start?.character??0,severity:problem.severity,message:problem.message,source:problem.source||'IKEMEN',code:String(problem.diagnosticCode??problem.code??'')}));
-      const contextText=contextPath.map(item=>item.signature||item.title||'').join('\n'),component={kind,id:stableId,stableId,filename,fileLabel:path.basename(filename),index,line,startLine:line,endLine,signature:String(child.signature||child.title||'').trim(),title:`${child.title} creation site ${index+1}`,label:`${child.title} creation site ${index+1}`,syntax,sourceHash,rangeHash,sourceText,text:sourceText,shared:sharedSource(filename,assets),diagnostics:relevant,owner:ownerSummary(owner),contextPath,receiverHints:receiverHints(`${contextText}\n${sourceText}`,syntax)};
+      const index=counts[kind]++,line=child.startLine,endLine=controllerEndLine(lines,line,syntax,child.endLine),sourceText=exactLineSlice(text,line,endLine),rangeHash=hash(sourceText),stableId=`${canonical(filename)}:${kind}:${line}:${endLine}:${rangeHash}`,owner=ancestors.slice().reverse().find(item=>['state','function'].includes(item.kind)),contextPath=lexicalContextPath(lines,(owner?.startLine??-1)+1,line,syntax),relevant=diagnostics.filter(problem=>canonical(problem.filename||problem.uri?.fsPath)===canonical(filename)&&Number(problem.line??problem.range?.start?.line??-1)>=line&&Number(problem.line??problem.range?.start?.line??-1)<=endLine).map(problem=>({filename:problem.filename||problem.uri?.fsPath,line:problem.line??problem.range?.start?.line??line,character:problem.character??problem.range?.start?.character??0,severity:problem.severity,message:problem.message,source:problem.source||'IKEMEN',code:String(problem.diagnosticCode??problem.code??'')}));
+      const contextText=contextPath.map(item=>item.signature||item.title||'').join('\n'),component={kind,id:stableId,stableId,filename,fileLabel:path.basename(filename),index,line,startLine:line,endLine,signature:String(child.signature||child.title||'').trim(),title:`${child.title} creation site ${index+1}`,label:`${child.title} creation site ${index+1}`,syntax,sourceHash,rangeHash,sourceText,text:sourceText,shared:sharedSource(filename,assets),diagnostics:relevant,owner:ownerSummary(owner),contextPath,receiverHints:receiverHints(`${contextText}\n${sourceText}`,syntax),helperMapBindings:kind==='helper'?existingBindings(sourceText,syntax):[]};
       component.reference=componentReference(component,assets.defPath||assets.def);components.push(component);
      }
      visit(child,[...ancestors,child]);
@@ -95,7 +159,12 @@ function directComponentModel(assets,openDocuments=[],diagnostics=[]){
   });
   const behaviors=behaviorComponentModel(assets,openDocuments,diagnostics);
   const specialists=specialistComponentModel(assets,openDocuments,diagnostics);
-  return{components:items,behaviors:behaviors.components,specialists:specialists.components,failures:[...behaviors.failures,...specialists.failures],constantProfiles:library.constantProfiles||[],counts:{hitdefs:items.length,states:behaviors.counts.states,functions:behaviors.counts.functions,...specialists.counts,diagnostics:[...items,...behaviors.components,...specialists.components].reduce((sum,item)=>sum+item.diagnostics.length,0)}};
+  let knowledge=null,knowledgeFailures=[];
+  try{knowledge=assignedProjectKnowledge(assets,openDocuments);}catch(error){knowledgeFailures=[{filename:assets.defPath||assets.def||'',message:error.message}];}
+  const components=items,behaviorItems=behaviors.components,specialistItems=specialists.components;
+  const lifecycle=knowledge?buildResourceLifecycleProjection(knowledge,{ownerIdentity:assets.defPath||assets.def,contextOwnerIdentity:assets.defPath||assets.def}):null;
+  const linkedSpecialists=specialistItems.map(item=>({...item,lifecycleConnections:selectedComponentLifecycle(item,lifecycle,assets.defPath||assets.def)}));
+  return{components,behaviors:behaviorItems,specialists:linkedSpecialists,projectKnowledge:knowledge?compactProjectKnowledge(knowledge,lifecycle):{resolved:false,failures:knowledgeFailures,entries:[],resourceLifecycle:null},failures:[...behaviors.failures,...specialists.failures,...knowledgeFailures],constantProfiles:library.constantProfiles||[],counts:{hitdefs:components.length,states:behaviors.counts.states,functions:behaviors.counts.functions,...specialists.counts,diagnostics:[...components,...behaviorItems,...linkedSpecialists].reduce((sum,item)=>sum+item.diagnostics.length,0)}};
 }
 
-module.exports={canonical,componentReference,validComponentReference,behaviorComponentModel,specialistComponentModel,directComponentModel};
+module.exports={canonical,componentReference,validComponentReference,selectedComponentKnowledge,selectedComponentLifecycle,assignedProjectKnowledge,compactProjectKnowledge,behaviorComponentModel,specialistComponentModel,directComponentModel};

@@ -1,0 +1,20 @@
+IKEMaker 0.79.182
+
+AIR source escape
+- Opening source from the AIR Actions Browser records the exact return route as soon as the correct source editor is confirmed open.
+- Escape, Alt+Left, the compact Return to AIR Browser strip, and the exact close action provide redundant exits.
+- A degraded header or editor topology restores the AIR browser without deleting the still-valid route.
+- Ordinary tab, Close All, and window closing never force the AIR browser to reopen or take focus.
+
+Palette Workshop palette-number compaction
+- Standard > Batch Tools and Advanced > Sync / Remap / Repair expose the same concise guided workflow.
+- Preview shows the exact old-to-new mapping. Preserved gaps are order barriers rather than slots that entries may cross.
+- Build Candidate, Compare Candidate, Apply Verified Compaction, and Undo form one reviewed sequence.
+- Colors, palette links, physical order, unrelated groups, and source files remain unchanged.
+- Affected or dynamic palette references, incomplete scans, unreadable/linked folders, target drift, domain-registry drift, replayed actions, and stale sessions stop safely.
+- Interrupted post-commit verification remains truthful and retryable with the exact retained receipt.
+
+Verification
+- All 120 AIR tests pass, including focused escape, provider, companion-header, and action-usage coverage.
+- All 106 Palette Workshop tests pass, including exact 4096/4097 audit boundaries and real controller Preview/Build/Compare/Apply/Undo/recovery orchestration.
+- New Dev reviewed before implementation, rejected three remaining P1 gaps during final audit, and approved the corrected checkpoint with no remaining P0/P1 findings.

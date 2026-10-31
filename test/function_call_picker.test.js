@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('assert');
+const {parameterName,callTemplate,pickerItems,sameDeclaration}=require('../src/function_call_picker');
+assert.strictEqual(parameterName('value'),'value');
+assert.strictEqual(callTemplate({name:'Commit',params:['damage','guard']}),'call Commit(${1:damage}, ${2:guard});');
+const catalog={entries:[{filename:'C:/Ryu/a.zss',hash:'a'.repeat(64),records:{functions:[{name:'Commit',line:4,declaration:true,signature:'(damage, guard)',displaySignature:'Commit(damage, guard) → (result)',params:['damage','guard'],returns:['result'],documentation:'Commits reviewed damage.'}]}},{filename:'C:/Ryu/b.zss',hash:'b'.repeat(64),records:{functions:[{name:'Commit',line:9,declaration:true,signature:'(value)',params:['value']} ]}}]};
+const rows=pickerItems(catalog);assert.strictEqual(rows.length,2);assert(rows.every(row=>row.detail.includes('multiple exact declarations')));assert(rows[0].description.includes('→ (result)')&&rows[0].detail.includes('named returns result')&&rows[0].detail.includes('reviewed damage'));assert(sameDeclaration(rows[0],catalog));
+const ranked=pickerItems(catalog,{favorites:[rows[1].id],recents:[rows[0].id]});assert.strictEqual(ranked[0].id,rows[1].id);assert(ranked[0].detail.startsWith('★ Favorite'));assert(ranked[1].detail.startsWith('Recent'),'favorite and recent order is explicit without changing source identity');
+const byUse=pickerItems(catalog,{order:'most-used',usage:{[rows[1].id]:7,[rows[0].id]:2}});assert.strictEqual(byUse[0].id,rows[1].id);assert(byUse[0].detail.includes('Used 7×'));
+const namedStringReturn={entries:[{filename:'C:/Ryu/string.zss',hash:'s',records:{functions:[{name:'DisplayName',line:1,declaration:true,signature:'() string',params:[],returns:['string']}]}}]};assert.strictEqual(pickerItems(namedStringReturn).length,1,'a return variable named string is not mistaken for a declared type or hidden on stable targets');assert.strictEqual(pickerItems(namedStringReturn,{nightlyStringsEnabled:true}).length,1,'target capability does not change function declaration visibility');
+assert.strictEqual(pickerItems({entries:[{filename:'many.zss',hash:'x',records:{functions:Array.from({length:300},(_,index)=>({name:`F${index}`,line:index,declaration:true,signature:'()',params:[]}))}}]}).length,256,'the native picker is explicitly bounded');
+console.log('Authored function picker exposes exact declarations and editable call placeholders');

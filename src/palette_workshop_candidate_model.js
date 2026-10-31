@@ -1,0 +1,28 @@
+'use strict';
+
+const crypto = require('crypto');
+const { normalizeColors } = require('./palette_editor');
+const interactionModel = require('./palette_workshop_interaction_model');
+const { normalizeDisplayMetadata } = require('./palette_workshop_candidate_comparison_model');
+
+const VERSION = 1;
+const MAX_CANDIDATES = 2000;
+const MAX_PATH = 4096;
+function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
+function hash(value) { return crypto.createHash('sha256').update(Buffer.from(JSON.stringify(value))).digest('hex'); }
+function integer(value) { const number=Number(value);return Number.isInteger(number)&&number>=0?number:null; }
+function text(value,limit=MAX_PATH){return String(value||'').slice(0,limit);}
+function evidence(value, required = true) { const length=Number(value?.byteLength),result={filename:text(value?.filename),byteHash:text(value?.byteHash,128),byteLength:Number.isSafeInteger(length)&&length>=0?length:-1};if(required&&(!result.filename||!/^[a-f0-9]{64}$/i.test(result.byteHash)||result.byteLength<0))throw new Error('Candidate evidence is incomplete or malformed.');return result; }
+function palette(value={}){const result={physicalIndex:integer(value.physicalIndex),group:integer(value.group),number:integer(value.number)};if(Object.values(result).some(item=>item===null))throw new Error('Candidate baseline requires an exact physical palette identity.');return result;}
+function preview(value={}){const dirty=Boolean(value.dirty),colors=dirty?normalizeColors(value.colors):null,source=value.source?.filename?evidence(value.source):null,actOrder=value.actOrder==null||value.actOrder===''?null:text(value.actOrder,32);if(actOrder!==null&&!['index','reversed'].includes(actOrder))throw new Error('Baseline preview ACT order is invalid.');if(source&&/\.png$/i.test(source.filename)&&actOrder!==null)throw new Error('Indexed PNG baseline previews do not use ACT order.');return{dirty,stale:Boolean(value.stale),colors,source,actOrder,label:text(value.label,240)};}
+function captureBaseline(session){
+  const normalized={version:VERSION,target:evidence(session.target),palette:palette(session.selection?.palette),preview:preview(session.preview),interaction:interactionModel.normalizeInteraction({...session.interaction,candidateBaseline:null}),factsPreview:text(session.facts?.preview,64)||'none',stale:Boolean(session.stale),staleReasons:[...new Set((session.staleReasons||[]).map(item=>text(item,64)))].slice(0,8),applyAllowed:Boolean(session.applyAllowed)};
+  return Object.freeze({...normalized,baselineHash:hash(normalized)});
+}
+function normalizeBaseline(value){if(!value||Number(value.version)!==VERSION||!/^[a-f0-9]{64}$/i.test(String(value.baselineHash||'')))return null;try{const normalized={version:VERSION,target:evidence(value.target),palette:palette(value.palette),preview:preview(value.preview),interaction:interactionModel.normalizeInteraction({...value.interaction,candidateBaseline:null}),factsPreview:text(value.factsPreview,64)||'none',stale:Boolean(value.stale),staleReasons:[...new Set((value.staleReasons||[]).map(item=>text(item,64)))].slice(0,8),applyAllowed:Boolean(value.applyAllowed)},baselineHash=hash(normalized);if(value.baselineHash!==baselineHash)return null;return{...normalized,baselineHash};}catch(_){return null;}}
+function normalizeCandidate(value={}){const baseline=normalizeBaseline(value.baseline),rawIndex=value.selectedIndex==null?0:Number(value.selectedIndex),validIndex=Number.isInteger(rawIndex)&&rawIndex>=0&&rawIndex<MAX_CANDIDATES;let candidate=null;try{if(value.candidate){const exact=evidence(value.candidate),extension=/\.([^.]+)$/.exec(exact.filename)?.[1]?.toLowerCase()||'',format=value.candidate.format;if(!['act','png'].includes(format)||extension!==format)throw new Error('Candidate format does not match its exact filename.');const actOrder=format==='act'?text(value.candidate.actOrder,32):null;if(format==='act'&&!['index','reversed'].includes(actOrder))throw new Error('Candidate ACT order is invalid.');if(format==='png'&&value.candidate.actOrder!=null)throw new Error('Indexed PNG candidates do not use ACT order.');candidate={...exact,format,actOrder};}}catch(_){candidate=null;}return{version:VERSION,active:Boolean(baseline&&candidate&&validIndex),baseline,candidate:selectedIndexSafe(validIndex,candidate),selectedIndex:validIndex?rawIndex:0,stale:Boolean(value.stale)||!validIndex,status:text(value.status,240),displayMetadata:normalizeDisplayMetadata(value.displayMetadata)};}
+function selectedIndexSafe(valid,candidate){return valid?candidate:null;}
+function assertBaseline(value,target,selection){const baseline=normalizeBaseline(value);if(!baseline)throw new Error('The retained candidate baseline is malformed or incomplete.');const current=evidence(target),selected=palette(selection);if(baseline.target.filename!==current.filename||baseline.target.byteHash!==current.byteHash||baseline.target.byteLength!==current.byteLength)throw new Error('The SFF target changed after candidate browsing began. Restore cannot rebind to different bytes.');if(hash(baseline.palette)!==hash(selected))throw new Error('The exact physical palette changed after candidate browsing began.');return baseline;}
+function restorePatch(baseline){const value=normalizeBaseline(baseline);if(!value)throw new Error('The retained candidate baseline cannot be restored safely.');return{preview:clone(value.preview),interaction:clone(value.interaction),facts:{preview:value.factsPreview},stale:value.stale,staleReasons:[...value.staleReasons],applyAllowed:value.applyAllowed,candidate:normalizeCandidate()};}
+
+module.exports={VERSION,MAX_CANDIDATES,captureBaseline,normalizeBaseline,normalizeCandidate,assertBaseline,restorePatch,hash};

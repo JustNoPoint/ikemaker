@@ -15,7 +15,14 @@ Module._load = function patched(request, parent, main) {
   return original.call(this, request, parent, main);
 };
 const related = require('../src/related_work');
+const viewerNavigation = require('../src/viewer_navigation');
 Module._load = original;
+
+assert.strictEqual(viewerNavigation.allowsArchiveContext('moves.zss'), false, 'text/ZSS Related Work must ignore stale archive-family context and use DEF assignments');
+for (const asset of ['shared.air', 'shared.sff', 'shared.snd']) {
+  assert.strictEqual(viewerNavigation.allowsArchiveContext(asset), false, 'a filename alone cannot prove a visual archive-family handoff');
+  assert.strictEqual(viewerNavigation.allowsArchiveContext(asset, { panel: {}, kind: path.extname(asset).slice(1) }), true, 'a live visual panel may retain its intentional archive family');
+}
 
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemaker-related-'));
 try {
@@ -40,19 +47,17 @@ try {
 const cohesiveScreens = [
   'air_viewer.js', 'sff_viewer.js', 'snd_viewer.js', 'palfx_editor.js', 'character_dependency_workspace.js',
   'code_structure_workspace.js', 'command_movelist_workspace.js', 'menu_modes_workspace.js', 'move_constants_workspace.js',
-  'palette_import_workspace.js', 'production_workflow_workspace.js', 'screenpack_workspace.js', 'select_def_workspace.js',
+  'production_workflow_workspace.js', 'screenpack_workspace.js', 'select_def_workspace.js',
   'stage_workspace.js', 'story_dialogue_workspace.js', 'test_session_workspace.js', 'throw_creator_workspace.js', 'mutation_history.js', 'character_health_workspace.js', 'cns_converter_workspace.js'
 ];
 for (const filename of cohesiveScreens) {
   const source = fs.readFileSync(path.join(__dirname, '..', 'src', filename), 'utf8');
-  assert(source.includes('launchControlsHtml'), `${filename} is missing the universal header controls`);
-  assert(source.includes('launchControlsClientScript'), `${filename} is missing the universal header client bridge`);
-  assert(source.includes('handleLaunchMessage'), `${filename} does not handle universal launch/related-work actions`);
+  assert(source.includes('renderUniversalToolbar') || source.includes('launchControlsHtml'), `${filename} is missing universal-v1 chrome`);
+  assert(source.includes('universalToolbarClientScript') || source.includes('launchControlsClientScript'), `${filename} is missing the universal client bridge`);
 }
 
 const launch = fs.readFileSync(path.join(__dirname, '..', 'src', 'launch_controls.js'), 'utf8');
-assert(launch.indexOf('Related Work…') < launch.indexOf('data-ikemen-launch="game"'), 'navigation should precede launch actions consistently');
-for (const shortcut of ['Ctrl+Alt+F5', 'Ctrl+Alt+F6', 'Ctrl+Alt+F7']) assert(launch.includes(shortcut), `missing visible shortcut ${shortcut}`);
-assert(launch.includes('@media(max-width:900px)'), 'shared controls need a compact responsive layout');
+assert(!launch.includes('data-ikemen-launch="game"'), 'variable legacy launch rows are retired');
+assert(launch.includes('universal_toolbar_webview'), 'legacy consumers bind through universal-v1');
 
 console.log('Related-work navigation and screen-cohesion tests passed');

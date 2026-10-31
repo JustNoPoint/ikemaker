@@ -11,19 +11,19 @@ function inspect(panel){return new Promise(resolve=>{const id=++sequence,timeout
 async function prepare(panels,api=require('vscode')){
  for(const panel of panels){
   track(panel);const actions=capabilities.get(panel);let state;
-  try{state=actions?.isBusy?.()?{busy:true}:await inspect(panel);}catch(_){state=null;}
+  try{state=actions?.readOnly===true?{clean:true,busy:false,canKeepDraft:false}:actions?.isBusy?.()?{busy:true}:await inspect(panel);}catch(_){state=null;}
   if(state?.clean&&!state.busy)continue;
   panel.reveal?.(panel.viewColumn,false);
-  if(state===null){await api.window.showInformationMessage('Could not verify '+(panel.title||'the visual workspace')+'. It was kept open. Reopen it or finish its current operation before closing the session.');return false;}
-  if(state.busy){await api.window.showInformationMessage((panel.title||'This visual workspace')+' is still applying or saving changes. Wait for it to finish before closing.');return false;}
+  if(state===null){void api.window.showInformationMessage('Could not verify '+(panel.title||'the visual workspace')+'. It was kept open. Reopen it or finish its current operation before closing the session.');return false;}
+  if(state.busy){void api.window.showInformationMessage((panel.title||'This visual workspace')+' is still applying or saving changes. Wait for it to finish before closing.');return false;}
   const canKeep=state.canKeepDraft&&typeof actions?.keepDraft==='function';
   const answer=await api.window.showWarningMessage((panel.title||'This visual workspace')+' has unapplied edits. Review and apply them before closing, or choose how to close this view. Closing without applying may lose form edits; existing local recovery drafts remain available.',{modal:true},...(canKeep?['Keep Draft and Close']:[]),'Close Without Applying');
   if(answer==='Keep Draft and Close'&&canKeep){try{await actions.keepDraft();}catch(error){await api.window.showWarningMessage('The draft could not be kept. This view remains open: '+error.message);return false;}}
   else if(answer!=='Close Without Applying')return false;
   // A save may have started while the confirmation was open.
   const finalState=await inspect(panel);
-  if(!finalState||finalState.busy||actions?.isBusy?.()){await api.window.showInformationMessage('The view could not finish its close check. Wait for pending changes to finish and try again.');return false;}
-  if(answer==='Keep Draft and Close'&&!finalState.clean&&!finalState.canKeepDraft){await api.window.showInformationMessage('The form changed while keeping the draft. Review it before closing.');return false;}
+  if(!finalState||finalState.busy||actions?.isBusy?.()){void api.window.showInformationMessage('The view could not finish its close check. Wait for pending changes to finish and try again.');return false;}
+  if(answer==='Keep Draft and Close'&&!finalState.clean&&!finalState.canKeepDraft){void api.window.showInformationMessage('The form changed while keeping the draft. Review it before closing.');return false;}
  }
  return true;
 }

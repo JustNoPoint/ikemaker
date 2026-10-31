@@ -1,0 +1,19 @@
+IKEMaker 0.79.264
+
+Universal update center
+
+- Added one Updates icon to every shared IKEMaker header. Left click checks both the official Elecbyte-format / IKEMEN knowledge sources and IKEMaker itself; either check is still attempted if the other fails.
+- Right click, the Context Menu key, or Shift+F10 opens one plain-language Update Settings chooser.
+- Automatic checks can be Off, Daily, Weekly, or Monthly and apply to both update sources. Manual checking remains available when automatic checks are off.
+- IKEMaker download and installation permission can be disabled independently, leaving checks informational only.
+- Automatic IKEMaker updating is separately opt-in and remains off by default. It never reloads the app automatically.
+- Update methods are Make a backup then update, Update without a backup, or Keep as a new build. The separate-build path retains a verified versioned VSIX without replacing the active build because VS Code cannot activate two extensions with the same identity side by side.
+- Backup mode now requires an exact size/hash/identity-verified VSIX for the installed version from the reviewed feed. It stops rather than silently weakening to a no-backup update.
+- Added Restore Previous IKEMaker for verified rollback packages.
+- Extended strict toolbar routing and keyboard context access across legacy SFF/AIR/SND viewers, coding workspaces, specialist workspaces, and companion browsers.
+
+Safety
+
+- Update packages still require HTTPS/trusted-host, size, SHA-256, publisher, extension identity, and version validation.
+- Update storage remains outside character and game projects; project files and settings are not rewritten by installation or rollback.
+- Manual installs show the selected method in the final review. Automatic install authority must be explicitly enabled and uses the selected method.

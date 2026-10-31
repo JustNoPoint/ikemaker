@@ -1,0 +1,10 @@
+IKEMaker 0.79.283
+
+Remappen workspace layout correction
+
+- Removed the duplicate visible image-tool rail beside the sprite canvas.
+- Kept one functional image-tool set in the Bank B tool area.
+- Replaced the upper-left canvas rail with 100 Remappen presets containing 200 compact index swatches.
+- Arranged ten pairs across, with each old/source index directly above its new/replacement index and a gap between pair bands.
+- Selecting or editing a pair activates the Remap Pen and clearly identifies old and new index roles.
+- Preserved all 100 pairs in the retained Palette Workshop editor state.

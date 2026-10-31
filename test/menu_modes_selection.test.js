@@ -3,9 +3,10 @@ const assert = require('assert'), fs = require('fs'), os = require('os'), path =
 const original = Module._load, root = fs.mkdtempSync(path.join(os.tmpdir(), 'menu-modes-selection-'));
 const makeGame = name => { const folder = path.join(root, name), data = path.join(folder, 'data'), system = path.join(data, 'system.def'), select = path.join(data, 'select.def'); fs.mkdirSync(data, { recursive: true }); fs.writeFileSync(system, '[Files]\nspr = system.sff\n[Title Info]\nmenu.itemname.arcade = ARCADE\n'); fs.writeFileSync(select, '[Characters]\nRyu/Ryu.def, order=1\n[Options]\narcade.maxmatches = 1\n'); return { folder, system, select }; };
 const firstGame = makeGame('one'), secondGame = makeGame('two'), records = new Map(); let created = 0, revealed = 0;
+const context={snapshot:()=>({identity:'screenpack:test',revision:0,selectionRevision:0,selection:null,activeSurfaceId:''}),update(){}};
 const key = value => path.resolve(value).toLowerCase(), sessions = { register: (panel, file, kind) => records.set(`${key(file)}|${kind}`, panel) };
-const document = filename => ({ fileName: filename, uri: { fsPath: filename, toString: () => key(filename) }, getText: () => fs.readFileSync(filename, 'utf8'), lineCount: 1, lineAt: () => ({ lineNumber: 0, text: '' }) });
-const panel = () => ({ title: '', reveal: () => { revealed++; }, onDidDispose() {}, webview: { cspSource: 'test:', options: {}, html: '', onDidReceiveMessage: () => ({ dispose() {} }) } });
+const document = filename => {const text=fs.readFileSync(filename,'utf8'),lines=text.split(/\r?\n/);return{fileName:filename,uri:{fsPath:filename,toString:()=>`file:///${filename.replace(/\\/g,'/')}`},version:1,getText:()=>text,lineCount:lines.length,lineAt:index=>({lineNumber:index,text:lines[index]||''})};};
+const panel = () => ({ active:true,title: '', reveal: () => { revealed++; }, onDidDispose() {}, webview: { cspSource: 'test:', options: {}, html: '',postMessage:()=>true, onDidReceiveMessage: () => ({ dispose() {} }) } });
 const vscode = { ViewColumn: { Active: 1 }, Uri: { file: fsPath => ({ fsPath }) }, window: { createWebviewPanel: () => { created++; return panel(); } }, workspace: { openTextDocument: async uri => document(uri.fsPath) } };
 Module._load = function(request, parent, main) {
   if (request === 'vscode') return vscode;
@@ -13,7 +14,9 @@ Module._load = function(request, parent, main) {
   if (request === './viewer_group') return { preferredViewerColumn: () => 2, trackViewerPanel: value => value, revealInViewerGroup: value => value.reveal() };
   if (request === './select_roster_preview') return { gameRoot: filename => path.dirname(path.dirname(filename)) };
   if (request === './screenpack_workspace') return { locateCharacterSelectMotif: async uri => uri?.fsPath || '' };
-  if (request === './launch_controls') return { launchControlsHtml: () => '', launchControlsClientScript: () => '', handleLaunchMessage: async () => false };
+  if (request === './authoring_context_registry') return {registerAuthoringPanel:(panel,value)=>({panel,...value}),getContextModel:()=>context};
+  if (request === './viewer_navigation') return {registerSourcePanel(){},currentPoint:()=>({}),openViewerSource:async()=>true,acknowledgeRestore(){}};
+  if (request === './viewer_close') return {support(){},clientScript:()=>'',prepare:async()=>true};
   if (request === './webview_policy') return { protect: value => value };
   return original.call(this, request, parent, main);
 };

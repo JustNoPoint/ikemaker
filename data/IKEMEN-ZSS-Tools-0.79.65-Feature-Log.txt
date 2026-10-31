@@ -1,0 +1,5 @@
+IKEMaker 0.79.65
+
+- Restored Palette Workshop explanatory and status text in the floating SFF workspace.
+- Added selected-palette identity and declared-color information.
+- Added preview/save safety guidance, audit descriptions, master-index protection guidance, palette-folder conventions, staged-plan status, and insertion/alias explanations.

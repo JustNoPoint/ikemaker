@@ -1,0 +1,10 @@
+IKEMaker 0.79.415 — Exact template color locator
+
+- Added Find Selected Color to the template palette controls.
+- The locator searches only real sprite layers and deliberately ignores IKEMaker-generated swatch-table and filler layers.
+- Exact matching pixels blink directly over the template without changing source pixels or layer placement.
+- Added a pixelated 21×21 magnifier with adjustable 3×–20× zoom.
+- Repeated Find actions cycle through every matching sprite layer while keeping the page position stable.
+- The locator reports the matching layer and exact pixel count.
+- Blink can be stopped and restarted independently.
+- Decoded sprite pixels are cached for the active canvas so subsequent color searches avoid re-decoding unchanged images.

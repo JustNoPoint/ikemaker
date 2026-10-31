@@ -2,6 +2,33 @@
 
 const { commandBlock } = require('./command_movelist_model');
 
+const CUSTOM_PRESET_LIMITS = Object.freeze({ count: 100, labelCharacters: 80, labelBytes: 320, textBytes: 64 * 1024, aggregateBytes: 512 * 1024 });
+
+function byteLength(value) { return Buffer.byteLength(String(value ?? ''), 'utf8'); }
+function validPresetId(id) { return typeof id === 'string' && /^custom:[A-Za-z0-9._:-]{1,120}$/.test(id); }
+function normalizeCustomPreset(preset) {
+  if (!preset || Object.getPrototypeOf(preset) !== Object.prototype || Object.keys(preset).some(key => !['id', 'label', 'text'].includes(key))) throw new Error('A workspace command preset has unsupported fields.');
+  const id = String(preset.id || '').trim(), label = String(preset.label || '').trim(), text = String(preset.text ?? '');
+  if (!validPresetId(id)) throw new Error('A workspace command preset has an invalid identifier.');
+  if (!label) throw new Error('A custom command preset needs a name.');
+  if ([...label].length > CUSTOM_PRESET_LIMITS.labelCharacters || byteLength(label) > CUSTOM_PRESET_LIMITS.labelBytes) throw new Error(`Preset names are limited to ${CUSTOM_PRESET_LIMITS.labelCharacters} characters.`);
+  if (/[\u0000-\u001f\u007f<>]/u.test(label)) throw new Error('Preset names cannot contain control characters or markup brackets.');
+  if (!text || byteLength(text) > CUSTOM_PRESET_LIMITS.textBytes) throw new Error(`Each custom command preset is limited to ${CUSTOM_PRESET_LIMITS.textBytes / 1024} KiB.`);
+  return { id, label, text };
+}
+function normalizeCustomPresets(existing) {
+  if (!Array.isArray(existing)) throw new Error('Workspace command preset storage is not a list.');
+  if (existing.length > CUSTOM_PRESET_LIMITS.count) throw new Error(`This workspace can store at most ${CUSTOM_PRESET_LIMITS.count} custom command presets.`);
+  const result = existing.map(normalizeCustomPreset), ids = new Set(), labels = new Set();
+  for (const item of result) {
+    const labelKey = item.label.toLocaleLowerCase();
+    if (ids.has(item.id) || labels.has(labelKey)) throw new Error('Workspace command presets contain duplicate identifiers or names.');
+    ids.add(item.id); labels.add(labelKey);
+  }
+  if (result.reduce((total, item) => total + byteLength(item.id) + byteLength(item.label) + byteLength(item.text), 0) > CUSTOM_PRESET_LIMITS.aggregateBytes) throw new Error(`Workspace command presets are limited to ${CUSTOM_PRESET_LIMITS.aggregateBytes / 1024} KiB total.`);
+  return result;
+}
+
 function native(name, command, time, steptime, bufferTime = 1) {
   return { name, command, time, steptime, autogreater: 1, bufferTime, bufferHitpause: 1, bufferPauseend: 1, bufferShared: 1 };
 }
@@ -24,12 +51,9 @@ const PRESETS = [
 function presetText(preset) { return preset.kind === 'native' ? preset.blocks.map(commandBlock).join('\n\n') : preset.snippet; }
 function findPreset(id) { return PRESETS.find((preset) => preset.id === id); }
 function upsertCustomPreset(existing, preset) {
-  const clean = (existing || []).filter((item) => item && item.id && item.label && typeof item.text === 'string');
-  const label = String(preset.label || '').trim();
-  if (!label) throw new Error('A custom command preset needs a name.');
-  const id = String(preset.id || '').trim();
-  return [...clean.filter((item) => item.id !== id && item.label.toLowerCase() !== label.toLowerCase()), { id, label, text: String(preset.text || '') }];
+  const clean = normalizeCustomPresets(existing || []), candidate = normalizeCustomPreset(preset);
+  return normalizeCustomPresets([...clean.filter((item) => item.id !== candidate.id && item.label.toLocaleLowerCase() !== candidate.label.toLocaleLowerCase()), candidate]);
 }
-function removeCustomPreset(existing, id) { return (existing || []).filter((item) => item && item.id !== id); }
+function removeCustomPreset(existing, id) { return normalizeCustomPresets(existing || []).filter((item) => item.id !== id); }
 
-module.exports = { PRESETS, presetText, findPreset, upsertCustomPreset, removeCustomPreset };
+module.exports = { PRESETS, CUSTOM_PRESET_LIMITS, presetText, findPreset, normalizeCustomPreset, normalizeCustomPresets, upsertCustomPreset, removeCustomPreset };

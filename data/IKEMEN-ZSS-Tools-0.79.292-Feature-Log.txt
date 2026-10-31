@@ -1,0 +1,9 @@
+IKEMaker 0.79.292
+
+Final Palette Workshop layout hardening after New Dev review:
+
+- Makes each Remappen pair wrapper fit its exact 16-pixel grid track, preventing overlap or unnecessary horizontal scrolling in the narrow Bank A dock.
+- Handles Escape from anywhere within the expanded sprite editor, including immediately after the Expand viewer button receives focus.
+- Retains the complete 0.79.291 layout: Remappen 1–70 beside Bank A, 71–100 below-left of the anchored sprite canvas, inset stage controls, full-workspace viewer mode, and exact canonical editor routes from the floating SFF Palette Browser.
+
+New Dev completed final post-review and approved this build with no remaining release blocker.

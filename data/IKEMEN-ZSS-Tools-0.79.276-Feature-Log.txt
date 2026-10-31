@@ -1,0 +1,7 @@
+IKEMaker 0.79.276
+
+AIR browser action identifiers
+
+- AIR list, thumbnail, and combined cards now always show the numeric Action ID before the authored name or comment.
+- Card tooltips and accessible labels also include the exact Action ID.
+- Filtering, marking, selection, and source navigation continue to use the same numeric action identity.

@@ -1,5 +1,37 @@
 'use strict';
 
+const crypto = require('crypto');
+
+const STORY_SOURCE_TYPE = 'story-dialogue-source-v1';
+const STORY_SOURCE_ROLES = Object.freeze(['select-root', 'story-arc', 'story-route', 'inserted-dialogue']);
+
+function sha256(value) { return crypto.createHash('sha256').update(String(value), 'utf8').digest('hex'); }
+function plain(value) { return !!value && typeof value === 'object' && Object.getPrototypeOf(value) === Object.prototype; }
+function exact(value, keys) { return plain(value) && Object.keys(value).sort().join('|') === [...keys].sort().join('|'); }
+function byteLength(value) { return Buffer.byteLength(String(value), 'utf8'); }
+function normalizedId(value) { return String(value || '').trim().toLowerCase(); }
+function normalizeLogicalRecord(value) { return String(value || '').replace(/\r\n?|\n/g, '\n'); }
+function freeze(value, seen = new WeakSet()) { if (!value || typeof value !== 'object' || seen.has(value)) return value; seen.add(value); for (const child of Object.values(value)) if (plain(child) || Array.isArray(child)) freeze(child, seen); return Object.freeze(value); }
+function validStorySourceReference(value) {
+  return exact(value, ['type', 'role', 'uri', 'normalizedId', 'rawSignatureSha', 'occurrence', 'matchCount']) &&
+    value.type === STORY_SOURCE_TYPE && STORY_SOURCE_ROLES.includes(value.role) && typeof value.uri === 'string' && value.uri.startsWith('file:') && byteLength(value.uri) >= 6 && byteLength(value.uri) <= 4096 &&
+    typeof value.normalizedId === 'string' && value.normalizedId === normalizedId(value.normalizedId) && byteLength(value.normalizedId) <= 512 && (value.role === 'select-root' ? value.normalizedId === '' : byteLength(value.normalizedId) >= 1) && /^[0-9a-f]{64}$/.test(value.rawSignatureSha) &&
+    Number.isInteger(value.occurrence) && value.occurrence >= 0 && value.occurrence <= 9999 && Number.isInteger(value.matchCount) && value.matchCount >= 1 && value.matchCount <= 10000 && value.occurrence < value.matchCount;
+}
+function storySourceReferences(records) {
+  const projected = (records || []).map((record) => {
+    const role = STORY_SOURCE_ROLES.includes(record.role) ? record.role : '';
+    const id = normalizedId(record.id);
+    const uri = String(record.uri || '');
+    if (!role || (role === 'select-root' ? id !== '' : !id) || byteLength(id) > 512 || !uri.startsWith('file:') || byteLength(uri) > 4096) return null;
+    const rawSignatureSha = sha256(JSON.stringify([STORY_SOURCE_TYPE, role, uri, id, normalizeLogicalRecord(record.logicalRecord)]));
+    return { record, base: { type: STORY_SOURCE_TYPE, role, uri, normalizedId: id, rawSignatureSha } };
+  }).filter(Boolean);
+  const counts = new Map(); for (const item of projected) counts.set(item.base.rawSignatureSha, (counts.get(item.base.rawSignatureSha) || 0) + 1);
+  const seen = new Map(); return projected.map((item) => { const occurrence = seen.get(item.base.rawSignatureSha) || 0; seen.set(item.base.rawSignatureSha, occurrence + 1); return freeze({ record: item.record, reference: { ...item.base, occurrence, matchCount: counts.get(item.base.rawSignatureSha) } }); });
+}
+function resolveStorySource(records, reference) { if (!validStorySourceReference(reference)) return null; const matches = storySourceReferences(records).filter((item) => item.reference.rawSignatureSha === reference.rawSignatureSha); if (matches.length !== reference.matchCount) return null; const found = matches[reference.occurrence]; return found && JSON.stringify(found.reference) === JSON.stringify(reference) ? found : null; }
+
 function field(entry) {
   const first = entry && entry.params && entry.params[0];
   return first ? { key: String(first.name || '').toLowerCase(), value: String(first.value || '').trim(), line: entry.line } : null;
@@ -63,4 +95,4 @@ function dialogueController(options = {}) {
   return `${out.join('\n')}\n`;
 }
 
-module.exports = { storyArcs, luaString, luaList, launchFightBlock, linearStoryLua, dialogueToken, dialogueController };
+module.exports = { STORY_SOURCE_TYPE, STORY_SOURCE_ROLES, sha256, normalizedId, normalizeLogicalRecord, validStorySourceReference, storySourceReferences, resolveStorySource, storyArcs, luaString, luaList, launchFightBlock, linearStoryLua, dialogueToken, dialogueController };

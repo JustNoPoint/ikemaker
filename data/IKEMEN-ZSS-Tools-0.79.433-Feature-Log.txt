@@ -1,0 +1,9 @@
+IKEMaker 0.79.433
+
+Add Sprites live destination guidance
+- Group and First Index now update the destination review while the user types.
+- Reports whether the entered group is already used.
+- Reports the first open index in that group and the next open index at or after the entered value.
+- Reports the next entirely unused group after the entered group.
+- Selected batches report existing index conflicts before anything is staged.
+- Filename-based destination detection clearly notes that it can override the manual destination.

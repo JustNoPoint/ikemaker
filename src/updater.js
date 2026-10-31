@@ -6,6 +6,7 @@ const path = require('path');
 const knowledgeModel = require('./engine_knowledge_model');
 const engineModel = require('./engine_registry_model');
 const engineUpdateModel = require('./engine_update_model');
+const { notifyEngineCapabilitiesChanged } = require('./engine_capability_events');
 const BUILT_IN_ENGINE_CATALOG = require('../data/engine-capability-catalog.json');
 
 const SNAPSHOT_KEY = 'ikemenZss.upstreamSnapshot.v1';
@@ -359,7 +360,10 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
         const storedSnapshot = JSON.parse(JSON.stringify(snapshot));
         if (storedSnapshot.sources.sctrl) delete storedSnapshot.sources.sctrl.text;
         await context.globalState.update(SNAPSHOT_KEY, storedSnapshot);
-        if (engineRefresh.promoted) await context.globalState.update(ENGINE_CATALOG_KEY, engineRefresh.catalog);
+        if (engineRefresh.promoted) {
+          await context.globalState.update(ENGINE_CATALOG_KEY, engineRefresh.catalog);
+          if (engineRefresh.changed) notifyEngineCapabilitiesChanged('engine-knowledge-promoted');
+        }
         await context.globalState.update(REPORT_KEY, report);
         output.clear(); output.appendLine(report);
 

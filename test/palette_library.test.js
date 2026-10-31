@@ -4,7 +4,7 @@ const assert = require('assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
-const { paletteLibraryFiles, safeLibraryPalette, safePaletteSource, paletteSourceLabel, pngPaletteRgba } = require('../src/palette_library');
+const { paletteLibraryFiles, safeLibraryPalette, safePaletteSource, paletteSourceLabel, retainedPaletteActOrder, pngPaletteRgba } = require('../src/palette_library');
 
 function chunk(type, data) { const output = Buffer.alloc(data.length + 12); output.writeUInt32BE(data.length, 0); output.write(type, 4, 4, 'ascii'); data.copy(output, 8); return output; }
 
@@ -17,6 +17,8 @@ fs.writeFileSync(png, Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), chu
 assert.deepStrictEqual(paletteLibraryFiles(root), [first, png, second]);
 assert.strictEqual(safeLibraryPalette(root, second), second);
 assert.deepStrictEqual(pngPaletteRgba(fs.readFileSync(png))[0], [9, 8, 7, 0]);
+assert.strictEqual(retainedPaletteActOrder(png, 'index'), null, 'indexed PNG previews never retain an ACT table order');
+assert.strictEqual(retainedPaletteActOrder(first, 'reversed'), 'reversed', 'ACT previews retain their explicit reviewed table order');
 assert.throws(() => safeLibraryPalette(root, path.join(path.dirname(root), 'outside.act')), /outside/);
 assert.throws(() => safeLibraryPalette(root, path.join(root, 'ignore.txt')), /outside/);
 const outside = path.join(path.dirname(root), 'manually-selected.act'); fs.writeFileSync(outside, Buffer.alloc(768));

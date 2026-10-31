@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path');
+const {PaletteReplacementRuleStore,normalizeRule,assess}=require('../src/palette_replacement_rule_store');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'ikemaker-rules-')),master='a'.repeat(64),source='b'.repeat(64),scope={kind:'character',id:'ryu'};
+const store=new PaletteReplacementRuleStore(root),first=store.read(),rule=normalizeRule({id:'rule-red-001',enabled:true,scope,sourceRgba:[200,1,2,255],destinationIndex:7,destinationRgba:[192,0,0,255],masterFingerprint:master,masterVersion:'sff:1,0',alphaPolicy:'exact-alpha',conversionProfile:'indexed-exact-v1',sourceHashes:[source],exclusions:[],reason:'reviewed red',createdAt:'2026-10-22T12:00:00.000Z',updatedAt:'2026-10-22T12:00:00.000Z'});
+const saved=store.upsert(first.byteHash,rule);assert.strictEqual(saved.document.rules.length,1);assert.strictEqual(assess(rule,{sourceRgba:[200,1,2,255],masterFingerprint:master,masterVersion:'sff:1,0',alphaPolicy:'exact-alpha',conversionProfile:'indexed-exact-v1',sourceHash:source,sourceId:'a',masterColors:Array.from({length:256},(_,i)=>i===7?[192,0,0,255]:[0,0,0,255])},scope).valid,true);
+assert.strictEqual(assess(rule,{sourceRgba:[201,1,2,255],masterFingerprint:master,masterVersion:'sff:1,0',alphaPolicy:'exact-alpha',conversionProfile:'indexed-exact-v1',sourceHash:source,sourceId:'a'},scope).valid,false,'nearest colors never match');
+assert(assess(rule,{sourceRgba:[200,1,2,255],masterFingerprint:'c'.repeat(64),masterVersion:'sff:1,0',alphaPolicy:'exact-alpha',conversionProfile:'indexed-exact-v1',sourceHash:source,sourceId:'a'},scope).reasons.includes('palette-or-profile'));
+const exported=store.export(),copy=fs.mkdtempSync(path.join(os.tmpdir(),'ikemaker-rules-copy-')),copyStore=new PaletteReplacementRuleStore(copy),imported=copyStore.import(copyStore.read().byteHash,exported);assert.strictEqual(imported.document.rules[0].ruleHash,rule.ruleHash);
+const tampered=JSON.parse(exported);tampered.rules[0].destinationIndex=9;assert.throws(()=>copyStore.import(imported.byteHash,Buffer.from(JSON.stringify(tampered))),/self-hash|registry/);
+assert.throws(()=>store.save(first.byteHash,[]),/changed after review/,'CAS blocks stale writes');
+store.remove(saved.byteHash,rule.id);assert.strictEqual(store.read().document.rules.length,0);fs.rmSync(root,{recursive:true,force:true});fs.rmSync(copy,{recursive:true,force:true});
+console.log('replacement-rule registry exact matching, invalidation, CAS, import/export tamper, edit/delete passed');

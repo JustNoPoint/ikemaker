@@ -1,0 +1,5 @@
+IKEMaker 0.79.58
+
+- Fixed the blank SFF Browser regression introduced in 0.79.57.
+- SFF binary palette tables are no longer incorrectly converted as JavaScript color arrays while constructing the floating-browser model.
+- Verified the browser model and page against Ryu_Development.sff: 613 sprites, 3 palettes, and 488 linked AIR actions load successfully.

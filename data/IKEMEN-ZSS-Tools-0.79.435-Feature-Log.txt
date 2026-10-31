@@ -1,0 +1,8 @@
+IKEMaker 0.79.435
+
+Compact Add Sprites direct build
+- Added Build Now beside Stage for Build Review.
+- Build Now retains and seals the same reviewed intake choices, then immediately starts the existing selected-writer build flow.
+- The selected writer remains authoritative; no duplicate or alternate writer path was introduced.
+- Existing candidate validation, final confirmation, backup, and adoption safeguards remain in force.
+- Needs Palette must still be resolved before either staging or building.

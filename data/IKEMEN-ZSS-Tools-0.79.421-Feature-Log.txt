@@ -1,0 +1,9 @@
+IKEMaker 0.79.421
+
+Template color focus controls
+
+- Darken unselected and Lighten unselected are now always available.
+- Either viewing mode can be enabled before selecting any colors; it activates as soon as colors are selected.
+- Fixed retained palette drafts keeping a stale focus callback after a protected background refresh.
+- The active draft now restores its own Darken/Lighten behavior after canvas or layout updates.
+- Status text distinguishes an armed mode awaiting color selection from an active visual effect.

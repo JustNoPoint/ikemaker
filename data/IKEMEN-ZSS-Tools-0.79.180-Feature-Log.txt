@@ -1,0 +1,11 @@
+IKEMaker 0.79.180
+
+AIR source escape across physical windows
+- A tracked floating AIR Actions Browser now refuses source navigation until the user explicitly returns it to the main window. The browser stays visible and the source document is not loaded.
+- A browser detached with native VS Code controls is revealed and kept focused; source opens locally beside that exact browser instead of switching to another physical window.
+- Floating state is rechecked after awaited collision and hit-region rebuilds and before document admission, closing the move-during-navigation race.
+- Manual routed-source close returns to the exact live AIR browser once. Dirty-close cancellation, delayed events, native Close All bursts, IKEMaker context shutdown, disposed browsers, and wrong origins fail safely.
+
+Verification
+- New Dev audited before implementation, rejected incomplete cross-window and post-await race handling during post-review, and approved the final corrected contract.
+- AIR source escape, collision route, hit-region route, text companion, webview accessibility, direct-write, and full AIR-focused tests pass.

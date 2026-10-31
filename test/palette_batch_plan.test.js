@@ -84,7 +84,20 @@ function chunk(type, data) { const output = Buffer.alloc(data.length + 12); outp
   const alphaDiffers = duplicatePaletteClusters([{ label: 'existing', group: 1, number: 1, colors: colors(9) }], [{ label: 'incoming', group: 1, number: 2, colors: colors(9, 254) }]);
   assert.strictEqual(alphaDiffers.length, 0);
   const otherGroup = duplicatePaletteClusters([{ label: 'existing', group: 2, number: 1, colors: colors(9) }], [{ label: 'incoming', group: 1, number: 2, colors: colors(9) }]);
-  assert.strictEqual(otherGroup.length, 0);
+  assert.strictEqual(otherGroup.length, 1, 'exact duplicates warn across palette groups as well as within one group');
+}
+
+{
+  const f = fixture('gap-fill');
+  try {
+    const incoming = [1, 2, 3].map((number) => ({ source: f.source(number), colors: colors(number) }));
+    const preview = batchPalettePreflight(f.sff, { mode: 'gap-fill', group: 1, beforeNumber: 1, incoming, occupiedIds: ['1,1', '1,3', '1,7', '2,2'] });
+    assert.deepStrictEqual(preview.assigned.map((entry) => entry.number), [2, 4, 5], 'gap fill uses the earliest open numeric slots without shifting occupied palettes');
+    assert.deepStrictEqual(preview.shifted, []);
+    const result = stagePaletteBatch(f.sff, preview);
+    assert.deepStrictEqual(result.plan.palettes.map((entry) => entry.number), [2, 4, 5]);
+    assert.deepStrictEqual(result.plan.shifts, [], 'gap-filled palette additions remain ordinary reviewed additions');
+  } finally { fs.rmSync(f.root, { recursive: true, force: true }); }
 }
 
 {

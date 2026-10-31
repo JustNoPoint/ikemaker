@@ -1,32 +1,14 @@
 'use strict';
-
-const assert = require('assert');
-const Module = require('module');
-const original = Module._load;
-Module._load = function patched(request, parent, main) {
-  if (request === 'vscode') return { window: {}, workspace: {}, commands: {}, Uri: { file: (fsPath) => ({ fsPath }) }, ViewColumn: {}, env: { clipboard: {} }, DiagnosticSeverity: { Error: 0, Warning: 1 } };
-  return original.call(this, request, parent, main);
-};
-const { converterHtml, totals } = require('../src/cns_converter_workspace');
-Module._load = original;
-
-const file = { mode: 'file', title: 'normal.cns', source: 'normal.cns', target: 'normal.zss', sourceText: '[StateDef 200]', text: '[StateDef 200]', experience: 'learning', counts: { safe: 2, review: 1, unsupported: 0 }, findings: [{ level: 'review', line: 0, message: 'Review timing.' }], canWrite: true };
-const page = converterHtml(file);
-assert.match(page, /CNS → ZSS Converter/);
-assert.match(page, /CNS source/);
-assert.match(page, /ZSS preview/);
-assert.match(page, /Save ZSS As/);
-assert.match(page, /Related Work/);
-assert.match(page, /Ctrl\+Alt\+F5/);
-assert.match(page, /globalThis\.ikemenNavigationSelection=\(\)=>\(\{mode:model\.mode,index,source:current\(\)\.source\|\|model\.source\}\)/);
-assert.match(page, /reference\.mode===model\.mode/);
-assert.match(page, /key\(files\[reference\.index\]\?\.source\|\|model\.source\)===key\(reference\.source\)/);
-assert.deepStrictEqual(totals(file), file.counts);
-
-const character = { mode: 'character', title: 'Ryu', source: 'Ryu.def', defPath: 'Ryu.def', defText: '', experience: 'advanced', findings: [], files: [{ ...file, counts: { safe: 4, review: 2, unsupported: 0 } }], canWrite: true };
-const batch = converterHtml(character);
-assert.match(batch, /Save All ZSS/);
-assert.match(batch, /Save All \+ Update DEF/);
-assert.deepStrictEqual(totals(character), { safe: 4, review: 2, unsupported: 0 });
-
-console.log('CNS-to-ZSS converter workspace tests passed');
+const assert=require('assert'),Module=require('module');const original=Module._load;
+const uri={file:fsPath=>({fsPath,toString:()=>`file:///${String(fsPath).replace(/\\/g,'/')}`}),parse:value=>({fsPath:value.replace(/^file:\/\//,'').replace(/^\//,'')})};
+Module._load=function(request,parent,main){if(request==='vscode')return{window:{},workspace:{textDocuments:[]},commands:{},Uri:uri,ViewColumn:{},env:{clipboard:{}},DiagnosticSeverity:{Error:0,Warning:1}};return original.call(this,request,parent,main)};
+const workspace=require('../src/cns_converter_workspace');Module._load=original;
+const file={mode:'file',title:'normal.cns',source:'normal.cns',target:'normal.zss',sourceText:'[StateDef 200]',text:'[StateDef 200]',counts:{safe:2,review:1,unsupported:0},findings:[{level:'review',line:0,message:'Review timing.'}],canWrite:true};
+const page=workspace.converterHtml(file);assert.equal((page.match(/acquireVsCodeApi\(\)/g)||[]).length,1);assert.match(page,/data-toolbar-contract="universal-v1"/);assert.equal((page.match(/data-universal-slot=/g)||[]).length,29);assert.match(page,/width:27px/);assert.match(page,/overflow-x:hidden/);assert.doesNotMatch(page,/launchControls|Open Source/);for(const label of ['Review Findings','Copy ZSS','Save ZSS As','CNS source','ZSS preview','Tabs','List','Cards','Edit selected source'])assert(page.includes(label),`missing ${label}`);for(const label of ['Previous CNS source','CNS source position','Next CNS source','Choose CNS source'])assert(page.includes(`aria-label="${label}"`),`missing accessible navigator label: ${label}`);assert.deepStrictEqual(workspace.totals(file),file.counts);
+for(const contract of ['aria-label="CNS sources"','role="listbox"','id="actionStatus"','aria-live="polite"','aria-pressed'])assert(page.includes(contract),`missing converter accessibility/state contract: ${contract}`);
+const blocked=workspace.converterHtml({...file,canWrite:false});assert.match(blocked,/Saving is unavailable until unsupported conversion findings are resolved/);assert.match(blocked,/Resolve unsupported conversion findings before saving/);
+const emptyCharacter=workspace.converterHtml({mode:'character',title:'Empty',findings:[],files:[],canWrite:false});assert.match(emptyCharacter,/Saving is unavailable because this conversion has no assigned CNS sources/);assert.match(emptyCharacter,/Choose a character with at least one assigned CNS source before saving/);assert.match(emptyCharacter,/disabled\(previous,!count\|\|selected<=0,!count\?'No CNS sources are assigned\.'/,'zero-source Previous guidance takes precedence over the first-source boundary');
+const character={mode:'character',title:'Ryu',findings:[],files:[{...file,counts:{safe:4,review:2,unsupported:0}}],canWrite:true};const batch=workspace.converterHtml(character);assert.match(batch,/Save All ZSS/);assert.match(batch,/Save All \+ Update DEF/);assert.deepStrictEqual(workspace.totals(character),{safe:4,review:2,unsupported:0});
+for(const type of ['cnsEditSelected','cnsRefresh','cnsChoose','cnsCopySelected','cnsSaveCurrent','cnsSaveAll','cnsApplyAll']){assert(workspace.validBodyMessage({type,generation:4},4));assert(!workspace.validBodyMessage({type,generation:4,path:'forged'},4));}
+assert(workspace.validBodyMessage({type:'cnsNavigate',generation:4,slot:0,navMode:'cards'},4));assert(!workspace.validBodyMessage({type:'cnsNavigate',generation:3,slot:0,navMode:'cards'},4));assert(!workspace.validBodyMessage(Object.assign(Object.create({polluted:true}),{type:'cnsRefresh',generation:4}),4));
+console.log('CNS converter universal shell and strict protocol tests passed');

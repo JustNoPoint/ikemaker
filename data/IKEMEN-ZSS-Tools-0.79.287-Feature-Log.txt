@@ -1,0 +1,2 @@
+IKEMaker 0.79.287
+Fix first-opening Text Editor header crash when no prior workspace owner exists. Header setup failures no longer silently open a side-by-side native editor. Seven focused regression suites passed; live layout confirmation remains manual.

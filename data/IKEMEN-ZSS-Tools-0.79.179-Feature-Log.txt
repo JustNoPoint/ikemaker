@@ -1,0 +1,12 @@
+IKEMaker 0.79.179
+
+AIR source escape topology
+- Opening source from the AIR Actions Browser now verifies the exact live browser, source, and Code Navigation tabs instead of trusting window-focus command completion or numeric editor columns.
+- The AIR browser must be active and visible before the handoff. The source must then be active in a distinct group, and the exact Return to AIR Browser strip must be active and visible after attachment.
+- The canonical two-group layout remains supported: AIR browser and Code Navigation may share the header group, with the visible Return strip active and the browser retained behind it.
+- Same-group replacement, stale detached-window state, hidden or missing return UI, duplicate/missing exact tabs, and topology drift restore the AIR browser and remove only the provisional return route.
+- Failure never closes the opened source, preserving any edits made while asynchronous checks were completing.
+
+Verification
+- New Dev audited the live repro before implementation and approved the final phase-aware topology contract after the hidden-tab and canonical two-group regressions were added.
+- Focused AIR source escape, text companion, webview accessibility, and direct-write authority tests pass.

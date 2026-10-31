@@ -10,7 +10,7 @@ const visualWorkspaces = [
   'code_structure_workspace.js', 'command_movelist_workspace.js',
   'character_dependency_workspace.js', 'character_health_workspace.js',
   'cns_converter_workspace.js', 'menu_modes_workspace.js', 'mutation_history.js',
-  'palette_import_workspace.js', 'palfx_editor.js', 'production_workflow_workspace.js',
+  'palfx_editor.js', 'production_workflow_workspace.js',
   'screenpack_workspace.js', 'select_def_workspace.js', 'stage_workspace.js',
   'story_dialogue_workspace.js', 'test_session_workspace.js', 'throw_creator_workspace.js',
   'hitdef_workspace.js', 'move_lab_workspace.js'

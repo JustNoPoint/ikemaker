@@ -15,9 +15,9 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
     await nav.openConnected(source,'air',nav.referenceAt(fs.readFileSync(source,'utf8'),0));
     assert.strictEqual(visits[0].uri.fsPath,air);assert.strictEqual(visits[0].options.action,200,'longest configured prefix disambiguates a numeric prefix suffix');assert.strictEqual(dialogs,0);
     assert(messages.some(message=>message.type==='viewerArchiveContext'&&message.label==='Shared SF6 · shared.air'));
-    await nav.openConnected(air,'sff',{group:1,number:2});
+    await nav.openConnected(air,'sff',{group:1,number:2},undefined,{filename:air,kind:'air',panel});
     assert.strictEqual(visits[1].uri.fsPath,sff,'shared AIR hands off to its shared SFF, never character SFF');
-    await nav.openConnected(air,'snd');assert.strictEqual(visits.length,2);assert(notices.at(-1).includes('shared prefix sf6'));
+    await nav.openConnected(air,'snd',undefined,undefined,{filename:air,kind:'air',panel});assert.strictEqual(visits.length,2);assert(notices.at(-1).includes('shared prefix sf6'));
     fs.writeFileSync(path.join(folder,'other.def'),'[Info]\nprefix = SF6\n[Files]\nair = other.air\n');extra=['other.def'];
     await nav.openConnected(source,'air',{prefix:'SF6',group:200});assert.strictEqual(visits.length,2,'canceled duplicate-prefix choice never navigates');
     await nav.openConnected(source,'air',{prefix:'UNKNOWN',group:200});assert.strictEqual(dialogs,1);assert.strictEqual(visits.length,2,'unresolved prefix offers explicit browse without guessing');

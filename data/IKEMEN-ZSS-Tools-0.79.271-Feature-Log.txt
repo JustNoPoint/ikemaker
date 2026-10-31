@@ -1,0 +1,9 @@
+IKEMEN ZSS Tools 0.79.271
+
+Narrow SFF Browser Layout
+
+- Reset the SFF browser's previously broken saved-width preference so its next floating launch starts at the shared minimum width.
+- Deliberate user resizing is remembered immediately after the opening resize settles, including a resize made soon after opening.
+- Replaced the fixed header-height subtraction with a flex layout so wrapped toolbar and tab rows cannot push the bottom of the browser outside its usable scrolling area.
+- Palette index thumbnails now render as one proportional square 16 by 16 bank instead of stretching 256 colors into two horizontal-looking bars.
+- Added regression coverage for minimum-width restoration, immediate resize persistence, narrow vertical scrolling, and square palette index previews.

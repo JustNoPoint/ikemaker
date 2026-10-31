@@ -1,0 +1,15 @@
+'use strict';
+const assert = require('assert'), fs = require('fs'), path = require('path');
+const root = path.resolve(__dirname, '..', 'src');
+const organizer = fs.readFileSync(path.join(root, 'palette_index_organizer_workspace.js'), 'utf8'), importer = fs.readFileSync(path.join(root, 'palette_import_workspace.js'), 'utf8'), player = fs.readFileSync(path.join(root, 'player_palette_workspace.js'), 'utf8'), browser = fs.readFileSync(path.join(root, 'sff_browser.js'), 'utf8'), controller = fs.readFileSync(path.join(root, 'palette_workspace_controller.js'), 'utf8');
+assert.match(organizer, /ikemen\.palette\.openWorkspace/); assert.doesNotMatch(organizer, /createWebviewPanel|ikemenPaletteIndexOrganizer/, 'legacy organizer module must not contain its old panel path');
+assert.match(importer, /ikemen\.palette\.openWorkspace/); assert.doesNotMatch(importer, /createWebviewPanel|ikemenPaletteImportAssistant/, 'legacy import module must not contain its old panel path');
+assert.match(player, /paletteWorkspaceController\(\)\.openTargetWorkspace/, 'player palette routes must open the dedicated Palette Workspace target surface');
+assert.doesNotMatch(player, /sff\.openBrowser/, 'player palette aliases must not fall back to the broad SFF comparison browser');
+assert.match(player, /compatibilityAlias: 'ikemen\.palettePlayer\.organize'/);
+assert.match(browser, /openCanonicalPaletteWorkshop/, 'the SFF browser must route palette work through the canonical Palette Workshop');
+assert.match(browser, /ikemen\.palette\.openWorkspace/, 'the SFF browser must use the one canonical Palette Workshop command');
+assert.doesNotMatch(browser, /paletteWorkspaceViewModel/, 'the generic SFF browser must not embed a second Palette Workshop state model');
+for (const ordinary of ['applyPalettePreview', 'stageLibraryPalette', 'replacePalette', 'savePaletteEdits', 'exportAct', 'choosePaletteFiles', 'importAct']) assert(controller.includes(ordinary), `controller missing ordinary capability ${ordinary}`);
+assert.match(browser, /openCanonicalPaletteWorkshop\(filename,archive,m\)/); assert.match(browser, /if\(m\.type==='syncPalette'\)\{return\}/, 'canonical browser must not require hidden SFF palette synchronization');
+console.log('Palette Workspace compatibility commands are aliases to one canonical surface');

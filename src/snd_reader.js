@@ -1,6 +1,7 @@
 'use strict';
 
 const fs = require('fs');
+const crypto = require('crypto');
 
 const SIGNATURE = Buffer.from('ElecbyteSnd\0', 'binary');
 
@@ -61,4 +62,44 @@ function soundPeaks(archive, entry, buckets = 360) {
   return peaks;
 }
 
-module.exports = { parseSndBuffer, readSnd, wavInfo, soundBuffer, soundDataUri, soundPeaks };
+function soundAnalysis(archive, entry, options = {}) {
+  const wav = soundBuffer(archive, entry), info = entry.wav || wavInfo(wav), limit = Math.max(1000, Number(options.maxSamples) || 50000);
+  if (!info.valid || info.format !== 1 || ![8, 16].includes(info.bitsPerSample) || info.dataOffset === null || !info.blockAlign || !info.channels || !info.sampleRate) return { supported: false, reason: 'Audio QA currently supports PCM 8-bit and PCM 16-bit WAV data.' };
+  const bytes = info.bitsPerSample / 8, frames = Math.floor(info.dataSize / info.blockAlign), totalSamples = frames * info.channels, stride = Math.max(1, Math.ceil(totalSamples / limit));
+  let analyzedSamples = 0, peak = 0, sum = 0, sumSquares = 0, clippedSamples = 0, nearClippedSamples = 0;
+  const sample = sampleIndex => { const at = info.dataOffset + sampleIndex * bytes; if (at + bytes > wav.length) return 0; return info.bitsPerSample === 16 ? wav.readInt16LE(at) / 32768 : (wav.readUInt8(at) - 128) / 128; };
+  for (let sampleIndex = 0; sampleIndex < totalSamples; sampleIndex += stride) { const value = sample(sampleIndex), absolute = Math.abs(value); analyzedSamples += 1; peak = Math.max(peak, absolute); sum += value; sumSquares += value * value; if (info.bitsPerSample === 16 ? value <= -1 || value >= 32767 / 32768 : value <= -1 || value >= 127 / 128) clippedSamples += 1; if (absolute >= .98) nearClippedSamples += 1; }
+  const silentFrame = frame => { for (let channel = 0; channel < info.channels; channel += 1) if (Math.abs(sample(frame * info.channels + channel)) > .0032) return false; return true; }, silenceSeconds = Math.max(.05, Math.min(10, Number(options.silenceScanSeconds) || 1)), silenceLimit = Math.min(frames, Math.max(1, Math.floor(info.sampleRate * silenceSeconds)));
+  let leadingFrames = 0, trailingFrames = 0;
+  while (leadingFrames < silenceLimit && silentFrame(leadingFrames)) leadingFrames += 1;
+  while (trailingFrames < silenceLimit && trailingFrames < frames - leadingFrames && silentFrame(frames - trailingFrames - 1)) trailingFrames += 1;
+  return { supported: true, sampled: stride > 1, analyzedSamples, totalSamples, peak, rms: analyzedSamples ? Math.sqrt(sumSquares / analyzedSamples) : 0, dcOffset: analyzedSamples ? sum / analyzedSamples : 0, clippedSamples, nearClippedSamples, leadingSilenceSeconds: leadingFrames / info.sampleRate, trailingSilenceSeconds: trailingFrames / info.sampleRate };
+}
+
+function soundDuplicates(archive) {
+  const exact = new Map(), pcm = new Map(), result = new Map();
+  for (const entry of archive.entries || []) {
+    const wav = soundBuffer(archive, entry), info = entry.wav || wavInfo(wav), exactKey = crypto.createHash('sha256').update(wav).digest('hex'), exactOf = exact.has(exactKey) ? exact.get(exactKey) : null;
+    if (exactOf === null) exact.set(exactKey, entry.archiveIndex);
+    let pcmOf = null;
+    if (info.valid && info.dataOffset !== null && info.dataSize >= 0 && info.dataOffset + info.dataSize <= wav.length) {
+      const formatKey = `${info.format}:${info.channels}:${info.sampleRate}:${info.bitsPerSample}:`, pcmKey = formatKey + crypto.createHash('sha256').update(wav.subarray(info.dataOffset, info.dataOffset + info.dataSize)).digest('hex');
+      pcmOf = pcm.has(pcmKey) ? pcm.get(pcmKey) : null;
+      if (pcmOf === null) pcm.set(pcmKey, entry.archiveIndex);
+    }
+    result.set(entry.archiveIndex, { exactOf, pcmOf: pcmOf === exactOf ? null : pcmOf });
+  }
+  return result;
+}
+
+function slicePcmWav(wav, startSeconds, endSeconds) {
+  const info = wavInfo(wav);
+  if (!info.valid || info.format !== 1 || ![8, 16].includes(info.bitsPerSample) || info.dataOffset === null || !info.blockAlign || !info.sampleRate) throw new Error('A/B export currently supports PCM 8-bit and PCM 16-bit WAV data.');
+  const frames = Math.floor(info.dataSize / info.blockAlign), start = Math.max(0, Math.min(frames, Math.floor(Number(startSeconds) * info.sampleRate))), end = Math.max(start, Math.min(frames, Math.ceil(Number(endSeconds) * info.sampleRate)));
+  if (!Number.isFinite(Number(startSeconds)) || !Number.isFinite(Number(endSeconds)) || end <= start) throw new Error('Choose a non-empty A/B audition range first.');
+  const data = wav.subarray(info.dataOffset + start * info.blockAlign, info.dataOffset + end * info.blockAlign), output = Buffer.alloc(44 + data.length);
+  output.write('RIFF', 0); output.writeUInt32LE(output.length - 8, 4); output.write('WAVEfmt ', 8); output.writeUInt32LE(16, 16); output.writeUInt16LE(1, 20); output.writeUInt16LE(info.channels, 22); output.writeUInt32LE(info.sampleRate, 24); output.writeUInt32LE(info.sampleRate * info.blockAlign, 28); output.writeUInt16LE(info.blockAlign, 32); output.writeUInt16LE(info.bitsPerSample, 34); output.write('data', 36); output.writeUInt32LE(data.length, 40); data.copy(output, 44);
+  return output;
+}
+
+module.exports = { parseSndBuffer, readSnd, wavInfo, soundBuffer, soundDataUri, soundPeaks, soundAnalysis, soundDuplicates, slicePcmWav };

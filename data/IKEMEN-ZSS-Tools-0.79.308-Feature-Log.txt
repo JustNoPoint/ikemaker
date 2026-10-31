@@ -1,0 +1,5 @@
+IKEMaker 0.79.308
+
+- Prevented mirrored Palette Workshop sliders from rebuilding the pane on every live input tick.
+- Preserve page and pane scroll offsets during required companion snapshots.
+- Restore the active mirrored control without allowing focus to scroll the browser.

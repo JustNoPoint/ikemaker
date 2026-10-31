@@ -1,0 +1,10 @@
+IKEMaker 0.79.431
+
+Native SFF v2.1 true-color writing
+
+- The IKEMaker native writer now carries sealed RGB24 and RGBA32 PNG sprites through SFF Creator as PNG24 and PNG32 data.
+- A single SFF v2.1 archive may mix indexed PNG8, RGB24, and RGBA32 sprites while preserving axes, links, palettes, decoded pixels, and alpha.
+- True-color candidates now pass the full reviewed lifecycle: source verification, creation, strict validation, persistence, reopen, adoption planning, recovery, and history reconciliation.
+- Palette-family and reverse-sync candidate rebuilding preserve true-color sprite formats and pixels instead of forcing the PNG8-only writer.
+- Indexed-only SFF output continues through the established PNG8 writer path unchanged.
+- SprMake2 and dual-writer comparison are clearly unavailable for true-color builds until that external route is independently certified; the native IKEMaker route remains available.

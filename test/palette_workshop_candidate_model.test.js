@@ -1,0 +1,20 @@
+'use strict';
+const assert=require('assert');
+const model=require('../src/palette_workshop_candidate_model');
+const colors=Array.from({length:256},(_,index)=>[index,255-index,index%17,index===0?0:255]);
+const target={filename:'C:\\game\\hero.sff',byteHash:'a'.repeat(64),byteLength:100};
+const palette={physicalIndex:2,group:1,number:3};
+const interaction=require('../src/palette_workshop_interaction_model').normalizeInteraction({activeIndex:9,lockedIndexes:[0,9]});
+function session(dirty){return{target,selection:{palette},preview:dirty?{dirty:true,stale:false,colors,source:{filename:'C:\\pal\\old.act',byteHash:'b'.repeat(64),byteLength:768},actOrder:'index',label:'Old draft'}:{dirty:false,stale:false,colors:null,source:null,actOrder:null,label:''},interaction,facts:{preview:dirty?'draft':'none'},stale:false,staleReasons:[],applyAllowed:true};}
+for(const dirty of [false,true]){const baseline=model.captureBaseline(session(dirty)),normalized=model.normalizeBaseline(baseline),patch=model.restorePatch(normalized);assert.strictEqual(patch.preview.dirty,dirty);assert.deepStrictEqual(patch.preview.colors,dirty?colors:null);assert.deepStrictEqual(patch.interaction,interaction);assert.strictEqual(patch.facts.preview,dirty?'draft':'none');assert.strictEqual(model.assertBaseline(baseline,target,palette).baselineHash,baseline.baselineHash)}
+const baseline=model.captureBaseline(session(true)),candidate=model.normalizeCandidate({baseline,candidate:{filename:'C:\\pal\\new.act',byteHash:'c'.repeat(64),byteLength:768,format:'act',actOrder:'reversed'},selectedIndex:4});
+assert.strictEqual(candidate.active,true);assert.strictEqual(candidate.candidate.actOrder,'reversed');assert.strictEqual(candidate.selectedIndex,4);
+const labeled=model.normalizeCandidate({...candidate,displayMetadata:{label:' Alt ',groupLabel:'Base',tags:['warm','Warm']}});assert.strictEqual(labeled.displayMetadata.label,'Alt');assert.strictEqual(labeled.displayMetadata.tags.length,1,'display-only metadata is bounded and case-insensitively deduplicated');
+const stepped=model.normalizeCandidate({...candidate,candidate:{filename:'C:\\pal\\next.png',byteHash:'d'.repeat(64),byteLength:900,format:'png',actOrder:null},selectedIndex:5});assert.strictEqual(stepped.baseline.baselineHash,baseline.baselineHash,'candidate stepping cannot overwrite the original draft baseline');
+assert.throws(()=>model.assertBaseline(baseline,{...target,byteHash:'d'.repeat(64)},palette),/SFF target changed/);assert.throws(()=>model.assertBaseline(baseline,target,{...palette,number:4}),/physical palette changed/);
+assert.strictEqual(model.normalizeBaseline({...baseline,baselineHash:'e'.repeat(64)}),null,'tampered baselines are rejected');assert.strictEqual(model.normalizeCandidate({baseline:{bad:true},candidate:{bad:true}}).active,false);
+const missingHash={...baseline};delete missingHash.baselineHash;assert.strictEqual(model.normalizeBaseline(missingHash),null,'unsealed persisted baselines are rejected');assert.strictEqual(model.normalizeBaseline({...baseline,target:{...baseline.target,byteLength:Infinity},baselineHash:'f'.repeat(64)}),null);
+assert.strictEqual(model.normalizeCandidate({baseline,candidate:{filename:'C:\\pal\\new.act',byteHash:'c'.repeat(64),byteLength:768,format:'png',actOrder:null},selectedIndex:4}).active,false,'format must match extension');
+assert.strictEqual(model.normalizeCandidate({baseline,candidate:{filename:'C:\\pal\\new.act',byteHash:'c'.repeat(64),byteLength:768,format:'act',actOrder:'index'},selectedIndex:4.5}).active,false,'candidate index must be an integer');
+const invalidOrder=model.captureBaseline(session(true));const invalidOrderValue={...invalidOrder,preview:{...invalidOrder.preview,actOrder:'legacy-guess'}};invalidOrderValue.baselineHash=model.hash(Object.fromEntries(Object.entries(invalidOrderValue).filter(([key])=>key!=='baselineHash')));assert.strictEqual(model.normalizeBaseline(invalidOrderValue),null,'restorable preview order is closed to explicit supported modes');
+console.log('Palette Workshop candidate baseline tests passed');

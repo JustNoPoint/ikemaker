@@ -1,0 +1,8 @@
+IKEMaker 0.79.438
+
+Direct compact Add Sprites package handling
+- Compact Build Now no longer asks the user to choose an internal reviewed-package parent folder.
+- The protected IKEMaker build lifecycle uses a private automatic working location under the target character's .ikemen-tools folder.
+- The active SFF remains the explicit reviewed destination; internal package selection is not presented as part of ordinary sprite intake.
+- Manual Create Package and advanced diagnostic routes retain their explicit destination controls.
+- Successful compact writes still refresh and return to the original SFF viewer.

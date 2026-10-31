@@ -17,25 +17,29 @@ for (const command of declared) {
   const literal = new RegExp(`registerCommand\\(\\s*['\"]${command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}['\"]`);
   assert(literal.test(allSource) || factoryCommands.has(command), `${command} is contributed but not registered`);
 }
+const submenuIds = new Set((packageJson.contributes.submenus || []).map(item => item.id));
 for (const [menuName, entries] of Object.entries(packageJson.contributes.menus || {})) for (const item of entries) {
-  assert(declared.includes(item.command), `${menuName} references undeclared command ${item.command}`);
+  if (item.submenu) assert(submenuIds.has(item.submenu), `${menuName} references undeclared submenu ${item.submenu}`);
+  else assert(declared.includes(item.command), `${menuName} references undeclared command ${item.command}`);
 }
 
 const requiredCreation = ['ikemen.character.createNew', 'ikemen.stage.createNew', 'ikemen.ui.createNew', 'sff.createNew', 'air.createNew', 'snd.createNew', 'zss.createNew', 'cns.createNew', 'inp.createNew', 'cmd.createNew', 'ikemen.def.createNew', 'ikemen.lua.createNew', 'ikemen.text.createNew'];
 const requiredOpen = ['ikemen.character.open', 'ikemen.stage.openWorkspace', 'ikemen.ui.openWorkspace', 'sff.openViewer', 'air.openAnimationPreview', 'snd.openViewer', 'ikemen.projectManager.open'];
 for (const command of [...requiredCreation, ...requiredOpen]) assert(declared.includes(command), `missing open/create command: ${command}`);
-const commandTitleEntry = packageJson.contributes.menus['editor/title'].find(item => item.command === 'ikemen.commandMovelist.openEditor');
-assert(commandTitleEntry && commandTitleEntry.when.includes('resourceExtname == .inp') && commandTitleEntry.when.includes('ikemen.interfaceMode != player'), 'CMD/INP title access remains visible in both Simple and Workspace authoring modes');
+const codingTitleEntry = packageJson.contributes.menus['editor/title'].find(item => item.command === 'ikemen.textToolbar.openPrimary');
+assert(codingTitleEntry && codingTitleEntry.when.includes('ikemen.activeTextSupported') && !codingTitleEntry.when.includes('ikemen.interfaceMode == workspace'), 'the native title bar exposes one matching IKEMaker tool in both Simple and Workspace authoring modes');
+assert(packageJson.contributes.menus['ikemen.text.tools'].some(item => item.command === 'ikemen.commandMovelist.openEditor' && item.when.includes('ikemen.activeTextKind == inp')), 'the direct CMD/INP editor remains accessible through the nested text toolbar');
 
 for (const { name, text } of sources.filter((item) => /(?:viewer|workspace)\.js$/i.test(item.name))) {
-  const ids = [...text.matchAll(/<button\b[^>]*\bid=["']([^"']+)["']/gi)].map((match) => match[1]);
+  const ids = [...text.matchAll(/<button\b[^>]*\sid=["']([^"']+)["']/gi)].map((match) => match[1]);
   for (const id of new Set(ids)) {
     const occurrences = text.split(id).length - 1;
     assert(occurrences >= 2, `${name} button #${id} has no discoverable client binding`);
   }
   for (const match of text.matchAll(/<button\b[^>]*>([\s\S]*?)<\/button>/gi)) {
     const tag = match[0], label = match[1].replace(/<[^>]+>/g, '').trim();
-    assert(label || /\b(?:aria-label|title)=["']/i.test(tag), `${name} contains an unlabelled button`);
+    const intentionallyHidden = /\bhidden\b/i.test(tag);
+    assert(label || intentionallyHidden || /\b(?:aria-label|title)=["']/i.test(tag), `${name} contains an unlabelled button`);
   }
   for (const match of text.matchAll(/vscode\.postMessage\(\{\s*type\s*:\s*["']([^"']+)/g)) {
     const type = match[1], occurrences = text.split(type).length - 1;

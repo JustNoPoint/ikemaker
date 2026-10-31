@@ -1,0 +1,10 @@
+IKEMaker 0.79.27 — Docked-first prototype and native docking finding
+
+- Open Docking Prototype now reveals a docked native View only.
+- It no longer creates an editor tab automatically.
+- The editor/floating-window probe remains available as a separate advanced
+  action.
+- Records that VS Code native Views and editor/floating windows are separate
+  docking domains and cross-region movement can require Hold Shift.
+- Establishes an IKEMaker-owned, no-modifier internal docking canvas as the path
+  for the approved Photoshop-style workspace behavior.

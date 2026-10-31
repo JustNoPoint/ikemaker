@@ -1,0 +1,5 @@
+IKEMaker 0.79.55
+
+- Stops VS Code from restoring an SFF Browser tab into a previously shared AIR auxiliary window.
+- Discards stale native-window placement during startup.
+- Lets the active main SFF viewer create one fresh, separately floated SFF Browser.

@@ -1,0 +1,14 @@
+IKEMaker 0.79.389
+
+Palette Workshop animation parity
+
+- Added a complete AIR-action chooser to the SFF-backed Palette Workshop.
+- Any embedded palette can now be previewed across any neighboring AIR action without first opening SFF Browser.
+- Added Replay and Open in AIR Viewer controls beside the animation preview.
+- Added a direct PalFX Editor route in the same palette workflow.
+- Clarified that animation palette application is a non-destructive preview; AIR and SFF files remain unchanged.
+- Prevented stale animation frames from a previously selected palette or action from replacing the current preview.
+- Ambiguous duplicate group,index sprite references are reported and skipped rather than resolved arbitrarily.
+- Zero, negative, loop, or infinite frame times cannot stall the preview animation.
+
+Astra medium reviewed the Palette Workshop and SFF Browser palette surfaces for parity, accessibility, and ownership. Palette Workshop remains the authoritative palette workspace; other viewers may provide shortcuts but should not own unique palette features.

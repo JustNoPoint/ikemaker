@@ -5,20 +5,40 @@ const { preferredViewerColumn, trackViewerPanel } = require('./viewer_group');
 const path = require('path');
 const fs = require('fs');
 const { parseZss, displayName } = require('./parser');
+const { documentOutline } = require('./zss_document_outline');
 const controllerCatalog = require('../data/sctrl.json');
+const luaApiCatalog = require('../data/lua-api.json');
+const { luaAuthoringInsert } = require('./language_intelligence');
+const { parseLuaFunctions } = require('./lua_function_catalog');
 const { controllerAuthoringPlan, controllerAuthoringText, cnsControllerAuthoringText } = require('./controller_authoring');
 const { leadingWhitespace, wrapText } = require('./wrappers');
+const zssStructures = require('./zss_structures');
+const authoringLibrary = require('./authoring_library');
 const { generateGuardProximity, updateGuardHelperZss } = require('./air');
 const { createAirClsn2BatchService } = require('./air_clsn2_batch_service');
-const { analyzeZss } = require('./analyzer');
-const { createUpdateMonitor } = require('./updater');
+const { analyzeZss, analyzeCommandReferences, defMapCapabilityIssues, defMapValueIssues, typedConstantIssues } = require('./analyzer');
+const { missingFileIssues } = require('./def_file_diagnostics');
+const { basicSyntaxIssues } = require('./basic_syntax_diagnostics');
+const { registerNativeDocumentOutlines } = require('./native_document_outlines');
+const { resolveCommandCatalog, sameFile } = require('./command_reference_model');
+const { createUpdateMonitor, ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG } = require('./updater');
 const { registerExtensionUpdater } = require('./extension_updater');
+const { registerUpdateCenter } = require('./update_center');
 const engineRuntime = require('./engine_runtime');
+const engineModel = require('./engine_registry_model');
+const engineCapabilityPolicy = require('./engine_capability_policy');
+const { entryAvailable, filterAvailable } = require('./catalog_capability_filter');
+const controllerChangeMarkers = require('./controller_change_markers');
+const { ControllerChangeReviewStore } = require('./controller_change_review_store');
+const { ControllerChangeReviewAuthority } = require('./controller_change_review_authority');
 const { auditFirstActiveElements } = require('./frame_sync');
 const { selectedClsn2, updateStateRegionAssignments } = require('./region_assign');
 const { parseSizeboxLine, readCharacterScale, scaleSizebox, formatScaledLine } = require('./sizebox');
 const { registerSffCommands } = require('./sff_commands');
 const { registerSffViewer } = require('./sff_viewer');
+const { registerSffTransferHost } = require('./sff_transfer_host');
+const { registerSndTransferHost } = require('./snd_transfer_host');
+const { registerAirTransferHost } = require('./air_transfer_host');
 const { registerAirViewer } = require('./air_viewer');
 const { registerSndViewer } = require('./snd_viewer');
 const { registerDirectAssetOpening } = require('./direct_asset_opening');
@@ -47,6 +67,7 @@ const { registerMoveLab } = require('./move_lab_workspace');
 const { registerHitDefWorkspace } = require('./hitdef_workspace');
 const { registerThrowCreator } = require('./throw_creator_workspace');
 const { registerSpatialComposer } = require('./spatial_composer_workspace');
+const { registerTrajectoryWorkspace } = require('./trajectory_workspace');
 const { registerHelperLab } = require('./helper_workspace');
 const { registerPaletteImportWorkspace } = require('./palette_import_workspace');
 const { registerPlayerPaletteWorkspace } = require('./player_palette_workspace');
@@ -62,10 +83,17 @@ const { registerAssetCreation } = require('./asset_creation');
 const { registerExperience } = require('./experience');
 const { registerLanguageProviders } = require('./language_providers');
 const { registerDefSemanticHighlighting } = require('./def_semantics');
-const { registerNavigationProviders } = require('./navigation_providers');
+const { WorkspaceZssIndex, registerNavigationProviders } = require('./navigation_providers');
 const { registerMutationHistory } = require('./mutation_history');
 const { registerDiagnosticExplanations } = require('./diagnostic_explanations');
+const { registerCommentAssistance } = require('./comment_assistance');
+const { registerTriggerExpressionPicker } = require('./trigger_expression_picker');
+const { registerFunctionCallPicker } = require('./function_call_picker');
+const { registerZssAssetDiagnostics } = require('./zss_asset_diagnostics');
+const { registerZssFunctionDiagnostics } = require('./zss_function_diagnostics');
+const { registerStateTransferDiagnostics } = require('./state_transfer_diagnostics');
 const { registerAnimationStandardDiagnostics } = require('./animation_standard_diagnostics');
+const { registerCharacterScaleReview } = require('./character_scale_review_service');
 const { registerAuthoringBridge } = require('./authoring_bridge');
 const { openPalFxPresetEditor } = require('./palfx_editor');
 const { detectCapabilities, capabilitySummary } = require('./platform_capabilities');
@@ -75,9 +103,33 @@ const validationLevels = require('./validation_levels');
 const metadataRegistry = require('./metadata_registry');
 const { SignatureCache } = require('./signature_cache');
 const { ZssRegistryProvider } = require('./zss_registry_provider');
+const textEditorToolbar = require('./text_editor_toolbar');
+const companionSwitch = require('./companion_switch');
+const { registerAuthoringWorkspace } = require('./authoring_workspace');
+const { commandDocumentTargetDiagnostics } = require('./command_movelist_model');
 
 const diagnosticCollection = vscode.languages.createDiagnosticCollection('ikemen-zss');
 const validationCache = new SignatureCache(16);
+let activeCapabilityResolver = () => ({});
+
+async function readOnlyTreeSnapshot(provider) {
+  let count = 0;
+  const visit = async (parent, depth, trail) => {
+    const children = await Promise.resolve(provider?.getChildren?.(parent));
+    const result = [];
+    for (let index = 0; index < (children || []).length && count < 500; index += 1) {
+      const item = children[index]; count += 1;
+      const filename = item.uri?.fsPath || item.resourceUri?.fsPath || '';
+      const record = { id: String(item.id || item.contextValue || `${trail}-${index}`), label: String(typeof item.label === 'string' ? item.label : item.label?.label || item.description || `Item ${index + 1}`), description: String(item.description || ''), detail: String(item.tooltip?.value || item.tooltip || '') };
+      if (typeof provider?.decorateReadOnlyTreeRecord === 'function') Object.assign(record, provider.decorateReadOnlyTreeRecord(item, record) || {});
+      if (filename) record.source = { filename, ...(Number.isInteger(item.line) ? { line: item.line } : {}) };
+      if (depth < 2) { const nested = await visit(item, depth + 1, `${trail}-${index}`); if (nested.length) record.children = nested; }
+      result.push(record);
+    }
+    return result;
+  };
+  return { items: await visit(undefined, 0, 'root') };
+}
 
 function configuredPrefixes(config, pluralKey, legacyKey) {
   const inspected = config.inspect(pluralKey) || {};
@@ -97,10 +149,26 @@ function configuredPrefixes(config, pluralKey, legacyKey) {
 function analyzerOptions(resource) {
   const config = vscode.workspace.getConfiguration('ikemenZss', resource);
   const authorName = String(config.get('authorName', '') || '').trim();
+  const commandCatalog = resource?.fsPath ? resolveCommandCatalog(resource.fsPath, { openDocuments: vscode.workspace.textDocuments }) : null;
+  const ownerHasUnsavedAssignment = commandCatalog?.owners?.some(owner => vscode.workspace.textDocuments.some(document => document.isDirty && sameFile(document.fileName, owner)));
   return {
     mapPrefixes: configuredPrefixes(config, 'mapPrefixes', 'mapPrefix'),
     functionPrefixes: configuredPrefixes(config, 'functionPrefixes', 'functionPrefix'),
     opponentAvailability: authorName ? config.get('authorRules.opponentAvailability', 'off') : 'off',
+    unusedLetSeverity: config.get('diagnostics.unusedLetSeverity', 'error'),
+    commandNames: commandCatalog?.complete && !ownerHasUnsavedAssignment ? commandCatalog.names : undefined,
+    commandCatalog: commandCatalog?.complete && !ownerHasUnsavedAssignment ? commandCatalog : undefined,
+    capabilities: activeCapabilityResolver(resource),
+    syntaxDiagnostics: {
+      enabled: config.get('diagnostics.syntax.enabled', true),
+      missingSemicolons: config.get('diagnostics.syntax.missingSemicolons', true),
+      duplicateParameters: config.get('diagnostics.syntax.duplicateParameters', true),
+      unknownControllers: config.get('diagnostics.syntax.unknownControllers', true),
+      unknownTriggers: config.get('diagnostics.syntax.unknownTriggers', false),
+      structure: config.get('diagnostics.syntax.structure', true),
+      controlFlow: config.get('diagnostics.syntax.controlFlow', true),
+      ignoredNames: config.get('diagnostics.syntax.ignoredNames', [])
+    },
     authorName
   };
 }
@@ -135,15 +203,22 @@ function validationSettings(resource) {
 }
 
 function analyzeDocument(document) {
-  if (!document || document.languageId !== 'zss') return { issues: [], records: {} };
-  const result = analyzeZss(document.getText(), analyzerOptions(document.uri));
+  const defDocument=Boolean(document&&/\.def$/i.test(document.fileName || document.uri?.fsPath || ''));
+  if (!document || !['zss', 'ikemen-cns'].includes(document.languageId) && !defDocument) return { issues: [], records: {} };
+  const options = analyzerOptions(document.uri), result = defDocument
+    ? {issues:[...defMapCapabilityIssues(document.getText(),activeCapabilityResolver(document.uri),document.fileName||document.uri?.fsPath||'character.def'),...defMapValueIssues(document.getText(),activeCapabilityResolver(document.uri)),...typedConstantIssues(document.getText(),activeCapabilityResolver(document.uri),{legacy:true}),...missingFileIssues(document.getText(),document.fileName||document.uri?.fsPath||'character.def')],records:{}}
+    : document.languageId === 'zss'
+    ? analyzeZss(document.getText(), options)
+    : { issues: [...analyzeCommandReferences(document.getText(), options.commandNames, { semicolonComments: true }),...typedConstantIssues(document.getText(),activeCapabilityResolver(document.uri),{legacy:true})], records: {} };
+  if (!defDocument) result.issues.push(...basicSyntaxIssues(document.getText(), document.languageId, options.syntaxDiagnostics));
+  if (/\.(?:cmd|inp|jnp)$/i.test(document.fileName || document.uri?.fsPath || '')) result.issues.push(...commandDocumentTargetDiagnostics(document.getText(), { capabilities: activeCapabilityResolver(document.uri) }, document.fileName || document.uri?.fsPath || ''));
   const settings = validationSettings(document.uri), diagnostics = result.issues.filter((entry) => validationLevels.enabled({ ...entry, level: validationLevel(entry) }, settings)).map((entry) => {
     const line = Math.min(entry.line, document.lineCount - 1);
     const max = document.lineAt(line).text.length;
     const range = new vscode.Range(line, Math.min(entry.start, max), line, Math.min(entry.start + entry.length, max));
     const diagnostic = new vscode.Diagnostic(range, entry.message, vscodeSeverity(validationLevel(entry)));
     diagnostic.code = entry.code;
-    diagnostic.source = 'IKEMEN ZSS';
+    diagnostic.source = defDocument ? 'IKEMEN DEF' : document.languageId === 'zss' ? 'IKEMEN ZSS' : 'IKEMEN CNS';
     if (entry.help) diagnostic.relatedInformation = [new vscode.DiagnosticRelatedInformation(
       new vscode.Location(document.uri, range), entry.help
     )];
@@ -232,20 +307,25 @@ function selectionFor(document, symbol) {
 
 class ZssDocumentSymbolProvider {
   provideDocumentSymbols(document) {
-    return parseZss(document.getText()).map((symbol) => {
-      const kind = symbol.type === 'state'
+    return documentOutline(document.getText()).map((symbol) => {
+      const kind = symbol.kind === 'state'
         ? vscode.SymbolKind.Class
         : vscode.SymbolKind.Function;
-      const detail = symbol.type === 'state'
-        ? (symbol.heading || 'StateDef')
-        : (symbol.heading || 'Function');
-      return new vscode.DocumentSymbol(
-        displayName(symbol),
-        detail,
+      const result = new vscode.DocumentSymbol(
+        symbol.label,
+        symbol.detail,
         kind,
         rangeFor(document, symbol),
         selectionFor(document, symbol)
       );
+      result.children = symbol.children.map((child) => new vscode.DocumentSymbol(
+        child.label,
+        child.detail,
+        child.kind === 'controller' ? vscode.SymbolKind.Method : child.kind === 'call' ? vscode.SymbolKind.Function : child.kind === 'transition' ? vscode.SymbolKind.Event : child.kind === 'command' ? (vscode.SymbolKind.Key??vscode.SymbolKind.Event) : child.kind === 'resource' ? (vscode.SymbolKind.Object??vscode.SymbolKind.Variable) : child.kind === 'constant' ? (vscode.SymbolKind.Constant??vscode.SymbolKind.Variable) : child.kind === 'map' ? (vscode.SymbolKind.Key??vscode.SymbolKind.Variable) : child.kind === 'redirect' ? (vscode.SymbolKind.Interface??vscode.SymbolKind.Variable) : child.kind === 'parameter' ? vscode.SymbolKind.Field : vscode.SymbolKind.Variable,
+        new vscode.Range(child.line, 0, child.line, document.lineAt(child.line).text.length),
+        new vscode.Range(child.line, child.start, child.line, child.start + child.length)
+      ));
+      return result;
     });
   }
 }
@@ -311,12 +391,30 @@ class ZssNavigator {
         workspace.iconPath = new vscode.ThemeIcon('files');
         roots.push(workspace);
       }
+      if (!roots.length) {
+        const empty = new NavigatorItem('Open a ZSS file or workspace folder to begin', vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'navigatorEmpty', contextValue: 'zssNavigatorEmpty' });
+        empty.description = 'no ZSS navigation source';
+        empty.tooltip = 'Open a ZSS source file, or add a workspace folder containing ZSS files.';
+        empty.iconPath = new vscode.ThemeIcon('info');
+        empty.command = { command: 'workbench.action.files.openFile', title: 'Open a ZSS File' };
+        roots.push(empty);
+      }
       return roots;
     }
 
     if (element.nodeType === 'workspace') {
       const limit = vscode.workspace.getConfiguration('zssNavigator').get('maxWorkspaceFiles', 500);
       const uris = await vscode.workspace.findFiles('**/*.zss', '**/{.git,node_modules}/**', limit);
+      if (!uris.length) {
+        const empty = new NavigatorItem('No ZSS files found in this workspace', vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'navigatorWorkspaceEmpty', contextValue: 'zssNavigatorWorkspaceEmpty' });
+        empty.description = 'Open or create a ZSS file, then use Refresh.';
+        empty.tooltip = 'The current workspace folders contain no discoverable .zss files.';
+        empty.iconPath = new vscode.ThemeIcon('info');
+        empty.command = { command: 'workbench.action.files.openFile', title: 'Open a ZSS File' };
+        return [empty];
+      }
       return uris
         .sort((a, b) => a.fsPath.localeCompare(b.fsPath))
         .map((uri) => {
@@ -332,7 +430,16 @@ class ZssNavigator {
 
     if (element.nodeType === 'document') {
       const document = await vscode.workspace.openTextDocument(element.uri);
-      return parseZss(document.getText()).map((symbol) => {
+      const symbols = parseZss(document.getText());
+      if (!symbols.length) {
+        const empty = new NavigatorItem('No authored states or functions found', vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'navigatorDocumentEmpty', contextValue: 'zssNavigatorDocumentEmpty' });
+        empty.description = 'Add a StateDef or Function, save, then use Refresh.';
+        empty.tooltip = `No navigable StateDef or Function declaration was parsed in ${path.basename(document.fileName || element.uri?.fsPath || 'this file')}.`;
+        empty.iconPath = new vscode.ThemeIcon('info');
+        return [empty];
+      }
+      return symbols.map((symbol) => {
         const item = new NavigatorItem(displayName(symbol), vscode.TreeItemCollapsibleState.None, {
           nodeType: 'symbol', uri: document.uri, line: symbol.startLine,
           contextValue: symbol.type === 'state' ? 'zssState' : 'zssFunction'
@@ -359,14 +466,24 @@ class ZssNavigator {
 }
 
 class ZssControllerProvider {
-  constructor(catalog = controllerCatalog) {
+  constructor(catalog = controllerCatalog, getCapabilities = () => ({}), reviewStore = null, reviewAuthority = null) {
     this.catalog = catalog;
+    this.getCapabilities = getCapabilities;
+    this.reviewStore = reviewStore;
+    this.reviewAuthority = reviewAuthority;
     this.filter = '';
     this.changeEmitter = new vscode.EventEmitter();
     this.onDidChangeTreeData = this.changeEmitter.event;
   }
 
   refresh() {
+    try {
+      const review = this.reviewProjection();
+      vscode.commands.executeCommand('setContext', 'ikemen.controllerChangesAvailable', Boolean(review.visible && review.unreviewedCount));
+    } catch (_) {
+      vscode.commands.executeCommand('setContext', 'ikemen.controllerChangesAvailable', false);
+    }
+    vscode.commands.executeCommand('setContext', 'ikemen.controllerFilterActive', Boolean(this.filter));
     this.changeEmitter.fire(undefined);
   }
 
@@ -382,62 +499,338 @@ class ZssControllerProvider {
 
   matches(controller) {
     if (!this.filter) return true;
-    return [
+    return require('./intent_search').matches([
       controller.name,
       controller.status,
       controller.description,
       ...controller.params.map((parameter) => parameter.name)
-    ].join(' ').toLowerCase().includes(this.filter);
+    ].join(' '), this.filter, vscode.workspace.getConfiguration('ikemenZss').get('authoring.intentAliases', {}));
+  }
+
+  matchesStructure(structure) {
+    if (!this.filter) return true;
+    return require('./intent_search').matches(`${structure.label} ${structure.detail} ${structure.id}`, this.filter, vscode.workspace.getConfiguration('ikemenZss').get('authoring.intentAliases', {}));
+  }
+
+  matchesLua(entry) {
+    if (!this.filter) return true;
+    return require('./intent_search').matches([
+      entry.name,
+      entry.signature,
+      entry.description,
+      entry.parameters,
+      entry.returns,
+      entry.category,
+      entry.source
+    ].join(' '), this.filter, vscode.workspace.getConfiguration('ikemenZss').get('authoring.intentAliases', {}));
+  }
+
+  luaProjectFunctions() {
+    const document = vscode.window.activeTextEditor?.document;
+    if (!document || document.languageId !== 'lua') return [];
+    return parseLuaFunctions(document.getText(), document.fileName).definitions.filter((entry) => entry.topLevel && this.matchesLua({ ...entry, signature: `${entry.name}(${entry.params.join(', ')})`, category: 'Current file' }));
   }
 
   filteredCatalog(status) {
-    return this.catalog.filter((controller) =>
+    return filterAvailable(this.catalog, this.getCapabilities(vscode.window.activeTextEditor?.document?.uri)).filter((controller) =>
       controller.status === status && this.matches(controller)
     );
   }
 
+  reviewContext(context = null) {
+    const root = context?.root || context?.directory || vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath || 'workspace';
+    const files = (context?.files || context?.connectedFiles || []).filter((value) => typeof value === 'string').map((value) => path.resolve(value).toLowerCase()).sort().slice(0, 256);
+    return JSON.stringify(['State Controllers', path.resolve(root), context?.identity || context?.id || context?.key || '', files]);
+  }
+
+  reviewProjectionFor(capabilities, contextIdentity) {
+    const acknowledged = this.reviewStore?.acknowledged(contextIdentity) || {};
+    return controllerChangeMarkers.project(this.catalog, capabilities, { acknowledged });
+  }
+
+  reviewProjection() { const contextIdentity = this.reviewContext(); return this.reviewProjectionFor(this.getCapabilities(vscode.window.activeTextEditor?.document?.uri), contextIdentity); }
+
+  markerFor(controller, review = this.reviewProjection()) {
+    return review.items?.find((item) => item.marked && String(item.controller).toLowerCase() === String(controller?.name).toLowerCase()) || null;
+  }
+
+  decorateReadOnlyTreeRecord(item) {
+    const review = this.reviewProjection();
+    if (item?.nodeType === 'controller') {
+      const marker = this.markerFor(item.controller, review);
+      return marker ? { reviewController: marker.controller, markerText: controllerChangeMarkers.ACCESSIBLE_MARKER, changeMarker: true } : {};
+    }
+    if (item?.nodeType === 'controllerGroup') {
+      const groupId = item.status === 'new' ? 'new' : item.status === 'changed' ? 'changed' : '', group = review.groups?.find((value) => value.id === groupId);
+      return group?.unreviewedCount ? { reviewGroup: groupId, markerText: controllerChangeMarkers.ACCESSIBLE_MARKER, changeMarker: true } : {};
+    }
+    return {};
+  }
+
+  async reviewControllerFor(controller, context, expectedSnapshotId = '', isCurrent = () => true) {
+    const contextIdentity = this.reviewContext(context), capabilities = this.getCapabilities(context || vscode.window.activeTextEditor?.document?.uri), review = this.reviewProjectionFor(capabilities, contextIdentity), marked = this.markerFor(controller, review);
+    if (!marked) return false;
+    if (expectedSnapshotId && review.snapshotId !== expectedSnapshotId) throw new Error('Controller review context changed; refresh Coding Assistance before acknowledging.');
+    const issued = this.reviewAuthority.issueDetails(contextIdentity, review, controller.name), options = issued.details.options.map((item) => `${item.name}${item.required ? ' (required)' : ''}: ${item.placeholder || 'value'}${item.description ? ` — ${item.description}` : ''}`).join('\n');
+    const actions = this.reviewStore?.available ? ['Acknowledge Reviewed', 'Insert Controller'] : ['Insert Controller'];
+    const answer = await vscode.window.showInformationMessage(`${issued.details.controller} — ${issued.details.markerText}`, { modal: true, detail: `${issued.details.description || 'State controller'}\n\nCurrent effective options:\n${options || '(no documented options)'}\n\nTarget: ${issued.details.target}${this.reviewStore?.available ? '' : '\n\nAcknowledgement storage is unavailable; this marker remains read-only.'}` }, ...actions);
+    if (answer === 'Insert Controller') return insertController(controller, this.catalog, this.getCapabilities);
+    if (answer !== 'Acknowledge Reviewed') return false;
+    if (!isCurrent()) throw new Error('Coding Assistance changed context before controller acknowledgement. Refresh and review again.');
+    const currentCapabilities = this.getCapabilities(context || vscode.window.activeTextEditor?.document?.uri), current = this.reviewProjectionFor(currentCapabilities, contextIdentity), records = this.reviewAuthority.consume(issued.receipt, contextIdentity, current);
+    await this.reviewStore.acknowledge(contextIdentity, records); this.refresh(); return true;
+  }
+
+  async reviewController(controller) {
+    if (!controller) {
+      const review = this.reviewProjection();
+      const choices = filterAvailable(this.catalog, this.getCapabilities(vscode.window.activeTextEditor?.document?.uri))
+        .filter((candidate) => this.markerFor(candidate, review))
+        .map((candidate) => ({ label: candidate.name, description: candidate.description || 'Changed controller contract', controller: candidate }));
+      if (!choices.length) return vscode.window.showInformationMessage('No unreviewed controller changes are available for the current project target.');
+      const picked = await vscode.window.showQuickPick(choices, { title: 'Review New or Changed Controller', placeHolder: 'Choose the exact controller contract to review.' });
+      if (!picked) return false;
+      controller = picked.controller;
+    }
+    return this.reviewControllerFor(controller, null);
+  }
+
+  async clearReviewGroupFor(groupId, context, expectedSnapshotId = '', isCurrent = () => true) {
+    const contextIdentity = this.reviewContext(context), capabilities = this.getCapabilities(context || vscode.window.activeTextEditor?.document?.uri), review = this.reviewProjectionFor(capabilities, contextIdentity);
+    if (!groupId || !this.reviewStore?.available) return false;
+    if (expectedSnapshotId && review.snapshotId !== expectedSnapshotId) throw new Error('Controller review context changed; refresh Coding Assistance before acknowledging.');
+    const receipt = this.reviewAuthority.issueGroup(contextIdentity, review, groupId), count = receipt.items.length, label = groupId === 'new' ? 'IKEMEN New' : 'Changed / Expanded';
+    const answer = await vscode.window.showWarningMessage(`Clear all ${count} change marker${count === 1 ? '' : 's'} in this group?`, { modal: true, detail: `This acknowledges the exact current controller contracts in ${label}. It does not modify source, controller definitions, the selected engine target, or compatibility policy.` }, 'Clear Change Markers');
+    if (answer !== 'Clear Change Markers') return false;
+    if (!isCurrent()) throw new Error('Coding Assistance changed context before group acknowledgement. Refresh and review again.');
+    const currentCapabilities = this.getCapabilities(context || vscode.window.activeTextEditor?.document?.uri), current = this.reviewProjectionFor(currentCapabilities, contextIdentity), records = this.reviewAuthority.consume(receipt, contextIdentity, current);
+    await this.reviewStore.acknowledge(contextIdentity, records); this.refresh(); return true;
+  }
+  async clearReviewGroup(element) {
+    let groupId = element?.status === 'new' ? 'new' : element?.status === 'changed' ? 'changed' : '';
+    if (!groupId) {
+      const review = this.reviewProjection();
+      const choices = (review.groups || []).filter((group) => ['new', 'changed'].includes(group.id) && group.unreviewedCount).map((group) => ({
+        label: group.id === 'new' ? 'IKEMEN New' : 'Changed / Expanded',
+        description: `${group.unreviewedCount} unreviewed controller${group.unreviewedCount === 1 ? '' : 's'}`,
+        groupId: group.id
+      }));
+      if (!choices.length) return vscode.window.showInformationMessage('No controller change-marker groups are available to clear for the current project target.');
+      const picked = await vscode.window.showQuickPick(choices, { title: 'Clear Controller Change Markers', placeHolder: 'Choose the exact reviewed group to acknowledge.' });
+      if (!picked) return false;
+      groupId = picked.groupId;
+    }
+    return this.clearReviewGroupFor(groupId, null);
+  }
+
+  browserSnapshot(context = {}) {
+    const contextIdentity = this.reviewContext(context), capabilities = this.getCapabilities(context), review = this.reviewProjectionFor(capabilities, contextIdentity), groups = [['new', 'IKEMEN New'], ['changed', 'Changed / Expanded'], ['old', 'MUGEN Compatible']];
+    return { items: groups.map(([status, label]) => {
+      const children = filterAvailable(this.catalog, capabilities).filter((controller) => controller.status === status).map((controller) => {
+        const marker = this.markerFor(controller, review);
+        return { id: `controller:${String(controller.name).toLowerCase()}`, label: `${controller.name}${marker ? ' *' : ''}`, description: `${controller.params.length} options${marker ? ` · ${controllerChangeMarkers.ACCESSIBLE_MARKER}` : ''}`, detail: controller.description || 'State controller', ...(marker ? { reviewController: controller.name, reviewSnapshot: review.snapshotId, markerText: controllerChangeMarkers.ACCESSIBLE_MARKER } : {}) };
+      });
+      const reviewGroup = review.groups?.find((item) => item.id === status), marked = Boolean(reviewGroup?.unreviewedCount);
+      return { id: `controller-group:${status}`, label: `${label} (${children.length})${marked ? ' *' : ''}`, description: marked ? `${reviewGroup.unreviewedCount} unreviewed · group count remains ${children.length}` : `${children.length} controllers`, ...(marked ? { reviewGroup: status, reviewSnapshot: review.snapshotId, markerText: controllerChangeMarkers.ACCESSIBLE_MARKER } : {}), children };
+    }).filter((group) => group.children.length), count: review.count, unreviewedCount: review.unreviewedCount, snapshotId: review.snapshotId, note: review.note };
+  }
+
   getChildren(element) {
     if (!element) {
+      const review = this.reviewProjection();
+      const quickAccess = new NavigatorItem('Authoring Quick Access', vscode.TreeItemCollapsibleState.Expanded,
+        { nodeType: 'authoringQuickRoot', contextValue: 'authoringQuickRoot' });
+      quickAccess.iconPath = new vscode.ThemeIcon('star-full');
       const groups = [
         ['new', 'IKEMEN New'],
         ['changed', 'Changed / Expanded'],
         ['old', 'MUGEN Compatible']
       ];
-      return groups.map(([status, label]) => {
+      const controllerGroups = groups.map(([status, label]) => {
         const count = this.filteredCatalog(status).length;
+        const reviewGroup = review.groups?.find((item) => item.id === status), marked = Boolean(reviewGroup?.unreviewedCount);
         const item = new NavigatorItem(
-          `${label} (${count})`,
+          `${label} (${count})${marked ? ' *' : ''}`,
           this.filter
             ? vscode.TreeItemCollapsibleState.Expanded
             : vscode.TreeItemCollapsibleState.Collapsed,
-          { nodeType: 'controllerGroup', status, contextValue: 'zssControllerGroup' }
+          { nodeType: 'controllerGroup', status, contextValue: marked ? 'zssControllerChangedGroup' : 'zssControllerGroup' }
         );
         item.iconPath = new vscode.ThemeIcon(
-          status === 'new' ? 'sparkle' : status === 'changed' ? 'diff-modified' : 'archive'
+          marked ? 'asterisk' : status === 'new' ? 'sparkle' : status === 'changed' ? 'diff-modified' : 'archive',
+          marked ? new vscode.ThemeColor('errorForeground') : undefined
         );
+        if (marked) item.tooltip = `${controllerChangeMarkers.ACCESSIBLE_MARKER}. ${reviewGroup.unreviewedCount} controller${reviewGroup.unreviewedCount === 1 ? '' : 's'} unreviewed; group count remains ${count}.`;
         return item;
       }).filter((item) => !this.filter || this.filteredCatalog(item.status).length);
+      const structureCount = zssStructures.STRUCTURES.filter((item) => this.matchesStructure(item)).length;
+      if (structureCount) {
+        const structures = new NavigatorItem(
+          `ZSS Structure & Logic (${structureCount})`,
+          this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'structureRoot', contextValue: 'zssStructureRoot' }
+        );
+        structures.iconPath = new vscode.ThemeIcon('symbol-structure');
+        structures.tooltip = 'Valid starting structures for conditions, selection, loops, functions, assignments, states, and common safety patterns.';
+        controllerGroups.push(structures);
+      }
+      const luaApiCount = luaApiCatalog.filter((entry) => this.matchesLua(entry)).length;
+      const luaProjectCount = this.luaProjectFunctions().length;
+      if (luaApiCount || luaProjectCount) {
+        const lua = new NavigatorItem(
+          `Lua Authoring (${luaApiCount + luaProjectCount})`,
+          this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'luaRoot', contextValue: 'ikemenLuaRoot' }
+        );
+        lua.iconPath = new vscode.ThemeIcon('code');
+        lua.tooltip = 'IKEMEN Lua API functions and hooks, plus top-level functions detected in the active Lua file.';
+        controllerGroups.push(lua);
+      }
+      if (this.filter && !controllerGroups.length) {
+        const empty = new NavigatorItem(`No controller, structure, or Lua matches for “${this.filter}”`, vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'authoringFilterEmpty', contextValue: 'authoringFilterEmpty' });
+        empty.description = 'Change or clear the filter to restore results.';
+        empty.iconPath = new vscode.ThemeIcon('search-stop');
+        return [quickAccess, empty];
+      }
+      return [quickAccess, ...controllerGroups];
+    }
+
+    if (element.nodeType === 'authoringQuickRoot') {
+      const sections = [];
+      const favoriteCount = authoringLibrary.favorites().length;
+      const recentCount = authoringLibrary.recents().length;
+      if (favoriteCount) sections.push(new NavigatorItem(`Favorites (${favoriteCount})`, vscode.TreeItemCollapsibleState.Expanded, { nodeType: 'authoringFavorites', contextValue: 'authoringFavorites' }));
+      if (recentCount) sections.push(new NavigatorItem(`Recent (${recentCount})`, vscode.TreeItemCollapsibleState.Collapsed, { nodeType: 'authoringRecents', contextValue: 'authoringRecents' }));
+      const shortcuts = [
+        ['Recipe Library…', 'ikemen.authoring.openRecipes', 'book'],
+        ['Project Symbols & Contracts…', 'ikemen.authoring.openSymbols', 'symbol-variable'],
+        ['Example Templates…', 'ikemen.authoring.openExamples', 'references'],
+        ['Manage Favorites…', 'ikemen.authoring.openFavorites', 'star-full']
+      ];
+      return [...sections, ...shortcuts.map(([label, command, icon]) => {
+        const item = new NavigatorItem(label, vscode.TreeItemCollapsibleState.None, { nodeType: 'authoringShortcut', contextValue: 'authoringShortcut' });
+        item.iconPath = new vscode.ThemeIcon(icon);
+        item.command = { command, title: label };
+        return item;
+      })];
+    }
+
+    if (element.nodeType === 'authoringFavorites' || element.nodeType === 'authoringRecents') {
+      const entries = element.nodeType === 'authoringFavorites' ? authoringLibrary.favorites() : authoringLibrary.recents();
+      return entries.slice(0, 10).map((entry) => {
+        const item = new NavigatorItem(entry.label, vscode.TreeItemCollapsibleState.None, { nodeType: 'authoringCatalogItem', entry, contextValue: 'authoringCatalogItem' });
+        item.description = `${entry.kind} · ${entry.source}`;
+        item.tooltip = `${entry.detail}\n\nSource: ${entry.source}\nCompatibility: ${entry.compatibility}`;
+        item.iconPath = new vscode.ThemeIcon(entry.kind === 'recipe' ? 'book' : entry.kind === 'recipeSection' ? 'symbol-snippet' : entry.kind === 'structure' ? 'symbol-structure' : 'references');
+        item.command = ['structure', 'recipeSection'].includes(entry.kind)
+          ? { command: 'ikemen.authoring.insertCatalogItem', title: 'Insert authoring item', arguments: [entry] }
+          : { command: entry.kind === 'examplePack' ? 'ikemen.authoring.openExamples' : 'ikemen.authoring.openRecipes', title: 'Open authoring library' };
+        return item;
+      });
     }
 
     if (element.nodeType === 'controllerGroup') {
+      const review = this.reviewProjection();
       return this.filteredCatalog(element.status).map((controller) => {
+        const marker = this.markerFor(controller, review);
         const item = new NavigatorItem(
-          controller.name,
+          `${controller.name}${marker ? ' *' : ''}`,
           vscode.TreeItemCollapsibleState.None,
-          { nodeType: 'controller', controller, contextValue: 'zssController' }
+          { nodeType: 'controller', controller, contextValue: marker ? 'zssControllerChanged' : 'zssController' }
         );
-        item.description = `${controller.params.length} options`;
-        item.iconPath = new vscode.ThemeIcon('symbol-method');
+        item.description = `${controller.params.length} options${marker ? ` · ${controllerChangeMarkers.ACCESSIBLE_MARKER}` : ''}`;
+        item.iconPath = new vscode.ThemeIcon(marker ? 'asterisk' : 'symbol-method', marker ? new vscode.ThemeColor('errorForeground') : undefined);
         const tooltip = new vscode.MarkdownString();
         tooltip.appendMarkdown(`**${controller.name}** · ${controller.status}\n\n`);
         tooltip.appendText(controller.description || 'State controller');
+        if (marker) tooltip.appendMarkdown(`\n\n**${controllerChangeMarkers.ACCESSIBLE_MARKER}.** Review the current documentation and options to acknowledge it.`);
         tooltip.appendMarkdown(`\n\n[Open merged documentation](${controller.url})`);
         item.tooltip = tooltip;
         item.command = {
-          command: 'zssControllers.insert',
-          title: 'Insert ZSS State Controller',
+          command: marker ? 'zssControllers.reviewChange' : 'zssControllers.insert',
+          title: marker ? 'Review Controller Change' : 'Insert ZSS State Controller',
           arguments: [controller]
         };
+        return item;
+      });
+    }
+
+
+    if (element.nodeType === 'structureRoot') {
+      return zssStructures.GROUPS.map((group) => {
+        const count = zssStructures.STRUCTURES.filter((item) => item.group === group.id && this.matchesStructure(item)).length;
+        const item = new NavigatorItem(`${group.label} (${count})`, this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'structureGroup', group: group.id, contextValue: 'zssStructureGroup' });
+        item.iconPath = new vscode.ThemeIcon(group.icon);
+        return item;
+      }).filter((item) => Number(/\((\d+)\)$/.exec(item.label)?.[1] || 0));
+    }
+
+    if (element.nodeType === 'structureGroup') {
+      return zssStructures.STRUCTURES.filter((structure) => structure.group === element.group && this.matchesStructure(structure)).map((structure) => {
+        const item = new NavigatorItem(structure.label, vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'structure', structure, contextValue: 'zssStructure' });
+        item.description = structure.wrap ? 'insert or wrap' : 'insert';
+        item.iconPath = new vscode.ThemeIcon('symbol-snippet');
+        const tooltip = new vscode.MarkdownString();
+        tooltip.appendMarkdown(`**${structure.label}**\n\n`);
+        tooltip.appendText(structure.detail);
+        if (structure.wrap) tooltip.appendMarkdown('\n\nSelect complete lines to wrap them, or click with no selection to insert an empty structure.');
+        item.tooltip = tooltip;
+        item.command = { command: 'zssStructures.insert', title: 'Insert or Wrap ZSS Structure', arguments: [structure] };
+        return item;
+      });
+    }
+
+    if (element.nodeType === 'luaRoot') {
+      const nodes = [];
+      const project = this.luaProjectFunctions();
+      if (project.length) {
+        const item = new NavigatorItem(`Current File Functions (${project.length})`, this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'luaProjectGroup', contextValue: 'ikemenLuaProjectGroup' });
+        item.iconPath = new vscode.ThemeIcon('symbol-function');
+        item.tooltip = 'Top-level functions authored in the active Lua file. Select one to reveal its definition.';
+        nodes.push(item);
+      }
+      const categories = [...new Set(luaApiCatalog.filter((entry) => this.matchesLua(entry)).map((entry) => entry.category))];
+      for (const category of categories) {
+        const count = luaApiCatalog.filter((entry) => entry.category === category && this.matchesLua(entry)).length;
+        const item = new NavigatorItem(`${category} (${count})`, this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'luaApiGroup', category, contextValue: 'ikemenLuaApiGroup' });
+        item.iconPath = new vscode.ThemeIcon(/hook/i.test(category) ? 'plug' : 'library');
+        nodes.push(item);
+      }
+      return nodes;
+    }
+
+    if (element.nodeType === 'luaProjectGroup') {
+      return this.luaProjectFunctions().map((entry) => {
+        const signature = `${entry.name}(${entry.params.join(', ')})`;
+        const item = new NavigatorItem(signature, vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'luaProjectFunction', entry, contextValue: 'ikemenLuaProjectFunction' });
+        item.description = entry.local ? 'local' : 'project';
+        item.iconPath = new vscode.ThemeIcon('symbol-function');
+        item.tooltip = entry.documentation || `Authored at line ${entry.line + 1} of ${path.basename(entry.filename)}.`;
+        item.command = { command: 'ikemen.lua.goToFunction', title: 'Go to Lua Function', arguments: [entry] };
+        return item;
+      });
+    }
+
+    if (element.nodeType === 'luaApiGroup') {
+      return luaApiCatalog.filter((entry) => entry.category === element.category && this.matchesLua(entry)).map((entry) => {
+        const item = new NavigatorItem(entry.signature || entry.name, vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'luaApi', entry, contextValue: 'ikemenLuaApi' });
+        item.description = entry.kind === 'hook' ? 'hook' : 'IKEMEN API';
+        item.iconPath = new vscode.ThemeIcon(entry.kind === 'hook' ? 'plug' : 'symbol-method');
+        const tooltip = new vscode.MarkdownString();
+        tooltip.appendMarkdown(`**${entry.signature || entry.name}**\n\n`);
+        tooltip.appendText(entry.description || 'IKEMEN Lua API entry.');
+        if (entry.parameters) tooltip.appendMarkdown(`\n\n**Parameters:** ${entry.parameters}`);
+        if (entry.returns) tooltip.appendMarkdown(`\n\n**Returns:** ${entry.returns}`);
+        if (entry.url) tooltip.appendMarkdown(`\n\n[Open Lua documentation](${entry.url})`);
+        item.tooltip = tooltip;
+        item.command = { command: 'ikemen.lua.insertApi', title: 'Insert IKEMEN Lua API', arguments: [entry] };
         return item;
       });
     }
@@ -450,7 +843,7 @@ class ZssControllerProvider {
   }
 }
 
-async function insertController(controller, catalog = controllerCatalog) {
+async function insertController(controller, catalog = controllerCatalog, getCapabilities = () => ({})) {
   const editor = vscode.window.activeTextEditor;
   const language = editor && editor.document.languageId;
   if (!editor || (language !== 'zss' && language !== 'ikemen-cns')) {
@@ -458,13 +851,18 @@ async function insertController(controller, catalog = controllerCatalog) {
     return;
   }
   if (!controller || !controller.name) {
-    const picked = await vscode.window.showQuickPick((catalog || []).map((item) => ({ label: item.name, description: item.description, controller: item })), {
-      title: 'Insert IKEMEN 1.0 state controller',
+    const availableCatalog = filterAvailable(catalog, getCapabilities(editor.document.uri));
+    const picked = await vscode.window.showQuickPick(availableCatalog.map((item) => ({ label: item.name, description: item.description, controller: item })), {
+      title: 'Insert IKEMEN state controller',
       placeHolder: 'Choose a native controller. Required options will always be reviewed.'
     });
     if (!picked) return;
     controller = picked.controller;
   }
+  if (!entryAvailable(controller, getCapabilities(editor.document.uri))) {
+    return vscode.window.showWarningMessage('The selected state controller is not supported by this project engine target. Nothing was inserted.');
+  }
+  controller = filterAvailable([controller], getCapabilities(editor.document.uri))[0];
   const required = (controller.params || []).filter((parameter) => parameter.required);
   const optional = (controller.params || []).filter((parameter) => !parameter.required);
   const pickedOptional = optional.length ? await vscode.window.showQuickPick(optional.map((parameter) => ({
@@ -482,7 +880,7 @@ async function insertController(controller, catalog = controllerCatalog) {
   for (const parameter of plan.parameters) {
     const value = await vscode.window.showInputBox({
       title: `${controller.name}.${parameter.name}`,
-      prompt: `${parameter.required ? 'Required' : 'Selected optional'} IKEMEN 1.0 option`,
+      prompt: `${parameter.required ? 'Required' : 'Selected optional'} IKEMEN option`,
       placeHolder: parameter.placeholder || 'value',
       validateInput: (input) => input.trim() ? undefined : `Enter a reviewed value for ${parameter.name}.`
     });
@@ -518,34 +916,81 @@ async function focusIkemenView(viewId) {
 
 function openPalFxEditor(context, uri, options) {
   return openPalFxPresetEditor(context, uri, options);
-  const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenPalFxEditor', 'PalFX Editor', preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
-  const nonce = String(Date.now());
-  panel.webview.html = `<!doctype html><html><head><meta charset="UTF-8"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'nonce-${nonce}';"><style>
-    body{font-family:var(--vscode-font-family);color:var(--vscode-foreground);background:var(--vscode-editor-background);padding:16px}.grid{display:grid;grid-template-columns:110px repeat(3,90px);gap:8px;align-items:center}input{width:72px;background:var(--vscode-input-background);color:var(--vscode-input-foreground);border:1px solid var(--vscode-input-border);padding:5px}.preview{height:150px;margin:16px 0;border:1px solid var(--vscode-panel-border);display:grid;place-items:center}.swatch{width:96px;height:96px;border:1px solid #888}button{margin-right:8px;padding:7px 12px}code{white-space:pre-wrap}
-  </style></head><body><h2>PalFX Editor</h2><p>Adjust the values, preview the resulting color, then insert the generated block at the cursor.</p><div class="grid"><b></b><b>Red</b><b>Green</b><b>Blue</b><label>Add</label><input id="ar" type="number" value="0"><input id="ag" type="number" value="0"><input id="ab" type="number" value="0"><label>Multiply</label><input id="mr" type="number" value="256"><input id="mg" type="number" value="256"><input id="mb" type="number" value="256"><label>Sin amplitude</label><input id="sr" type="number" value="0"><input id="sg" type="number" value="0"><input id="sb" type="number" value="0"><label>Period</label><input id="period" type="number" value="1"><label>Time</label><input id="time" type="number" value="1"></div><div class="preview"><div id="swatch" class="swatch"></div></div><p><button id="insert">Insert in ZSS</button><button id="copy">Copy</button></p><code id="output"></code><script nonce="${nonce}">const vscode=acquireVsCodeApi();const ids=['ar','ag','ab','mr','mg','mb','sr','sg','sb','period','time'];function n(id){return Number(document.getElementById(id).value)||0}function text(){return 'palFX {\\n  time: '+n('time')+';\\n  add: '+n('ar')+', '+n('ag')+', '+n('ab')+';\\n  mul: '+n('mr')+', '+n('mg')+', '+n('mb')+';\\n  sinAdd: '+n('sr')+', '+n('sg')+', '+n('sb')+', '+n('period')+';\\n}'}function update(){const rgb=['r','g','b'].map(c=>Math.max(0,Math.min(255,128*n('m'+c)/256+n('a'+c))));document.getElementById('swatch').style.background='rgb('+rgb.join(',')+')';document.getElementById('output').textContent=text()}ids.forEach(id=>document.getElementById(id).addEventListener('input',update));document.getElementById('insert').onclick=()=>vscode.postMessage({type:'insert',text:text()});document.getElementById('copy').onclick=()=>vscode.postMessage({type:'copy',text:text()});update();</script></body></html>`;
-  panel.webview.onDidReceiveMessage(async (message) => {
-    if (message.type === 'copy') return vscode.env.clipboard.writeText(message.text);
-    if (message.type !== 'insert') return;
-    const editor = vscode.window.activeTextEditor;
-    if (!editor || editor.document.languageId !== 'zss') return vscode.window.showWarningMessage('Focus a ZSS editor, then press Insert again.');
-    await editor.edit((builder) => builder.insert(editor.selection.active, message.text));
-  }, undefined, context.subscriptions);
 }
 
 async function filterControllers(provider) {
   const value = await vscode.window.showInputBox({
-    title: 'Filter ZSS State Controllers',
-    prompt: 'Search controller names, descriptions, classifications, or option names',
+    title: 'Filter State Controllers, ZSS Structures, or Lua Authoring',
+    prompt: 'Search controller names, options, structures, Lua functions, hooks, signatures, or descriptions',
     value: provider.filter
   });
   if (value !== undefined) provider.setFilter(value);
 }
 
-async function openControllerDocs(item) {
-  const controller = item && item.controller ? item.controller : item;
-  if (controller && controller.url) {
-    await vscode.env.openExternal(vscode.Uri.parse(controller.url));
+async function insertLuaApi(entry) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor || editor.document.languageId !== 'lua') return vscode.window.showWarningMessage('Open a Lua file before inserting an IKEMEN Lua function or hook.');
+  if (!entry?.name) {
+    const picked = await vscode.window.showQuickPick(luaApiCatalog.map((candidate) => ({ label: candidate.signature || candidate.name, description: candidate.description || candidate.category || 'IKEMEN Lua API', entry: candidate })), {
+      title: 'Insert IKEMEN Lua API',
+      placeHolder: 'Choose the exact function or hook to insert.'
+    });
+    if (!picked) return false;
+    entry = picked.entry;
   }
+  const value = luaAuthoringInsert(entry);
+  if (!value) return false;
+  await editor.insertSnippet(new vscode.SnippetString(value), editor.selection.active);
+  return true;
+}
+
+async function goToLuaFunction(entry) {
+  if (!entry?.filename || !Number.isInteger(entry.line)) {
+    const active = vscode.window.activeTextEditor?.document;
+    if (!active || active.languageId !== 'lua') return vscode.window.showWarningMessage('Open a Lua file before choosing an authored Lua function.');
+    const definitions = parseLuaFunctions(active.getText(), active.fileName).definitions.filter((candidate) => candidate.topLevel);
+    if (!definitions.length) return vscode.window.showInformationMessage('No top-level Lua functions were found in the active file. Add a function, save it, then try again.');
+    const picked = await vscode.window.showQuickPick(definitions.map((candidate) => ({ label: `${candidate.name}(${candidate.params.join(', ')})`, description: `Line ${candidate.line + 1}`, entry: candidate })), {
+      title: 'Go to Authored Lua Function',
+      placeHolder: 'Choose the exact top-level function to reveal.'
+    });
+    if (!picked) return false;
+    entry = picked.entry;
+  }
+  const document = await vscode.workspace.openTextDocument(vscode.Uri.file(entry.filename));
+  const editor = await vscode.window.showTextDocument(document, { preview: false });
+  const line = Math.max(0, Math.min(entry.line, document.lineCount - 1));
+  const position = new vscode.Position(line, 0);
+  editor.selection = new vscode.Selection(position, position);
+  editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenterIfOutsideViewport);
+  return editor;
+}
+
+async function openControllerDocs(item) {
+  let controller = item && item.controller ? item.controller : item;
+  if (!controller?.url) {
+    const picked = await vscode.window.showQuickPick(controllerCatalog.filter((entry) => entry.url).map((entry) => ({ label: entry.name, description: entry.description || 'State controller', controller: entry })), {
+      title: 'Open State Controller Documentation',
+      placeHolder: 'Choose the controller documentation to open.'
+    });
+    if (!picked) return false;
+    controller = picked.controller;
+  }
+  await vscode.env.openExternal(vscode.Uri.parse(controller.url));
+  return true;
+}
+
+async function openLuaApiDocs(item) {
+  let entry = item?.entry || item;
+  if (!entry?.url) {
+    const choices = luaApiCatalog.filter((candidate) => candidate.url).map((candidate) => ({ label: candidate.signature || candidate.name, description: candidate.description || candidate.category || 'IKEMEN Lua API', entry: candidate }));
+    if (!choices.length) return vscode.window.showInformationMessage('No Lua API documentation links are available in the bundled catalog.');
+    const picked = await vscode.window.showQuickPick(choices, { title: 'Open IKEMEN Lua API Documentation', placeHolder: 'Choose the exact function or hook documentation to open.' });
+    if (!picked) return false;
+    entry = picked.entry;
+  }
+  await vscode.env.openExternal(vscode.Uri.parse(entry.url));
+  return true;
 }
 
 function fullLineSelection(document, selection) {
@@ -660,6 +1105,82 @@ async function batchEditClsn2() {
     const source = await airClsn2BatchService.textSource(vscode.window.activeTextEditor);
     return await airClsn2BatchService.run(source);
   } catch (error) { vscode.window.showErrorMessage(`AIR Clsn2 batch: ${error.message}`); }
+}
+
+function sameSelection(left, right) {
+  return left?.start?.line === right?.start?.line && left?.start?.character === right?.start?.character
+    && left?.end?.line === right?.end?.line && left?.end?.character === right?.end?.character;
+}
+
+async function showContextualZssRecommendations() {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor || editor.document.languageId !== 'zss') return;
+  const document = editor.document, selection = editor.selection, capture = {
+    uri: document.uri.toString(), version: document.version,
+    selection: new vscode.Range(selection.start, selection.end)
+  };
+  const model = require('./zss_context_recommendations').contextualRecommendations({
+    text: document.getText(), line: selection.active.line,
+    selectedText: selection.isEmpty ? '' : document.getText(selection),
+    favoriteIds: authoringLibrary.favorites().map(item => item.id),
+    recentIds: authoringLibrary.recents().map(item => item.id),
+    intentAliases: vscode.workspace.getConfiguration('ikemenZss', document.uri).get('authoring.intentAliases', {})
+  });
+  if (!model.items.length) return;
+  const choices = model.items.map(item => ({
+    label: `$(sparkle) Insert: ${item.label}`,
+    description: [item.favorite ? 'Favorite' : '', item.recent ? 'Recent' : '', item.family || item.source].filter(Boolean).join(' · '),
+    detail: `Why offered: ${item.reason} Uses the existing ${item.source} catalog entry; no project convention or value is inferred.`,
+    action: 'insert', item
+  }));
+  choices.push(
+    { label: '$(book) Browse the complete Recipe Library', description: 'No insertion', detail: `Why offered: the detected context matched “${model.query}”; browse existing alternatives manually.`, action: 'recipes' },
+    { label: '$(star-full) Review Authoring Favorites', description: 'No insertion', detail: 'Why offered: favorites preserve choices you explicitly made for your workflow and project conventions.', action: 'favorites' },
+    { label: '$(references) Review Example Templates', description: 'Reference only', detail: 'Why offered: examples can provide context without being treated as universal or inserted automatically.', action: 'examples' }
+  );
+  const picked = await vscode.window.showQuickPick(choices, {
+    title: 'IKEMaker ZSS — Contextual Recommendations',
+    placeHolder: 'Nothing is inserted until you explicitly choose an Insert item.',
+    matchOnDescription: true, matchOnDetail: true
+  });
+  if (!picked) return;
+  if (picked.action !== 'insert') return authoringLibrary.open(picked.action, document.uri);
+  const current = vscode.window.activeTextEditor;
+  if (!current || current.document.uri.toString() !== capture.uri || current.document.version !== capture.version || !sameSelection(current.selection, capture.selection)) {
+    return vscode.window.showInformationMessage('The source or selection changed while recommendations were open. Run Contextual Recommendations again; nothing was inserted.');
+  }
+  return vscode.commands.executeCommand('ikemen.authoring.insertCatalogItem', picked.item);
+}
+
+function stripBaseIndent(text, base) {
+  if (!base) return text;
+  return String(text).split(/\r?\n/).map((line) => line.startsWith(base) ? line.slice(base.length) : line).join('\n');
+}
+
+function applyBaseIndent(snippet, base, eol) {
+  const normalized = String(snippet).replace(/\r?\n/g, eol);
+  return base + normalized.split(eol).join(`${eol}${base}`);
+}
+
+async function insertZssStructure(structure) {
+  const editor = vscode.window.activeTextEditor;
+  if (!editor || editor.document.languageId !== 'zss') {
+    vscode.window.showWarningMessage('Open a ZSS file before inserting a ZSS structure.');
+    return false;
+  }
+  const selected = !editor.selection.isEmpty && structure.wrap;
+  if (!selected) {
+    return await editor.insertSnippet(new vscode.SnippetString(structure.snippet), editor.selection.active) !== false;
+  }
+  const document = editor.document;
+  const range = fullLineSelection(document, editor.selection);
+  const original = document.getText(range);
+  const eol = document.eol === vscode.EndOfLine.CRLF ? '\r\n' : '\n';
+  const nonblank = original.split(/\r?\n/).find((line) => line.trim());
+  const base = leadingWhitespace(nonblank || '');
+  const body = stripBaseIndent(original, base);
+  const snippet = zssStructures.wrapSnippet(structure, body, { eol, indentUnit: editorIndentUnit(editor) });
+  return await editor.insertSnippet(new vscode.SnippetString(applyBaseIndent(snippet, base, eol)), range) !== false;
 }
 
 async function readOptionalText(uri) {
@@ -910,7 +1431,10 @@ async function assignClsn2HitReactionRegion() {
 }
 
 async function revealSymbol(item) {
-  if (!item || !item.uri) return;
+  if (!item || !item.uri) {
+    await focusIkemenView('zssNavigator');
+    return vscode.window.showInformationMessage('Choose a file and authored symbol in the ZSS Navigator to reveal it.');
+  }
   const document = await vscode.workspace.openTextDocument(item.uri);
   const editor = await vscode.window.showTextDocument(document, { preview: false });
   const line = Math.max(0, Math.min(item.line || 0, document.lineCount - 1));
@@ -920,11 +1444,12 @@ async function revealSymbol(item) {
     new vscode.Range(position, position),
     vscode.TextEditorRevealType.AtTop
   );
+  return editor;
 }
 
-async function auditWorkspace(registry) {
+async function auditWorkspace(registry, functionDiagnostics, stateDiagnostics) {
   const limit = vscode.workspace.getConfiguration('ikemenZss').get('maxAuditFiles', 1000);
-  const uris = await vscode.workspace.findFiles('**/*.zss', '**/{.git,node_modules}/**', limit);
+  let uris = [];
   let issueCount = 0;
   let warningCount = 0;
   const scanned = [];
@@ -933,51 +1458,44 @@ async function auditWorkspace(registry) {
     title: 'Auditing IKEMEN ZSS entity and frame safety',
     cancellable: true
   }, async (progress, token) => {
-    for (let index = 0; index < uris.length && !token.isCancellationRequested; index += 1) {
-      const document = await vscode.workspace.openTextDocument(uris[index]);
-      const result = analyzeDocument(document);
+    const result = await require('./workspace_audit_sources').visitWorkspaceAuditDocuments(vscode, limit, async (document, uri, index, total) => {
+      const result = /\.zss$/i.test(document.fileName || '') ? analyzeDocument(document) : { issues: [], records: { calls: [], functions: [] } };
       scanned.push({ document, result });
       issueCount += result.issues.length;
       warningCount += result.issues.filter((entry) => ['error', 'warning'].includes(entry.severity)).length;
-      progress.report({ increment: 100 / Math.max(1, uris.length), message: vscode.workspace.asRelativePath(uris[index], false) });
-    }
+      progress.report({ increment: 100 / Math.max(1, total), message: vscode.workspace.asRelativePath(uri, false) });
+    }, { cancelled: () => token.isCancellationRequested });
+    uris = result.uris;
   });
 
-  // Project-owned prefixed missing calls are actionable;
-  // other missing calls may be supplied by IKEMEN's globally loaded data files.
-  const declarations = new Map();
   for (const entry of scanned) {
-    for (const declaration of entry.result.records.functions) {
-      if (!declarations.has(declaration.name)) declarations.set(declaration.name, []);
-      declarations.get(declaration.name).push({ ...declaration, document: entry.document });
-    }
-  }
-  for (const entry of scanned) {
-    const ownedFunctionPrefixes = analyzerOptions(entry.document.uri).functionPrefixes;
     const additions = [];
     const lineRange = (record) => {
       const line = Math.min(record.line, entry.document.lineCount - 1);
       const max = entry.document.lineAt(line).text.length;
       return new vscode.Range(line, Math.min(record.start, max), line, Math.min(record.start + record.name.length, max));
     };
+    // The live registrar is the sole owner of assigned-character function
+    // findings. Await it here so a full audit preserves coverage and counts
+    // without publishing the same problem through a second collection.
+    const liveFunctionDiagnostics = functionDiagnostics && /\.zss$/i.test(entry.document.fileName || '') ? await functionDiagnostics.update(entry.document) : [];
+    issueCount += liveFunctionDiagnostics.length;
+    warningCount += liveFunctionDiagnostics.length;
+    // State-transfer findings remain owned by their live collection. Awaiting
+    // that owner preserves full-audit coverage without cloning diagnostics into
+    // the general analyzer collection.
+    const liveStateDiagnostics = stateDiagnostics ? await stateDiagnostics.update(entry.document) : [];
+    issueCount += liveStateDiagnostics.length;
+    warningCount += liveStateDiagnostics.length;
     for (const call of entry.result.records.calls) {
-      const candidates = declarations.get(call.name) || [];
-      if (!candidates.length && ownedFunctionPrefixes.some((prefix) => call.name.startsWith(prefix))) {
-        const diagnostic = new vscode.Diagnostic(lineRange(call), `Owned function ${call.name} is called but was not found in the indexed workspace.`, vscode.DiagnosticSeverity.Warning);
-        diagnostic.source = 'IKEMEN ZSS'; diagnostic.code = 'missing-function'; additions.push(diagnostic);
-      } else if (candidates.length && !candidates.some((item) => item.arity === call.arity)) {
-        const expected = [...new Set(candidates.map((item) => item.arity))].join(' or ');
-        const diagnostic = new vscode.Diagnostic(lineRange(call), `${call.name} is called with ${call.arity} argument(s); indexed declaration expects ${expected}.`, vscode.DiagnosticSeverity.Error);
-        diagnostic.source = 'IKEMEN ZSS'; diagnostic.code = 'function-arity'; additions.push(diagnostic);
-      }
-      const sameFileLater = candidates.find((item) => item.document.uri.toString() === entry.document.uri.toString() && item.line > call.line);
+      const sameFileLater = entry.result.records.functions.find(item => item.name.toLowerCase() === call.name.toLowerCase() && item.line > call.line);
       if (sameFileLater) {
         const diagnostic = new vscode.Diagnostic(lineRange(call), `${call.name} is declared later in this file; ZSS functions may only call predefined functions.`, vscode.DiagnosticSeverity.Warning);
         diagnostic.source = 'IKEMEN ZSS'; diagnostic.code = 'function-order'; additions.push(diagnostic);
       }
     }
     for (const declaration of entry.result.records.functions) {
-      const sameFile = (declarations.get(declaration.name) || []).filter((item) => item.document.uri.toString() === entry.document.uri.toString());
+      const sameFile = entry.result.records.functions.filter(item => item.name.toLowerCase() === declaration.name.toLowerCase());
       if (sameFile.length > 1) {
         const diagnostic = new vscode.Diagnostic(lineRange(declaration), `Function ${declaration.name} is declared ${sameFile.length} times in this file.`, vscode.DiagnosticSeverity.Error);
         diagnostic.source = 'IKEMEN ZSS'; diagnostic.code = 'duplicate-function'; additions.push(diagnostic);
@@ -1002,13 +1520,21 @@ async function auditWorkspace(registry) {
 }
 
 function activate(context) {
+  // The synchronized entity host must exist before any viewer or companion can
+  // attach.  Individual surfaces still opt in only after their exact source is
+  // bound, so activation does not create panels or write project assets.
+  require('./entity_switch_runtime').initializeEntitySwitchRuntime(vscode, context);
+  companionSwitch.register(vscode, context);
+  textEditorToolbar.register(vscode, context);
   airClsn2BatchService = createAirClsn2BatchService(vscode, context);
+  require('./pending_changes_ui').register(vscode, context);
   const modeExistingKeys=context.globalState.keys?.()||[];
   require('./interface_mode').register(vscode,context);
   require('./workspace_setup').register(vscode,context);
   require('./asset_workspace').configure(vscode);
   require('./asset_workspace').register(context);
   require('./save_controls').register(context);
+  require('./visual_authoring_browser_service').register(context, vscode);
   const capabilities = detectCapabilities({
     uiKind: vscode.env.uiKind === vscode.UIKind.Web ? 'web' : 'desktop',
     platform: process.platform,
@@ -1050,22 +1576,113 @@ function activate(context) {
   const selector = { language: 'zss', scheme: 'file' };
   engineRuntime.initialize(context);
   const navigator = new ZssNavigator(context);
-  const savedControllerCatalog = context.globalState.get('ikemenZss.controllerCatalog.v1', controllerCatalog);
-  const controllers = new ZssControllerProvider(savedControllerCatalog);
-  registerLanguageProviders(vscode, context, () => controllers.catalog);
+  const persistedControllerCatalog = context.globalState.get('ikemenZss.controllerCatalog.v1', controllerCatalog);
+  const persistedControllerNames = new Set((persistedControllerCatalog || []).map((item) => String(item?.name || '').toLowerCase()));
+  const savedControllerCatalog = [...(persistedControllerCatalog || []), ...controllerCatalog.filter((item) => !persistedControllerNames.has(String(item?.name || '').toLowerCase()))];
+  const { RUNTIME_CAPABILITY_IDS: capabilityIds } = require('./runtime_capability_ids');
+  const runtimeStringCapability=(input={})=>{
+    const source=input?.fsPath||input?.fileName||input?.files?.[0]||input?.connectedFiles?.[0]||vscode.window.activeTextEditor?.document?.fileName||'';
+    const root=input?.root||require('./character_context').gameRoot(source)||vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath||path.dirname(source||'.');
+    const binding=engineRuntime.targetFor(root,source),catalog=engineModel.normalizeCatalog(context.globalState.get(ENGINE_CATALOG_KEY,BUILT_IN_ENGINE_CATALOG));
+    const capabilities=Object.fromEntries(capabilityIds.map(id=>[id,engineCapabilityPolicy.decision(catalog,binding.target,id)]));
+    const enabledCapabilities=capabilityIds.filter(id=>capabilities[id].enabled);
+    return {nightlyStringsEnabled:capabilities['zss.runtime-strings'].enabled,target:binding.target,status:capabilities['zss.runtime-strings'].status,enabledCapabilities,capabilities};
+  };
+  activeCapabilityResolver = runtimeStringCapability;
+  const controllerReviewStore = new ControllerChangeReviewStore(context.workspaceState), controllerReviewAuthority = new ControllerChangeReviewAuthority();
+  const controllers = new ZssControllerProvider(savedControllerCatalog, runtimeStringCapability, controllerReviewStore, controllerReviewAuthority);
+  controllerReviewStore.refresh().then(() => controllers.refresh(), (error) => vscode.window.showWarningMessage(`Controller change review state could not be loaded; markers remain read-only for this session: ${error.message}`));
+  context.subscriptions.push(require('./engine_capability_events').onDidChangeEngineCapabilities(() => {
+    controllers.refresh();
+    for (const document of vscode.workspace.textDocuments || []) if (['zss','ikemen-cns'].includes(document.languageId) || /\.(?:cmd|inp|jnp|def)$/i.test(document.fileName || document.uri?.fsPath || '')) analyzeDocument(document);
+  }));
+  authoringLibrary.register(vscode, context, {capabilities:runtimeStringCapability});
+  const zssIndex = new WorkspaceZssIndex(vscode);
+  const functionCatalogModel = require('./zss_function_catalog');
+  const {FunctionCatalogQueryCache}=require('./function_catalog_query_cache'),functionCatalogCache=new FunctionCatalogQueryCache(document=>functionCatalogModel.buildZssFunctionCatalog(vscode,document.uri),catalog=>functionCatalogModel.catalogStillCurrent(vscode,catalog));
+  const functionCatalog = document => functionCatalogCache.get(document);
+  const invalidateFunctionCatalog=()=>{functionCatalogCache.invalidate();functionCatalogModel.invalidateFunctionOwnerCache();};
+  context.subscriptions.push(require('./engine_capability_events').onDidChangeEngineCapabilities(invalidateFunctionCatalog));
+  const stateCatalogModel = require('./state_transfer_catalog');
+  const stateCatalog = async document => {
+    const service = require('./map_registry_service').current(), catalog = await stateCatalogModel.buildStateTransferCatalog(vscode, document.uri, service, { capabilities: runtimeStringCapability(document.uri) });
+    return catalog.complete && await stateCatalogModel.stateCatalogStillCurrent(vscode, catalog, service) ? catalog : { ...catalog, complete: false };
+  };
+  require('./statedef_authoring_workspace').register(vscode, context, { getCatalog: () => controllers.catalog, getCapabilities: runtimeStringCapability, getStateCatalog: stateCatalog });
+  const assetCatalog = document => require('./zss_asset_catalog').buildZssAssetCatalog(vscode, document.uri);
+  registerLanguageProviders(vscode, context, () => controllers.catalog, document => analyzerOptions(document.uri).commandCatalog, functionCatalog, assetCatalog, stateCatalog, runtimeStringCapability, async document => {const model=require('./lua_function_catalog'),catalog=await model.buildLuaFunctionCatalog(vscode,document);return model.luaCatalogStillCurrent(vscode,catalog,document)?catalog:{complete:false,definitions:[],limitations:['Lua source or a required module changed before assistance publication.']};});
+  registerZssAssetDiagnostics(vscode, context, assetCatalog);
   registerLuaSupport(context);
   registerDefSemanticHighlighting(vscode, context);
-  registerNavigationProviders(vscode, context);
+  require('./def_outline').register(vscode, context);
+  registerNativeDocumentOutlines(vscode, context);
+  registerNavigationProviders(vscode, context, zssIndex, functionCatalog, stateCatalog, runtimeStringCapability);
   registerMutationHistory(context);
   registerDiagnosticExplanations(vscode, context);
+  registerCommentAssistance(vscode, context);
+  registerTriggerExpressionPicker(vscode, context, runtimeStringCapability);
+  registerFunctionCallPicker(vscode, context, functionCatalog, runtimeStringCapability);
+  require('./coding_assistance_insights').register(vscode, context);
+  require('./unused_let_code_actions').registerUnusedLetCodeActions(vscode, context);
+  require('./scoped_local_code_actions').registerScopedLocalCodeActions(vscode, context);
+  require('./contextual_recommendation_code_actions').registerContextualRecommendationCodeActions(vscode, context, {
+    favorites: () => authoringLibrary.favorites().map(item => item.id),
+    recents: () => authoringLibrary.recents().map(item => item.id)
+  });
   registerAnimationStandardDiagnostics(vscode, context);
   const registry = new ZssRegistryProvider();
-  require('./map_registry_ui').register(vscode, context);
+  const controllerBrowserReader = async (browserContext = {}) => {
+    const capabilities = runtimeStringCapability(browserContext), controllerTree = controllers.browserSnapshot(browserContext), triggers = require('./authoring_browser_model').triggerProjection(undefined, { capabilities });
+    return { items: [...(controllerTree.items || []), ...(triggers.items || [])], count: controllerTree.count + triggers.count, unreviewedCount: controllerTree.unreviewedCount, snapshotId: controllerTree.snapshotId, note: controllerTree.note, truncated: triggers.truncated };
+  };
+  controllerBrowserReader.reviewController = (name, browserContext, expectedSnapshotId, isCurrent) => controllers.reviewControllerFor(controllers.catalog.find((item) => String(item.name).toLowerCase() === String(name).toLowerCase()), browserContext, expectedSnapshotId, isCurrent);
+  controllerBrowserReader.clearGroup = (groupId, browserContext, expectedSnapshotId, isCurrent) => controllers.clearReviewGroupFor(groupId, browserContext, expectedSnapshotId, isCurrent);
+  registerAuthoringWorkspace(vscode, context, {
+    'code-navigator': () => readOnlyTreeSnapshot(navigator),
+    'project-data': async browserContext => { const base=await readOnlyTreeSnapshot(registry),insights=require('./coding_assistance_insights'),coding=insights.buildCodingAssistanceInsights(vscode,browserContext,{codingScenarios:insights.scenarios(context),conditionValues:insights.conditionValues(context,browserContext.ownerDef)});return{...base,items:[coding,...(base.items||[])]}; },
+    recipes: () => ({ items: require('./authoring_browser_model').recipeProjection({ nightlyStringsEnabled:false }).items }),
+    controllers: controllerBrowserReader,
+    capabilities: runtimeStringCapability
+  });
+  require('./map_registry_ui').register(vscode, context, { capabilities: runtimeStringCapability });
+  const mapRegistryService = require('./map_registry_service').current();
+  context.subscriptions.push(require('./engine_capability_events').onDidChangeEngineCapabilities(() => mapRegistryService?.invalidate()));
+  let stateDiagnostics;
+  const functionDiagnostics = registerZssFunctionDiagnostics(
+    vscode,
+    context,
+    functionCatalog,
+    document => ({ ownedPrefixes: analyzerOptions(document.uri).functionPrefixes, capabilities: runtimeStringCapability(document.uri) }),
+    {
+      invalidateAuthority: invalidateFunctionCatalog,
+      onAuthorityChanged: () => stateDiagnostics.refreshOpen(),
+      onDidInvalidate: listener => mapRegistryService?.onDidChange(listener) || { dispose() {} },
+      isDependency: document => /\.def$/i.test(document?.fileName || '')
+        || require('./map_registry_grammar').supportedNative(document?.fileName || '')
+        || Boolean(require('./map_registry_grammar').textGrammar(document, mapRegistryService?.context))
+    }
+  );
+  context.subscriptions.push(require('./engine_capability_events').onDidChangeEngineCapabilities(() => functionDiagnostics.refreshOpenZss()));
+  stateDiagnostics = registerStateTransferDiagnostics(vscode, context, stateCatalog, {
+    getCapabilities: runtimeStringCapability,
+    validateCatalog: catalog => stateCatalogModel.stateCatalogStillCurrent(vscode, catalog, mapRegistryService),
+    invalidateAuthority: invalidateFunctionCatalog,
+    ensureAuthorityWatchers: functionDiagnostics.ensureAuthorityWatchers,
+    onDidInvalidate: listener => mapRegistryService?.onDidChange(listener) || { dispose() {} },
+    isDependency: document => /\.(?:def|ini|cns|cmd|st|zss)$/i.test(document?.fileName || '')
+  });
   const updates = createUpdateMonitor(vscode, context, controllerCatalog, (catalog) => controllers.setCatalog(catalog));
   registerSffCommands(context);
   registerSffViewer(context);
-  registerAirViewer(context, airClsn2BatchService);
-  registerSndViewer(context);
+  registerSffTransferHost(context);
+  registerSndTransferHost(context);
+  registerAirTransferHost(context);
+  require('./sff_browser').register(context);
+  registerAirViewer(context, airClsn2BatchService, activeCapabilityResolver);
+  require('./air_docking_workspace').register(context);
+    registerSndViewer(context);
+    require('./snd_browser').register(context);
+    require('./snd_intake_workspace').register(context);
   registerDirectAssetOpening(vscode, context);
   registerAssetGroupLogs(context);
   registerAssetCreation(context);
@@ -1077,27 +1694,35 @@ function activate(context) {
   registerProjectManagerWorkspace(context);
   registerEngineMigration(context);
   registerWorkspacePresets(context);
+  require('./docking_prototype').register(context);
   registerImpactPreview(context);
   registerOwnershipAudit(context);
   registerStageWorkspace(context);
   registerScreenpackWorkspace(context);
-  registerCommandMovelistWorkspace(context);
+  registerCommandMovelistWorkspace(context, { getCapabilities: runtimeStringCapability });
   registerCodeStructureWorkspace(vscode, context);
   registerSelectDefWorkspace(context);
   registerMenuModesWorkspace(context);
   registerStoryDialogueWorkspace(context);
   registerStoryboardWorkspace(context);
+  require('./layered_psd_workspace').register(context);
   registerPaletteIndexOrganizer(context);
-  registerMoveConstantsWorkspace(context);
+  registerMoveConstantsWorkspace(context, { getCapabilities: runtimeStringCapability });
+  registerCharacterScaleReview(vscode, context);
   registerMoveLab(context);
   registerHitDefWorkspace(context);
   registerThrowCreator(context);
   registerSpatialComposer(context);
+  registerTrajectoryWorkspace(context);
   registerHelperLab(context);
   registerPaletteImportWorkspace(context);
   registerPlayerPaletteWorkspace(context);
   registerArtistIntake(context);
   registerSffAssembly(context);
+  context.subscriptions.push(require('./sff_writer_preference').register(context));
+  require('./sff_creator_workspace').register(context);
+  require('./sff_add_sprites_workspace').register(context);
+  require('./shader_workshop_host').registerShaderWorkshop(context);
   registerProductionWorkflow(context);
   registerReleaseBuilder(context);
   registerTestSessionWorkspace(context);
@@ -1110,13 +1735,21 @@ function activate(context) {
   registerExperience(context);
   registerAuthoringBridge(context);
   require('./def_workspace').registerDefWorkspace(context);
-  require('./ikemen_hub').registerIkemenHub(context);
+  require('./ikemen_hub').registerIkemenHub(context, { getCapabilities: runtimeStringCapability });
   registerExtensionUpdater(vscode, context);
+  registerUpdateCenter(vscode, context);
   let analysisTimer;
+  let commandReferenceTimer;
   let frameSyncTimer;
   const scheduleAnalysis = (document) => {
     clearTimeout(analysisTimer);
     analysisTimer = setTimeout(() => analyzeDocument(document), 250);
+  };
+  const scheduleCommandReferenceAnalysis = () => {
+    clearTimeout(commandReferenceTimer);
+    commandReferenceTimer = setTimeout(() => {
+      for (const document of vscode.workspace.textDocuments) if (['zss', 'ikemen-cns'].includes(document.languageId)) analyzeDocument(document);
+    }, 250);
   };
   const scheduleFrameSync = () => {
     clearTimeout(frameSyncTimer);
@@ -1135,11 +1768,39 @@ function activate(context) {
 		vscode.commands.registerCommand('zss.toggleLineComment', () => vscode.commands.executeCommand('editor.action.commentLine')),
 		vscode.commands.registerCommand('zss.openProjectData', () => focusIkemenView('zssRegistry')),
 		vscode.commands.registerCommand('zss.openControllers', () => focusIkemenView('zssStateControllers')),
+		vscode.commands.registerCommand('zss.contextualRecommendations', showContextualZssRecommendations),
+		vscode.commands.registerCommand('ikemen.zssLearning.open', async () => {
+			const document = await vscode.workspace.openTextDocument(vscode.Uri.joinPath(context.extensionUri, 'data', 'zss-learning-criteria.md'));
+			return vscode.window.showTextDocument(document, { preview: false });
+		}),
 		vscode.commands.registerCommand('zss.openPalFxEditor', (uri, options) => openPalFxEditor(context, uri, options)),
     vscode.commands.registerCommand('zssControllers.search', () => filterControllers(controllers)),
     vscode.commands.registerCommand('zssControllers.clearFilter', () => controllers.setFilter('')),
-    vscode.commands.registerCommand('zssControllers.insert', (controller) => insertController(controller, controllers.catalog)),
+    vscode.commands.registerCommand('zssControllers.insert', (controller) => insertController(controller, controllers.catalog, runtimeStringCapability)),
     vscode.commands.registerCommand('zssControllers.openDocs', openControllerDocs),
+    vscode.commands.registerCommand('ikemen.lua.insertApi', insertLuaApi),
+    vscode.commands.registerCommand('ikemen.lua.goToFunction', goToLuaFunction),
+    vscode.commands.registerCommand('ikemen.lua.openApiDocs', openLuaApiDocs),
+    vscode.commands.registerCommand('zssControllers.reviewChange', (controller) => controllers.reviewController(controller)),
+    vscode.commands.registerCommand('zssControllers.reviewChangeByName', (name) => controllers.reviewController(controllers.catalog.find((item) => String(item.name).toLowerCase() === String(name).toLowerCase()))),
+    vscode.commands.registerCommand('zssControllers.clearChangeGroup', (group) => controllers.clearReviewGroup(group)),
+    vscode.commands.registerCommand('zssControllers.clearChangeGroupById', (groupId) => controllers.clearReviewGroup({ status: groupId, label: groupId === 'new' ? 'IKEMEN New' : 'Changed / Expanded' })),
+    vscode.commands.registerCommand('zssStructures.insert', insertZssStructure),
+    vscode.commands.registerCommand('ikemen.authoring.refreshSidebar', () => controllers.refresh()),
+    vscode.commands.registerCommand('ikemen.authoring.insertCatalogItem',entry=>require('./authoring_catalog_insertion').insertCatalogItem(vscode,entry,{capabilities:runtimeStringCapability,entryAvailable,insertReviewedLiteral:require('./authoring_literal_insertion').insertReviewedLiteral,insertStructure:insertZssStructure,structureById:zssStructures.structureById,recordRecent:authoringLibrary.recordRecent})),
+    vscode.commands.registerCommand('zssStructures.browse', async () => {
+      const picked = await vscode.window.showQuickPick(zssStructures.STRUCTURES.map((structure) => ({
+        label: structure.label,
+        description: zssStructures.GROUPS.find((group) => group.id === structure.group)?.label || '',
+        detail: structure.detail,
+        structure
+      })), { title: 'Insert or wrap with ZSS Structure & Logic', placeHolder: 'Search by syntax or use case; selected complete lines are wrapped when supported.' });
+      if (picked) await insertZssStructure(picked.structure);
+    }),
+    vscode.commands.registerCommand('zss.wrap.if', () => insertZssStructure(zssStructures.structureById('if'))),
+    vscode.commands.registerCommand('zss.wrap.ifElse', () => insertZssStructure(zssStructures.structureById('ifElse'))),
+    vscode.commands.registerCommand('zss.wrap.for', () => insertZssStructure(zssStructures.structureById('for'))),
+    vscode.commands.registerCommand('zss.wrap.targetGuard', () => insertZssStructure(zssStructures.structureById('targetGuard'))),
     vscode.commands.registerCommand('zss.wrap.ignoreHitPause', () => wrapEditorSelection('ignoreHitPause')),
     vscode.commands.registerCommand('zss.wrap.persistent', () => wrapPersistent(false)),
     vscode.commands.registerCommand('zss.wrap.ignoreHitPausePersistent', () => wrapPersistent(true)),
@@ -1153,7 +1814,7 @@ function activate(context) {
       analyzeDocument(editor.document);
       return vscode.commands.executeCommand('workbench.actions.view.problems');
     }),
-    vscode.commands.registerCommand('zss.audit.workspace', () => auditWorkspace(registry)),
+    vscode.commands.registerCommand('zss.audit.workspace', () => auditWorkspace(registry, functionDiagnostics, stateDiagnostics)),
     vscode.commands.registerCommand('zssRegistry.refresh', () => registry.refresh()),
     vscode.commands.registerCommand('zss.updates.checkNow', () => updates.check({ manual: true })),
     vscode.commands.registerCommand('zss.updates.checkDefNow', async (uri) => {
@@ -1168,23 +1829,31 @@ function activate(context) {
     vscode.commands.registerCommand('zss.updates.showLastReport', () => updates.showLastReport()),
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       navigator.refresh();
-      if (editor && editor.document.languageId === 'zss') analyzeDocument(editor.document);
+      controllers.refresh();
+      if (editor && (['zss', 'ikemen-cns'].includes(editor.document.languageId)||/\.def$/i.test(editor.document.fileName||''))) analyzeDocument(editor.document);
     }),
     vscode.workspace.onDidSaveTextDocument((document) => {
-      if (document.languageId === 'zss') {
+      if (document.languageId === 'lua') controllers.refresh();
+      if (['zss', 'ikemen-cns'].includes(document.languageId)||/\.def$/i.test(document.fileName||'')) {
         navigator.refresh();
-        registry.refresh();
+        if (document.languageId === 'zss') registry.refresh();
         analyzeDocument(document);
       }
+      if (/\.(?:cmd|inp|jnp|def)$/i.test(document.fileName)) scheduleCommandReferenceAnalysis();
       if (/\.(?:zss|cns|air)$/i.test(document.fileName)) scheduleFrameSync();
     }),
     vscode.workspace.onDidChangeTextDocument((event) => {
-      if (event.document.languageId === 'zss') {
+      if (event.document.languageId === 'lua') controllers.refresh();
+      if (['zss', 'ikemen-cns'].includes(event.document.languageId)||/\.def$/i.test(event.document.fileName||'')) {
         navigator.refresh();
         scheduleAnalysis(event.document);
       }
+      if (/\.(?:cmd|inp|jnp|def)$/i.test(event.document.fileName)) scheduleCommandReferenceAnalysis();
     }),
-    vscode.workspace.onDidCloseTextDocument((document) => diagnosticCollection.delete(document.uri)),
+    vscode.workspace.onDidCloseTextDocument((document) => {
+      diagnosticCollection.delete(document.uri);
+      if (/\.(?:cmd|inp|jnp|def)$/i.test(document.fileName)) scheduleCommandReferenceAnalysis();
+    }),
     vscode.workspace.onDidChangeConfiguration((event) => {
       if (event.affectsConfiguration('ikemenZss')) {
         registry.refresh();
@@ -1203,4 +1872,4 @@ function activate(context) {
 
 function deactivate() {}
 
-module.exports = { activate, deactivate };
+module.exports = { activate, deactivate, ZssControllerProvider };

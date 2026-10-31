@@ -1,0 +1,8 @@
+IKEMaker 0.79.425
+
+Optional filler preview
+
+- Added a checked-by-default Show filler option beside the filler controls.
+- Turning it off hides the filler color only in the 16x16 organized palette preview.
+- Reserved filler indexes remain part of the palette plan and saved output while hidden.
+- The display preference is remembered when Palette Workshop is reopened.

@@ -1,0 +1,33 @@
+IKEMaker 0.79.309
+
+Template Creator source cleanup
+
+- Added an explicit Open image action to every template-source contact card.
+- Added Select unwanted region with exact, zoom-independent source-pixel mapping.
+- Added a reviewed color list for the selected rectangle.
+- The rectangle is cleared only from that working/template image, so shared
+  colors such as a sprite outline are not damaged elsewhere.
+- Colors with no remaining occurrence outside the rectangle are locked as
+  automatically removed. Shared colors are unchecked and clearly warn that
+  selecting them removes every exact match across all imported images.
+- Original imported PNG files are never modified.
+- Region masks now affect thumbnails, the current preview, effective color
+  coverage, cumulative cleanup reviews, organizer handoff data, and the
+  full-resolution template layout.
+- Review hashes and exact source inventory hashes reject stale application.
+- Cleanup reviews reject colors outside the reviewed rectangle and bound both
+  exact-color review size and retained region count.
+
+Verification
+
+- Verified the supplied vsav2002.png PRESS START region: six exclusive text
+  colors are identified automatically, while magenta and the dark outline are
+  correctly identified as shared. The spatial mask removes the whole label
+  without punching shared dark pixels out of the character.
+- Added model tests for shared/exclusive color classification, source
+  immutability, spatial clearing, cumulative masks, and effective coverage.
+- Added controller tests for stale review rejection, out-of-review rejection,
+  unchanged source bytes, transparent preview/layout pixels, and exact
+  full-resolution layout output.
+- Added UI reachability and pointer mapping tests for forward/reverse drags,
+  clamping, zoom invariance, and downscaled previews.

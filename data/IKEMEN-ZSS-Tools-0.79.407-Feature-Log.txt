@@ -1,0 +1,10 @@
+IKEMaker 0.79.407
+
+Palette image-session intake repair
+
+- Fixes Load image session JSON doing nothing while Palette Workshop is still attached to an SFF.
+- A saved image session can now be loaded before scanning or opening an image folder.
+- Loading the session changes the same workshop into its inline template workspace and restores cached decoded images, cleanup decisions, selected images, template positions, swatch groups, and separator lines.
+- The source-image folder is not rescanned or decoded again.
+- Adds an explanatory hover note to the session-load button.
+- Adds a regression test for the SFF-owned Palette Workshop route as well as the existing source-workspace restore coverage.

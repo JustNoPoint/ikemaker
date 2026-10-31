@@ -1,0 +1,10 @@
+IKEMEN ZSS Tools 0.79.219
+
+Reviewed palette adaptation and character palette-image sync
+
+- SFF Creator now offers a collapsed, opt-in nearest-color review for unmatched source colors. Nothing is selected automatically; every accepted color is bound to exact source pixels, master palette evidence, and a single-use host review.
+- Reviewed color decisions are materialized only into private package sources. Untouched indexed pixels are proven compatible with the master palette before any prepared file can be written.
+- The SFF quick palette-sync action is now last in the sprite toolbar and asks for Import, Export, or Two-Way Sync before opening a folder or scanning files.
+- Character palette-image sync accepts root sequential images such as 000/001, where root 000 is palette 1,0 and is retained as the template/master image.
+- Named subfolders such as SSB and SSBE can be reviewed once as palette groups 2 and 3; their numbered images and nested descendants then sync recursively. Explicit group-index filenames remain authoritative.
+- Folder mappings, template identity, SFF/palette inventory, manifest state, and ordered image hashes are reviewed and revalidated before a transactional write. Duplicate coordinates, stale groups, linked-destination imports, unsafe traversal, or changed files fail closed.

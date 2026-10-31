@@ -29,6 +29,6 @@ Module._load = originalLoad;
   assert(resources.includes(target.fsPath), 'SFF naming/view settings must be read with the active SFF resource');
   assert(!resources.includes('unscoped'), 'SFF configuration consumers must not fall back to an unscoped read');
   await chooseImageEditor(target);
-  assert.deepStrictEqual(updates.at(-1), { key: 'imageEditorPath', value: '', scope: 'folder', resource: target.fsPath });
-  console.log('SFF naming and image-editor preferences retain the active archive scope');
+  assert.deepStrictEqual(updates.at(-1), { key: 'imageEditorPath', value: '', scope: 'global', resource: undefined });
+  console.log('SFF asset settings retain archive scope while the image editor is shared globally');
 })().catch(error => { console.error(error); process.exitCode = 1; });

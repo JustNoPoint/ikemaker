@@ -1,0 +1,13 @@
+IKEMaker 0.79.300
+
+Palette Workshop Remappen and browser release-blocker repair:
+
+- Remappen old/source and new/replacement squares are now true color swatches, immune to universal semantic button background overrides.
+- Selecting a pair then left-clicking a palette color assigns old/source; right-clicking assigns new/replacement through one direct mounted-editor owner.
+- Exact behavior checks cover a non-first pair, both mouse buttons, neighboring-pair isolation, and important swatch color presentation.
+- The Palette Workshop header browser icon now opens or focuses the connected SFF Groups + Sprites browser instead of reopening Palette Workshop.
+- The inline Browse sprites control uses the same open-or-focus route.
+- Existing SFF browsers retain their current docked or floating mode; the route does not toggle them closed.
+- Standalone ACT, PNG, and scratch palette workspaces report that an SFF connection is required instead of attempting to parse them as SFF files.
+
+Focused Remappen, dual-bank, Palette Workspace host, browser routing/lifecycle, shared toolbar, and JavaScript syntax checks pass.

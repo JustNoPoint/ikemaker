@@ -1,0 +1,8 @@
+IKEMaker 0.79.302
+
+- Remappen now starts with 100 empty, independent pairs instead of mirroring Bank A indexes.
+- Added Clone unique A indices → Remappen; duplicate RGBA values are skipped and the first matching index is retained.
+- Old identity-filled Remappen browser state is invalidated once so it cannot silently repopulate the independent table.
+- Palette Workshop Browser now floats automatically when opened from its icon.
+- Float Window now waits for the exact browser webview and uses VS Code's supported detach command.
+- A floated Palette Workshop Browser can be returned to the main window.

@@ -1,0 +1,10 @@
+IKEMaker 0.79.33 — Floating internal docking-shell prototype
+
+- Uses the same VS Code WebviewPanel host class as the AIR viewer so the complete
+  IKEMaker workspace can move with an editor group into a floating VS Code window.
+- Adds four internal docking zones with draggable, tabbed placeholder panels.
+- Adds mouse and keyboard resizing, explicit Move controls, collapse/restore,
+  layout reset, and workspace layout saving.
+- Stacks every zone at narrow widths so detached compact windows retain access.
+- Keeps the prototype strictly non-writing; no source drafts or mutation authority
+  are stored in the layout.

@@ -1,0 +1,208 @@
+{
+  "startedAt": "2026-10-13T16:02:36.461Z",
+  "passed": true,
+  "mode": "integrated",
+  "targetFile": "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Ryu.def",
+  "checks": {
+    "extensionDiscovered": true,
+    "extensionActive": true,
+    "version": "0.79.116",
+    "commandAvailable": true,
+    "navigationToolbarSlots": 25,
+    "navigationSlider": true,
+    "navigationArrows": true,
+    "navigationModes": true,
+    "navigationFilesListed": true,
+    "assistanceToolbarSlots": 0,
+    "assistanceSections": true,
+    "engineProfileVisible": true,
+    "nightlyStringStatus": "hidden",
+    "stableProfileHidesNightlyStrings": true,
+    "verifiedNightlyEnablesStrings": true,
+    "nativeTab": true,
+    "navigationTab": true,
+    "assistanceTab": true,
+    "companionsShareGroup": true,
+    "nativeUsesSeparateGroup": true,
+    "connectedFileCount": 23,
+    "connectedNativeTabs": 23,
+    "allConnectedNativeTabs": true,
+    "noLegacyWebviewEditor": true,
+    "groupCount": 2,
+    "noFourColumnLayout": true,
+    "nativeLanguageId": "zss",
+    "missingCommandDiagnostic": true,
+    "missingCommandSeverity": 1,
+    "nativeEditApplied": true,
+    "nativeDirtyAfterEdit": true,
+    "nativeUndoRestored": true,
+    "nativeCleanAfterUndo": true
+  },
+  "connectedFiles": [
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Ryu.def",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\template.jnp",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Sf6Ryu.air",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Constants.cns",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Ryu_movelist.dat",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\commonoptions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\input.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\system_movement.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_armor.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_combo_scaling.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\normal_functions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_hit_regions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_attack_lifecycle.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_normal_functions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_cancel_system.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\damage_compatibility.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_game_options.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\normals.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\normals_extras.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_debug_export_bridge.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\sound_archive_bridge.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\JNP_training.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\common.zss"
+  ],
+  "groups": [
+    {
+      "index": 0,
+      "viewColumn": 1,
+      "active": false,
+      "tabs": [
+        {
+          "label": "Ryu.def",
+          "active": true,
+          "dirty": false
+        },
+        {
+          "label": "template.jnp",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "Sf6Ryu.air",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "Constants.cns",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "Ryu_movelist.dat",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "commonoptions.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "input.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "system_movement.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_armor.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_combo_scaling.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "normal_functions.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_hit_regions.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_attack_lifecycle.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_normal_functions.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_cancel_system.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "damage_compatibility.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_game_options.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "normals.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "normals_extras.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sf6_debug_export_bridge.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "sound_archive_bridge.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "JNP_training.zss",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "common.zss",
+          "active": false,
+          "dirty": false
+        }
+      ]
+    },
+    {
+      "index": 1,
+      "viewColumn": 2,
+      "active": true,
+      "tabs": [
+        {
+          "label": "IKEMaker Code Navigation",
+          "active": false,
+          "dirty": false
+        },
+        {
+          "label": "IKEMaker Coding Assistance",
+          "active": true,
+          "dirty": false
+        }
+      ]
+    }
+  ],
+  "finishedAt": "2026-10-13T16:02:47.104Z"
+}

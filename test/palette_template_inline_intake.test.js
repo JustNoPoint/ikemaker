@@ -1,0 +1,22 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'palette-template-inline-')),originalLoad=Module._load;
+const vscode={Uri:{file:fsPath=>({fsPath})},ViewColumn:{One:1,Beside:2},ConfigurationTarget:{WorkspaceFolder:1},commands:{executeCommand:async()=>false},workspace:{getConfiguration:()=>({get:(_key,fallback)=>fallback,update:async()=>{}})},window:{tabGroups:{activeTabGroup:{viewColumn:1}},showOpenDialog:async()=>undefined,showSaveDialog:async()=>undefined,showInputBox:async()=>undefined,showWarningMessage:async()=>undefined,showInformationMessage:async()=>undefined}};
+Module._load=function(request,parent,main){if(request==='vscode')return vscode;return originalLoad.call(this,request,parent,main)};
+(async()=>{try{
+ const {encodeRgbaPng,buildCollective}=require('../src/palette_collective_model'),{PaletteWorkspaceController}=require('../src/palette_workspace_controller'),{configurePaletteWorkspaceService,paletteWorkspaceService}=require('../src/palette_workspace_service');configurePaletteWorkspaceService({get:()=>({}),update:async()=>{}});
+ const target=path.join(root,'character.sff'),source=path.join(root,'art.png');fs.writeFileSync(target,Buffer.from('retained-target'));fs.writeFileSync(source,encodeRgbaPng(1,1,Buffer.from([255,0,0,255])));paletteWorkspaceService().open(target);
+ const collective=buildCollective([{filename:source,buffer:fs.readFileSync(source)}]),posted=[],state={filename:target,post:message=>posted.push(message),busy:false,inlineSource:null,selectedSourceIds:new Set(),paletteImages:{}};
+ const controller=new PaletteWorkspaceController({}),folderCalls=[];controller.chooseCollectiveFiles=async folder=>{folderCalls.push(folder);return{collective,root:folder?root:null}};controller.replaySff=()=>true;
+ assert.strictEqual(controller.inlinePanel(state),controller.inlinePanel(state),'the inline template bridge remains stable so repeated contact-sheet posts can be deduplicated');
+ await controller.handleSff(state,{type:'workspaceAction',action:'templateChooseImages'});
+ assert.deepStrictEqual(folderCalls,[false],'Open image files reaches the explicit multi-file picker route');
+ assert(state.inlineSource&&path.resolve(state.inlineSource.filename)===path.resolve(source),'the selected source is adopted by the current Palette Workshop panel');
+ assert(posted.some(message=>message.type==='paletteWorkspaceSession'&&message.session.context.kind==='collective-source'),'the current panel switches to the exact collective-source session');
+ assert(posted.some(message=>message.type==='paletteCollectiveContact'),'the selected images immediately refresh Sources & Preflight in the same panel');
+ await controller.handleAttachedWorkspace(state,{type:'workspaceAction',action:'contactPage',page:0});
+ await controller.handleAttachedWorkspace(state,{type:'workspaceAction',action:'templateReturnToTarget'});assert.strictEqual(state.inlineSource,null,'Return to character leaves inline template mode without closing the character workshop');assert(posted.some(message=>message.type==='paletteWorkspaceSession'&&message.session.context.kind==='existing-sff'),'the same panel restores its character Palette Workshop session');
+ controller.chooseImageCleanFiles=async()=>({collective,paths:[source],repair:[]});await controller.handleSff(state,{type:'workspaceAction',action:'imageCleanChooseImages'});assert.strictEqual(paletteWorkspaceService().sourceSnapshot(source).context.origin.surface,'palette-image-clean-inline','Image Clean uses its own source-preserving workflow instead of entering template creation');await controller.handleAttachedWorkspace(state,{type:'workspaceAction',action:'templateReturnToTarget'});
+ await controller.handleSff(state,{type:'workspaceAction',action:'templateScanFolder'});assert.deepStrictEqual(folderCalls,[false,true],'Scan one folder reaches the recursive folder picker route');assert(state.inlineSource,'folder intake is also adopted inline instead of opening a second Palette Workshop');
+ console.log('Palette template file/folder controls route end-to-end into the current workshop panel');
+}finally{Module._load=originalLoad;fs.rmSync(root,{recursive:true,force:true})}})().catch(error=>{console.error(error);process.exitCode=1});

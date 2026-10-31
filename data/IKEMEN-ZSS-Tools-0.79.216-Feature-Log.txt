@@ -1,0 +1,19 @@
+IKEMEN ZSS Tools 0.79.216
+
+Explicit palette-image synchronization choices
+
+- Palette Workshop now presents Import Images → Palettes, Export Palettes → Images, and Two-Way Sync as three visible buttons in Bulk Export & Gallery Sync.
+- A main Palette Workshop action named Sync Palette Images… opens this guided step directly and focuses the Two-Way Sync choice.
+- The buried direction dropdown is replaced by the same explicit buttons when the advanced palette-image flow is open.
+- Opening or rendering Palette Workshop never scans palette-image folders. A scan begins only after the user presses one of the three synchronization buttons.
+- Every direction remains review-first: exact changes and conflicts are shown before any candidate or project update can be prepared.
+
+Character palette sync in the SFF viewer
+
+- The SFF quick-action bar now has a dedicated palette-color sync action instead of routing the user into Palette Workshop.
+- Its popup offers all three directions: Import Images → SFF Palettes, Export SFF Palettes → Images, and Two-Way Sync.
+- The palette-image folder is selected and remembered separately for each character. Shared SFFs ask which character owns the sync before using a folder.
+- Matching indexed PNGs are identified from explicit group/index filenames such as 1-1.png and 1-0000.png. Duplicate identities and invalid images block the sync instead of being guessed.
+- Export changes only the PNG color table and preserves its exact pixel/index plane. Import changes only writable SFF RGB palette entries and preserves sprites, indexes, axes, IDs, assignments, and alpha.
+- Two-Way Sync records the last completed state in the selected character folder. When both sides changed, it asks whether image or SFF colors should win, with an option to decide each palette separately.
+- Nothing scans or writes in the background. Every run begins from the user’s sync action and ends with an exact summary plus explicit confirmation.

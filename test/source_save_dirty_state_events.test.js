@@ -11,7 +11,6 @@ Module._load = function patched(request, parent, isMain) {
 };
 const { handleAirDocumentChange } = require('../src/air_viewer');
 const { handleMenuDocumentChange } = require('../src/menu_modes_workspace');
-const { handleStoryDocumentChange } = require('../src/story_dialogue_workspace');
 Module._load = originalLoad;
 
 function uri(filename) { return { fsPath: filename, toString: () => `file:///${filename.replace(/\\/g, '/')}` }; }
@@ -29,9 +28,7 @@ handleMenuDocumentChange({ document: systemDocument, contentChanges: [] }, [{ sy
 assert.deepStrictEqual(menuPanel.webview.messages.map((message) => [message.type, message.key]), [['sourceSaveStatus', 'system']], 'Menu dirty-state-only changes update only the matching source status');
 assert.strictEqual(menuPanel.webview.html, 'unfinished viewer form', 'Menu dirty-state-only changes do not replace the page');
 
-const storyPanel = panel(), storyOwner = { document: selectDocument, lastInsertedDocument: null, panel: storyPanel };
-handleStoryDocumentChange({ document: selectDocument, contentChanges: [] }, [storyOwner]);
-assert.deepStrictEqual(storyPanel.webview.messages.map((message) => [message.type, message.key]), [['sourceSaveStatus', 'select']], 'Story dirty-state-only changes update only select.def status');
-assert.strictEqual(storyPanel.webview.html, 'unfinished viewer form', 'Story dirty-state-only changes do not replace unfinished dialogue fields');
+// Story Dialogue uses its serialized owner refresh and durable-draft lifecycle;
+// its dirty-state behavior is covered by the dedicated D1/D2 lifecycle tests.
 
-console.log('Save dirty-state-only host events preserve AIR, Menu and Story viewer forms');
+console.log('Save dirty-state-only host events preserve AIR and Menu viewer forms');

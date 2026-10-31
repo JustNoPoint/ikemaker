@@ -1,0 +1,10 @@
+IKEMaker 0.79.192
+
+Sprite Controls and assigned-SFF authority
+
+- Keeps the authoritative sprite slider bounded inside the compact control rail at narrow widths.
+- Removes the retired duplicate SFF quick-action toolbar from final viewer composition.
+- Opens only the character SFF assigned by the DEF; discovered common and FX archives cannot replace it.
+- Does not fall back to an unrelated FX SFF when a character has no sprite assignment.
+- Ignores stale archive-family context during normal text-editor navigation while preserving intentional asset-viewer routing.
+- Adds focused regression coverage for slider layout, single-toolbar composition, exact assigned-SFF selection, and missing-assignment safety.

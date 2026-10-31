@@ -1,0 +1,5 @@
+IKEMaker 0.79.64
+
+- Applies the embedded PalFX theme directly to live document elements, bypassing the iframe policy that rejected injected stylesheets.
+- Forces readable text, control backgrounds, borders, headings, tabs, code areas, and palette/composer content.
+- Applies matching colors to controls created later by PalFX through live document observation.

@@ -1,0 +1,8 @@
+IKEMaker 0.79.45 — AIR frame-editor rail correction
+
+- Repurposes the former left action-list column as the selected AIR frame editor.
+- Places group, index, offsets, time, flip, blend, scale, angle, and frame-edit actions in that left rail.
+- Expands the AIR canvas through the remaining center width instead of leaving an empty reserved border.
+- Keeps frame thumbnails directly below the canvas.
+- On narrow screens, keeps the canvas and thumbnail strip together first, then moves the frame editor and inspector below them.
+- Constrains the thumbnail strip to a stable visible height so lower controls cannot push it out of the center viewer region.

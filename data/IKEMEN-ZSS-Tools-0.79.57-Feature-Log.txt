@@ -1,0 +1,6 @@
+IKEMaker 0.79.57
+
+- Corrected the floating SFF workspace buttons so they select local replacement modes instead of launching unrelated tools or redirecting the main viewer.
+- Animations now opens an embedded SFF-linked AIR action list with lazy thumbnails; it does not open the AIR viewer.
+- Open PalFX Editor remains a separate explicit action.
+- Added safe migration placeholders for Palette Workshop, Review, Display, and Layer Preview while their shared live SFF state is centralized. The existing writable tools remain available in the main SFF viewer during this transition to prevent competing edits.

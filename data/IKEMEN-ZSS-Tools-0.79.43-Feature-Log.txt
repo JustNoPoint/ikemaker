@@ -1,0 +1,7 @@
+IKEMaker 0.79.43 — Portable AIR action management comparison
+
+- Adds sorting, filtering, New, Duplicate, Delete Selected, Mark Visible, and Clear to the experimental AIR Actions Browser.
+- Applies filtering, ordering, active selection, and marked selection equally to list and thumbnail presentations.
+- Synchronizes active and marked actions with the original AIR viewer in both directions.
+- Routes create, duplicate, and delete through the shared host-side AIR action mutation path so dialogs, unsaved source baselines, Undo, and Auto Save behavior remain consistent.
+- Keeps the existing embedded action controls temporarily for side-by-side approval; no main-viewer controls are removed in this comparison build.

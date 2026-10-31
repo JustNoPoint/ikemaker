@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('assert'),Module=require('module'),vm=require('vm');
+const original=Module._load;
+Module._load=function(request,parent,main){if(request==='vscode')return{env:{uiKind:1},UIKind:{Web:2},window:{},workspace:{getConfiguration:()=>({get:(key,fallback)=>fallback})},Uri:{file:fsPath=>({fsPath})}};if(request==='./ikemen_hub')return{findGameRoot:()=>'',currentCharacter:()=>''};return original.call(this,request,parent,main)};
+const {html}=require('../src/test_session_workspace');Module._load=original;
+const page=html({root:'C:/game',profile:'default',context:{character:'chars/Ryu/Ryu.def'},errors:[],results:[],catalog:{profiles:[{id:'default',name:'Default'}],suites:[{id:'current',name:'Current suite',scope:{kind:'universal-engine',value:''},tests:[{}],description:''},{id:'other',name:'Other profile suite',scope:{kind:'game-profile',value:'other'},tests:[{}],description:''}],diagnostics:[]}});
+assert.match(page,/role="toolbar"/);assert.match(page,/role="tablist"/);for(const id of ['testTabTests','testTabDiagnostics','testTabResults','testTabHelp'])assert.match(page,new RegExp(`id="${id}"[^>]*role="tab"`));assert.equal((page.match(/role="tabpanel"/g)||[]).length,4);
+assert.match(page,/event\.key==='ArrowRight'/);assert.match(page,/aria-live="polite"/);assert.match(page,/does not apply to the default profile/);assert.match(page,/Select at least one applicable suite/);assert.match(page,/No diagnostics are available/);assert.match(page,/message\.root===testRoot/);assert.match(page,/stored\.root===testRoot/);assert.match(page,/root:testRoot,suiteIds/);assert.match(page,/queueMicrotask/);
+for(const script of [...page.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(match=>match[1]))assert.doesNotThrow(()=>new vm.Script(script),'generated Project Tests client must compile');
+const source=require('fs').readFileSync(require('path').join(__dirname,'../src/test_session_workspace.js'),'utf8');assert.match(source,/panel\.ikemenTestBusy/);assert.match(source,/readResults\(currentRoot\)\.find/);assert.match(source,/no longer in this game’s recent IKEMaker evidence list/);
+console.log('Project Tests accessibility, single-flight, restoration, and result-authority tests passed');

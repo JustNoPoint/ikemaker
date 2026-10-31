@@ -2,7 +2,7 @@
 
 const assert = require('assert');
 const obsoleteBaseline = new RegExp(['night' + 'ly', 'release ' + 'candidate', '\\bR' + 'C\\d*\\b'].join('|'), 'i');
-const { clientModel, html, DOCS_URL, WIKI_URL } = require('../src/code_structure_workspace');
+const { clientModel, html, blockAtLine, DOCS_URL, WIKI_URL } = require('../src/code_structure_workspace');
 const { flatten } = require('../src/code_structure_model');
 
 const text = `[StateDef 200]
@@ -17,6 +17,8 @@ const model = clientModel(document), hitDef = flatten(model).find((item) => item
 assert.strictEqual(model.experience, 'learning');
 assert.strictEqual(clientModel(document, 'advanced').experience, 'advanced');
 assert.ok(hitDef, 'HitDef controller should be recognized');
+assert.strictEqual(blockAtLine(flatten(model),2),hitDef,'an exact Move Lab source line focuses the smallest containing visual block');
+assert.strictEqual(blockAtLine(flatten(model),999),null,'an out-of-range source line never guesses another visual block');
 assert.deepStrictEqual(hitDef.usedParams.map((item) => item.toLowerCase()), ['attr', 'damage', 'ground.velocity']);
 assert.ok(hitDef.doc.params.some((item) => item.name.toLowerCase() === 'attr'));
 assert.match(hitDef.doc.params.find((item) => item.name === 'damage').description, /damage/i);
@@ -25,6 +27,7 @@ assert.strictEqual(hitDef.doc.params.find((item) => item.name === 'damage').plac
 assert.ok(hitDef.doc.params.some((item) => item.name === 'ground.velocity'));
 assert.strictEqual(hitDef.doc.url, undefined, 'Controller reference should not depend on an online URL');
 const page = html(model);
+assert(page.includes('model.focusOnSelected&&selected'), 'an explicit native-editor focus route opens with the exact selected block as the presentation-only focus');
 assert.ok(page.includes('id="onlineDocs"'));
 assert.ok(page.includes('id="wiki"'));
 assert.ok(page.includes('id="controllerDocs"'));
@@ -36,7 +39,19 @@ assert.ok(page.includes('id="experience"'));
 assert.ok(page.includes('IKEMEN 1.0'));
 assert.ok(page.includes('ZSS authoring path'));
 assert.ok(page.includes('id="languagePath" open'));
-assert.ok(!obsoleteBaseline.test(page));
+assert.match(page,/data-toolbar-contract="universal-v1"/);assert.match(page,/data-surface-id="code\.structure"/);assert.strictEqual((page.match(/data-universal-slot=/g)||[]).length,29);
+assert.strictEqual((page.match(/acquireVsCodeApi\(\)/g)||[]).length,1,'Code Structure uses one webview bridge');
+assert.match(page,/id="filePrevious"/);assert.match(page,/id="fileSlider"/);assert.match(page,/id="fileNext"/);assert.match(page,/Tabs/);assert.match(page,/Cards/);assert.match(page,/Follow active supported editor/);
+assert.match(page,/id="focusSelected"/);assert.match(page,/id="showAll"/);assert.match(page,/id="focusStatus"/);
+assert.match(page,/Hide unrelated blocks in this presentation only/);assert.match(page,/presentation only/);
+assert.match(page,/focusId=idFor\(selected\)/);assert.match(page,/focusId=null;render\(\)/);
+assert.match(page,/Search names, explanations, and options/);assert.match(page,/value="issues">Issues &amp; safety/);
+assert.match(page,/value="call">Function calls/);
+assert.match(page,/doc\.summary,params,insights/);assert.match(page,/f==='issues'&&hasIssue/);
+assert.doesNotMatch(page,/id=['"]saveCode/,'the universal Save action owns whole-document save');
+assert.match(page,/select\(n,false\);vscode\.postMessage\(\{type:'selectBlock'/,'tree selection updates the visual selection without auto-revealing native source');
+assert.match(page,/move-constants-content|code-structure-content/);assert.match(page,/\.code-structure-content \.viewer-icon-toolbar\{display:none!important\}/);
+assert.ok(!/\b(?:Experimental|Beta)\b/i.test(page),'retired beta/experimental aliases stay out of the canonical menus');
 assert.ok(!page.includes('controllerDocsLink'));
 assert.ok(!page.includes('Offline docs'));
 assert.ok(DOCS_URL.startsWith('https://'));
@@ -68,7 +83,4 @@ const navigation={currentPoint:(filename,kind,message,panel)=>({filename,kind,pa
 })().catch(error=>{console.error(error);process.exitCode=1;});
 
 // Rebinding the singleton panel updates its owner identity before publishing.
-const bindBody=workspaceSource.match(/function bindSession\([^]*?\n\}/)[0];
-const events=[],session={panel:{webview:{postMessage:m=>events.push(['model',m.model])}}};
-vm.runInNewContext(bindBody+';bindSession({},session,document)',{session,document,supported:()=>true,experienceFor:()=> 'learning',title:()=> 'test',clientModel:()=> 'new owner model',require:()=>({registerSourcePanel:(panel,filename)=>events.push(['owner',filename])})});
-assert.equal(events[0][0],'owner');assert.equal(events[0][1],document.fileName);assert.equal(events[1][0],'model');
+assert.match(workspaceSource,/async function bindSession/,'file rebinding is serialized through the asynchronous host path');

@@ -1,0 +1,33 @@
+'use strict';
+const assert=require('assert'),Module=require('module'),original=Module._load;
+Module._load=function(request,parent,main){if(request==='vscode')return{commands:{},window:{},ViewColumn:{Active:1}};return original.call(this,request,parent,main)};
+try{
+  const {VIEW_TYPE,selectionFor}=require('../src/palette_workshop_browser');
+  assert.strictEqual(VIEW_TYPE,'ikemenPaletteCompanion','Palette browser has its own surface identity');
+  const archive={sprites:[{index:0,group:0,number:0,paletteIndex:1},{index:1,group:10,number:20,paletteIndex:0}],palettes:[{index:0,group:1,number:1},{index:1,group:1,number:2}]};
+  const current={sprite:{physicalIndex:0,group:0,number:0},palette:{physicalIndex:1,group:1,number:2}};
+  assert.deepStrictEqual(selectionFor(archive,current,{type:'selectSprite',physicalIndex:1}),{sprite:{physicalIndex:1,group:10,number:20},palette:{physicalIndex:0,group:1,number:1}},'sprite browsing updates the exact shared sprite and its authored palette');
+  assert.deepStrictEqual(selectionFor(archive,current,{type:'selectPalette',physicalIndex:0}),{sprite:current.sprite,palette:{physicalIndex:0,group:1,number:1}},'palette browsing updates Bank A authority without changing the selected sprite');
+  assert.strictEqual(selectionFor(archive,current,{type:'selectSprite',physicalIndex:99}),undefined,'stale sprite rows cannot change workshop selection');
+  const source=require('fs').readFileSync(require('path').join(__dirname,'..','src','palette_workshop_browser.js'),'utf8');
+  assert.match(source,/workbench\.action\.moveEditorToNewWindow/,'Palette browser uses the working VS Code detach command');
+  assert.doesNotMatch(source,/moveActiveEditorToNewWindow/,'Palette browser does not use the nonexistent detach command');
+  assert.match(source,/if\(options\.autoFloat!==false\)await float\(record\)/,'a newly opened Palette browser floats by default');
+  assert.match(source,/createBrowserReadinessController/,'floating waits for the exact Palette browser webview to be ready');
+  assert.match(source,/data-tool="hand">✋ Move canvas/,'Workshop Tools exposes actual image-tool proxies');
+  assert.match(source,/data-tool="bucket">▰ Paint bucket/,'Workshop Tools exposes the complete image-tool rail');
+  assert.match(source,/ikemen\.palette\.focusWorkshopTool/,'browser section and tool buttons use the direct authoritative-workshop focus bridge');
+  assert.match(source,/application\/x-ikemaker-sff-sprite/,'browser sprite rows expose a dedicated drag payload for the template canvas');
+  assert.match(source,/b\.draggable=true/,'browser sprite rows are draggable as well as clickable');
+  assert.match(source,/Find group, index, name, comment, role, or usage/,'palette organizer searches human metadata as well as numeric coordinates');
+  assert.match(source,/Exact duplicates/,'palette organizer can isolate exact duplicate palettes');
+  assert.match(source,/catalog-mini-swatch/,'palette organizer keeps a compact palette-table preview on every row');
+  assert.match(source,/button\.catalog-row/,'palette organizer counts and annotates the rows it actually renders');
+  assert.match(source,/type:'tabChanged'/,'the selected catalog tab is reported to the host before a float rerender');
+  assert.match(source,/message\?\.type==='tabChanged'/,'the host retains the selected tab across browser rerenders');
+  assert.match(source,/application\/x-ikemaker-palette/,'whole palettes have a dedicated internal drag payload');
+  assert.match(source,/Drop ACT or indexed image palettes here/,'whole-palette file intake is distinct from Bank B color-index drops');
+  assert.match(source,/savePaletteMetadata/,'palette comments and display names persist through the shared metadata authority');
+  assert.match(source,/mode:'gap-fill'/,'palette intake stages into available numeric gaps rather than overwriting them');
+  console.log('Palette Workshop companion preserves one exact shared selection owner');
+}finally{Module._load=original}

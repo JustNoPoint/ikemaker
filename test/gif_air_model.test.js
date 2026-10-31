@@ -16,6 +16,11 @@ assert.strictEqual(resampleTiming([10, 10, 10, 10, 10, 10]).reduce((sum, item) =
 const resampled = gifActionBlock({ action: 202, group: 202, frameCount: 6, useGifTiming: true, resampleTo60: true, delaysMs: [10, 10, 10, 10, 10, 10] });
 assert.match(resampled, /resampled to 60 Hz/);
 assert.strictEqual(resampled.split(/\r?\n/).filter((line) => /^202,/.test(line)).length, 4);
+const reviewedIdentities = gifActionBlock({ action: 203, group: 9, startIndex: 0, frameCount: 3, spriteRefs: [{ group: 70, index: 4 }, { group: 70, index: 8 }, { group: 71, index: 2 }] });
+assert.match(reviewedIdentities, /70,4,0,0,1/);
+assert.match(reviewedIdentities, /70,8,0,0,1/);
+assert.match(reviewedIdentities, /71,2,0,0,1/);
+assert.throws(() => gifActionBlock({ action: 204, group: 0, frameCount: 2, spriteRefs: [{ group: 1, index: 0 }] }), /Every GIF frame/);
 
 const source = '[Begin Action 0]\n0,0,0,0,1\n\n[Begin Action 5]\n5,0,0,0,2\n';
 assert.deepStrictEqual(actionRange(source, 0), { start: 0, end: 3 });

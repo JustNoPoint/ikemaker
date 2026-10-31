@@ -1,0 +1,15 @@
+'use strict';
+const assert=require('assert'),m=require('../src/palette_index_migration_model');
+const colors=Array.from({length:256},(_,i)=>[i,i,i,i===0?0:255]),authorityHash='a'.repeat(64);
+let plan=m.createPlan({operationId:'migration-0001',sourceAuthorityHash:authorityHash,colors,usedSourceIndexes:[0,1,2,3],reclaimableSourceIndexes:[4,5,6,7]});
+assert.throws(()=>m.normalizePlan({...plan,columns:3.5}),/integer/);assert.throws(()=>m.normalizePlan({...plan,operationId:'x'}),/operation ID/);assert.throws(()=>m.normalizePlan({...plan,sourceAuthorityHash:'bad'}),/SHA-256/);
+plan=m.move(plan,1,'right');let map=m.mapping(plan);assert.strictEqual(map.oldToNew[1],2);assert.strictEqual(map.oldToNew[2],1);assert.throws(()=>m.move(plan,0,'right'),/pinned/);
+const placed=m.place(plan,1,5),placedMap=m.mapping(placed);assert.strictEqual(placedMap.oldToNew[1],5);assert.strictEqual(placedMap.oldToNew[5],2);assert.throws(()=>m.place(plan,0,5),/pinned/);assert.throws(()=>m.place(plan,1,0),/pinned/);
+plan=m.insertColor(plan,4,[9,8,7,6],'new');plan=m.insertGap(plan,5,2,'space');assert.strictEqual(plan.slots[4].kind,'new');assert.strictEqual(plan.slots[5].kind,'reserved');
+const pixels=Buffer.from([0,1,2,3,1]),remapped=m.remapIndices(pixels,plan);for(let i=0;i<pixels.length;i++)assert.strictEqual(remapped[i],m.mapping(plan).oldToNew[pixels[i]]);
+const duplicate=m.createPlan({operationId:'migration-0002',sourceAuthorityHash:authorityHash,colors:colors.map((c,i)=>i===2?colors[1]:c),usedSourceIndexes:[0,1,2]});assert(m.duplicateDiagnostics(duplicate).some(x=>x.indexes.includes(1)&&x.indexes.includes(2)));
+const grouped={...m.createPlan({operationId:'migration-0003',sourceAuthorityHash:authorityHash,colors,usedSourceIndexes:[0,10,11]}),groups:[{id:'group-0001',name:'Ramp',sourceIndexes:[10,11]}]};assert.doesNotThrow(()=>m.normalizePlan(grouped));assert.throws(()=>m.normalizePlan({...grouped,groups:[{id:'group-0001',name:'Ramp',sourceIndexes:[10,12]}]}),/contiguous/);
+const groupMoved=m.moveGroup(grouped,'group-0001','right'),groupMap=m.mapping(groupMoved);assert.strictEqual(groupMap.oldToNew[10],11);assert.strictEqual(groupMap.oldToNew[11],12);assert.strictEqual(groupMap.oldToNew[12],10);assert.throws(()=>m.move(grouped,[10,12],'right'),/contiguous/);assert.throws(()=>m.move(grouped,[],'right'),/Select at least one/);
+assert.throws(()=>m.assertAuthority({...plan,slots:plan.slots.map((s,i)=>i===1&&s?.kind==='source'?{...s,rgba:[1,2,3,4]}:s)},{authorityHash,colors}),/altered immutable/);
+let seed=7;for(let trial=0;trial<200;trial++){seed=(seed*1664525+1013904223)>>>0;const a=1+(seed%254),b=a+1,p=m.move(m.createPlan({operationId:`prop-${String(trial).padStart(4,'0')}`,sourceAuthorityHash:authorityHash,colors,usedSourceIndexes:[0,a,b]}),a,'right'),mapping=m.mapping(p);assert.notStrictEqual(mapping.oldToNew[a],mapping.oldToNew[b]);assert.deepStrictEqual(p.slots[mapping.oldToNew[a]].rgba,colors[a])}
+console.log('Palette index migration model mapping, capacity, grouping, authority, and property tests passed');

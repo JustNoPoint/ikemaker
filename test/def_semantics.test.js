@@ -17,5 +17,7 @@ assert.deepStrictEqual(found.map((item) => [item.key, item.value, item.ownership
   ['sprite', 'files/Ryu.sff', 'character'],
   ['stcommon', '../../data/common.zss', 'common']
 ]);
+assert.strictEqual(found[0].resolvedPath,path.resolve(path.dirname(characterDef),'files/Ryu.sff'),'DEF ownership records retain the exact resolved target used by native hover and navigation');
+assert.strictEqual(found[1].resolvedPath,path.resolve(path.dirname(characterDef),'../../data/common.zss'),'shared references retain their exact resolved target without substituting a project-local file');
 
 console.log('DEF semantic ownership tests passed');

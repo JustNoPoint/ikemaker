@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module');
+const root=fs.mkdtempSync(path.join(os.tmpdir(),'palette-image-clean-')),originalLoad=Module._load,dialogs=[];
+const vscode={Uri:{file:fsPath=>({fsPath})},ViewColumn:{One:1,Beside:2},ConfigurationTarget:{WorkspaceFolder:1},commands:{executeCommand:async()=>false},workspace:{getConfiguration:()=>({get:(_key,fallback)=>fallback,update:async()=>{}})},window:{tabGroups:{activeTabGroup:{viewColumn:1}},showOpenDialog:async options=>{dialogs.push(options);return vscode.nextDialog},showSaveDialog:async()=>undefined,showInputBox:async()=>undefined,showWarningMessage:async()=>undefined,showInformationMessage:async()=>undefined}};
+Module._load=function(request,parent,main){if(request==='vscode')return vscode;return originalLoad.call(this,request,parent,main)};
+(async()=>{try{
+ const {encodeIndexedPng}=require('../src/palette_indexed_png'),{encodeRgbaPng}=require('../src/palette_collective_model'),{PaletteWorkspaceController}=require('../src/palette_workspace_controller');
+ const indexed=path.join(root,'indexed.png'),truecolor=path.join(root,'truecolor.png'),psd=path.join(root,'layered.psd');fs.writeFileSync(indexed,encodeIndexedPng({width:1,height:1},Buffer.from([0]),Array.from({length:256},(_,i)=>[i,0,0,255])));fs.writeFileSync(truecolor,encodeRgbaPng(1,1,Buffer.from([255,0,0,255])));fs.writeFileSync(psd,Buffer.from('8BPS'));
+ const controller=new PaletteWorkspaceController({});vscode.nextDialog=[{fsPath:indexed}];let chosen=await controller.chooseImageCleanFiles(false);assert(chosen.collective&&chosen.repair.length===0,'a valid indexed PNG enters Image Clean directly');assert.strictEqual(chosen.collective.evidence.length,1);
+ vscode.nextDialog=[{fsPath:truecolor},{fsPath:psd}];chosen=await controller.chooseImageCleanFiles(false);assert.strictEqual(chosen.collective,null);assert.strictEqual(chosen.repair.length,2,'truecolor PNG and PSD are accepted by intake but explicitly require repair/indexing');assert(chosen.repair.some(item=>/PSD must be converted/.test(item.reason)));assert(dialogs.at(-1).filters['IKEMaker images'].includes('psd'),'the visible chooser includes PSD among IKEMaker-supported repair inputs');
+ console.log('Palette Image Clean indexed gate and supported-format repair routing tests passed');
+}finally{Module._load=originalLoad;fs.rmSync(root,{recursive:true,force:true})}})().catch(error=>{console.error(error);process.exitCode=1});

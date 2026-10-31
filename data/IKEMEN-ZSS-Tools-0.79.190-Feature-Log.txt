@@ -1,0 +1,12 @@
+IKEMaker 0.79.190
+
+Atomic Character Workbench close repair
+
+- One Close Character action drains the complete restored SFF/AIR/SND stack, including viewers VS Code materializes after an earlier viewer closes.
+- Success is reported only after the exact character-owned session remains empty for a sustained interval.
+- Character-session opening is cancelled when close begins, preventing late tabs, late viewers, and false "opened" messages.
+- AIR and SND now persist complete exact owner sets, add a second owner when a shared viewer is reused, and retain that viewer until its final owner closes.
+- SFF restoration rejects a closing owner before changing active-viewer or file caches, so a disposed restored panel cannot poison later reopening.
+- Legacy restored viewers are considered only when connected to the selected character or actively visible for explicit confirmation; unrelated inactive character viewers remain untouched.
+- Regression coverage includes delayed restored panels, open/close races, unrelated legacy viewers, shared Ryu/Ken ownership, restart persistence, final-owner closure, and standalone retention.
+- New Dev reviewed the final ownership and close lifecycle and approved this build.

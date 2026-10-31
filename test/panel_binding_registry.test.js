@@ -1,0 +1,10 @@
+'use strict';
+const assert = require('assert');
+const { createPanelBindingRegistry } = require('../src/panel_binding_registry');
+const registry=createPanelBindingRegistry({key:value=>String(value).toLowerCase()}),a={},b={};
+assert.strictEqual(registry.claim(a,'A').ok,true);assert.strictEqual(registry.get('a'),a);
+assert.strictEqual(registry.claim(b,'A').ok,false,'an ordinary target cannot silently acquire a second panel');
+assert.strictEqual(registry.claim(a,'B').ok,true,'the same panel can retarget in place');
+assert.strictEqual(registry.get('a'),undefined);assert.strictEqual(registry.get('b'),a);assert.strictEqual(registry.target(a),'b');
+assert.strictEqual(registry.release(a),true);assert.strictEqual(registry.release(a),false);assert.strictEqual(registry.size,0);
+console.log('Panel binding registry rekeys one pane in place and rejects duplicate ordinary targets');

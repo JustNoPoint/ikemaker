@@ -1,0 +1,24 @@
+IKEMaker 0.79.165
+
+Palette Family and image-sync guided workflow
+- Advanced Palette Workshop now exposes Palette Family & Image Sync as one guided, first-class work area.
+- Image-template swatches/sync, named RemapPal ranges, Quick Browse, project-to-image sync, image-to-project sync, review, and finish routes all reach it.
+- Standard Add, Replace, View/Edit Colors, and Batch workflows remain unchanged.
+- The old Index Layout & Migration tool is a compatibility redirect; no enabled tool route lands on its empty legacy host.
+
+Exact template preview
+- Quick Browse offers Sprite and Template image preview choices when exact evidence exists.
+- The template preview retains the verified source dimensions and index plane.
+- Transparent index 0, candidate palette colors, and the current per-palette color are represented exactly.
+- Changed template authority fails closed, and preview generation writes no source or project file.
+
+Retained state and recovery
+- Browsing, paused, summary, and recovery presentations remain visible across guided steps.
+- Idle sync steps use a smaller sync-only presentation.
+- Recovery is an additive card beside retained work: ready recovery saves a separate indexed copy, while unresolved master-color recovery continues into Palette Workshop.
+- Apply and Enter restore focus to the color field; narrow docked browsers reflow without losing actions.
+
+Verification
+- Syntax and focused guided-workflow, family UI, reachability, authority, and recovery checks pass.
+- All 86 Palette-focused test files pass.
+- New Dev approved the implementation with no remaining P0/P1 release blocker.

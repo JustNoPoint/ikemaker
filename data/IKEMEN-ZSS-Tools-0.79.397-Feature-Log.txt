@@ -1,0 +1,15 @@
+IKEMaker 0.79.397 — Deep palette-bank viewport ownership
+
+Use stable bank/card/editor identities for deep Palette Workshop anchors,
+including data-bank-card, data-bank-grid, body/section identities and stable IDs.
+Do not anchor to the sticky preview or any of its descendants: their viewport
+position cannot measure movement of the document underneath them.
+
+Retain the original semantic anchor across rapid passive updates while the
+asynchronous bank editor is temporarily absent. Do not recapture a different
+heading or loading placeholder midway through rebuilding the same editor.
+
+Chromium CSP regression positions Bank A at y=120, replaces the real bank editor
+through enhanceRefresh(), inserts late header content, and waits 1500ms. The
+packaged 0.79.396 runtime fails with Bank A moving to y=317. This version retains
+y=120, including after five rapid session rebuilds and deferred enhancements.

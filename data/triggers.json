@@ -122,12 +122,18 @@
   },
   {
     "name": "BgmVar",
-    "signature": "BGMVar",
+    "signature": "BGMVar(param)",
     "description": "Allows checking the filename, freqmul, length, loop, loopcount, loopend, loopstart, position, startposition, and volume of the currently playing BGM.",
     "arguments": "paramname",
     "returnType": "variable",
     "kind": "trigger",
     "status": "new",
+    "capabilityAugmentations": [
+      {
+        "capabilityId": "audio.sample-rate-query",
+        "descriptionAppend": "Verified supporting Nightlies also accept sampleRate as the requested parameter."
+      }
+    ],
     "source": "Triggers-(new).md",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_bgmvar"
   },
@@ -206,7 +212,14 @@
     "kind": "trigger",
     "status": "changed",
     "source": "Triggers-(changed).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_command"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_command",
+    "capabilityAugmentations": [{
+      "capabilityId": "command.nightly-expressions",
+      "signature": "Command = stringExpression",
+      "arguments": "quoted command name, string map, or string local",
+      "returnType": "boolean int (1 or 0)",
+      "descriptionAppend": "A verified supporting build may resolve a string-valued map or scoped local as the command name at runtime."
+    }]
   },
   {
     "name": "ConsecutiveWins",
@@ -221,14 +234,21 @@
   },
   {
     "name": "Const",
-    "signature": "Const",
+    "signature": "Const(paramname)",
     "description": "The Const trigger can now also read Ikemen GO's new constants.",
-    "arguments": "",
-    "returnType": "",
+    "arguments": "paramname",
+    "returnType": "int or float",
     "kind": "trigger",
     "status": "changed",
     "source": "Triggers-(changed).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_const"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_const",
+    "capabilityAugmentations": [
+      {
+        "capabilityId": "zss.runtime-strings",
+        "returnType": "int, float, or string",
+        "descriptionAppend": "On a verified supporting build, an auto-typed custom character constant can also return its quoted string value."
+      }
+    ]
   },
   {
     "name": "Const1080p",
@@ -244,9 +264,9 @@
   {
     "name": "DebugMode",
     "signature": "DebugMode(paramname)",
-    "description": "Returns information related to the debug mode.",
-    "arguments": "paramname",
-    "returnType": "",
+    "description": "Reports an engine debug-display or debug-reset state. Accepted names are accel, clsndisplay, debugdisplay, lifebarhide, wireframedisplay, and roundreset. The engine compiler does not accept the upstream-documented spelling roundrestarted. This trigger is development/debug information and should not be used as reliable gameplay logic.",
+    "arguments": "accel | clsndisplay | debugdisplay | lifebarhide | wireframedisplay | roundreset",
+    "returnType": "float or boolean int (parameter-dependent)",
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
@@ -353,9 +373,25 @@
   },
   {
     "name": "EnvShakeVar",
-    "signature": "EnvShakeVar",
-    "description": "Allows checking the (remaining) time, frequency and amplitude of the current EnvShake.",
-    "arguments": "paramname",
+    "signature": "EnvShakeVar(param_name)",
+    "description": "Checks EnvShake values. Valid arguments: time, freq, ampl, dir. EnvShakeVar(dir) returns the stored base shake direction in degrees as a float, not the instantaneous direction after diradd. Source-verified for the pinned engine revisions documented in offline help; dir is omitted from the upstream argument list. This is a trigger, not a controller parameter.",
+    "arguments": "param_name (time | freq | ampl | dir)",
+    "argumentSlots": [
+      {
+        "position": 0,
+        "name": "param_name",
+        "meaning": "The EnvShake value to read.",
+        "type": "named value",
+        "optional": false,
+        "allowExpression": true,
+        "choices": [
+          { "value": "time", "meaning": "Remaining EnvShake time in ticks.", "type": "float" },
+          { "value": "freq", "meaning": "Current EnvShake frequency.", "type": "float" },
+          { "value": "ampl", "meaning": "Current EnvShake amplitude.", "type": "float" },
+          { "value": "dir", "meaning": "Stored base shake direction in degrees, before diradd.", "type": "float" }
+        ]
+      }
+    ],
     "returnType": "float",
     "kind": "trigger",
     "status": "new",
@@ -371,7 +407,8 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_explodvar"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_explodvar",
+    "capabilityAugmentations": [{ "capabilityId": "render.expanded-shaders", "returnType": "int, float, or string", "descriptionAppend": "A verified supporting build accepts shader as the parameter and returns the assigned shader name." }, { "capabilityId": "zss.animation-prefix-query", "returnType": "int, float, or string", "descriptionAppend": "The exact supporting build accepts animPrefix as the parameter and returns the Explod animation archive prefix." }]
   },
   {
     "name": "FightScreenState",
@@ -485,14 +522,19 @@
   },
   {
     "name": "GetHitVar",
-    "signature": "GetHitVar",
+    "signature": "GetHitVar(param)",
     "description": "Returns the X, Y or Z component of the last HitDef's air.velocity parameter, even if the player was not hit in the air. (float)",
     "arguments": "",
     "returnType": "",
     "kind": "trigger",
     "status": "changed",
     "source": "Triggers-(changed).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_gethitvar"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_gethitvar",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "returnType": "varies; attr and guardflag return strings when not compared",
+      "descriptionAppend": "A verified supporting build returns the current attribute or guard flag as a string when GetHitVar(attr) or GetHitVar(guardflag) is used without an explicit comparison."
+    }, {"capabilityId":"zss.expanded-string-expressions","descriptionAppend":"A newer verified supporting build accepts any runtime string expression on the right side when comparing attr or guardflag."}]
   },
   {
     "name": "GroundAngle",
@@ -634,8 +676,14 @@
     "returnType": "Varies. See details",
     "kind": "trigger",
     "status": "new",
+    "capabilityId": "combat.hitdef-var-trigger",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_hitdefvar"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_hitdefvar",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "returnType": "varies; guardflag and hitflag return strings when not compared",
+      "descriptionAppend": "A verified supporting build returns the current guard or hit flag as a string when HitDefVar(guardflag) or HitDefVar(hitflag) is used without an explicit comparison."
+    }, {"capabilityId":"zss.expanded-string-expressions","descriptionAppend":"A newer verified supporting build accepts any runtime string expression on the right side when comparing guardflag or hitflag."}]
   },
   {
     "name": "HitOverridden",
@@ -693,17 +741,6 @@
     "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_index"
   },
   {
-    "name": "InDialogue",
-    "signature": "InDialogue",
-    "description": "Returns 1 during ongoing dialogue initiated by Dialogue/#newdialogue) state controller.",
-    "arguments": "none",
-    "returnType": "boolean int (1 or 0)",
-    "kind": "trigger",
-    "status": "new",
-    "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_indialogue"
-  },
-  {
     "name": "InputTime",
     "signature": "InputTime(button)",
     "description": "Returns number of frames since a given button was pressed or released. A positive number means the button is being held, while a negative number means it has been released. For players without keyctrl, it returns 0.",
@@ -735,17 +772,6 @@
     "status": "new",
     "source": "Triggers-(new).md",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_isasserted"
-  },
-  {
-    "name": "IsClsnProxy",
-    "signature": "IsClsnProxy",
-    "description": "Returns if the helper is a Clsn Proxy#clsnproxy).",
-    "arguments": "none",
-    "returnType": "boolean int (1 or 0)",
-    "kind": "trigger",
-    "status": "new",
-    "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_isclsnproxy"
   },
   {
     "name": "IsHelper",
@@ -1108,7 +1134,13 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_physics"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_physics",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "Physics OR Physics [oper] physicstype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "On a verified supporting build, bare Physics returns the current physics flag as a string."
+    }]
   },
   {
     "name": "Player",
@@ -1185,7 +1217,13 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_prevmovetype"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_prevmovetype",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "PrevMoveType OR PrevMoveType [oper] movetype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "On a verified supporting build, bare PrevMoveType returns I, A, or H as a string."
+    }]
   },
   {
     "name": "PrevStateType",
@@ -1196,7 +1234,13 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_prevstatetype"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_prevstatetype",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "PrevStateType OR PrevStateType [oper] statetype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "On a verified supporting build, bare PrevStateType returns its state-type flag as a string."
+    }]
   },
   {
     "name": "ProjClsnOverlap",
@@ -1218,7 +1262,8 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_projvar"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_projvar",
+    "capabilityAugmentations": [{ "capabilityId": "render.expanded-shaders", "returnType": "int, float, or string", "descriptionAppend": "A verified supporting build accepts shader as the parameter and returns the assigned shader name." }, {"capabilityId":"zss.expanded-string-expressions","descriptionAppend":"A newer verified supporting build accepts any runtime string expression on the right side when comparing projectile attr, guardflag, or hitflag."}, { "capabilityId": "zss.animation-prefix-query", "returnType": "int, float, or string", "descriptionAppend": "The exact supporting build accepts animPrefix as the parameter and returns the projectile animation archive prefix." }]
   },
   {
     "name": "Rad",
@@ -1284,7 +1329,13 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_reversaldefattr"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_reversaldefattr",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "ReversalDefAttr OR ReversalDefAttr [oper] value1, value2",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "A verified supporting build returns the current reversal attributes as a string when ReversalDefAttr is used without an explicit comparison."
+    }, {"capabilityId":"zss.expanded-string-expressions","signature":"ReversalDefAttr OR ReversalDefAttr [oper] stringExpression","descriptionAppend":"A newer verified supporting build accepts any runtime string expression as the compared reversal attribute."}]
   },
   {
     "name": "RootDist",
@@ -1394,7 +1445,14 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_selfcommand"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_selfcommand",
+    "capabilityAugmentations": [{
+      "capabilityId": "command.nightly-expressions",
+      "signature": "SelfCommand = stringExpression",
+      "arguments": "quoted command name, string map, or string local",
+      "returnType": "boolean int (1 or 0)",
+      "descriptionAppend": "A verified supporting build may resolve a string-valued map or scoped local against the state owner's command list at runtime."
+    }]
   },
   {
     "name": "SelfStatenoExist",
@@ -1437,6 +1495,12 @@
     "returnType": "int or float",
     "kind": "trigger",
     "status": "new",
+    "capabilityAugmentations": [
+      {
+        "capabilityId": "audio.sample-rate-query",
+        "descriptionAppend": "Verified supporting Nightlies also accept sampleRate as the requested parameter."
+      }
+    ],
     "source": "Triggers-(new).md",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_soundvar"
   },
@@ -1504,7 +1568,14 @@
     "kind": "trigger",
     "status": "new",
     "source": "Triggers-(new).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_stageconst"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_stageconst",
+    "capabilityAugmentations": [
+      {
+        "capabilityId": "zss.runtime-strings",
+        "returnType": "int, float, or string",
+        "descriptionAppend": "On a verified supporting build, an auto-typed stage constant can also return its quoted string value."
+      }
+    ]
   },
   {
     "name": "StageFrontEdgeDist",
@@ -1537,7 +1608,17 @@
     "kind": "trigger",
     "status": "changed",
     "source": "Triggers-(changed).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_stagevar"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_stagevar",
+    "capabilityAugmentations": [
+      {
+        "capabilityId": "stage.depth-camera",
+        "descriptionAppend": "On a verified supporting build it also accepts camera.zboundtop, camera.zboundbot, camera.ztension, camera.ztensionvel, and camera.zautocenter."
+      },
+      {
+        "capabilityId": "render.expanded-shaders",
+        "descriptionAppend": "On a verified supporting build it also accepts shadow.shader and reflection.shader and returns the assigned shader name."
+      }
+    ]
   },
   {
     "name": "Standby",
@@ -1592,7 +1673,13 @@
     "kind": "trigger",
     "status": "changed",
     "source": "Triggers-(changed).md",
-    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_teammode"
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#changed_teammode",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "TeamMode OR TeamMode [oper] mode",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "On a verified supporting build, bare TeamMode returns the active team mode as a string."
+    }]
   },
   {
     "name": "TeamSize",
@@ -1736,5 +1823,218 @@
     "status": "new",
     "source": "Triggers-(new).md",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_zoomvar"
-  }
+  },
+  {
+    "name": "InRunState",
+    "signature": "InRunState",
+    "description": "Returns true while the current code is being executed by the RunState controller.",
+    "arguments": "none",
+    "returnType": "bool",
+    "kind": "trigger",
+    "status": "new",
+    "capabilityId": "zss.run-state",
+    "source": "IKEMEN GO source 94d2289fe615b27745c7f06d75f1c994b27f5ada",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/94d2289fe615b27745c7f06d75f1c994b27f5ada"
+  },
+  {
+    "name": "HitDefAttr",
+    "signature": "HitDefAttr [oper] value1, value2",
+    "description": "Checks the attribute of the player's currently active HitDef.",
+    "arguments": "[oper] value1, value2",
+    "returnType": "boolean int (1 or 0)",
+    "kind": "trigger",
+    "status": "changed",
+    "source": "IKEMEN GO source 15b73490f9cb04e65577620bcc40e88332019864",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/15b73490f9cb04e65577620bcc40e88332019864",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "HitDefAttr OR HitDefAttr [oper] value1, value2",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "A verified supporting build returns the current HitDef attributes as a string when HitDefAttr is used without an explicit comparison."
+    }, {"capabilityId":"zss.expanded-string-expressions","signature":"HitDefAttr OR HitDefAttr [oper] stringExpression","descriptionAppend":"A newer verified supporting build accepts any runtime string expression as the compared HitDef attribute."}]
+  },
+  {
+    "name": "MoveType",
+    "signature": "MoveType [oper] movetype",
+    "description": "Checks the player's current move type.",
+    "arguments": "[oper] movetype",
+    "returnType": "boolean int (1 or 0)",
+    "kind": "trigger",
+    "status": "changed",
+    "source": "IKEMEN GO source 15b73490f9cb04e65577620bcc40e88332019864",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/15b73490f9cb04e65577620bcc40e88332019864",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "MoveType OR MoveType [oper] movetype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "A verified supporting build returns I, A, or H when MoveType is used without an explicit comparison."
+    }]
+  },
+  {
+    "name": "P2MoveType",
+    "signature": "P2MoveType [oper] movetype",
+    "description": "Checks the opponent's current move type.",
+    "arguments": "[oper] movetype",
+    "returnType": "boolean int (1 or 0)",
+    "kind": "trigger",
+    "status": "changed",
+    "source": "IKEMEN GO source 15b73490f9cb04e65577620bcc40e88332019864",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/15b73490f9cb04e65577620bcc40e88332019864",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "P2MoveType OR P2MoveType [oper] movetype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "A verified supporting build returns the opponent's I, A, or H move type when P2MoveType is used without an explicit comparison."
+    }]
+  },
+  {
+    "name": "StateType",
+    "signature": "StateType [oper] statetype",
+    "description": "Checks the player's current state type.",
+    "arguments": "[oper] statetype",
+    "returnType": "boolean int (1 or 0)",
+    "kind": "trigger",
+    "status": "changed",
+    "source": "IKEMEN GO source 15b73490f9cb04e65577620bcc40e88332019864",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/15b73490f9cb04e65577620bcc40e88332019864",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "StateType OR StateType [oper] statetype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "A verified supporting build returns the current state-type flag when StateType is used without an explicit comparison."
+    }]
+  },
+  {
+    "name": "P2StateType",
+    "signature": "P2StateType [oper] statetype",
+    "description": "Checks the opponent's current state type.",
+    "arguments": "[oper] statetype",
+    "returnType": "boolean int (1 or 0)",
+    "kind": "trigger",
+    "status": "changed",
+    "source": "IKEMEN GO source 15b73490f9cb04e65577620bcc40e88332019864",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/15b73490f9cb04e65577620bcc40e88332019864",
+    "capabilityAugmentations": [{
+      "capabilityId": "zss.runtime-strings",
+      "signature": "P2StateType OR P2StateType [oper] statetype",
+      "returnType": "string when bare; boolean int when compared",
+      "descriptionAppend": "A verified supporting build returns the opponent's state-type flag when P2StateType is used without an explicit comparison."
+    }]
+  },
+  { "name": "AILevel", "signature": "AILevel", "description": "Returns the current AI difficulty level for the player.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#ailevel" },
+  { "name": "Alive", "signature": "Alive", "description": "Returns 1 while the player is alive and 0 after defeat.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#alive" },
+  { "name": "Anim", "signature": "Anim", "description": "Returns the number of the player's current animation action.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#anim" },
+  { "name": "AnimPrefix", "signature": "AnimPrefix", "description": "Returns the current animation archive prefix as a runtime string. Static AIR/SFF navigation is exact only when the prefix has a finite proven value.", "arguments": "none", "returnType": "string", "kind": "trigger", "status": "new", "source": "IKEMEN GO source", "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/f49a1b157ad5e1b83305f5c584583849583646ee", "capabilityId": "zss.animation-prefix-query" },
+  { "name": "AnimElem", "signature": "AnimElem [oper] element [, time]", "description": "Tests the current animation element and optionally its relative element time.", "arguments": "element, optional time", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#animelem" },
+  { "name": "AnimElemNo", "signature": "AnimElemNo(time)", "description": "Returns the animation element number active at the specified relative animation time.", "arguments": "time", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#animelemno" },
+  { "name": "AnimElemTime", "signature": "AnimElemTime(element)", "description": "Returns the time elapsed since the specified animation element began.", "arguments": "element", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#animelemtime" },
+  { "name": "AnimExist", "signature": "AnimExist(animation)", "description": "Returns whether the player owns the specified animation action.", "arguments": "animation", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#animexist" },
+  { "name": "AnimTime", "signature": "AnimTime", "description": "Returns the time remaining until the current animation ends; zero marks its final tick.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#animtime" },
+  { "name": "AuthorName", "signature": "AuthorName [oper] \"author\"", "description": "Compares the author name declared by the current character.", "arguments": "quoted author name", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#authorname" },
+  { "name": "BackEdge", "signature": "BackEdge", "description": "Returns the player's back-side screen-edge coordinate.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#backedge" },
+  { "name": "BackEdgeBodyDist", "signature": "BackEdgeBodyDist", "description": "Returns the distance from the back edge of the player's width to the screen edge behind the player.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#backedgebodydist" },
+  { "name": "BackEdgeDist", "signature": "BackEdgeDist", "description": "Returns the distance from the player's axis to the screen edge behind the player.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#backedgedist" },
+  { "name": "BottomEdge", "signature": "BottomEdge", "description": "Returns the bottom screen-edge coordinate.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "CanRecover", "signature": "CanRecover", "description": "Returns whether the player currently satisfies the engine conditions for recovery.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#canrecover" },
+  { "name": "Ctrl", "signature": "Ctrl", "description": "Returns whether the player currently has control.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#ctrl" },
+  { "name": "Facing", "signature": "Facing", "description": "Returns 1 when facing right and -1 when facing left.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#facing" },
+  { "name": "FrontEdge", "signature": "FrontEdge", "description": "Returns the player's front-side screen-edge coordinate.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#frontedge" },
+  { "name": "FrontEdgeBodyDist", "signature": "FrontEdgeBodyDist", "description": "Returns the distance from the front edge of the player's width to the screen edge ahead of the player.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#frontedgebodydist" },
+  { "name": "FrontEdgeDist", "signature": "FrontEdgeDist", "description": "Returns the distance from the player's axis to the screen edge ahead of the player.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#frontedgedist" },
+  { "name": "GameTime", "signature": "GameTime", "description": "Returns the number of engine ticks elapsed in the current match.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#gametime" },
+  { "name": "HitCount", "signature": "HitCount", "description": "Returns the number of hits in the player's current combo.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#hitcount" },
+  { "name": "HitFall", "signature": "HitFall", "description": "Returns whether the current received hit is configured to make the player fall.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#hitfall" },
+  { "name": "HitOver", "signature": "HitOver", "description": "Returns whether the current get-hit animation time has completed.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#hitover" },
+  { "name": "HitPauseTime", "signature": "HitPauseTime", "description": "Returns the number of hit-pause ticks remaining for the player.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#hitpausetime" },
+  { "name": "HitShakeOver", "signature": "HitShakeOver", "description": "Returns whether get-hit shaking has completed.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#hitshakeover" },
+  { "name": "HitVel", "signature": "HitVel X OR HitVel Y", "description": "Returns the X or Y velocity assigned by the current received hit.", "arguments": "axis", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#hitvel" },
+  { "name": "ID", "signature": "ID", "description": "Returns the player's unique runtime ID.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#id" },
+  { "name": "InGuardDist", "signature": "InGuardDist", "description": "Returns whether the player is within guarding distance of an opponent attack.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#inguarddist" },
+  { "name": "IsHomeTeam", "signature": "IsHomeTeam", "description": "Returns whether the player belongs to the home-side team.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "Life", "signature": "Life", "description": "Returns the player's current life.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#life" },
+  { "name": "LifeMax", "signature": "LifeMax", "description": "Returns the player's maximum life.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#lifemax" },
+  { "name": "MoveContact", "signature": "MoveContact", "description": "Returns the contact status or elapsed ticks since the player's attack made contact.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#movecontact" },
+  { "name": "MoveGuarded", "signature": "MoveGuarded", "description": "Returns the guard-contact status or elapsed ticks since the player's attack was guarded.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#moveguarded" },
+  { "name": "MoveHit", "signature": "MoveHit", "description": "Returns the hit-contact status or elapsed ticks since the player's attack hit.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#movehit" },
+  { "name": "MoveReversed", "signature": "MoveReversed", "description": "Returns the reversal-contact status or elapsed ticks since the player's attack was reversed.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "Name", "signature": "Name [oper] \"display name\"", "description": "Compares the display name of the current player.", "arguments": "quoted display name", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#name" },
+  { "name": "NumEnemy", "signature": "NumEnemy", "description": "Returns the number of active enemy players.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numenemy" },
+  { "name": "NumExplod", "signature": "NumExplod([id])", "description": "Returns the number of the player's Explods, optionally restricted to one ID.", "arguments": "optional explod ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numexplod" },
+  { "name": "NumHelper", "signature": "NumHelper([id])", "description": "Returns the number of the player's Helpers, optionally restricted to one ID.", "arguments": "optional helper ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numhelper" },
+  { "name": "NumPartner", "signature": "NumPartner", "description": "Returns the number of active partner players on the same team.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numpartner" },
+  { "name": "NumProj", "signature": "NumProj", "description": "Returns the number of the player's active projectiles.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numproj" },
+  { "name": "NumProjID", "signature": "NumProjID(id)", "description": "Returns the number of the player's active projectiles with the specified ID.", "arguments": "projectile ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numprojid" },
+  { "name": "NumTarget", "signature": "NumTarget([id])", "description": "Returns the number of the player's current targets, optionally restricted to one target ID.", "arguments": "optional target ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#numtarget" },
+  { "name": "P2Life", "signature": "P2Life", "description": "Returns the current life of the player selected as P2.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#p2life" },
+  { "name": "P2StateNo", "signature": "P2StateNo", "description": "Returns the current StateDef number of the player selected as P2.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#p2stateno" },
+  { "name": "PalNo", "signature": "PalNo", "description": "Returns the palette number selected for the player.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#palno" },
+  { "name": "PlayerIDExist", "signature": "PlayerIDExist(id)", "description": "Returns whether a player with the specified runtime ID currently exists.", "arguments": "player ID", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#playeridexist" },
+  { "name": "Pos", "signature": "Pos X OR Pos Y", "description": "Returns the player's X or Y position.", "arguments": "axis", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#pos" },
+  { "name": "Power", "signature": "Power", "description": "Returns the player's current power.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#power" },
+  { "name": "PowerMax", "signature": "PowerMax", "description": "Returns the player's maximum power.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#powermax" },
+  { "name": "PrevStateNo", "signature": "PrevStateNo", "description": "Returns the number of the player's previous StateDef.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#prevstateno" },
+  { "name": "Random", "signature": "Random", "description": "Returns a pseudo-random integer from 0 through 999.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#random" },
+  { "name": "RoundNo", "signature": "RoundNo", "description": "Returns the current round number.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#roundno" },
+  { "name": "RoundsExisted", "signature": "RoundsExisted", "description": "Returns the number of rounds in which this player instance has existed.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#roundsexisted" },
+  { "name": "ScreenPos", "signature": "ScreenPos X OR ScreenPos Y", "description": "Returns the player's X or Y position in screen coordinates.", "arguments": "axis", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#screenpos" },
+  { "name": "StateNo", "signature": "StateNo", "description": "Returns the number of the player's current StateDef.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#stateno" },
+  { "name": "TeamSide", "signature": "TeamSide", "description": "Returns the side number of the player's team.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#teamside" },
+  { "name": "TicksPerSecond", "signature": "TicksPerSecond", "description": "Returns the engine's logical ticks per second.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "Time", "signature": "Time", "description": "Returns the number of ticks elapsed in the player's current state.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#time" },
+  { "name": "TopEdge", "signature": "TopEdge", "description": "Returns the top screen-edge coordinate.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "UniqHitCount", "signature": "UniqHitCount", "description": "Returns the number of unique successful hits in the player's current combo.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#uniqhitcount" },
+  { "name": "Vel", "signature": "Vel X OR Vel Y", "description": "Returns the player's X or Y velocity.", "arguments": "axis", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#vel" },
+  { "name": "Abs", "signature": "Abs(value)", "description": "Returns the absolute value of a numeric expression.", "arguments": "value", "returnType": "int or float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#abs" },
+  { "name": "ACos", "signature": "ACos(value)", "description": "Returns the inverse cosine of a numeric expression in degrees.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#acos" },
+  { "name": "ASin", "signature": "ASin(value)", "description": "Returns the inverse sine of a numeric expression in degrees.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#asin" },
+  { "name": "ATan", "signature": "ATan(value)", "description": "Returns the inverse tangent of a numeric expression in degrees.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#atan" },
+  { "name": "Ceil", "signature": "Ceil(value)", "description": "Rounds a numeric expression upward to the nearest integer value.", "arguments": "value", "returnType": "int", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#ceil" },
+  { "name": "Cos", "signature": "Cos(angle)", "description": "Returns the cosine of an angle in degrees.", "arguments": "angle", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#cos" },
+  { "name": "E", "signature": "E", "description": "Returns Euler's number as a floating-point constant.", "arguments": "none", "returnType": "float", "kind": "constant", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#e" },
+  { "name": "Exp", "signature": "Exp(value)", "description": "Returns Euler's number raised to the supplied power.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#exp" },
+  { "name": "Floor", "signature": "Floor(value)", "description": "Rounds a numeric expression downward to the nearest integer value.", "arguments": "value", "returnType": "int", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#floor" },
+  { "name": "Ln", "signature": "Ln(value)", "description": "Returns the natural logarithm of a numeric expression.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#ln" },
+  { "name": "Log", "signature": "Log(value, base)", "description": "Returns the logarithm of a value using the specified base.", "arguments": "value, base", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#log" },
+  { "name": "Pi", "signature": "Pi", "description": "Returns pi as a floating-point constant.", "arguments": "none", "returnType": "float", "kind": "constant", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#pi" },
+  { "name": "Sin", "signature": "Sin(angle)", "description": "Returns the sine of an angle in degrees.", "arguments": "angle", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#sin" },
+  { "name": "Tan", "signature": "Tan(angle)", "description": "Returns the tangent of an angle in degrees.", "arguments": "angle", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#tan" },
+  { "name": "Cond", "signature": "Cond(condition, trueValue, falseValue)", "description": "Returns one of two expressions according to a condition using the legacy Cond evaluation contract.", "arguments": "condition, true value, false value", "returnType": "int or float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#cond" },
+  { "name": "IfElse", "signature": "IfElse(condition, trueValue, falseValue)", "description": "Returns one of two expressions according to a condition.", "arguments": "condition, true value, false value", "returnType": "int or float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#ifelse" },
+  { "name": "Const240p", "signature": "Const240p(value)", "description": "Converts a coordinate-dependent value from a 240p reference scale.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#const240p" },
+  { "name": "Const480p", "signature": "Const480p(value)", "description": "Converts a coordinate-dependent value from a 480p reference scale.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#const480p" },
+  { "name": "Const720p", "signature": "Const720p(value)", "description": "Converts a coordinate-dependent value from a 720p reference scale.", "arguments": "value", "returnType": "float", "kind": "function", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#const720p" },
+  { "name": "FVar", "signature": "FVar(index)", "description": "Returns one of the player's floating-point variables.", "arguments": "variable index", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#fvar" },
+  { "name": "SysFVar", "signature": "SysFVar(index)", "description": "Returns one of the player's system floating-point variables.", "arguments": "variable index", "returnType": "float", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#sysfvar" },
+  { "name": "SysVar", "signature": "SysVar(index)", "description": "Returns one of the player's system integer variables.", "arguments": "variable index", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#sysvar" },
+  { "name": "Var", "signature": "Var(index)", "description": "Returns one of the player's integer variables.", "arguments": "variable index", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#var" },
+  { "name": "CameraPos", "signature": "CameraPos X OR CameraPos Y", "description": "Returns the current camera position on the selected axis.", "arguments": "axis", "returnType": "float", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "CameraZoom", "signature": "CameraZoom", "description": "Returns the current camera zoom scale.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "DrawGame", "signature": "DrawGame", "description": "Returns whether the game world is currently being drawn.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "LeftEdge", "signature": "LeftEdge", "description": "Returns the left screen-edge coordinate.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "RightEdge", "signature": "RightEdge", "description": "Returns the right screen-edge coordinate.", "arguments": "none", "returnType": "float", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "ScreenHeight", "signature": "ScreenHeight", "description": "Returns the logical screen height.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#screenheight" },
+  { "name": "ScreenWidth", "signature": "ScreenWidth", "description": "Returns the logical screen width.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#screenwidth" },
+  { "name": "Lose", "signature": "Lose", "description": "Returns whether the player lost the round.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#lose" },
+  { "name": "LoseKO", "signature": "LoseKO", "description": "Returns whether the player lost the round by knockout.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#loseko" },
+  { "name": "LoseTime", "signature": "LoseTime", "description": "Returns whether the player lost the round by time expiration.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#losetime" },
+  { "name": "MatchNo", "signature": "MatchNo", "description": "Returns the current match number in arcade-style progression.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#matchno" },
+  { "name": "MatchOver", "signature": "MatchOver", "description": "Returns whether the current match has ended.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#matchover" },
+  { "name": "Win", "signature": "Win", "description": "Returns whether the player won the round.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#win" },
+  { "name": "WinKO", "signature": "WinKO", "description": "Returns whether the player won the round by knockout.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#winko" },
+  { "name": "WinPerfect", "signature": "WinPerfect", "description": "Returns whether the player won the round without losing life.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#winperfect" },
+  { "name": "WinTime", "signature": "WinTime", "description": "Returns whether the player won the round by time expiration.", "arguments": "none", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#wintime" },
+  { "name": "P1Name", "signature": "P1Name [oper] \"display name\"", "description": "Compares the display name of player 1.", "arguments": "quoted display name", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#p1name" },
+  { "name": "P2Name", "signature": "P2Name [oper] \"display name\"", "description": "Compares the display name of player 2.", "arguments": "quoted display name", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#p2name" },
+  { "name": "P3Name", "signature": "P3Name [oper] \"display name\"", "description": "Compares the display name of player 3.", "arguments": "quoted display name", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "P4Name", "signature": "P4Name [oper] \"display name\"", "description": "Compares the display name of player 4.", "arguments": "quoted display name", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "IKEMEN-compatible core trigger", "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/4d007d6e1b72262115b120c4b25886b3ba4f9a57/src/compiler.go" },
+  { "name": "ProjCancelTime", "signature": "ProjCancelTime([id])", "description": "Returns elapsed ticks since a matching projectile was cancelled, or the engine's negative no-contact value.", "arguments": "optional projectile ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projcanceltime" },
+  { "name": "ProjContact", "signature": "ProjContact([id])", "description": "Returns whether a matching projectile made hit or guard contact.", "arguments": "optional projectile ID", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projcontact" },
+  { "name": "ProjContactTime", "signature": "ProjContactTime([id])", "description": "Returns elapsed ticks since a matching projectile made hit or guard contact.", "arguments": "optional projectile ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projcontacttime" },
+  { "name": "ProjGuarded", "signature": "ProjGuarded([id])", "description": "Returns whether a matching projectile was guarded.", "arguments": "optional projectile ID", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projguarded" },
+  { "name": "ProjGuardedTime", "signature": "ProjGuardedTime([id])", "description": "Returns elapsed ticks since a matching projectile was guarded.", "arguments": "optional projectile ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projguardedtime" },
+  { "name": "ProjHit", "signature": "ProjHit([id])", "description": "Returns whether a matching projectile hit.", "arguments": "optional projectile ID", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projhit" },
+  { "name": "ProjHitTime", "signature": "ProjHitTime([id])", "description": "Returns elapsed ticks since a matching projectile hit.", "arguments": "optional projectile ID", "returnType": "int", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#projhittime" },
+  { "name": "SelfAnimExist", "signature": "SelfAnimExist(animation)", "description": "Returns whether the player owns the specified animation, without redirect ownership changing the lookup.", "arguments": "animation", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#selfanimexist" },
+  { "name": "TimeMod", "signature": "TimeMod = divisor, remainder", "description": "Tests the current state time modulo a divisor using legacy trigger syntax.", "arguments": "divisor, remainder", "returnType": "boolean int (1 or 0)", "kind": "trigger", "status": "old", "source": "MUGEN-compatible core trigger", "url": "https://www.elecbyte.com/mugendocs/trigger.html#timemod" },
+  { "name": "AnimLoopCount", "signature": "AnimLoopCount", "description": "Returns the number of completed loops of the current animation.", "arguments": "none", "returnType": "int", "kind": "trigger", "status": "new", "capabilityId": "animation.loop-count-trigger", "source": "IKEMEN GO source 7ad6cc982ef7bb38bfab87b5c8502c467801feac", "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/7ad6cc982ef7bb38bfab87b5c8502c467801feac" }
 ]

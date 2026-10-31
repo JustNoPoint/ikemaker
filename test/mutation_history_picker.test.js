@@ -26,6 +26,8 @@ const { chooseHistory, openMutationHistory } = require('../src/mutation_history'
 Module._load = original;
 (async () => {
   assert.deepStrictEqual(await chooseHistory(), history, 'custom SFF tab resolves its own history');
+  vscode.window.tabGroups.activeTabGroup.activeTab.input.uri = uri(path.resolve('unrelated-project', 'other.zss'));
+  assert.deepStrictEqual(await chooseHistory(uri(path.join(root, 'normal.zss'))), history, 'an exact toolbar seed takes priority over an unrelated active tab');
   vscode.window.tabGroups.activeTabGroup.activeTab.input.uri = history;
   assert.deepStrictEqual(await chooseHistory(), history, 'opened history is recognized directly');
   vscode.window.tabGroups.activeTabGroup.activeTab = null;

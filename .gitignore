@@ -15,3 +15,6 @@ IKEMaker-*-Distribution-Manifest.txt
 Thumbs.db
 .vscode/
 .ikemen-tools/
+.analysis/
+.codex-video-frames/
+.package-*/

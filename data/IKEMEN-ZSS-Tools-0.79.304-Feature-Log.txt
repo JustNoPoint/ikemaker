@@ -1,0 +1,7 @@
+IKEMaker 0.79.304
+
+- Added a preview-only option to darken every sprite color except selected Bank A or Bank B indexes.
+- Bank A colors now seed a temporary editable working color without modifying Bank A.
+- Picker, slider, numeric, and exact-value changes preview the temporary Bank A working color live on the sprite.
+- Added explicit Use working color as Remap Old and Use working color as Remap New actions.
+- Remappen receives the edited working RGBA snapshot while retaining the selected source index.

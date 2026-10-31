@@ -1,0 +1,9 @@
+IKEMaker 0.79.417 — Drag thumbnail-filter colors into named groups
+
+- Exact swatches in the collapsible thumbnail color filter are now draggable.
+- Named swatch groups become visible drop targets during a color drag.
+- Dropping assigns that one exact RGBA to the chosen group and moves it from its previous group when necessary.
+- Existing temporary multi-selection is not accidentally included in a single-color drag.
+- Clicking the same swatch still performs normal thumbnail filtering.
+- The transparent/background color remains protected from named-group assignment.
+- A live status message confirms the target group and reminds the user to press Apply Groups & Repack to retain the draft organization.

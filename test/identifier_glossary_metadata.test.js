@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert');
+const metadata=require('../src/identifier_glossary_metadata');
+const first='a'.repeat(32),second='b'.repeat(32);
+let store=metadata.putAnnotation(null,{id:first,description:'Current combo phase',aliases:['combo phase','Phase','phase'],favorite:true});
+assert.deepStrictEqual(metadata.annotationFor(store,first),{id:first,description:'Current combo phase',aliases:['combo phase','Phase'],favorite:true});
+store=metadata.putAnnotation(store,{id:second,description:'Current voice language',aliases:[],favorite:false});assert.strictEqual(store.records.length,2);
+store=metadata.toggleFavorite(store,second);assert.strictEqual(metadata.annotationFor(store,second).favorite,true);
+store=metadata.putAnnotation(store,{id:first,description:'',aliases:[],favorite:false});assert.strictEqual(metadata.annotationFor(store,first),null);
+assert.throws(()=>metadata.putAnnotation(store,{id:'phase',description:'bad',aliases:[]}),/opaque current symbol identity/);
+assert.throws(()=>metadata.putAnnotation(store,{id:second,description:'<script>',aliases:[]}),/bounded plain text/);
+let bounded=metadata.normalizeStore(null),hitLimit=false;for(let index=0;index<512;index+=1){try{bounded=metadata.putAnnotation(bounded,{id:index.toString(16).padStart(32,'0'),description:'d'.repeat(1900),aliases:[],favorite:false});}catch(error){hitLimit=/256 KiB/.test(error.message);break;}}assert(hitLimit);assert(Buffer.byteLength(JSON.stringify(bounded),'utf8')<=metadata.LIMITS.storeBytes,'durable workspace metadata has a strict aggregate byte bound');
+console.log('Identifier glossary metadata keeps bounded workspace-local annotations scoped by opaque symbol identity');

@@ -1,0 +1,39 @@
+{
+  "startedAt": "2026-10-13T17:35:13.791Z",
+  "passed": false,
+  "mode": "restore",
+  "targetFile": "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Ryu.def",
+  "checks": {
+    "extensionDiscovered": true,
+    "extensionActive": true,
+    "version": "0.79.116",
+    "commandAvailable": true
+  },
+  "connectedFiles": [
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Ryu.def",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\template.jnp",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Sf6Ryu.air",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Constants.cns",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\Ryu_movelist.dat",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\commonoptions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\input.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\system_movement.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_armor.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_combo_scaling.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\normal_functions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_hit_regions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_attack_lifecycle.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_normal_functions.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_cancel_system.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\damage_compatibility.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_game_options.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\normals.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\Ryu\\normals_extras.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\sf6_debug_export_bridge.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\sound_archive_bridge.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\SF6template\\JNP_training.zss",
+    "D:\\Dropbox\\Ikemen\\Ikemen_GO-dev-windows\\chars\\template\\common.zss"
+  ],
+  "error": "Canceled: Canceled\n\tat Ea (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:8:1546)\n\tat file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:32:155494\n\tat Array.forEach (<anonymous>)\n\tat r.dispose (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:32:155402)\n\tat f_.terminate (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:169:12474)\n\tat r.terminate (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:171:1076)\n\tat Sa (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:474:11797)\n\tat Kp.value (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:474:9939)\n\tat T._deliver (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:28:3617)\n\tat T.fire (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:28:3935)\n\tat ks.fire (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:30:8627)\n\tat MessagePortMain.<anonymous> (file:///c:/Users/Keith/AppData/Local/Programs/Microsoft%20VS%20Code/2a59476c9b/resources/app/out/vs/workbench/api/node/extensionHostProcess.js:474:8171)\n\tat MessagePortMain.emit (node:events:514:28)\n\tat Object.emit (node:electron/js2c/utility_init:2:2934)",
+  "finishedAt": "2026-10-14T00:44:32.908Z"
+}

@@ -1,0 +1,13 @@
+IKEMEN ZSS Tools 0.79.212
+
+AIR SFF Sprite Explorer
+
+- Adds a clear SFF Sprites tab to the AIR Actions Browser.
+- Browse the connected SFF by group using either thumbnails or a compact list.
+- Select individual sprites or an entire visible group in exact playback order.
+- Create a new AIR animation from the selected sprites with action number, name/comment, and default timing.
+- Append the selected sprites to the currently selected AIR Action.
+- Shows the exact AIR block or frame lines before the reviewed edit begins.
+- Uses exact physical SFF sprite identities while selecting and preserves the selected order.
+- Loads sprite thumbnails only for the visible group to keep the narrow browser responsive.
+- Keeps all AIR changes on the existing guarded, stale-source-aware, undoable action-edit path.

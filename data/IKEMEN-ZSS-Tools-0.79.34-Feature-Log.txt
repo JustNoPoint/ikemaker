@@ -1,0 +1,5 @@
+IKEMaker 0.79.34 — Return floating workspace to the main window
+
+- Adds a visible Return to Main Window button to the floating docking workspace.
+- Uses VS Code's native Restore Editors into Main Window behavior.
+- Keeps the prototype non-writing and preserves the internal saved layout.

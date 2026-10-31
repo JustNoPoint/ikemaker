@@ -1,0 +1,10 @@
+IKEMaker 0.79.186
+
+- Restores the SFF viewer's normal Sprite Controls + preview startup layout.
+- Removes the retired embedded palette-first screen from the visible SFF workflow.
+- Routes the explicit Palette Workshop action and guided palette step to the canonical Palette Workshop.
+- Fixes the malformed generated SFF navigation listener that prevented all viewer buttons from running.
+- Activates the legacy SFF Browser serializer during cold restore and disposes cached retired pages immediately.
+- Adds Close Browser and a guarded Escape exit to the live SFF comparison browser.
+- Adds regression coverage for generated-script syntax, startup layout, canonical palette routing, cold restore, and browser exits.
+- New Dev final review: APPROVED; no P0/P1 release blocker found.

@@ -116,6 +116,7 @@ function validateCatalog(raw = {}) {
     ids.add(build.id);
     if (build.channel === 'nightly' && !build.commit) issues.push({ level: 'error', code: 'floating-nightly', message: `${build.id} is a nightly without an exact commit.` });
     if (build.channel !== 'nightly' && build.monitorOnly) issues.push({ level: 'warning', code: 'monitor-channel', message: `${build.id} is marked monitor-only outside the nightly channel.` });
+    if(build.baseBuildId&&!catalog.builds.some(item=>item.id===build.baseBuildId))issues.push({level:'error',code:'unknown-base-build',message:`${build.id} inherits unknown base build ${build.baseBuildId}.`});
   }
   for (const capability of catalog.capabilities) for (const buildId of [...capability.buildIds, ...capability.removedBuildIds, ...capability.fallbackBuildIds]) if (!ids.has(buildId)) issues.push({ level: 'warning', code: 'unknown-capability-build', message: `${capability.id} refers to unknown build ${buildId}.` });
   return { catalog, issues, valid: !issues.some((item) => item.level === 'error') };
@@ -125,19 +126,23 @@ function capabilityStatus(catalogRaw, targetRaw, capabilityId, projectId = '') {
   const capability = catalog.capabilities.find((item) => item.id === clean(capabilityId).toLowerCase());
   if (!capability) return { status: 'unknown', reason: 'No capability evidence is recorded.' };
   if (catalog.conflicts.some((item) => item.capabilityId === capability.id && item.status !== 'resolved')) return { status: 'conflicting', capability };
-  if (capability.removedBuildIds.includes(target.buildId)) return { status: 'removed', capability };
-  if (capability.buildIds.includes(target.buildId)) {
-    const relevant = capability.evidence.filter((item) => item.buildIds.includes(target.buildId) && (!item.projectIds.length || item.projectIds.includes(clean(projectId).toLowerCase())));
+  const lineage=[],seen=new Set();let buildId=target.buildId;
+  while(buildId&&!seen.has(buildId)){lineage.push(buildId);seen.add(buildId);const build=catalog.builds.find(item=>item.id===buildId),base=build?.baseBuildId||(buildId===target.buildId?clean(target.customFork?.baseBuildId).toLowerCase():'');buildId=base;}
+  const direct=lineage.find(id=>capability.removedBuildIds.includes(id)||capability.buildIds.includes(id));
+  if(direct&&capability.removedBuildIds.includes(direct)) return { status: 'removed', capability };
+  if(direct) {
+    const relevant = capability.evidence.filter((item) => item.buildIds.includes(direct) && (!item.projectIds.length || item.projectIds.includes(clean(projectId).toLowerCase())));
     const conflicting = relevant.some((item) => item.status === 'conflicting');
     const verified = relevant.some((item) => ['parser', 'runtime', 'project'].includes(item.domain) && item.status === 'verified');
     const verifiedStatus = capability.changeKind === 'changed' ? 'changed' : capability.changeKind === 'deprecated' ? 'deprecated' : 'supported';
-    return { status: conflicting ? 'conflicting' : verified ? verifiedStatus : 'unverified', capability };
+    return { status: conflicting ? 'conflicting' : verified ? verifiedStatus : 'unverified', capability, inheritedFrom:direct===target.buildId?null:direct };
   }
-  if (capability.fallbackBuildIds.includes(target.buildId)) {
-    const relevant = capability.evidence.filter((item) => item.fallbackBuildIds.includes(target.buildId) && (!item.projectIds.length || item.projectIds.includes(clean(projectId).toLowerCase())));
+  const fallback=lineage.find(id=>capability.fallbackBuildIds.includes(id));
+  if (fallback) {
+    const relevant = capability.evidence.filter((item) => item.fallbackBuildIds.includes(fallback) && (!item.projectIds.length || item.projectIds.includes(clean(projectId).toLowerCase())));
     const conflicting = relevant.some((item) => item.status === 'conflicting');
     const verifiedFallback = relevant.some((item) => item.status === 'verified' && ['runtime', 'project'].includes(item.domain));
-    return { status: conflicting ? 'conflicting' : verifiedFallback ? 'fallback' : 'unverified', capability };
+    return { status: conflicting ? 'conflicting' : verifiedFallback ? 'fallback' : 'unverified', capability, inheritedFrom:fallback===target.buildId?null:fallback };
   }
   return { status: 'unsupported', capability };
 }

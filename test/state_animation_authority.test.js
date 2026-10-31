@@ -1,0 +1,21 @@
+'use strict';
+
+const assert=require('assert');
+const path=require('path');
+const {hash}=require('../src/mutation_safety');
+const authority=require('../src/state_animation_authority');
+
+const defPath=path.resolve('Hero.def'),sourcePath=path.resolve('states.cns'),airPath=path.resolve('Hero.air'),defText='[Files]\nanim = Hero.air\nst = states.cns\n',airText='[Begin Action 200]\n0, 0, 0, 0, 1\n[Begin Action 201]\n1, 0, 0, 0, 1\n',token='a'.repeat(48);
+function fixture(text,syntax='cns'){return{kind:'state',syntax,filename:sourcePath,startLine:0,endLine:text.split(/\r?\n/).length-1,text,sourceHash:hash(text),rangeHash:hash(text),stableId:'state-200',signature:'200',reference:{defPath}};}
+const cnsText='[Statedef 200]\r\ntype = S\r\nanim = 200 ; exact default\r\nctrl = 0\r\n[State 200, child]\r\ntype = ChangeAnim\r\nvalue = 999',cns=fixture(cnsText),context={defPath,defText,defDirty:false,sourceText:cnsText,assignedSources:[sourcePath],airPath,airText,generation:3,token:()=>token};
+let built=authority.buildStateAnimationAuthority(cns,context);assert.strictEqual(built.publicAnimation.action,200);const route=built.authorities.get(token);assert(route&&authority.validateStateAnimationAuthority(route,cns,{...context,token:()=>token}));assert.strictEqual(route.fieldLine,2,'only the StateDef field before the first child controller section is authoritative');
+const origin=authority.targetOrigin(route);assert(authority.validateStateAnimationOriginSource(origin,{defPath,sourceText:cnsText}));assert.strictEqual(authority.validateStateAnimationOriginSource(origin,{defPath,sourceText:cnsText.replace('anim = 200','anim = 201')}),false,'same-location source mutation revokes target authority');
+assert.strictEqual(authority.validateStateAnimationOriginSource({...origin,componentIdentity:'forged'},{defPath,sourceText:cnsText}),false,'target-side validation recomputes the exact StateDef identity');
+const zssText='[StateDef 200; type: S; anim: 201; ctrl: 0]\nchangeAnim { value: 999; }',zss=fixture(zssText,'zss'),zssBuilt=authority.buildStateAnimationAuthority(zss,{...context,sourceText:zssText,token:()=>token});assert.strictEqual(zssBuilt.publicAnimation.action,201,'the exact ZSS StateDef header option is supported without reading child controllers');
+for(const [label,text,syntax='cns'] of [
+ ['omitted','[Statedef 200]\ntype = S'],['dynamic','[Statedef 200]\nanim = map(Default.Anim)'],['negative','[Statedef 200]\nanim = -1'],['unsafe','[Statedef 200]\nanim = 9007199254740993'],['duplicate','[Statedef 200]\nanim = 200\nanim = 201'],['child only','[Statedef 200]\n[State 200, child]\ntype = ChangeAnim\nanim = 200'],['custom marker','[Statedef 200]\n; @customstate\nanim = 200'],['ZSS duplicate','[StateDef 200; anim: 200; anim: 201]','zss']
+])assert.strictEqual(authority.parseStateDefaultAnimation(fixture(text,syntax)).available,false,label+' does not receive an exact default-animation claim');
+for(const changed of [{...context,defDirty:true},{...context,sourceDocument:{isDirty:true}},{...context,assignedSources:[]},{...context,sourceText:cnsText+'\n'},{...context,airText:airText.replace('0, 0, 0, 0, 1','0, 1, 0, 0, 1')},{...context,generation:4}])assert.strictEqual(authority.validateStateAnimationAuthority(route,cns,{...changed,token:()=>token}),null,'DEF/source/AIR/generation drift fails closed');
+assert.strictEqual(authority.buildStateAnimationAuthority(cns,{...context,airText:'[Begin Action 201]\n1,0,0,0,1\n'}).publicAnimation.available,false,'missing AIR action is unresolved');assert.strictEqual(authority.buildStateAnimationAuthority(cns,{...context,airText:airText+'[Begin Action 200]\n2,0,0,0,1\n'}).publicAnimation.available,false,'duplicate AIR action is ambiguous');
+assert.strictEqual(authority.buildStateAnimationAuthority(cns,{...context,defText:'x'.repeat(authority.MAX_DEF_BYTES+1)}).publicAnimation.available,false);assert.strictEqual(authority.buildStateAnimationAuthority(cns,{...context,sourceText:'x'.repeat(authority.MAX_SOURCE_BYTES+1)}).publicAnimation.available,false);assert.strictEqual(authority.buildStateAnimationAuthority(cns,{...context,airText:'x'.repeat(authority.MAX_AIR_BYTES+1)}).publicAnimation.available,false);
+console.log('Exact StateDef default-animation authority is syntax-specific, bounded, assignment-bound, and fail-closed');

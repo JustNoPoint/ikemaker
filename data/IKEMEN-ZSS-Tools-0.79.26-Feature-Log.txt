@@ -1,0 +1,8 @@
+IKEMaker 0.79.26 — Docking prototype launcher correction
+
+- Corrects Open Docking Prototype on VS Code installations where the panel
+  View Container does not expose a public generated open command.
+- Reveals the prototype through the stable Project Knowledge View focus route.
+- Preserves the user's current location if that View was moved to another
+  Sidebar, Panel, or View group.
+- Keeps the prototype non-writing and isolated from game assets.

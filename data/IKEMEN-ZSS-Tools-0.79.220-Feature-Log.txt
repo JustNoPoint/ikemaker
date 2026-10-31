@@ -1,0 +1,11 @@
+IKEMEN ZSS Tools 0.79.220
+
+Named palette groups and reviewed palette-image layouts
+
+- Character palette-image sync now stores folder-to-group mappings, IKEMaker palette-group names, and named-export folder bindings as separate reviewed metadata. Folder names are never silently treated as engine or SFF names.
+- First-time named-folder mapping offers a clear choice: use the folder basename as the IKEMaker group name and export binding, or map the folder without naming the group.
+- Manage Palette Group Names & Folders lets users name real palette groups, adopt an existing mapped folder name, set an exact named-export folder, clear optional metadata, or choose the default export layout.
+- Export now offers either updating current images in place or saving every SFF palette to a new empty folder as flat group-index files or named group folders.
+- New exports reuse the exact reviewed 000/1-0 master image index plane for every palette image. Named layouts require an explicit unique name and folder binding for every non-root group; IKEMaker never guesses.
+- Palette sync metadata migrated to strict manifest v3. Metadata-only saves cannot import or export colors, and existing folders are never renamed as a side effect.
+- New-layout exports revalidate the SFF, palette inventory, source images, master template, mappings, metadata, destination emptiness, encoded outputs, and path collisions before a bounded no-overwrite transaction.

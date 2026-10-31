@@ -1,0 +1,25 @@
+IKEMaker 0.79.171
+
+Shareable command presets
+- Command & Movelist adds a compact, collapsed Share saved presets area beside the preset shelf.
+- Export writes only explicitly selected workspace presets to .inp2. Built-in presets are excluded.
+- Import selects exact rows and reviews every case-insensitive label collision as Keep existing, Replace existing, Keep both under a validated unique name, or Cancel entire import.
+- The controls expose accessible status announcements and stack vertically in narrow browser docks without a new universal-toolbar icon.
+
+Strict .inp2 contract and compatibility
+- The versioned data-only file contains only label and exact native command text fields; it never carries internal IDs, paths, glyph mappings, generated code, or project files.
+- Intake enforces strict UTF-8 and JSON, exact fields, bounded bytes/count/names/text/aggregate storage, complete native Command definitions, and structural command validity.
+- Authored command text round-trips exactly.
+- Stable and ownerless targets may store Nightly broad-direction presets for later use, but these appear unavailable and Apply is blocked. Verified supporting Nightly targets enable them.
+
+Mutation safety
+- New and keep-both rows use SHA-256-derived, collision-checked IDs. Replace retains the existing workspace identity.
+- A one-use authority binds session, generation, normalized source, exact file hash, workspace-store snapshot, capability snapshot, and final import plan.
+- File, store, target, and plan are rechecked immediately before the serialized compare-and-swap write. The persisted workspace state is independently read back and compared.
+- Export requires explicit overwrite consent, uses transactional replacement, and reopens the exact bytes and hash for verification.
+- Import and export never edit CMD, DEF, movelist, glyph, or project source files.
+
+Verification
+- Added strict transfer-model, one-use authority, compact UI/host-boundary, and real host lifecycle/source-race coverage.
+- All 25 Commands/glyph test files pass.
+- New Dev approved the slice with no release blocker.

@@ -1,0 +1,30 @@
+'use strict';
+
+const path=require('path');
+const {hash}=require('./mutation_safety');
+const {hitDefSignature,hitDefIdentity,proveExactController}=require('./exact_controller_resource_authority');
+const {MAX_ASSIGNED_FILES,MAX_AGGREGATE_BYTES,exactStateNumber,buildStateDestinationSnapshot,findUniqueStateDestination}=require('./exact_state_destination_authority');
+
+const FIELDS=Object.freeze(['p1stateno','p2stateno']),MAX_DEF_BYTES=1024*1024;
+const canonical=value=>path.resolve(String(value||'')).toLowerCase();
+function freeze(value){if(value&&typeof value==='object'&&!Object.isFrozen(value)){for(const child of Object.values(value))freeze(child);Object.freeze(value);}return value;}
+function unavailable(expression,reason){return freeze({available:false,expression:String(expression||''),reason});}
+function occurrence(text,blocks,index){const signature=hitDefSignature(text,blocks[index]);return blocks.slice(0,index).filter(item=>hitDefSignature(text,item)===signature).length;}
+function controllerEvidence(context,block,index){const raw={kind:'hitdef',defPath:path.resolve(context.defPath),sourcePath:path.resolve(context.sourcePath),syntax:context.syntax,sourceHash:hash(context.sourceText),startOffset:block.start,endOffset:block.end,rangeHash:hash(context.sourceText.slice(block.start,block.end)),signature:hitDefSignature(context.sourceText,block),occurrence:occurrence(context.sourceText,context.blocks,index)};return freeze({...raw,identity:hitDefIdentity(raw)});}
+function buildHitDefStateAuthorities(block,index,context={}){
+ const publicFields={},authorities=new Map(),failAll=reason=>{for(const field of FIELDS){const entry=block?.entries?.[field];if(entry)publicFields[field]=unavailable(entry.value,reason);}return freeze({publicFields,authorities,evidence:null});};
+ if(!block||context.blocks?.[index]!==block||!['cns','zss'].includes(context.syntax)||!context.defPath||!context.sourcePath)return failAll('The exact existing HitDef is unavailable.');
+ if(context.defDirty)return failAll('Save or revert the character DEF before exact state navigation.');
+ if(typeof context.defText!=='string'||Buffer.byteLength(context.defText,'utf8')>MAX_DEF_BYTES)return failAll('The character DEF is unavailable or exceeds the exact-assignment limit.');
+ const snapshot=context.stateSnapshot||buildStateDestinationSnapshot(context),sources=snapshot?.sources;if(!sources)return failAll('The complete assigned state-source inventory is unavailable or exceeds its bounded inspection limit.');
+ if(!sources.some(item=>canonical(item.filename)===canonical(context.sourcePath))||hash(String(context.sourceText||''))!==sources.find(item=>canonical(item.filename)===canonical(context.sourcePath))?.sourceHash)return failAll('The HitDef source is no longer one exact assigned state source.');
+ const evidence=controllerEvidence(context,block,index),defHash=hash(String(context.defText||'')),inventoryHash=snapshot.inventoryHash;
+ for(const field of FIELDS){const entry=block.entries?.[field];if(!entry)continue;if((block.duplicates||[]).includes(field)){publicFields[field]=unavailable(entry.value,'Duplicate options must be resolved in text before exact state navigation.');continue;}const parsed=exactStateNumber(entry.value);if(!parsed){publicFields[field]=unavailable(entry.value,'Only an authored nonnegative static safe-integer state can be opened exactly.');continue;}
+  const matches=findUniqueStateDestination(snapshot,parsed.number).matches;
+  if(matches.length!==1){publicFields[field]=unavailable(entry.value,matches.length?'The assigned sources contain duplicate matching StateDef declarations.':`StateDef ${parsed.number} is absent from the complete assigned source set.`);continue;}const match=matches[0],declarationText=match.source.text.slice(match.declaration.start,match.declaration.end),route=String(context.token?.(field,parsed)||'');if(!/^[0-9a-f]{48}$/.test(route)){publicFields[field]=unavailable(entry.value,'Exact state navigation authority could not be issued.');continue;}const authority=freeze({schema:'ikemaker.hitdef-state-route',version:1,route,generation:Number(context.generation),field,expression:parsed.expression,state:parsed.number,defPath:path.resolve(context.defPath),defHash,inventoryHash,evidence,targetPath:match.source.filename,targetHash:match.source.sourceHash,targetSyntax:match.source.syntax,targetStart:match.declaration.start,targetEnd:match.declaration.end,targetLine:match.declaration.line,targetRangeHash:hash(declarationText)});authorities.set(route,authority);publicFields[field]=freeze({available:true,state:parsed.number,file:path.basename(match.source.filename),line:match.declaration.line,route});
+ }
+ return freeze({publicFields,authorities,evidence});
+}
+function validateHitDefStateAuthority(authority,block,index,context={}){if(authority?.schema!=='ikemaker.hitdef-state-route'||authority.version!==1||authority.generation!==Number(context.generation))return null;const source=context.sources?.find(item=>canonical(item.filename)===canonical(context.sourcePath));if(!source?.available||!proveExactController(authority.evidence,{defPath:context.defPath,sourcePath:context.sourcePath,sourceText:source.text,sourceDocument:context.sourceDocument,assignedSources:context.assignedSources}))return null;const rebuilt=buildHitDefStateAuthorities(block,index,{...context,token:(field,parsed)=>field===authority.field&&parsed.expression===authority.expression&&parsed.number===authority.state?authority.route:'0'.repeat(48)}),candidate=rebuilt.authorities.get(authority.route);if(!candidate)return null;for(const key of ['field','expression','state','defPath','defHash','inventoryHash','targetPath','targetHash','targetSyntax','targetStart','targetEnd','targetLine','targetRangeHash'])if(candidate[key]!==authority[key])return null;if(JSON.stringify(candidate.evidence)!==JSON.stringify(authority.evidence))return null;return candidate;}
+
+module.exports={FIELDS,MAX_DEF_BYTES,MAX_ASSIGNED_FILES,MAX_AGGREGATE_BYTES,exactStateNumber,buildHitDefStateAuthorities,validateHitDefStateAuthority};

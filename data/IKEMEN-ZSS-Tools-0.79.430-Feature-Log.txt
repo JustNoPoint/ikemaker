@@ -1,0 +1,9 @@
+IKEMaker 0.79.430
+
+Visible Palette Workshop SFF intake controls
+
+- Source Images now exposes the reviewed SFF intake that was previously reachable only in the controller.
+- Use sprites from the current or another SFF opens the indexed, truecolor, and mixed template intake review.
+- Create CS set from the current SFF opens exact index-safe duplicate review and source mapping.
+- Pre-indexed sprite folders can enter either the standard template path or the CS-only path.
+- Every visible control routes into an isolated reviewed working candidate; the source SFF and open character remain unchanged.

@@ -8,6 +8,12 @@ const { parseSizeboxes, updateSizebox, readPushboxPlan, setFrameOverride, remove
 
 const source = '[Size]\r\nstand.sizebox = -15, -60, 16, 0 ; keep\r\n';
 assert.deepStrictEqual(parseSizeboxes(source).stand.box, [-15, -60, 16, 0]);
+assert.strictEqual(parseSizeboxes(source).stand.provenance, 'native sizebox');
+const legacy = parseSizeboxes('[Size]\nground.front = 18\nground.back = 14\nair.front = 11\nair.back = 9\nheight = 72\n');
+assert.deepStrictEqual(legacy.stand.box, [-14, -72, 18, 0]);
+assert.deepStrictEqual(legacy.crouch.box, [-14, -72, 18, 0]);
+assert.deepStrictEqual(legacy.air.box, [-9, -72, 11, 0]);
+assert.strictEqual(legacy.air.provenance, 'legacy fallback');
 assert(updateSizebox(source, 'stand', [-17, -81, 20, 0]).includes('stand.sizebox = -17, -81, 20, 0 ; keep'));
 assert(updateSizebox(source, 'air', [-20, -99, 15, -42]).includes('air.sizebox = -20, -99, 15, -42'));
 const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pushbox-plan-'));

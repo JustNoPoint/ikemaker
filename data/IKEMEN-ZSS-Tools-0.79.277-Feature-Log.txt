@@ -1,0 +1,10 @@
+IKEMaker 0.79.277
+
+AIR animated thumbnails
+
+- Added an optional Animate thumbnails control to the AIR Actions Browser.
+- Animation is off by default and the choice is remembered for the current AIR browser.
+- Only thumbnail cards entering the visible browser area request their frame images.
+- Playback follows positive AIR frame times while giving zero, negative, and infinite-time frames a short visible preview duration.
+- Thumbnail previews always cycle through the complete Action; AIR loop points and infinite holds cannot trap the preview.
+- List view remains text-only and does not start thumbnail playback.

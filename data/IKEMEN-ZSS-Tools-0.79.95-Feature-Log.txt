@@ -1,0 +1,14 @@
+IKEMaker 0.79.95
+
+- Gives SFF, AIR, and SND matching choices in every non-Project dropdown.
+- Opens the connected owning viewer before running an action that belongs to
+  another asset surface.
+- Routes only allowlisted stable action identities; it never accepts a remote
+  selector, element ID, or arbitrary command from a webview.
+- Rechecks destination availability and blocks dirty or busy handoffs,
+  unknown actions, and same-viewer routing loops.
+- Keeps Project actions asset-specific so New, Open, and Save cannot affect
+  the wrong archive. SND still does not claim unsupported direct archive Save.
+- Keeps every established viewer button available during hands-on testing.
+- The complete 407-file automated source suite passes. Installed visual and
+  interaction testing remains required.

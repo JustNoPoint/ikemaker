@@ -28,6 +28,13 @@ const inferred = inspectZssText('[StateDef 410]\nplayerPush{value: 0}', 'normal.
 assert.strictEqual(inferred[0].confidence, 'inferred');
 assert.deepStrictEqual(inferred[0].actions, [410]);
 
+const expanded = inspectZssText('[StateDef 500]\nreversalDef{reversal.attr: SCA, AA; p2clsncheck: Dummy; p2clsnrequire: Size}\nhitBy{attr: SCA, AA; time: 1; clsn.group: Clsn2; clsn.index: 7}\nmodifyProjectile{p2clsncheck: Clsn2; projClsnAngle: 20}', 'collision.zss');
+assert.deepStrictEqual(expanded.map((item) => item.controller), ['ReversalDef', 'HitBy', 'ModifyProjectile']);
+assert(expanded[0].details.includes('p2clsncheck: Dummy'));
+assert(expanded[0].details.includes('reversal.attr: SCA, AA'));
+assert(expanded[1].details.includes('clsn.index: 7'));
+assert(expanded[2].details.includes('projclsnangle: 20'));
+
 const ignored = inspectZssText('[StateDef 0]\nhitDef{damage: 10, 0}\nprojectile{projID: 2}', 'plain.zss');
 assert.strictEqual(ignored.length, 1);
 assert(ignored[0].details.includes('collision rule: no p2clsn override authored'));

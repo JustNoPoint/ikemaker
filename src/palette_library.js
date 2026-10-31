@@ -4,13 +4,16 @@ const fs = require('fs');
 const path = require('path');
 
 function paletteLibraryFiles(root, limit = 2000) {
-  if (!root || !fs.existsSync(root) || !fs.statSync(root).isDirectory()) return [];
+  if (!root || !fs.existsSync(root)) return [];
+  const rootStat = fs.lstatSync(root);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) return [];
   const files = [], pending = [path.resolve(root)];
   while (pending.length && files.length < limit) {
     const folder = pending.shift();
     for (const entry of fs.readdirSync(folder, { withFileTypes: true }).sort((a, b) => a.name.localeCompare(b.name))) {
       const full = path.join(folder, entry.name);
-      if (entry.isDirectory()) pending.push(full);
+      if (entry.isSymbolicLink()) continue;
+      if (entry.isDirectory() && entry.name !== '.ikemen-tools') pending.push(full);
       else if (entry.isFile() && /\.(?:act|png)$/i.test(entry.name)) files.push(full);
       if (files.length >= limit) break;
     }
@@ -22,6 +25,10 @@ function safeLibraryPalette(root, filename) {
   if (!root || !filename) throw new Error('Choose a project palette library and palette file first.');
   const base = path.resolve(root), target = path.resolve(filename), relative = path.relative(base, target);
   if (relative.startsWith('..') || path.isAbsolute(relative) || !/\.(?:act|png)$/i.test(target)) throw new Error('The selected palette is outside the configured palette library.');
+  const rootStat = fs.lstatSync(base);
+  if (!rootStat.isDirectory() || rootStat.isSymbolicLink()) throw new Error('The configured palette library must be a real folder, not a symbolic link.');
+  let current = base;
+  for (const part of relative.split(path.sep)) { current = path.join(current, part); if (fs.existsSync(current) && fs.lstatSync(current).isSymbolicLink()) throw new Error('Palette library paths cannot traverse symbolic links.'); }
   return target;
 }
 
@@ -44,6 +51,10 @@ function paletteSourceLabel(root, filename, manuallySelected = []) {
   return root ? path.relative(path.resolve(root), target).replace(/\\/g, '/') : path.basename(target);
 }
 
+function retainedPaletteActOrder(filename, actOrder) {
+  return /\.png$/i.test(String(filename || '')) ? null : actOrder;
+}
+
 function pngPaletteRgba(buffer) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 8 || buffer.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error('Palette PNG has an invalid signature.');
   let offset = 8, rgb = null, alpha = null;
@@ -64,4 +75,4 @@ function pngPaletteRgba(buffer) {
 
 const actLibraryFiles = paletteLibraryFiles;
 const safeLibraryAct = safeLibraryPalette;
-module.exports = { paletteLibraryFiles, safeLibraryPalette, safePaletteSource, paletteSourceLabel, pngPaletteRgba, actLibraryFiles, safeLibraryAct };
+module.exports = { paletteLibraryFiles, safeLibraryPalette, safePaletteSource, paletteSourceLabel, retainedPaletteActOrder, pngPaletteRgba, actLibraryFiles, safeLibraryAct };

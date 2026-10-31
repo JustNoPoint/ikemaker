@@ -49,7 +49,7 @@ const Module = require('module');
   const context = { extensionUri: { path: '/extension' }, subscriptions: [] };
   await activate(context);
 
-  for (const id of ['ikemen.help.open', 'ikemen.codeStructure.openWorkspace', 'ikemen.testSessions.open', 'zss.audit.currentFile', 'zssControllers.insert', 'zssControllers.search', 'zssControllers.openDocs']) assert.ok(commands.has(id), `missing browser command ${id}`);
+      for (const id of ['ikemen.help.open', 'ikemen.codeStructure.openWorkspace', 'ikemen.testSessions.open', 'zss.audit.currentFile', 'zssControllers.insert', 'zssControllers.search', 'zssControllers.openDocs', 'ikemen.textActions.open', 'ikemen.textViewers.open', 'ikemen.textToolbar.toggleCompanion', 'ikemen.textToolbar.restoreNativeLayout', 'ikemen.textToolbar.disableNativeLayout']) assert.ok(commands.has(id), `missing browser command ${id}`);
   assert.ok(trees.has('zssStateControllers'));
   assert.strictEqual(trees.get('zssStateControllers').getChildren()[0].label, 'ChangeState');
   assert.strictEqual(completionProviders.length, 1);

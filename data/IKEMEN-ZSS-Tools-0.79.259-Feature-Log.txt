@@ -1,0 +1,19 @@
+IKEMaker 0.79.259
+
+Image template intake and authority
+
+- Separates four clear starting paths: edit the current primary template, import a recolored copy, review an expanded copy, or review a completely new template candidate.
+- Keeps the primary indexed project template authoritative and unchanged during every external-image intake.
+- Uses reviewed swatch-zone metadata as an overlay for same-canvas recolored submissions, including true-color copies, and saves only a separate recovered indexed copy.
+- Routes changed-canvas recolors to the explicit expanded-template path instead of silently treating them as ordinary palette submissions.
+- Keeps expanded and replacement candidates isolated from the current template artwork; the two images are never merged onto one construction canvas.
+- Indexed replacement candidates enter review. True-color replacement or expansion candidates expose only Manual Repair or Reject.
+- Requires reviewed color coverage, swatch positions, row names, index order, a canonical indexed candidate, and explicit final approval before a candidate can become primary.
+- Promotion policy archives the prior primary and records either a reviewed primary expansion update or a reviewed complete replacement.
+- Adds stale-review hashes and exact source evidence to prevent an intake or promotion decision from being replayed after its files or authority change.
+
+Verification
+
+- Added focused PNG intake, derivative overlay, expansion, repair/reject, promotion, and authority-policy tests.
+- Existing unindexed legend recovery, Palette Workshop reachability, workspace/session, template synchronization, and atomic candidate tests pass.
+- The full suite currently reaches an unrelated pre-existing AIR collision-coordinate test failure: drawHandles references normalized outside that test's extracted runtime.

@@ -1,0 +1,9 @@
+IKEMaker 0.79.393
+
+Palette Workshop refresh stability
+
+- Advanced and Standard choices now remain responsive during workspace updates.
+- Removed a duplicate workflow redraw that could consume a click or reopen the prior view.
+- Ordinary palette refreshes no longer replay the whole page's old scroll position.
+- Automatic focus changes no longer pull the page away from the user's current location.
+- Disabled browser scroll anchoring within the replaceable workshop workflow area while preserving inner canvas and palette-panel positions.

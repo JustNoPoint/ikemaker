@@ -40,7 +40,7 @@ function releaseFeed(packageBytes = vsix(), version = '0.78.1', packageHash) {
 
 function harness(overrides = {}) {
   const messages = { info: [], errors: [], warnings: [] }, choices = [...(overrides.choices || [])];
-  const defaults = Object.assign({ enabled: true, feedUrl, channel: 'beta', intervalHours: 24, trustedAssetHosts: ['github.com'], maxDownloadMB: 10 }, overrides.defaults || {});
+  const defaults = Object.assign({ enabled: true, downloadInstallEnabled: true, autoUpdateEnabled: false, installMode: 'update-without-backup', feedUrl, channel: 'beta', intervalHours: 24, trustedAssetHosts: ['github.com'], maxDownloadMB: 10 }, overrides.defaults || {});
   const globals = Object.assign({}, overrides.globals || {}), workspaceValues = Object.assign({}, overrides.workspaceValues || {});
   const source = {
     get: (key, fallback) => { const short = key.replace(/^extensionUpdates\./, ''); return workspaceValues[short] ?? globals[short] ?? defaults[short] ?? fallback; },
@@ -100,6 +100,11 @@ function response(statusCode, headers = {}) { const value = new EventEmitter(); 
     await service.check(true); assert(h.messages.info.some((text) => /up to date/.test(text))); fs.rmSync(h.root, { recursive: true, force: true });
   }
   {
+    const h = harness({ defaults: { downloadInstallEnabled: false }, choices: ['View Update Details', 'Close'] }); let calls = 0, installs = 0;
+    const service = new ExtensionUpdateService(h.vscode, h.context, { fetch: async () => { calls += 1; return releaseFeed(); }, install: async () => { installs += 1; } });
+    await service.check(true); assert.strictEqual(calls, 1, 'check-only permission never downloads the asset'); assert.strictEqual(installs, 0, 'check-only permission never invokes the installer'); fs.rmSync(h.root, { recursive: true, force: true });
+  }
+  {
     const h = harness({ choices: ['Not now'] }); let calls = 0;
     const service = new ExtensionUpdateService(h.vscode, h.context, { fetch: async () => { calls += 1; return releaseFeed(); }, install: async () => { throw new Error('must not install'); } });
     await service.check(true); assert.strictEqual(calls, 1, 'declining must not download'); fs.rmSync(h.root, { recursive: true, force: true });
@@ -128,6 +133,18 @@ function response(statusCode, headers = {}) { const value = new EventEmitter(); 
     global.setTimeout = (fn) => { callback = fn; return 1; };
     try { const service = new ExtensionUpdateService(h.vscode, h.context); service.check = async () => { checks += 1; }; service.schedule(); h.globals.enabled = false; callback(); assert.strictEqual(checks, 0, 'disabling must cancel the queued startup check'); }
     finally { global.setTimeout = originalSetTimeout; fs.rmSync(h.root, { recursive: true, force: true }); }
+  }
+  {
+    const h = harness({ defaults: { autoUpdateEnabled: true, installMode: 'update-without-backup' }, choices: ['Later'] }); let packageFetches = 0, installs = 0;
+    const fetch = async (url) => url === feedUrl ? releaseFeed(packageBytes) : (packageFetches += 1, packageBytes);
+    const service = new ExtensionUpdateService(h.vscode, h.context, { fetch, install: async () => { installs += 1; } });
+    await service.check(false); assert.strictEqual(packageFetches, 1); assert.strictEqual(installs, 1, 'explicit automatic-update policy applies the selected method without another install prompt'); fs.rmSync(h.root, { recursive: true, force: true });
+  }
+  {
+    const h = harness({ defaults: { installMode: 'backup-and-update' }, choices: ['Review Update', 'Back Up, Download & Install'] }); let packageFetches = 0, installs = 0;
+    const fetch = async (url) => url === feedUrl ? releaseFeed(packageBytes) : (packageFetches += 1, packageBytes);
+    const service = new ExtensionUpdateService(h.vscode, h.context, { fetch, install: async () => { installs += 1; } });
+    await service.check(true); assert.strictEqual(packageFetches, 0, 'backup mode stops before downloading the new build when an exact rollback VSIX is unavailable'); assert.strictEqual(installs, 0); assert(h.messages.errors.some((text) => /rollback package/.test(text))); fs.rmSync(h.root, { recursive: true, force: true });
   }
   console.log('IKEMaker extension updater tests passed');
 })().catch((error) => { console.error(error); process.exit(1); });

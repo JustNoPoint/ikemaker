@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert'),canvas=require('../src/visual_canvas_selection_model');
+const items=[{id:'back',x:3,y:7,width:10,height:20},{id:'middle',x:20,y:15,width:4,height:4},{id:'front',x:43,y:31,width:6,height:8},{id:'guide',x:100,y:100,locked:true}];
+let state=canvas.create(items,['back'],'back');
+state=canvas.select(state,'front',{toggle:true});assert.deepStrictEqual(state.selected,['back','front']);
+state=canvas.select(state,'middle',{range:true});assert.deepStrictEqual(state.selected,['middle','front'],'shift range follows stable visual order from the current anchor');
+let result=canvas.move(state,4,6,{grid:5});assert.deepStrictEqual(result.changes.map(change=>change.to),[[25,20],[45,35]]);assert.strictEqual(result.state.items.find(item=>item.id==='guide').x,100);
+state=canvas.create(items,['back','middle','front'],'back');result=canvas.align(state,'left');assert.strictEqual(result.state.items.find(item=>item.id==='middle').x,0);assert.strictEqual(result.state.items.find(item=>item.id==='front').x,1);
+result=canvas.align(state,'center-y');assert.deepStrictEqual(result.state.items.slice(0,3).map(item=>item.y),[7,7,7]);
+result=canvas.distribute(state,'x');assert.deepStrictEqual(result.state.items.slice(0,3).map(item=>item.x),[3,23,43]);
+assert.throws(()=>canvas.distribute(canvas.create(items,['back','front']),'x'),/three unlocked/);
+assert.throws(()=>canvas.create([{id:'same'},{id:'same'}]),/Duplicate/);
+console.log('Shared visual canvas selection, snapped movement, alignment, distribution, and lock tests passed');

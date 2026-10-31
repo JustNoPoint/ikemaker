@@ -3,14 +3,18 @@ const assert = require('assert');
 const Module = require('module');
 const originalLoad = Module._load;
 Module._load = function patched(request, parent, isMain) { if (request === 'vscode') return {}; return originalLoad.call(this, request, parent, isMain); };
-const { playerPaletteConversion, rememberActOrder } = require('../src/roster_palette_flow');
+const { paletteSource, playerPaletteConversion, rememberActOrder, replacementFlowMessage, newPaletteFlowMessage } = require('../src/roster_palette_flow');
 Module._load = originalLoad;
+const nodeFs=require('fs'),crypto=require('crypto'),originalRead=nodeFs.readFileSync,firstAct=Buffer.alloc(768,7),secondAct=Buffer.alloc(768,9);let paletteReads=0;
+nodeFs.readFileSync=function(filename,...args){if(String(filename)==='race.act'){paletteReads+=1;return paletteReads===1?firstAct:secondAct;}return originalRead.call(this,filename,...args);};
+try{const reviewed=paletteSource('race.act');assert.strictEqual(paletteReads,1,'palette parsing and evidence hashing must share one byte snapshot');assert.strictEqual(reviewed.byteHash,crypto.createHash('sha256').update(firstAct).digest('hex'));}finally{nodeFs.readFileSync=originalRead;}
 const colors = Array.from({ length: 256 }, (_, index) => [index, index, index, index === 0 ? 0 : 255]), source = { name: 'test.act', colors };
 const flipped = playerPaletteConversion(source, { flipTable: true, preset: 'none' });
 assert.deepStrictEqual(flipped.colors[0].slice(0, 3), [255, 255, 255]); assert.strictEqual(flipped.colors[0][3], 0);
 assert.deepStrictEqual(flipped.colors[255].slice(0, 3), [0, 0, 0]); assert.strictEqual(flipped.colors[255][3], 255);
 const inverted = playerPaletteConversion(source, { preset: 'invert' }); assert.deepStrictEqual(inverted.colors[10].slice(0, 3), [245, 245, 245]);
 assert.deepStrictEqual(source.colors[10], [10, 10, 10, 255]);
+const replacement={type:'preview',requestId:1,paletteIndex:3,flipTable:false,rememberOrder:true,preset:'none'};assert(replacementFlowMessage(replacement,new Set([3])));assert.strictEqual(replacementFlowMessage({...replacement,extra:true},new Set([3])),null);assert.strictEqual(replacementFlowMessage({...replacement,paletteIndex:4},new Set([3])),null);assert.strictEqual(replacementFlowMessage({...replacement,preset:'forged'},new Set([3])),null);assert(newPaletteFlowMessage({type:'apply',requestId:2,flipTable:true,rememberOrder:false}));assert.strictEqual(newPaletteFlowMessage({type:'apply',requestId:2,flipTable:true,rememberOrder:false,group:99}),null);assert.deepStrictEqual(newPaletteFlowMessage({type:'cancel'}),{type:'cancel'});
 console.log('roster palette conversion tests passed');
 
 // Render the actual palette template with an adversarial filename.

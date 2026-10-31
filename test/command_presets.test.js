@@ -1,7 +1,7 @@
 'use strict';
 
 const assert = require('assert');
-const { PRESETS, presetText, findPreset, upsertCustomPreset, removeCustomPreset } = require('../src/command_presets');
+const { PRESETS, CUSTOM_PRESET_LIMITS, presetText, findPreset, normalizeCustomPresets, upsertCustomPreset, removeCustomPreset } = require('../src/command_presets');
 const { parseCommands } = require('../src/command_movelist_model');
 
 for (const id of ['qcf-held-down', 'qcb-held-down', 'dp-held-forward', 'rdp-held-back', 'charge-capcom-bf', 'charge-down-up', 'hcf-optional-refresh', 'circle-optional-refresh', 'held-start-deadline']) assert.ok(findPreset(id), `missing ${id}`);
@@ -21,5 +21,10 @@ assert.deepStrictEqual(custom.map((item) => item.id), ['custom:two'], 'case-inse
 custom = upsertCustomPreset(custom, { id: 'custom:two', label: 'Renamed Fireball', text: custom[0].text });
 assert.strictEqual(custom[0].label, 'Renamed Fireball');
 assert.deepStrictEqual(removeCustomPreset(custom, 'custom:two'), []);
+assert.throws(() => upsertCustomPreset([], { id: 'custom:bad', label: '<script>', text: '[Command]\nname="x"\ncommand=x' }), /markup/);
+assert.throws(() => upsertCustomPreset([], { id: 'custom:bad', label: 'x'.repeat(81), text: '[Command]\nname="x"\ncommand=x' }), /80 characters/);
+assert.throws(() => upsertCustomPreset([], { id: 'custom:bad', label: 'Large', text: 'x'.repeat(CUSTOM_PRESET_LIMITS.textBytes + 1) }), /64 KiB/);
+assert.throws(() => normalizeCustomPresets(Array.from({ length: CUSTOM_PRESET_LIMITS.count + 1 }, (_, index) => ({ id: `custom:${index}`, label: `Preset ${index}`, text: 'x' }))), /at most 100/);
+assert.throws(() => normalizeCustomPresets([{ id: 'custom:one', label: 'One', text: 'x', injected: true }]), /unsupported fields/);
 
 console.log('HDBZ/native command preset tests passed');

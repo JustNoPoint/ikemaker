@@ -1,0 +1,10 @@
+IKEMaker 0.79.24 — Common-normal ownership and override paths
+
+- Added formal recipe ownership levels: Common normal state, Shared normal-family function, Character move function, and Character state override.
+- The SF6 sLP recipe now shows three deliberate authoring paths: Configure Common Normal, Extend Common Normal, and Override Common Normal.
+- Common State 200, State -1 routing, and State -4 lifecycle are now reference-only in ordinary character authoring. They are not offered as code to duplicate into every character.
+- JNP_SF6_StandingLightPunch and the character constants remain the principal sLP customization surface.
+- Added a Character-Owned Normal Override Review for moves fundamentally incompatible with the common lifecycle.
+- The override review checks state ownership, entry/contact reset, HitDef/animation, cancels, hit-pause policy, metadata/reactions/armor/resources, corner policy, cleanup, control return, diagnostics, and assets.
+- Override generation remains intentionally disabled. The review documents ownership transfer without replacing common or character code.
+- Recipe cards now display ownership, authoring paths, ownership levels, and override responsibility checklists.

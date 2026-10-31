@@ -40,17 +40,43 @@ assert.strictEqual(swatch.subarray(0, 8).toString('hex'), '89504e470d0a1a0a'); a
 const written = bufferWithPaletteReplacement(archive, 1, replacement);
 const changed = parseSffBuffer(written.buffer, 'changed.sff');
 assert.deepStrictEqual(paletteRgba(changed, 1)[20], [9, 8, 7, 255]);
-const assigned = bufferWithPaletteAssignments(archive, [0], 0);
+const assignmentArchive = fixture();
+assignmentArchive.sprites[0].dataSize = 16;
+assignmentArchive.sprites[1].dataSize = 0;
+assignmentArchive.sprites[1].link = 0;
+const assigned = bufferWithPaletteAssignments(assignmentArchive, [0], 0);
 assert.strictEqual(assigned.changedCount, 1);
 assert.strictEqual(parseSffBuffer(assigned.buffer, 'assigned.sff').sprites[0].paletteIndex, 0);
 assert.strictEqual(parseSffBuffer(assigned.buffer, 'assigned.sff').sprites[1].paletteIndex, 0);
-assert.throws(() => bufferWithPaletteAssignments(archive, [99], 0), /does not exist/);
+assert.throws(() => bufferWithPaletteAssignments(assignmentArchive, [1], 0), /linked destination.*detach\/rebuild/i);
+assert.throws(() => bufferWithPaletteAssignments(assignmentArchive, [99], 0), /does not exist/);
+const sharedBuffer = Buffer.alloc(64 + 3 * 28);
+const sharedArchive = {
+  buffer: sharedBuffer,
+  header: { firstSpriteHeaderOffset: 64 },
+  palettes: [{ group: 1, number: 0 }, { group: 1, number: 1 }],
+  sprites: [
+    { index: 0, group: 0, number: 0, colorDepth: 8, dataSize: 32, paletteIndex: 1 },
+    { index: 1, group: 0, number: 1, colorDepth: 8, dataSize: 24, paletteIndex: 1 },
+    { index: 2, group: 0, number: 2, colorDepth: 8, dataSize: 0, link: 0, paletteIndex: 1 }
+  ]
+};
+for (const sprite of sharedArchive.sprites) sharedBuffer.writeUInt16LE(sprite.paletteIndex, 64 + sprite.index * 28 + 24);
+const sharedAssignment = bufferWithPaletteAssignments(sharedArchive, [0, 1], 0);
+assert.strictEqual(sharedAssignment.changedCount, 2);
+assert.deepStrictEqual(sharedAssignment.changedIndices, [0, 1]);
+assert.strictEqual(sharedAssignment.buffer.readUInt16LE(64 + 24), 0);
+assert.strictEqual(sharedAssignment.buffer.readUInt16LE(64 + 28 + 24), 0);
+assert.strictEqual(sharedAssignment.buffer.readUInt16LE(64 + 56 + 24), 1, 'linked destination header is not rewritten');
+assert.strictEqual(sharedArchive.palettes.length, 2, 'bulk assignment reuses one palette and never creates a palette per sprite');
 const scope = paletteScopedSprites([
-  { colorDepth: 8, paletteIndex: 1, id: 'character' },
-  { colorDepth: 8, paletteIndex: 2, id: 'other-or-fx' },
+  { colorDepth: 8, paletteIndex: 1, dataSize: 20, id: 'source-with-dependents' },
+  { colorDepth: 8, paletteIndex: 1, dataSize: 0, link: 0, id: 'linked-destination' },
+  { colorDepth: 8, paletteIndex: 2, dataSize: 20, id: 'other-or-fx' },
   { colorDepth: 32, paletteIndex: 1, id: 'true-color' }
 ], 1);
-assert.deepStrictEqual(scope.matching.map((sprite) => sprite.id), ['character']);
+assert.deepStrictEqual(scope.matching.map((sprite) => sprite.id), ['source-with-dependents'], 'a physical source remains eligible even when another sprite links to it');
+assert.strictEqual(scope.skippedLinkedDestinations, 1);
 assert.strictEqual(scope.skippedOtherPalettes, 1);
 assert.strictEqual(scope.skippedNonIndexed, 1);
 assert.throws(() => paletteScopedSprites([], -1), /valid source palette index/);

@@ -19,6 +19,21 @@ try {
   assert.strictEqual(block.kind, 'condition'); assert.strictEqual(block.startLine, 1); assert.strictEqual(block.endLine, 4);
   const pin = examples.createPin({ owner: ownerA, filename: local, text: source, line: 1, label: 'Stop movement' });
   assert.strictEqual(pin.scope, 'character'); assert.strictEqual(pin.label, 'Stop movement');
+  assert.strictEqual(examples.editorLanguage(local), 'zss'); assert.strictEqual(examples.editorLanguage(path.join(charA, 'values.cns')), 'ikemen-cns');
+  assert.deepStrictEqual(examples.normalizePin(pin).parameters, [], 'older bookmarks acquire an empty backward-compatible parameter list');
+  const occurrences = examples.exactOccurrences(pin.text, '0');
+  const parameterized = examples.withParameter(pin, { kind: 'state', label: 'Return state', original: '0', ranges: [occurrences[0]] });
+  const adapted = examples.adaptationPlan(parameterized, { [parameterized.parameters[0].id]: '20' });
+  assert.strictEqual(adapted.text, pin.text.slice(0, occurrences[0].start) + '20' + pin.text.slice(occurrences[0].end));
+  assert.strictEqual(adapted.text.replace('20', '0'), pin.text, 'only the explicitly selected exact range changes');
+  const dependencies=examples.adaptationDependencies('call Commit(1);\nchangeState{value: 20}\nplaySnd{value: 2, 4}');
+  assert(dependencies.summary.includes('functions: Commit')&&dependencies.summary.includes('states: 20')&&dependencies.summary.includes('sounds: 2, 4'),'adaptation previews expose literal dependencies for expert review');
+  assert.throws(() => examples.withParameter(parameterized, { kind: 'animation', label: 'Overlap', original: '0', ranges: [occurrences[0]] }), /overlap/);
+  assert.throws(() => examples.withParameter(pin, { kind: 'state', label: 'Wrong bytes', original: '7', ranges: [occurrences[0]] }), /no longer matches/);
+  assert.throws(() => examples.adaptationPlan(parameterized, { [parameterized.parameters[0].id]: '1\n2' }), /one explicit value/);
+  const mixed = '[StateDef 1]\r\nif time = 0 {\n\tcustom.field : keep ;\r\n}\r\n';
+  const mixedPin = examples.createPin({ owner: ownerA, filename: local, text: mixed, line: 1, label: 'Mixed bytes' });
+  assert.strictEqual(mixedPin.text, 'if time = 0 {\n\tcustom.field : keep ;\r\n}', 'new example pins retain custom spacing and mixed line endings byte-for-byte');
   const sharedPin = examples.createPin({ owner: ownerA, filename: shared, text: fs.readFileSync(shared, 'utf8'), line: 1, label: 'Shared helper' });
   assert.strictEqual(sharedPin.scope, 'shared');
 

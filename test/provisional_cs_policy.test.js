@@ -1,10 +1,11 @@
 'use strict';
 const assert=require('assert'),fs=require('fs'),path=require('path');
 const root=path.join(__dirname,'..'),read=file=>fs.readFileSync(path.join(root,file),'utf8');
-const organizer=read('src/palette_index_organizer_workspace.js'),intake=read('src/artist_intake_workspace.js'),feature=read('data/IKEMEN-ZSS-Tools-0.75.5-Feature-Log.txt');
-assert.match(organizer,/one reserved blank index between adjacent rows/i);
-assert.match(organizer,/never inserts gaps between shades/i);
-assert.match(organizer,/artist only needs that SFF/i);
+const organizer=read('src/palette_index_organizer_model.js'),intake=read('src/artist_intake_workspace.js'),feature=read('data/IKEMEN-ZSS-Tools-0.75.5-Feature-Log.txt');
+assert.match(organizer,/phase1RowGaps/);assert.match(organizer,/reserved-row-gap/);
+assert.match(feature,/Exactly one RESERVED_ROW_GAP palette index is inserted between adjacent/i);
+assert.match(feature,/Gaps are never inserted between individual shades/i);
+assert.match(feature,/artist handoff requires only the temporary SFF/i);
 assert.match(intake,/one shared palette/i);
 assert.match(intake,/CS working SFF validation failed/i);
 assert.match(intake,/artist-facing result is only the temporary SFF/i);

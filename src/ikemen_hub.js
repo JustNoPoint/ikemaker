@@ -3,11 +3,12 @@
 const vscode = require('vscode');
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
 const { detectCapabilities, missingCapabilityMessage } = require('./platform_capabilities');
 const engineLocator = require('./engine_locator');
+const runtimeSession = require('./ikemen_runtime_session');
 const { chooseLaunchStage } = require('./launch_stage');
 const PACKAGE_VERSION = require('../package.json').version;
+let engineCapabilities = () => ({ enabledCapabilities: [], capabilities: {} });
 
 const TEAM_MODES = [
   { label: 'Single', value: 0, count: 1 },
@@ -37,7 +38,32 @@ class IkemenHubProvider {
 
 // Commands have a primary home, while common entry points are intentionally
 // repeated where a player or creator would reasonably look for them.
-function buildHubItems(){const allowed=require('./interface_capabilities').allows,mode=require('./interface_mode').current(),setup=require('./workspace_setup'),value=setup.current();const filter=items=>items.flatMap(item=>{if(item.children){item.children=filter(item.children);return item.children.length?[item]:[];}return item.command&&allowed(item.command.command)?[item]:[];});const setupItems=mode==='workspace'?[new HubItem(`Current Project Tool Focus: ${setup.summary(value)}`,null,'ikemen.workspaceSetup.change','presentation only · changes with the active project'),new HubItem(value.showAll?'Use Saved Project Focus':'Show All Workspace Tools',null,'ikemen.workspaceSetup.showAll')]:[];return [new HubItem('Home',null,'ikemen.openHome'),new HubItem('Change mode…',null,'ikemen.changeMode'),...setupItems,...filter(buildAllHubItems())];}
+function buildHubItems(){
+  const allowed=require('./interface_capabilities').allows,catalog=require('./viewer_action_registry').publicCommandCatalog();
+  const quickStartActions=[
+    ['Open Character…','ikemen.character.open','start here'],
+    ['Open Move Lab…','ikemen.moveLab.open','moves, throws, animation, assets, code, diagnostics, and tests'],
+    ['Create New Character…','ikemen.character.createNew','complete playable character scaffold'],
+    ['Create New Stage…','ikemen.stage.createNew','stage files and visual workspace'],
+    ['Create New Screenpack / Fight UI…','ikemen.ui.createNew','screenpack files and visual workspace'],
+    ['Create New Storyboard…','ikemen.storyboard.create','opening, ending, credits, logo, loading, and story scenes'],
+    ['Create Code, Stage, or UI…','ikemen.file.createNew','code/data files and complete Stage or UI workspaces'],
+    ['Close Current Character…','ikemen.character.close','close all of its tabs'],
+    ['Close Current Authoring Context…','ikemen.context.closeCurrent','character, stage, or screenpack'],
+    ['Open Related Work…','ikemen.relatedWork.open','connected files and tools'],
+    ['Open Production Workflow…','ikemen.productionWorkflow.open','guided character work'],
+    ['Open Project & Team Manager…','ikemen.projectManager.open','games, work projects, teams, members, and job classes'],
+    ['Create New Game Profile…','ikemen.projectProfile.create','game identity, classification, and ownership'],
+    ['Open Roster Manager…','ikemen.selectDef.openWorkspace','add characters and stages'],
+    ['Launch IKEMEN  (Ctrl+Alt+F5)','ikemen.launchGame',''],
+    ['Infinite Quick VS Mirror  (Ctrl+Alt+F6)','ikemen.launchMirrorCurrent',''],
+    ['Training Mirror  (Ctrl+Alt+F7)','ikemen.launchTrainingCurrent','']
+  ];
+  const quickStart=new HubItem('Quick Start',quickStartActions.map(([label,command,description])=>{const enabled=allowed(command),item=new HubItem(label,null,enabled?command:null,enabled?description:'Unavailable in the current interface mode.');item.contextValue=enabled?'ikemenAction':'ikemenActionUnavailable';return item;}));
+  const viewEscapeOrder=['ikemen.textToolbar.restoreNativeLayout','ikemen.textToolbar.disableNativeLayout'];
+  const catalogGroups=catalog.menuOrder.map(group=>{const actions=catalog.actions.filter(action=>action.group===group);if(group==='View')actions.sort((left,right)=>{const a=viewEscapeOrder.indexOf(left.command),b=viewEscapeOrder.indexOf(right.command);return(a<0?viewEscapeOrder.length:a)-(b<0?viewEscapeOrder.length:b);});return new HubItem(group,actions.map(action=>{const enabled=allowed(action.command),item=new HubItem(action.label,null,enabled?action.command:null,enabled?[action.tooltip,action.shortcut].filter(Boolean).join(' · '):'Unavailable in the current interface mode.');item.actionId=action.actionId;item.contextValue=enabled?'ikemenAction':'ikemenActionUnavailable';return item;}));});
+  return [quickStart,...catalogGroups];
+}
 function buildAllHubItems() {
   return [
       new HubItem('Quick Start', [
@@ -47,7 +73,7 @@ function buildAllHubItems() {
         new HubItem('Create New Stage…', null, 'ikemen.stage.createNew', 'stage files and visual workspace'),
         new HubItem('Create New Screenpack / Fight UI…', null, 'ikemen.ui.createNew', 'screenpack files and visual workspace'),
         new HubItem('Create New Storyboard…', null, 'ikemen.storyboard.create', 'opening, ending, credits, logo, loading, and story scenes'),
-        new HubItem('Create an Individual File…', null, 'ikemen.file.createNew', 'ZSS, CNS, CMD, DEF, Lua, or text'),
+        new HubItem('Create Code, Stage, or UI…', null, 'ikemen.file.createNew', 'code/data files and complete Stage or UI workspaces'),
         new HubItem('Close Current Character…', null, 'ikemen.character.close', 'close all of its tabs'),
         new HubItem('Close Current Authoring Context…', null, 'ikemen.context.closeCurrent', 'character, stage, or screenpack'),
         new HubItem('Open Related Work…', null, 'ikemen.relatedWork.open', 'connected files and tools'),
@@ -56,7 +82,7 @@ function buildAllHubItems() {
         new HubItem('Create New Game Profile…', null, 'ikemen.projectProfile.create', 'game identity, classification, and ownership'),
         new HubItem('Open Roster Manager…', null, 'ikemen.selectDef.openWorkspace', 'add characters and stages'),
         new HubItem('Launch IKEMEN  (Ctrl+Alt+F5)', null, 'ikemen.launchGame'),
-        new HubItem('Infinite Mirror VS  (Ctrl+Alt+F6)', null, 'ikemen.launchMirrorCurrent'),
+        new HubItem('Infinite Quick VS Mirror  (Ctrl+Alt+F6)', null, 'ikemen.launchMirrorCurrent'),
         new HubItem('Training Mirror  (Ctrl+Alt+F7)', null, 'ikemen.launchTrainingCurrent')
       ]),
       new HubItem('Create New', [
@@ -88,15 +114,21 @@ function buildAllHubItems() {
         new HubItem('Character Select Preview…', null, 'ikemen.selectDef.openLayoutBuilder')
       ]),
       new HubItem('Character Authoring', [
+        new HubItem('Open Recipe Library…', null, 'ikemen.authoring.openRecipes', 'universal move recipes and reusable sections'),
+        new HubItem('Open Project Symbols & Contracts…', null, 'ikemen.authoring.openSymbols', 'maps, functions, constants, commands, and project contracts'),
+        new HubItem('Open Example Templates…', null, 'ikemen.authoring.openExamples', 'SF6, DS, DS4, and HDBZ learning references'),
+        new HubItem('Manage Authoring Favorites…', null, 'ikemen.authoring.openFavorites', 'quick access in the State Controllers sidebar'),
         new HubItem('Open Move Lab…', null, 'ikemen.moveLab.open', 'one visual shell for moves, throws, assets, code, diagnostics, and tests'),
         new HubItem('Open Explod Composer…', null, 'ikemen.explodComposer.open', 'place effects on fighters, the stage, or the screen'),
         new HubItem('Open Position & Camera…', null, 'ikemen.positionCamera.open', 'position fighters, targets, helpers, bounds, and camera-sensitive movement'),
+        new HubItem('Open Orbit / Trajectory Assist…', null, 'ikemen.trajectory.openAssist', 'preview and generate reviewed circular, elliptical, arc, and spiral movement'),
+        new HubItem('Open Shader Workshop…', null, 'ikemen.shader.openWorkshop', 'build and preview safeguarded offline sprite and animation effects'),
         new HubItem('Open Helper Lab…', null, 'ikemen.helperLab.open', 'create helpers, inspect nested helper trees, and map data flow'),
         new HubItem('Open Character…', null, 'ikemen.character.open'),
         new HubItem('Close Current Character…', null, 'ikemen.character.close'),
         new HubItem('Open Related Character Work…', null, 'ikemen.relatedWork.open'),
         new HubItem('Create New Character…', null, 'ikemen.character.createNew', 'choose MUGEN/CNS or IKEMEN/ZSS'),
-        new HubItem('Create Character Asset File…', null, 'ikemen.file.createNew', 'ZSS, CNS, CMD, DEF, Lua, or text'),
+        new HubItem('Create Code, Stage, or UI…', null, 'ikemen.file.createNew', 'code/data files and complete Stage or UI workspaces'),
         new HubItem('Create New SFF 2.1…', null, 'sff.createNew'),
         new HubItem('Create New AIR…', null, 'air.createNew'),
         new HubItem('Create New SND…', null, 'snd.createNew'),
@@ -114,6 +146,7 @@ function buildAllHubItems() {
       new HubItem('SFF and Sprites', [
         new HubItem('Create New SFF 2.1…', null, 'sff.createNew'),
         new HubItem('Open SFF Sprite Browser…', null, 'sff.openViewer'),
+        new HubItem('Open SFF Browser…', null, 'sff.toggleBrowser', 'read-only Groups, Sprites, and Details browser'),
         new HubItem('Open Artist Intake / Temporary SFF…', null, 'ikemen.artistIntake.open', 'organize unnamed GIFs, sheets, and frame folders'),
         new HubItem('Assemble or Replace Between Two SFFs…', null, 'sff.openAssembly', 'drag groups or selected sprites into a reviewed rebuild'),
         new HubItem('Open Sprite & Palette Import Assistant…', null, 'ikemen.paletteImport.open'),
@@ -136,6 +169,7 @@ function buildAllHubItems() {
       new HubItem('AIR and Collision', [
         new HubItem('Create New AIR…', null, 'air.createNew'),
         new HubItem('Open AIR Animation Viewer…', null, 'air.openAnimationPreview'),
+        new HubItem('Open AIR Browser…', null, 'air.toggleBrowser', 'portable action navigation and management; docks, floats, and restores with the AIR workspace'),
         new HubItem('Open or Refresh AIR Action Log', null, 'air.openActionLog'),
         new HubItem('Refresh AIR Action Log…', null, 'air.refreshActionLog', 'review generated entries; retain notes'),
         new HubItem('Batch Apply Clsn2', null, 'air.batchApplyClsn2'),
@@ -181,6 +215,8 @@ function buildAllHubItems() {
         new HubItem('Convert a Character’s CNS State Files…', null, 'ikemen.cnsConverter.character'),
         new HubItem('Browse and Insert State Controllers…', null, 'zss.openControllers'),
         new HubItem('Insert State Controller with Options…', null, 'zssControllers.insert'),
+        new HubItem('Browse ZSS Structure & Logic…', null, 'zssStructures.browse', 'conditions, selection, loops, functions, assignments, states, and safety patterns'),
+        new HubItem('Open ZSS Learning Criteria', null, 'ikemen.zssLearning.open', 'recognition-first daily topics with optional exercises'),
         new HubItem('Open Universal HitDef Editor…', null, 'ikemen.hitDef.openEditor', 'common attack options first; specialist fields stay collapsed'),
         new HubItem('Open Helper Lab…', null, 'ikemen.helperLab.open', 'creation, nested ownership, exact-instance routing, maps, and cleanup'),
         new HubItem('Open Visual Code Structure…', null, 'ikemen.codeStructure.openWorkspace'),
@@ -236,6 +272,8 @@ function buildAllHubItems() {
       ]),
       new HubItem('Personal Workspace and Preferences', [
         new HubItem('Configure Learning / Advanced Experience…', null, 'ikemen.experience.configure'),
+        new HubItem('Open Docking Panel Prototype…', null, 'ikemen.dockingPrototype.open', 'four movable native Views in the bottom Panel'),
+        new HubItem('Open Docking Floating-Window Probe…', null, 'ikemen.dockingPrototype.openEditor', 'optional editor tab for split groups and VS Code floating windows'),
         new HubItem('Save Workspace Layout Preset…', null, 'ikemen.workspacePreset.save'),
         new HubItem('Restore Workspace Layout Preset…', null, 'ikemen.workspacePreset.restore'),
         new HubItem('Delete Workspace Layout Preset…', null, 'ikemen.workspacePreset.delete'),
@@ -349,29 +387,73 @@ function quoteSummary(args) {
   return args.map((value) => /\s/.test(value) ? `"${value}"` : value).join(' ');
 }
 
-function launch(root, players1, players2, stage, mode1, mode2) {
+async function launch(root, players1, players2, stage, mode1, mode2) {
   const executable = enginePath(root);
   if (!fs.existsSync(executable)) throw new Error(`IKEMEN executable was not found: ${executable}`);
   // Quick VS keeps the configured round timer unless it is explicitly
   // overridden. Training must always begin with unlimited time; otherwise the
   // custom training-mode hook can enter a match whose timer has already ended.
-  const args = ['-loadmotif', '1', '-training', '1', '-time', '-1', '-tmode1', String(mode1.value), '-tmode2', String(mode2.value), '-s', stage];
+  const args = require('./training_launch_args').buildTrainingArgs('-time', '-1', '-tmode1', String(mode1.value), '-tmode2', String(mode2.value), '-s', stage);
   players1.forEach((character, index) => args.push(`-p${1 + index * 2}`, character));
   players2.forEach((character, index) => args.push(`-p${2 + index * 2}`, character));
-  const child = spawn(executable, args, { cwd: root, detached: true, stdio: 'ignore', windowsHide: false });
-  child.unref();
+  await runtimeSession.launch({ executable, args, cwd: root, mode: 'training' });
   vscode.window.showInformationMessage(`IKEMEN training launched: ${quoteSummary(args)}`);
 }
 
-function launchVersus(root, players1, players2, stage, mode1, mode2) {
+async function launchVersus(root, players1, players2, stage, mode1, mode2) {
   const executable = enginePath(root);
   if (!fs.existsSync(executable)) throw new Error(`IKEMEN executable was not found: ${executable}`);
   const args = ['-loadmotif', '-time', '-1', '-rounds', '-1', '-tmode1', String(mode1.value), '-tmode2', String(mode2.value), '-s', stage];
   players1.forEach((character, index) => args.push(`-p${1 + index * 2}`, character));
   players2.forEach((character, index) => args.push(`-p${2 + index * 2}`, character));
-  const child = spawn(executable, args, { cwd: root, detached: true, stdio: 'ignore', windowsHide: false });
-  child.unref();
-  vscode.window.showInformationMessage(`IKEMEN versus match launched: ${quoteSummary(args)}`);
+  await runtimeSession.launch({ executable, args, cwd: root, mode: 'quick-versus' });
+  vscode.window.showInformationMessage(`IKEMEN Infinite Quick VS launched: ${quoteSummary(args)}`);
+}
+
+async function launchScenarioOwner(request,services={}) {
+  const ownerDef=typeof request?.ownerDef==='string'&&path.isAbsolute(request.ownerDef)?path.resolve(request.ownerDef):'',mode=String(request?.mode||'');
+  const exists=services.existsSync||fs.existsSync;if(!ownerDef||path.extname(ownerDef).toLowerCase()!=='.def'||!exists(ownerDef)||!['training','versus','game'].includes(mode))return{status:'unavailable',reason:'The saved scenario has no valid exact character owner or launch mode.'};
+  const capabilities=(services.hostCapabilities||hostCapabilities)();if(!capabilities.ikemenLaunch)return{status:'unavailable',reason:missingCapabilityMessage('IKEMEN scenario launch',capabilities)};
+  const root=(services.findGameRoot||findGameRoot)(ownerDef);if(!root)return{status:'unavailable',reason:'The exact scenario owner is not inside a resolvable IKEMEN game root.'};
+  const character=path.relative(root,ownerDef).replace(/\\/g,'/');if(character.startsWith('../')||!/^chars\//i.test(character))return{status:'unavailable',reason:'The exact scenario owner is not a character DEF inside this game root.'};
+  try{
+    if(mode==='game'){
+      const executable=(services.enginePath||enginePath)(root);if(!exists(executable))return{status:'unavailable',reason:`IKEMEN executable was not found: ${executable}`};
+      await(services.runtimeLaunch||runtimeSession.launch)({executable,args:[],cwd:root,mode:'normal'});return{status:'manual-setup',reason:`Normal game opened. Select ${character} manually; normal game launch cannot preselect the saved exact owner.`,mode,root,ownerDef,character,exactOwnerSelected:false};
+    }
+    const preferred=(services.defaultStage||config().get('defaultTrainingStage','stages/stage0.def')),stage=await(services.chooseStage||chooseLaunchStage)(root,preferred,services.pick||((items,options)=>vscode.window.showQuickPick(items,options)));if(!stage)return{status:'cancelled',reason:'No stage was selected; the scenario launch was cancelled.',mode,root,ownerDef,character};
+    if(mode==='training')await(services.launchTraining||launch)(root,[character],[character],stage,TEAM_MODES[0],TEAM_MODES[0]);else await(services.launchVersus||launchVersus)(root,[character],[character],stage,TEAM_MODES[0],TEAM_MODES[0]);
+    return{status:'launched',mode,root,ownerDef,character,stage};
+  }catch(error){return{status:'failed',reason:error.message||String(error),mode,root,ownerDef,character};}
+}
+
+async function launchPreset(root, preset) {
+  const executable = enginePath(root);
+  if (!fs.existsSync(executable)) throw new Error(`IKEMEN executable was not found: ${executable}`);
+  const launchModel = require('./quick_launch_presets'), validation = launchModel.validatePreset(preset, root, fs.existsSync);
+  if (!validation.ok) throw new Error(validation.errors.join(' '));
+  const args = launchModel.buildArgs(validation.preset), runtimeMode = validation.preset.mode === 'training' ? 'training' : 'quick-versus';
+  if (validation.preset.music) {
+    require('./quick_launch_music_runtime').install(root);
+    args.push('-ikemaker.music', validation.preset.music,
+      '-ikemaker.music-volume', String(validation.preset.musicTest.volume),
+      '-ikemaker.music-loopstart', String(validation.preset.musicTest.loopStart),
+      '-ikemaker.music-loopend', String(validation.preset.musicTest.loopEnd));
+  }
+  await runtimeSession.launch({ executable, args, cwd: root, mode: runtimeMode });
+  vscode.window.showInformationMessage(`IKEMEN ${validation.preset.mode === 'training' ? 'Training' : 'Quick VS'} launched: ${launchModel.summary(validation.preset)}`);
+}
+
+async function openQuickLaunchSetup(selectedMode = 'versus') {
+  const capabilities = hostCapabilities(); if (!capabilities.ikemenLaunch) return vscode.window.showInformationMessage(missingCapabilityMessage('IKEMEN match setup', capabilities));
+  const root = currentGameRoot();
+  if (!root) return vscode.window.showErrorMessage('Could not locate an IKEMEN game root from the open character, tabs, or workspace.');
+  return require('./quick_launch_workspace').open({
+    mode: selectedMode === 'training' ? 'training' : 'versus', root,
+    currentCharacter: currentCharacter(root) || config().get('defaultTrainingCharacter', ''),
+    defaultStage: config().get('defaultTrainingStage', 'stages/stage0.def'),
+    run: preset => launchPreset(root, preset)
+  });
 }
 
 async function chooseCharacter(root, title, preferred) {
@@ -406,7 +488,7 @@ async function currentMirror() {
   const stage = await chooseLaunchStage(root, config().get('defaultTrainingStage', 'stages/stage0.def'), (items, options) => vscode.window.showQuickPick(items, options));
   if (!stage) return;
   if (!character) return vscode.window.showErrorMessage('Open a file inside a character folder or set a default training character.');
-  try { launch(root, [character], [character], stage, TEAM_MODES[0], TEAM_MODES[0]); }
+  try { await launch(root, [character], [character], stage, TEAM_MODES[0], TEAM_MODES[0]); }
   catch (error) { vscode.window.showErrorMessage(error.message); }
 }
 
@@ -418,7 +500,7 @@ async function currentMirrorVersus() {
   const stage = await chooseLaunchStage(root, config().get('defaultTrainingStage', 'stages/stage0.def'), (items, options) => vscode.window.showQuickPick(items, options));
   if (!stage) return;
   if (!character) return vscode.window.showErrorMessage('Open a file inside a character folder or set a default character.');
-  try { launchVersus(root, [character], [character], stage, TEAM_MODES[0], TEAM_MODES[0]); }
+  try { await launchVersus(root, [character], [character], stage, TEAM_MODES[0], TEAM_MODES[0]); }
   catch (error) { vscode.window.showErrorMessage(error.message); }
 }
 
@@ -428,27 +510,20 @@ async function launchGame() {
   if (!root) return vscode.window.showErrorMessage('Could not locate an IKEMEN game root from the open tabs or workspace.');
   const executable = enginePath(root);
   if (!fs.existsSync(executable)) return vscode.window.showErrorMessage(`IKEMEN executable was not found: ${executable}`);
-  const child = spawn(executable, [], { cwd: root, detached: true, stdio: 'ignore', windowsHide: false });
-  child.unref();
+  await runtimeSession.launch({ executable, args: [], cwd: root, mode: 'normal' });
   vscode.window.showInformationMessage('IKEMEN launched.');
 }
 
+async function restartRunning() {
+  const capabilities = hostCapabilities(); if (!capabilities.ikemenLaunch) return vscode.window.showInformationMessage(missingCapabilityMessage('IKEMEN restart', capabilities));
+  try {
+    const session = await runtimeSession.restart();
+    vscode.window.showInformationMessage(`IKEMEN restarted in ${session.mode === 'quick-versus' ? 'Infinite Quick VS' : session.mode === 'training' ? 'Training' : 'Normal'} mode. Saved motif and screenpack changes were reloaded from disk.`);
+  } catch (error) { vscode.window.showErrorMessage(error.message); }
+}
+
 async function configuredTraining() {
-  const capabilities = hostCapabilities(); if (!capabilities.ikemenLaunch) return vscode.window.showInformationMessage(missingCapabilityMessage('IKEMEN training launch', capabilities));
-  const root = currentGameRoot();
-  if (!root) return vscode.window.showErrorMessage('Could not locate an IKEMEN game root from the open character, tabs, or workspace.');
-  const preferred = currentCharacter(root) || config().get('defaultTrainingCharacter', '');
-  const mode1 = await chooseMode('P1 team mode'); if (!mode1) return;
-  const mode2 = await chooseMode('P2 team mode'); if (!mode2) return;
-  const count1 = await chooseTeamCount(mode1, 'P1'); if (!count1) return;
-  const count2 = await chooseTeamCount(mode2, 'P2'); if (!count2) return;
-  const players1 = [];
-  const players2 = [];
-  for (let i = 0; i < count1; i += 1) { const value = await chooseCharacter(root, `P1 member ${i + 1}`, preferred); if (!value) return; players1.push(value); }
-  for (let i = 0; i < count2; i += 1) { const value = await chooseCharacter(root, `P2 member ${i + 1}`, preferred); if (!value) return; players2.push(value); }
-  const stage = await chooseStage(root, 'Training stage', config().get('defaultTrainingStage', '')); if (!stage) return;
-  try { launch(root, players1, players2, stage, mode1, mode2); }
-  catch (error) { vscode.window.showErrorMessage(error.message); }
+  return openQuickLaunchSetup('training');
 }
 
 async function setDefaultCharacter() {
@@ -470,13 +545,51 @@ async function openControls() {
   await vscode.window.showTextDocument(vscode.Uri.file(filename));
 }
 
+async function reviewRetryLoadOnError() {
+  const root = findGameRoot(activePath());
+  if (!root) return vscode.window.showErrorMessage('IKEMEN game root not found.');
+  const capability = engineCapabilities(root)?.capabilities?.['launch.retry-load-on-error'];
+  if (!capability?.enabled) {
+    const choice = await vscode.window.showInformationMessage('Retry on load error is available only when this game explicitly targets a verified supporting IKEMEN GO Nightly build. IKEMEN GO 1.0 remains unchanged.', 'Review Engine Target');
+    if (choice === 'Review Engine Target') await vscode.commands.executeCommand('ikemen.projectManager.open');
+    return;
+  }
+  const filename = path.join(root, 'save', 'config.ini');
+  if (!fs.existsSync(filename)) return vscode.window.showErrorMessage(`IKEMEN configuration was not found: ${filename}`);
+  const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filename));
+  const config = require('./retry_load_config'), inspection = config.inspectRetryLoadOnError(document.getText());
+  const current = inspection.state === 'enabled' ? 'Enabled' : inspection.state === 'disabled' ? 'Disabled' : inspection.state === 'invalid' ? 'Invalid value' : 'Not set';
+  const picked = await vscode.window.showQuickPick([
+    { label: 'Enable for development', description: 'Offer Retry after a foreground character or stage load error', enabled: true },
+    { label: 'Disable', description: 'Return to the normal fail-and-exit loading behavior', enabled: false },
+    { label: 'Open config.ini without changing it', description: 'Review the [Debug] section manually', openOnly: true }
+  ], { title: `Retry on load error · currently ${current}`, placeHolder: 'A retry is convenience only and never counts as successful validation.' });
+  if (!picked) return;
+  if (picked.openOnly) return vscode.window.showTextDocument(document, { preview: false, selection: inspection.line >= 0 ? new vscode.Range(inspection.line, 0, inspection.line, 0) : undefined });
+  const plan = config.planRetryLoadOnError(document.getText(), picked.enabled);
+  if (!plan.ok) return vscode.window.showWarningMessage(plan.reason, 'Open config.ini').then(choice => choice === 'Open config.ini' && vscode.window.showTextDocument(document, { preview: false }));
+  if (!plan.changed) return vscode.window.showInformationMessage(`Retry on load error is already ${picked.enabled ? 'enabled' : 'disabled'}.`);
+  const confirmation = await vscode.window.showWarningMessage(`${picked.enabled ? 'Enable' : 'Disable'} RetryLoadOnError in save/config.ini? The edit will remain unsaved so you can review it. Retrying never counts as a successful compile or runtime test.`, { modal: true }, 'Apply Unsaved Edit');
+  if (confirmation !== 'Apply Unsaved Edit') return;
+  const edit = new vscode.WorkspaceEdit();
+  const end = document.lineAt(Math.max(0, document.lineCount - 1)).range.end;
+  edit.replace(document.uri, new vscode.Range(new vscode.Position(0, 0), end), plan.text.replace(/\r?\n$/, ''));
+  if (!await vscode.workspace.applyEdit(edit)) return vscode.window.showErrorMessage('VS Code could not apply the reviewed config edit.');
+  const editor = await vscode.window.showTextDocument(document, { preview: false });
+  const line = Math.max(0, Math.min(plan.line, document.lineCount - 1)), position = new vscode.Position(line, 0);
+  editor.selection = new vscode.Selection(position, position); editor.revealRange(new vscode.Range(position, position), vscode.TextEditorRevealType.InCenter);
+  vscode.window.showInformationMessage(`Retry on load error is ${picked.enabled ? 'enabled' : 'disabled'} in the unsaved config editor. Review and save when ready.`);
+}
+
 async function openPaletteFolder() {
   const root = findGameRoot(activePath()); if (!root) return vscode.window.showErrorMessage('IKEMEN game root not found.');
   const character = currentCharacter(root); if (!character) return vscode.window.showErrorMessage('Open a file inside the desired character folder first.');
   await vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(path.dirname(path.join(root, character))));
 }
 
-function registerIkemenHub(context) {
+function registerIkemenHub(context, options = {}) {
+  engineCapabilities = typeof options.getCapabilities === 'function' ? options.getCapabilities : engineCapabilities;
+  require('./quick_launch_workspace').initialize(context);
   const provider = new IkemenHubProvider();
   const changes=new vscode.EventEmitter();provider.onDidChangeTreeData=changes.event;
   context.subscriptions.push(changes,require('./workspace_setup').onDidChange(()=>changes.fire()),vscode.workspace.onDidChangeConfiguration(event=>{if(event.affectsConfiguration('ikemenZss.interfaceMode'))changes.fire();}));
@@ -507,10 +620,14 @@ function registerIkemenHub(context) {
     vscode.commands.registerCommand('ikemen.launchGame', launchGame),
     vscode.commands.registerCommand('ikemen.launchMirrorCurrent', currentMirrorVersus),
     vscode.commands.registerCommand('ikemen.launchTrainingCurrent', currentMirror),
+    vscode.commands.registerCommand('ikemen.authoring.launchScenarioOwner', launchScenarioOwner),
+    vscode.commands.registerCommand('ikemen.restartRunning', restartRunning),
     vscode.commands.registerCommand('ikemen.launchTrainingConfigured', configuredTraining),
+    vscode.commands.registerCommand('ikemen.quickLaunch.openSetup', openQuickLaunchSetup),
     vscode.commands.registerCommand('ikemen.setDefaultTrainingCharacter', setDefaultCharacter),
     vscode.commands.registerCommand('ikemen.setDefaultTrainingStage', setDefaultStage),
     vscode.commands.registerCommand('ikemen.openControls', openControls),
+    vscode.commands.registerCommand('ikemen.reviewRetryLoadOnError', reviewRetryLoadOnError),
     vscode.commands.registerCommand('ikemen.openPaletteFolder', openPaletteFolder),
     vscode.commands.registerCommand('ikemen.openLauncherSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:justnopoint.ikemen-zss-tools training')),
     vscode.commands.registerCommand('ikemen.openExtensionSettings', () => vscode.commands.executeCommand('workbench.action.openSettings', '@ext:justnopoint.ikemen-zss-tools'))
@@ -523,4 +640,4 @@ function registerIkemenHub(context) {
   }
 }
 
-module.exports = { registerIkemenHub, findGameRoot, currentCharacter, TEAM_MODES, HubItem, IkemenHubProvider, buildHubItems };
+module.exports = { registerIkemenHub, findGameRoot, currentCharacter, launchScenarioOwner, TEAM_MODES, HubItem, IkemenHubProvider, buildHubItems, reviewRetryLoadOnError };

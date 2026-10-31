@@ -1,0 +1,10 @@
+IKEMaker 0.79.243
+
+- Palette Workshop places palette and color controls on the left and the complete live sprite editor on the right.
+- Two 256-index palette banks support cloning, Ctrl/Shift multi-selection, protected-index-aware multi-color drag and drop, and separate A/B preview.
+- Mirror A is an explicitly reversible preview mode; it never silently creates or changes a real SFF palette link.
+- RGB, alpha, and HSV sliders, exact numeric and hexadecimal input, and a hue/saturation wheel update the sprite preview in real time before one reviewed draft change is accepted.
+- Mouse-wheel color adjustment uses one-step changes, with Shift for ten-step changes.
+- Command & Movelist can open the exact configured glyph SFF in Palette Workshop so glyph images use the same two-bank color and image-editing tools.
+- Movelist text-color tags preview locally and change source only after explicit acceptance.
+- Focused model, client, controller, sprite-editor, and Command & Movelist tests cover selection, locking, drag behavior, cancellation, live preview, and exact-owner handoff.

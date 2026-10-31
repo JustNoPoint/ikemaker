@@ -10,8 +10,14 @@ const FEATURE_BLOCKS = new Map([
   ['height', ['Height', 'geometry']],
   ['depth', ['Depth', 'geometry']],
   ['hitdef', ['HitDef', 'contact']],
+  ['modifyhitdef', ['ModifyHitDef', 'contact']],
+  ['reversaldef', ['ReversalDef', 'contact']],
+  ['modifyreversaldef', ['ModifyReversalDef', 'contact']],
+  ['hitby', ['HitBy', 'rule']],
+  ['nothitby', ['NotHitBy', 'rule']],
   ['helper', ['Helper', 'ownership']],
   ['projectile', ['Projectile', 'projectile']],
+  ['modifyprojectile', ['ModifyProjectile', 'projectile']],
   ['assertspecial', ['AssertSpecial', 'rule']]
 ]);
 
@@ -79,18 +85,21 @@ function featureDetails(controller, body) {
   if (lower === 'overrideclsn') {
     for (const name of ['group', 'index', 'rect']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
   } else if (lower === 'transformclsn') {
-    for (const name of ['scale', 'angle']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
+    for (const name of ['group', 'index', 'scale', 'angle', 'pivot']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
   } else if (lower === 'playerpush') {
     for (const name of ['value', 'priority', 'affectteam']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
   } else if (['width', 'height', 'depth'].includes(lower)) {
     for (const name of ['edge', 'player', 'value']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
-  } else if (lower === 'hitdef') {
+  } else if (['hitdef', 'modifyhitdef', 'reversaldef', 'modifyreversaldef'].includes(lower)) {
     for (const name of ['p2clsncheck', 'p2clsnrequire', 'guard.dist', 'attack.depth']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
+    if (lower.includes('reversal')) { const value = field(body, 'reversal.attr'); if (value !== null) details.push(`reversal.attr: ${value}`); }
     if (!details.length) details.push('collision rule: no p2clsn override authored');
+  } else if (['hitby', 'nothitby'].includes(lower)) {
+    for (const name of ['attr', 'time', 'clsn.group', 'clsn.index']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
   } else if (lower === 'helper') {
     for (const name of ['clsnproxy', 'ownclsnscale']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
-  } else if (lower === 'projectile') {
-    for (const name of ['projclsnscale', 'projclsnangle']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
+  } else if (lower === 'projectile' || lower === 'modifyprojectile') {
+    for (const name of ['projclsnscale', 'projclsnangle', 'p2clsncheck', 'p2clsnrequire']) { const value = field(body, name); if (value !== null) details.push(`${name}: ${value}`); }
   } else if (lower === 'assertspecial') {
     const relevant = flags(body).filter((value) => /^(sizepushonly|projtypecollision)$/i.test(value));
     relevant.forEach((value) => details.push(`flag: ${value}`));
@@ -100,9 +109,9 @@ function featureDetails(controller, body) {
 
 function relevantFeature(controller, details) {
   const lower = controller.toLowerCase();
-  if (lower === 'hitdef') return true;
+  if (['hitdef', 'modifyhitdef', 'reversaldef', 'modifyreversaldef', 'hitby', 'nothitby'].includes(lower)) return true;
   if (lower === 'helper') return details.some((item) => /^(clsnproxy|ownclsnscale)/i.test(item));
-  if (lower === 'projectile') return details.some((item) => /^projclsn/i.test(item));
+  if (lower === 'projectile' || lower === 'modifyprojectile') return details.some((item) => /^(projclsn|p2clsn)/i.test(item));
   if (lower === 'assertspecial') return details.length > 0;
   return true;
 }
@@ -141,7 +150,7 @@ function inspectZssText(text, filename = '') {
   const lines = String(text || '').split(/\r?\n/), ranges = declarationRanges(lines), findings = [];
   for (let line = 0; line < lines.length; line += 1) {
     const clean = withoutComment(lines[line]);
-    const match = /\b(OverrideClsn|TransformClsn|PlayerPush|Width|Height|Depth|HitDef|Helper|Projectile|AssertSpecial)\s*\{/i.exec(clean);
+    const match = /\b(OverrideClsn|TransformClsn|PlayerPush|Width|Height|Depth|HitDef|ModifyHitDef|ReversalDef|ModifyReversalDef|HitBy|NotHitBy|Helper|Projectile|ModifyProjectile|AssertSpecial)\s*\{/i.exec(clean);
     if (!match) continue;
     const controller = match[1], endLine = readBraceBlock(lines, line, clean.indexOf('{'));
     const body = lines.slice(line, endLine + 1).map(withoutComment).join('\n'), details = featureDetails(controller, body);

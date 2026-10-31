@@ -1,14 +1,8 @@
 'use strict';
-
-const assert = require('assert');
-const { progressiveBrowserHtml } = require('../src/map_registry_ui');
-
-const html = progressiveBrowserHtml({ root: 'C:/game', def: 'C:/game/Ryu.def', partial: false, defaultScope: 'assigned', scopes: [], entries: [], detail: '' }, null);
-const match = html.match(/\.split\((\/[^\n]+?\/)\)\.filter\(Boolean\)/);
-assert.ok(match, 'generated webview must contain the query tokenization expression');
-const splitter = Function(`return ${match[1]}`)();
-assert.deepStrictEqual('alpha beta'.split(splitter), ['alpha', 'beta'], 'multiword queries must split on whitespace');
-assert.deepStrictEqual('assist'.split(splitter), ['assist'], 'names containing s must not be split into fragments');
-assert.ok(html.includes('contexts?.[stateKey]'), 'browser preferences must be keyed by selected DEF/project context');
-
-console.log('Map registry generated webview search and state tests passed');
+const assert = require('assert'), fs = require('fs'), path = require('path');
+const source = fs.readFileSync(path.join(__dirname, '..', 'src', 'map_registry_ui.js'), 'utf8');
+assert(!source.includes('legacyOpenBrowser') && !source.includes('legacyProgressiveBrowserHtml'), 'retired unsafe browser hosts are absent');
+assert(!source.includes("message.type === 'use'") && !source.includes("message.type==='use'"), 'no client filename/line occurrence route remains');
+assert(source.includes('entry.searchText.includes(term)'), 'generated browser uses the same host-projected search predicate');
+assert(source.includes("send('mapFilter'"), 'filter changes use the generation-scoped host commit path');
+console.log('Map Registry has one universal generated browser route and no retired occurrence host');

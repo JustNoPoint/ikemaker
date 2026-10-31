@@ -26,4 +26,10 @@ assert.strictEqual(replaced.conflicts.length, 0);
 assert.strictEqual(replaced.rows.find((row) => row.group === 200).archive, 'source');
 assert.strictEqual(replaced.rows.find((row) => row.group === 200).axisX, 10);
 
+const authored = buildAssembly({ sprites: [
+  { index: 0, group: 900, number: 2 },
+  { index: 1, group: 0, number: 0 }
+] }, source, [{ selection: { indices: [1] }, targetGroup: 500, mode: 'append' }]);
+assert.deepStrictEqual(authored.rows.map((row) => `${row.group},${row.number}`), ['900,2', '0,0', '500,0'], 'assembly must preserve authored physical order instead of sorting identities');
+
 console.log('sff_assembly_model tests passed');

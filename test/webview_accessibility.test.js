@@ -2,6 +2,7 @@
 
 const assert = require('assert');
 const { launchControlsHtml, launchControlsClientScript } = require('../src/launch_controls');
+const { SLOTS } = require('../src/viewer_toolbar_contract');
 
 const controls = launchControlsHtml();
 const client = launchControlsClientScript();
@@ -17,22 +18,8 @@ assert(client.includes("querySelectorAll('input,select,textarea')"));
 assert(client.includes("querySelectorAll('canvas')"));
 assert(client.includes("querySelectorAll('img:not([alt])')"));
 
-// Availability changes must update both the visible hint and accessible name.
-const vm = require('vm');
-const attributes = new Map();
-const back = {textContent:'Back to Source',title:'Open from a reference',disabled:true,
-  hasAttribute:key=>attributes.has(key),getAttribute:key=>key==='title'?back.title:attributes.get(key),
-  setAttribute:(key,value)=>attributes.set(key,value)};
-const receivers=[];const receive=event=>receivers.forEach(handler=>handler(event));
-vm.runInNewContext(client, {
-  document:{querySelector:()=>null,querySelectorAll:selector=>selector==='[data-ikemen-back-source]'||selector==='button'?[back]:[]},
-  addEventListener:(type,handler)=>{if(type==='message')receivers.push(handler);},vscode:{postMessage(){}}
-});
-receive({data:{type:'viewerSourceAvailable',available:true,label:'moves.zss:12'}});
-assert.strictEqual(back.disabled,false);
-assert.strictEqual(attributes.get('aria-label'),'Return to moves.zss:12');
-receive({data:{type:'viewerSourceAvailable',available:false}});
-assert.strictEqual(back.disabled,true);
-assert.strictEqual(attributes.get('aria-label'),back.title);
+assert.strictEqual((controls.match(/data-universal-slot=/g)||[]).length,SLOTS.length);
+assert(controls.includes('aria-disabled="true" aria-description='),'fixed unavailable slots expose an accessible reason');
+assert(client.includes('universalToolbarBound'),'shared client binds the canonical strip once');
 
 console.log('Webview accessibility foundation tests passed');

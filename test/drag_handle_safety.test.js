@@ -27,7 +27,7 @@ assert.match(spatial, /id="findMarker"/);
 assert.match(spatial, /c\.onpointercancel=end;c\.onlostpointercapture=end/);
 
 const throws = source('throw_creator_workspace.js');
-assert.match(throws, /id='findP2'/);
+assert.match(throws, /id=["']findP2["']/);
 assert.match(throws, /onlostpointercapture=endDrag/);
 
 const air = source('air_viewer.js');

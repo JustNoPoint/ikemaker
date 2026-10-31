@@ -1,0 +1,12 @@
+IKEMaker 0.79.161
+
+AIR source escape and return
+- A floated AIR Actions Browser returns to the main window before any source editor opens.
+- Restore failure aborts the source handoff without replacing or closing the browser.
+- Direct AIR, animation-reference, collision, hit-region, and character-context routes share the same behavior.
+- AIR, ZSS, and CNS source editors opened from the browser receive an exact Return to AIR Actions Browser title action.
+- Handoffs are bounded and removed when the source or originating browser closes.
+
+Verification
+- Focused AIR source-route, text-header, close-policy, interface-capability, and accessibility suites pass.
+- New Dev approved the slice with no remaining release blocker.

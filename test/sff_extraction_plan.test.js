@@ -1,0 +1,24 @@
+'use strict';
+
+const assert = require('assert');
+const { createExtractionSnapshot, resolveExtractionScope } = require('../src/sff_extraction_scope_contract');
+const { createExtractionPlan, finalizeExtractionReceipt, inventorySeal } = require('../src/sff_extraction_plan');
+const { indexedSourcePng } = require('../src/sff_reader');
+const { readIndexedPng8 } = require('../src/sff_png8_source');
+const bytes=Buffer.from('plan archive'), parse=()=>({header:{version:[2,0,1,0]},sprites:[{group:3,number:7,width:1,height:1,axisX:2,axisY:3,paletteIndex:0,dataSize:1,format:0,colorDepth:8,dataOffset:0,headerOffset:0},{group:3,number:7,width:1,height:1,axisX:4,axisY:5,paletteIndex:0,dataSize:1,format:0,colorDepth:8,dataOffset:1,headerOffset:1}]});
+const snapshot=createExtractionSnapshot({archiveBytes:bytes,resourceIdentity:'plan.sff'},{parse}), selection=resolveExtractionScope(snapshot,{mode:'all'}), palette=Array.from({length:256},(_,i)=>[i,i,i,i?255:0]);
+const png=indexedSourcePng(1,1,Buffer.from([0]),palette), decodedHash=readIndexedPng8(png).decodedHash, materials={0:{pixelKind:'indexed8',decodedHash,paletteColors:palette,friendlyName:'Idle'},1:{pixelKind:'indexed8',decodedHash,paletteColors:palette,friendlyName:'Idle'}}, emptyInventoryHash=inventorySeal([]).hash, base={snapshot,selection,expectedSnapshotHash:snapshot.snapshotHash,expectedSelectionHash:selection.selectionHash,archiveBytes:bytes,naming:{profile:'group-number'},materials,destinationInventory:[],destinationInventoryHash:emptyInventoryHash};
+assert.throws(()=>createExtractionPlan(base),/explicit extraction format/);
+const plan=createExtractionPlan({...base,formats:['png-indexed8']});
+assert.strictEqual(plan.outputs.length,2); assert.notStrictEqual(plan.outputs[0].relativePath,plan.outputs[1].relativePath); assert(plan.outputs[0].relativePath.endsWith('_p00000.indexed.png'));
+const receipt=finalizeExtractionReceipt(plan,bytes,plan.outputs.map(row=>({outputId:row.outputId,bytes:png})),{expectedPlanHash:plan.planHash,currentDestinationInventoryHash:plan.destinationInventoryHash});
+assert.strictEqual(receipt.artifacts[0].sff4Source.kind,'complete-image'); const copy=receipt.readBytes(plan.outputs[0].outputId); copy[0]=0; assert.strictEqual(receipt.readBytes(plan.outputs[0].outputId)[0],137);
+const existing=[{relativePath:plan.outputs[0].relativePath,type:'file',byteHash:'c'.repeat(64)}], sealed=inventorySeal(existing);
+assert.throws(()=>createExtractionPlan({...base,formats:['png-indexed8'],destinationInventory:existing,destinationInventoryHash:sealed.hash}),/requires explicit/);
+assert.throws(()=>finalizeExtractionReceipt(plan,Buffer.from('changed'),[],{expectedPlanHash:plan.planHash,currentDestinationInventoryHash:plan.destinationInventoryHash}),/drifted/);
+assert.throws(()=>finalizeExtractionReceipt(plan,bytes,[],{expectedPlanHash:plan.planHash,currentDestinationInventoryHash:'f'.repeat(64)}),/inventory.*unchanged/);
+const tamperedSelection=JSON.parse(JSON.stringify(selection)); tamperedSelection.physicalEntries[0].axisX=99; assert.throws(()=>createExtractionPlan({...base,selection:tamperedSelection,formats:['png-indexed8']}),/selection.*drifted/);
+const selectedSecond=resolveExtractionScope(snapshot,{mode:'current',archiveByteHash:snapshot.archiveByteHash,snapshotHash:snapshot.snapshotHash,physicalIndex:1}), sequential=createExtractionPlan({...base,selection:selectedSecond,expectedSelectionHash:selectedSecond.selectionHash,formats:['png-indexed8'],naming:{profile:'sequential',prefix:'sprite_',start:7,padding:4}}); assert(sequential.outputs[0].relativePath.startsWith('sprite_0007_'));
+assert.throws(()=>inventorySeal([{relativePath:'A.png',type:'file',byteHash:'a'.repeat(64)},{relativePath:'a.PNG',type:'file',byteHash:'b'.repeat(64)}]),/repeats/);
+assert.strictEqual(inventorySeal([{relativePath:'b.png',type:'file',byteHash:'b'.repeat(64)},{relativePath:'a.png',type:'file',byteHash:'a'.repeat(64)}]).hash,inventorySeal([{relativePath:'a.png',type:'file',byteHash:'a'.repeat(64)},{relativePath:'b.png',type:'file',byteHash:'b'.repeat(64)}]).hash);
+console.log('SFF extraction plans are explicit, collision-reviewed, copy-safe, and SFF-4 ready');

@@ -7,7 +7,7 @@ const storageValues={};
 const workspaceState={get:(key,fallback)=>storageValues[key]??fallback,update:async(key,value)=>{storageValues[key]=value;}};
 const key=value=>path.resolve(value).toLowerCase();
 const document=filename=>({fileName:filename,uri:{fsPath:filename,toString:()=>key(filename)},getText:()=>fs.readFileSync(filename,'utf8'),lineCount:1,lineAt:()=>({lineNumber:0,text:''})});
-function makePanel(){const received=[],disposed=[];const panel={title:'',reveals:0,reveal(){this.reveals++;},onDidDispose(fn){disposed.push(fn);},dispose(){for(const fn of disposed)fn();},webview:{cspSource:'test:',html:'',messages:[],onDidReceiveMessage(fn){received.push(fn);return{dispose(){}};},postMessage(message){this.messages.push(message);return true;}}};panel.send=message=>{for(const fn of received)fn(message);};created.push(panel);return panel;}
+function makePanel(){const received=[],disposed=[],views=[];const panel={title:'',active:true,reveals:0,reveal(){this.reveals++;},onDidChangeViewState(fn){views.push(fn);return{dispose(){}};},onDidDispose(fn){disposed.push(fn);return{dispose(){}};},dispose(){for(const fn of disposed)fn();},webview:{cspSource:'test:',html:'',messages:[],onDidReceiveMessage(fn){received.push(fn);return{dispose(){}};},postMessage(message){this.messages.push(message);return true;}}};panel.send=message=>{for(const fn of received)fn(message);};created.push(panel);return panel;}
 const vscode={ViewColumn:{Active:1},Uri:{file:fsPath=>({fsPath})},window:{activeTextEditor:null,createWebviewPanel:()=>makePanel(),registerWebviewPanelSerializer:()=>({dispose(){}}),showErrorMessage:message=>{throw Error(message);}},workspace:{workspaceFolders:[],textDocuments:[],getConfiguration:()=>({get:(_,fallback)=>fallback}),openTextDocument:async uri=>document(uri.fsPath),onDidChangeTextDocument:()=>({dispose(){}})},commands:{registerCommand:(name,fn)=>{commands.set(name,fn);return{dispose(){}};},executeCommand:async()=>{}},env:{clipboard:{writeText:async()=>{}}}};
 Module._load=function(request,parent,main){
  if(request==='vscode')return vscode;
@@ -24,9 +24,10 @@ Module._load=function(request,parent,main){
  const one=await workspace.openStoryDialogueWorkspace({fsPath:first},'dialogue');
  const two=await workspace.openStoryDialogueWorkspace({fsPath:second},'creator');
  const draft={label:'Recovered rival',enemy:'Ken',phase:'post',group:9100,hidebars:false,lines:[{side:'p2',portrait:'3',wait:'12',text:'Again?',soundGroup:'5',soundIndex:'1'}]};
- one.send({type:'dialogueDraft',revision:7,draft});
+ const generation=workspace.sessions.get(key(first)).generation;
+ one.send({type:'dialogueDraft',generation,revision:7,draft});
  await new Promise(resolve=>setImmediate(resolve));
- assert.deepEqual(one.webview.messages.at(-1),{type:'dialogueDraftStored',revision:7});
+ assert(one.webview.messages.some(message=>message.type==='dialogueDraftStored'&&message.revision===7));
  assert.equal(supports.get(one).isBusy(),false,'draft persistence completes before close is allowed');
  one.dispose();
  const reopened=await workspace.openStoryDialogueWorkspace({fsPath:first},'dialogue');
@@ -38,7 +39,7 @@ Module._load=function(request,parent,main){
  assert.notStrictEqual(two,reopened,'different rosters keep independently bound Story & Dialogue panels');
  assert.equal(created.length,3,'two initial rosters plus one reopened disposed roster are created');
  assert.strictEqual(sessionRecords.get(`${key(first)}|story_dialogue`),reopened);
- reopened.send({type:'discardDialogueDraft'});await new Promise(resolve=>setImmediate(resolve));reopened.dispose();
+ reopened.send({type:'discardDialogueDraft',generation:workspace.sessions.get(key(first)).generation});await new Promise(resolve=>setImmediate(resolve));reopened.dispose();
  const clean=await workspace.openStoryDialogueWorkspace({fsPath:first},'dialogue');
  assert.doesNotMatch(clean.webview.html,/Recovered rival/,'explicit discard removes only this roster draft');
  assert.match(two.webview.html,/let view=vscode\.getState\(\)\?\.view\|\|'creator'/,'the other roster keeps its own selected view');

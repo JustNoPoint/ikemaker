@@ -2,10 +2,15 @@
 const fs = require('fs');
 const path = require('path');
 const panels = new Map();
+const TEXT_MODE_KEY='ikemaker.textAutoSave.previousMode';
+let storage;
 function enabled(seed) {
   const vscode = require('vscode');
   return vscode.workspace.getConfiguration('ikemenZss', seed ? vscode.Uri.file(seed) : undefined).get('autoSave', false);
 }
+function textMode(seed){const vscode=require('vscode'),resource=seed?vscode.Uri.file(seed):undefined;return vscode.workspace.getConfiguration('files',resource).get('autoSave','off');}
+function textEnabled(seed){return textMode(seed)!=='off';}
+async function toggleText(seed){const vscode=require('vscode'),resource=seed?vscode.Uri.file(seed):undefined,config=vscode.workspace.getConfiguration('files',resource),current=textMode(seed),next=current==='off'?(storage?.get(TEXT_MODE_KEY,'afterDelay')||'afterDelay'):'off',inspected=config.inspect('autoSave'),target=inspected?.workspaceFolderValue!==undefined?vscode.ConfigurationTarget.WorkspaceFolder:inspected?.workspaceValue!==undefined?vscode.ConfigurationTarget.Workspace:vscode.ConfigurationTarget.Global;if(current!=='off')await storage?.update(TEXT_MODE_KEY,current);await config.update('autoSave',next,target);return next;}
 async function publish(panel, seed) {
   const vscode=require('vscode'),resource=seed?vscode.Uri.file(seed):undefined;
   const textAutoSave=vscode.workspace.getConfiguration('files',resource).get('autoSave','off');
@@ -52,9 +57,10 @@ async function handle(message, seed, panel) {
 }
 function register(context) {
   const vscode = require('vscode');
+  storage=context.globalState;
   const guarded = action => async uri => {try {return await action(uri?.fsPath);}catch(error){await vscode.window.showErrorMessage('Save controls: '+error.message);}};
   context.subscriptions.push(vscode.commands.registerCommand('ikemen.makeBackup', guarded(makeBackup)),vscode.commands.registerCommand('ikemen.toggleAutoSave', guarded(toggle)),vscode.workspace.onDidChangeConfiguration(event=>{
     if(event.affectsConfiguration('ikemenZss.autoSave')||event.affectsConfiguration('files.autoSave')) for(const [panel,seed] of panels) publish(panel,seed).catch(()=>{});
   }));
 }
-module.exports = {enabled,toggle,makeBackup,handle,register};
+module.exports = {enabled,toggle,textMode,textEnabled,toggleText,makeBackup,handle,register};

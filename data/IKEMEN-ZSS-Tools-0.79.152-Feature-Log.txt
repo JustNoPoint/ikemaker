@@ -1,0 +1,10 @@
+IKEMaker 0.79.152
+
+Protected text-header group
+
+- Reserves the compact top group for Code Navigation whenever native tabs are hidden.
+- Prevents the Code Navigation close action from locking users out of the editor.
+- Automatically restores the header if its tab or group is removed unexpectedly.
+- Moves an editor or viewer opened into the reserved header group to the working group, then restores header focus.
+- Keeps intentional SFF, AIR, and SND transitions exempt so visual viewers can safely replace the text layout.
+- Removes duplicated native source tabs from the protected header group when the same source is available below.

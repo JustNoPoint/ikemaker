@@ -68,9 +68,9 @@ class ZssRegistryProvider {
   }
 
   statusText() {
-    if (this.status === 'failed') return `Legacy ZSS inventory failed: ${this.failure || 'unknown error'}. Use Refresh to retry.`;
-    if (this.status === 'partial') return `Legacy ZSS inventory is partial: ${this.skipped} unreadable file(s) skipped. Use Refresh to retry.`;
-    if (this.status === 'scanning' || this.status === 'idle') return 'Legacy ZSS inventory is scanning…';
+    if (this.status === 'failed') return `Workspace ZSS inventory failed: ${this.failure || 'unknown error'}. Use Refresh to retry.`;
+    if (this.status === 'partial') return `Workspace ZSS inventory is partial: ${this.skipped} unreadable file(s) skipped. Use Refresh to retry.`;
+    if (this.status === 'scanning' || this.status === 'idle') return 'Workspace ZSS inventory is scanning…';
     return 'Workspace-wide ZSS inventory';
   }
 
@@ -107,6 +107,13 @@ class ZssRegistryProvider {
       item.iconPath = new this.vscode.ThemeIcon(records.length > 1 && ['functions', 'states', 'resources'].includes(element.key) ? 'warning' : 'symbol-field');
       item.command = { command: 'zssNavigator.reveal', title: 'Reveal ZSS Registry Entry', arguments: [item] }; return item;
     });
+    if (!inventory.length) {
+      const label = GROUPS.find(([key]) => key === element.key)?.[1] || 'records';
+      const empty = new RegistryItem(`No ${label.toLowerCase()} found`, this.vscode.TreeItemCollapsibleState.None, { nodeType: 'registryEmpty', contextValue: 'zssRegistryEmpty' });
+      empty.description = this.status === 'partial' ? 'Some files could not be read; use Refresh to retry.' : 'Add or save ZSS sources, then use Refresh.';
+      empty.iconPath = new this.vscode.ThemeIcon('info');
+      return browseMaps ? [browseMaps, empty] : [empty];
+    }
     return browseMaps ? [browseMaps, ...inventory] : inventory;
   }
 

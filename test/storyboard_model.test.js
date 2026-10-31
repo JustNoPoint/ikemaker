@@ -2,6 +2,7 @@
 const assert = require('assert');
 const { parseDef } = require('../src/def_model');
 const { storyboardTemplate, storyboardModel, appendScene, duplicateScene, deleteScene, appendLayer } = require('../src/storyboard_model');
+const { validateStoryboard } = require('../src/storyboard_model');
 let text = storyboardTemplate('opening', 'Ryu Intro', 'intro.sff'); let model = storyboardModel(parseDef(text));
 assert.deepStrictEqual(model.localCoord, [320,240]); assert.strictEqual(model.sff, 'intro.sff'); assert.strictEqual(model.scenes.length, 1);
 text = appendScene(text, 1); model = storyboardModel(parseDef(text)); assert.strictEqual(model.scenes.length, 2);
@@ -17,7 +18,9 @@ for (const value of ['Audit credits; thank you', 'Player #1 says "Go!"', '  keep
   const written = appendLayer(source, scene.line, {index:1,kind:'text',text:value});
   assert.strictEqual(storyboardModel(parseDef(written)).scenes[0].layers[1].text, value);
 }
-assert.throws(() => appendLayer(storyboardTemplate('credits'), 11, {index:1,kind:'text',text:'one\ntwo'}), /one line/);
+const creditsSource = storyboardTemplate('credits');
+const creditsSceneLine = storyboardModel(parseDef(creditsSource)).scenes[0].line;
+assert.throws(() => appendLayer(creditsSource, creditsSceneLine, {index:1,kind:'text',text:'one\ntwo'}), /one line/);
 console.log('Storyboard literal text punctuation round-trip tests passed');
 
 const offsetSource = storyboardTemplate('credits');
@@ -37,3 +40,13 @@ for (const kind of Object.keys(require('../src/storyboard_model').TYPES)) {
   assert.strictEqual(sceneDef['key.cancel'], 'a, b, c, x, y, z, m');
 }
 console.log('Storyboard template input defaults match native engine buttons');
+
+const broken=storyboardModel(parseDef('[Info]\nlocalcoord=0,240\n[SceneDef]\nspr=story.sff\nstartscene=9\n[Scene 0]\nend.time=0\nlayer0.offset=-5,20'));
+const issues=validateStoryboard(broken);
+assert(issues.some(issue=>issue.code==='localcoord'&&issue.repair?.value==='320,240'));
+assert(issues.some(issue=>issue.code==='start-scene'&&issue.repair?.value==='0'));
+assert(issues.some(issue=>issue.code==='scene-duration'&&issue.repair?.value==='180'));
+assert(issues.some(issue=>issue.code==='empty-layer'));
+assert(issues.some(issue=>issue.code==='off-canvas-layer'));
+assert.deepStrictEqual(validateStoryboard(storyboardModel(parseDef(storyboardTemplate('opening','Valid','story.sff')))),[]);
+console.log('Storyboard validation and targeted repair plans passed');

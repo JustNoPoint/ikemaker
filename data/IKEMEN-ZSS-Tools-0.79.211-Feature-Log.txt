@@ -1,0 +1,12 @@
+IKEMEN ZSS Tools 0.79.211
+
+Usable-width viewer browsers and compact Add Sprites popup
+
+- Opens the standard Add Sprites flow as a centered, dismissible popup inside the active SFF Viewer. Advanced SFF Creator remains the separate full planning workspace.
+- Keeps the exact target, selected source bytes, writer choice, palette route, axis, crop, numbering, collision, and storage choices sealed through the popup handoff.
+- Revokes popup authority on Close or Escape, rejects unknown actions before staging, and prevents stale messages from reviving a cancelled intake.
+- Gives AIR Actions Browser, SFF Browser, and Coding Assistance one shared 420px minimum usable-width request while retaining responsive wrapping below that size.
+- Prevents browser headers, primary tabs, and control rows from collapsing vertically. The AIR Actions / Collisions / References row remains fully visible when the header wraps.
+- Keeps browser content free of required horizontal scrolling at narrow widths.
+
+New Dev review: approved; no remaining P0/P1 blockers in the popup lifecycle or shared browser sizing slice.

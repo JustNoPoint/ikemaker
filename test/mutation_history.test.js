@@ -26,9 +26,10 @@ try {
   assert.match(html, /IKEMEN Recovery Center/);
   assert.match(html, /Restore This Backup/);
   assert.match(html, /Recoverable backups/);
-  assert.match(html, /globalThis\.ikemenNavigationSelection=\(\)=>\(\{search:search\.value,kind:kind\.value,sourceIndex:selected\?selected\.sourceIndex:null\}\)/);
+  assert.match(html, /globalThis\.ikemenNavigationSelection=\(\)=>\(\{search:search\.value,kind:kind\.value,entryId:selected\?selected\.entryId:null\}\)/);
   assert.match(html, /\['all','recoverable','bulk'\]\.includes\(reference\.kind\)/);
-  assert.match(html, /model\.entries\.find\(entry=>entry\.sourceIndex===reference\.sourceIndex\)/);
+  assert.match(html, /model\.entries\.find\(entry=>entry\.entryId===reference\.entryId&&matchesReference\(entry,reference\)\)/);
+  assert.doesNotMatch(html, /sourceIndex:selected\?selected\.sourceIndex/);
   const allowedStyleNonce = /style-src 'nonce-([^']+)'/.exec(html)[1];
   for (const [, attrs] of html.matchAll(/<style\b([^>]*)>/g)) assert(attrs.includes('nonce=\"' + allowedStyleNonce + '\"'), 'shared styles must satisfy the rendered content security policy');
   const scripts = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)];

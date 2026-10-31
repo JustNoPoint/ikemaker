@@ -39,7 +39,7 @@ const sandbox = {
   tick: 0, model: { visual: { p1: { frames: [] }, p2: { frames: [] }, palette: {} } },
   document: { getElementById: id => id === 'moveCanvas' ? canvas : controls[id], querySelectorAll: () => [] },
   ResizeObserver: class { constructor(callback) { this.callback = callback; observer = this; } observe() {} disconnect() {} },
-  image: () => null, at: () => undefined, total: () => 1, stop() {}, play() {}, post() { posts++; }, saveShellState() { states++; },
+  image: () => null, at: () => undefined, total: () => 1, previewTicks: () => 1, syncMoveTimeline() {}, refreshVisualAvailability() {}, stop() {}, play() {}, post() { posts++; }, saveShellState() { states++; },
   sprite(context, frame, x, y) { axes.push({ x, y }); }
 };
 vm.createContext(sandbox);

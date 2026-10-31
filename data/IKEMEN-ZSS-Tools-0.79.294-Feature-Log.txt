@@ -1,0 +1,9 @@
+IKEMaker 0.79.294
+
+Palette Workshop viewer layout correction:
+
+- The sprite viewer and its zoom controls now span the full workshop width instead of reserving an empty 190-pixel column on the left.
+- Remappen pairs 71–100 remain intact in their own row below the viewer and cannot rise into the viewer area on wider layouts.
+- The responsive layout preserves this same viewer-first ordering at narrow and wide window sizes.
+
+Focused sprite editor, dual-bank palette, workspace view, workspace controller, and JavaScript syntax checks pass.

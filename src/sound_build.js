@@ -20,6 +20,19 @@ function validate(manifest, filename) {
 }
 function setEntry(manifest, group, index, source) { const at = manifest.entries.findIndex((entry) => entry.group === group && entry.index === index), next = { source, group, index }; if (at >= 0) manifest.entries[at] = next; else manifest.entries.push(next); manifest.entries.sort((a, b) => a.group - b.group || a.index - b.index); return manifest; }
 function removeEntry(manifest, group, index) { const before = manifest.entries.length; manifest.entries = manifest.entries.filter((entry) => entry.group !== group || entry.index !== index); return before !== manifest.entries.length; }
+function removeEntriesExact(manifest, identities) {
+  const requested = [...new Set((identities || []).map(String))];
+  if (!requested.length) throw new Error('Choose at least one sound to remove.');
+  const counts = new Map();
+  for (const entry of manifest.entries || []) { const id = `${entry.group},${entry.index}`; counts.set(id, (counts.get(id) || 0) + 1); }
+  const missing = requested.filter(id => !counts.has(id));
+  const duplicates = requested.filter(id => (counts.get(id) || 0) > 1);
+  if (missing.length) throw new Error(`The build manifest is missing selected sound${missing.length === 1 ? '' : 's'}: ${missing.join(', ')}.`);
+  if (duplicates.length) throw new Error(`The build manifest contains duplicate selected sound${duplicates.length === 1 ? '' : 's'}: ${duplicates.join(', ')}.`);
+  const remove = new Set(requested);
+  manifest.entries = (manifest.entries || []).filter(entry => !remove.has(`${entry.group},${entry.index}`));
+  return requested.length;
+}
 function reorder(manifest, mode = 'number', nameFor = () => '') {
   const entries = manifest.entries || [];
   if (mode === 'source') return manifest;
@@ -41,4 +54,4 @@ function remapEntries(manifest, mappings) {
 }
 function read(filename) { return parse(fs.readFileSync(filename, 'utf8')); }
 
-module.exports = { meaningfulLines, parse, stringify, validate, setEntry, removeEntry, reorder, remapEntries, read };
+module.exports = { meaningfulLines, parse, stringify, validate, setEntry, removeEntry, removeEntriesExact, reorder, remapEntries, read };

@@ -1,0 +1,25 @@
+'use strict';
+
+const assert = require('assert');
+const crypto = require('crypto');
+const { createSffBuildSpecification, specificationHash } = require('../src/sff_build_specification');
+const { readSealedLegacyV21Specification, migrateSealedLegacyV21Specification } = require('../src/sff_build_specification_v1_migration');
+const sha = value => crypto.createHash('sha256').update(value).digest('hex');
+const H = 'a'.repeat(64), D = 'b'.repeat(64);
+const legacy = createSffBuildSpecification({ planId: 'legacy', sourceRoot: 'input', target: { archiveIdentity: 'old.sff', sffVersion: '2.1' }, sprites: [{ entryId: 'sprite:0', group: 0, number: 0, axisX: 1, axisY: 2, colorDepth: 8, format: 'png8', compression: 'png8', paletteId: null, duplicatePolicy: 'preserve-separate', source: { relativePath: 'a.png', byteHash: H, decodedHash: D, width: 2, height: 2, provenance: { frame: 0 } } }], palettes: [], requirements: [], decisions: [], options: { shared: { legacy: true }, backends: { sprmake2: { optimize: false } } } });
+const bytes = Buffer.from(JSON.stringify(legacy));
+const args = { artifactBytes: bytes, expectedArtifactByteHash: sha(bytes), expectedLegacySpecificationHash: legacy.specificationHash, backendId: 'sprmake2-sff-v2.1' };
+const sealed = readSealedLegacyV21Specification(args);
+assert.strictEqual(sealed.sourceArtifactByteHash, sha(bytes)); assert.strictEqual(sealed.legacySpecificationHash, legacy.specificationHash); assert(Object.isFrozen(sealed.specification));
+const migrated = migrateSealedLegacyV21Specification(args);
+assert.strictEqual(migrated.version, 2); assert.strictEqual(migrated.logical.sprites[0].entryId, 'sprite:0');
+assert.strictEqual(migrated.review.migration.legacyEnvelope.options.backends.sprmake2.optimize, false);
+assert.deepStrictEqual(migrateSealedLegacyV21Specification(args), migrated);
+assert.throws(() => migrateSealedLegacyV21Specification({ ...args, artifactBytes: Buffer.concat([bytes, Buffer.from(' ')]) }), /byte hash/);
+assert.throws(() => migrateSealedLegacyV21Specification({ ...args, expectedLegacySpecificationHash: 'c'.repeat(64) }), /embedded specification hash/);
+assert.throws(() => migrateSealedLegacyV21Specification({ ...args, backendId: 'elecbyte-sprmaker-sff-v1' }), /incompatible/);
+const duplicateKeyBytes = Buffer.from(JSON.stringify(legacy).replace('"planId":"legacy"', '"planId":"legacy","planId":"forged"'));
+assert.throws(() => migrateSealedLegacyV21Specification({ ...args, artifactBytes: duplicateKeyBytes, expectedArtifactByteHash: sha(duplicateKeyBytes) }), /Duplicate JSON object key planId/);
+const invalid = JSON.parse(JSON.stringify(legacy)); invalid.sprites[0].axisX = 99999; invalid.specificationHash = specificationHash(invalid); const invalidBytes = Buffer.from(JSON.stringify(invalid));
+assert.throws(() => readSealedLegacyV21Specification({ artifactBytes: invalidBytes, expectedArtifactByteHash: sha(invalidBytes), expectedLegacySpecificationHash: invalid.specificationHash }), /self-hashed but invalid/);
+console.log('Sealed legacy v2.1 migration requires independent byte and specification receipts');

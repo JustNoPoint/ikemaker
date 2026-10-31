@@ -6,6 +6,9 @@ tools/vsce-npm-shim/**
 test-fixtures/**
 test-artifacts/**
 archive/**
+.analysis/**
+.codex-video-frames/**
+.package-*/**
 .vsix-stage*/**
 .vscode-live*/**
 IKEMaker-*-*/**

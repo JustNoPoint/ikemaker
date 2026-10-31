@@ -1,12 +1,13 @@
 'use strict';
 const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
 const source=fs.readFileSync(path.join(__dirname,'../src/air_viewer.js'),'utf8');
+assert(source.includes('sessionOwnerDefs:model.sessionOwnerDefs||[]')&&source.includes("m.type==='sessionOwners'"),'AIR persists and updates the exact character-owner set across restoration');
 function extract(start,end){return source.slice(source.indexOf(start),source.indexOf(end,source.indexOf(start)));}
 let state={actionSort:'name',otherPreference:true};const elements=new Map();
 const document={getElementById:id=>{if(!elements.has(id))elements.set(id,{value:'',classList:{remove(){}},append(){}});return elements.get(id);},createElement:()=>({})};
 const actions=[{number:990,frames:[{}]},{number:991,frames:[{}]}];
 const model={airPath:'fixture.air',title:'Fixture',actions,palettePreview:{assignedDefault:{group:0,number:0}},palettes:[]};
-const box={model,action:null,frameIndex:0,saved:{airPath:'fixture.air',activeAction:991},vscode:{getState:()=>state,setState:s=>state=s},selectedActions:new Set([991]),document,thumbs:new Map(),selectedFrames:new Set(),canvas:{classList:{remove(){}}},imageCache:new Map(),renderBoxEditor(){},renderActions(){},renderStrip(){},requestFrame(){},schedule(){}};
+const box={model,action:null,actionAnchor:null,frameIndex:0,saved:{airPath:'fixture.air',activeAction:991},vscode:{getState:()=>state,setState:s=>state=s,postMessage(){}},selectedActions:new Set([991]),document,thumbs:new Map(),selectedFrames:new Set(),canvas:{classList:{remove(){}}},imageCache:new Map(),collisionViewerEditEpoch:0,collisionEditPreparePending:null,clearCollisionEditReview(){},renderCollisionOwnership(){},renderBoxEditor(){},renderActions(){},renderStrip(){},requestFrame(){},schedule(){}};
 vm.runInNewContext(extract('function saveAirView(', 'saveAirView();'),box);
 vm.runInNewContext(extract('function selectAction(', 'function navigationAllowed('),box);
 vm.runInNewContext(extract('function applyModel(', "window.addEventListener('message'"),box);

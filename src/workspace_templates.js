@@ -1,16 +1,25 @@
 'use strict';
 
-function stageDef(name = 'New Stage', sff = 'New_Stage.sff') {
+function coordinates(options = {}) {
+  const value = Array.isArray(options.localCoord) ? options.localCoord : [320, 240];
+  return [Math.max(1, Math.trunc(Number(value[0])) || 320), Math.max(1, Math.trunc(Number(value[1])) || 240)];
+}
+
+function quoted(value) { return String(value || '').replace(/[\r\n"]/g, ' ').trim(); }
+
+function stageDef(name = 'New Stage', sff = 'New_Stage.sff', options = {}) {
+  const [width, height] = coordinates(options), halfWidth = Math.round(width / 2);
+  const playerStart = Math.max(1, Math.round(width * 70 / 320)), zOffset = Math.max(1, Math.round(height * 220 / 240));
   return `[Info]
 name = "${name}"
 displayname = "${name}"
-author = ""
+author = "${quoted(options.author)}"
 
 [Camera]
 startx = 0
 starty = 0
-boundleft = -160
-boundright = 160
+boundleft = -${halfWidth}
+boundright = ${halfWidth}
 boundhigh = -25
 boundlow = 0
 verticalfollow = 0.2
@@ -21,10 +30,10 @@ zoomin = 1
 zoomout = 1
 
 [PlayerInfo]
-p1startx = -70
+p1startx = -${playerStart}
 p1starty = 0
 p1facing = 1
-p2startx = 70
+p2startx = ${playerStart}
 p2starty = 0
 p2facing = -1
 leftbound = -1000
@@ -35,8 +44,8 @@ screenleft = 15
 screenright = 15
 
 [StageInfo]
-localcoord = 320,240
-zoffset = 220
+localcoord = ${width},${height}
+zoffset = ${zOffset}
 autoturn = 1
 resetbg = 1
 xscale = 1
@@ -66,46 +75,49 @@ layerno = 0
 `;
 }
 
-function screenpackDef() {
+function screenpackDef(options = {}) {
+  const [width, height] = coordinates(options), centerX = Math.round(width / 2), centerY = Math.round(height / 2);
+  const marginX = Math.max(1, Math.round(width / 16)), marginY = Math.max(1, Math.round(height / 6));
   return `[Info]
-name = "New Screenpack"
-author = ""
-localcoord = 320,240
+name = "${quoted(options.name) || 'New Screenpack'}"
+author = "${quoted(options.author)}"
+localcoord = ${width},${height}
 
 [Files]
 spr = system.sff
-fight = fight.def
+fight = ${quoted(options.fightFile) || 'fight.def'}
 
 [Title Info]
-menu.pos = 160,120
+menu.pos = ${centerX},${centerY}
 menu.item.font = 0,0,0
-menu.window = 20,40,300,220
+menu.window = ${marginX},${marginY},${width - marginX},${height - Math.max(1, Math.round(height / 12))}
 footer.version.text = Version 0.0
 
 [Select Info]
-pos = 160,120
+pos = ${centerX},${centerY}
 cell.bg.spr = 0,0
 `;
 }
 
-function fightDef() {
+function fightDef(options = {}) {
+  const [width, height] = coordinates(options), marginX = Math.max(1, Math.round(width / 16)), marginY = Math.max(1, Math.round(height / 12));
   return `[Info]
-name = "New Fight UI"
-author = ""
-localcoord = 320,240
+name = "${quoted(options.name) || 'New Fight UI'}"
+author = "${quoted(options.author)}"
+localcoord = ${width},${height}
 
 [Files]
 spr = fight.sff
 
 [Lifebar]
-p1.pos = 20,20
+p1.pos = ${marginX},${marginY}
 p1.bg0.spr = 0,0
-p2.pos = 300,20
+p2.pos = ${width - marginX},${marginY}
 p2.bg0.spr = 0,0
 
 [Round]
-pos = 160,50
+pos = ${Math.round(width / 2)},${Math.max(1, Math.round(height * 50 / 240))}
 `;
 }
 
-module.exports = { stageDef, screenpackDef, fightDef };
+module.exports = { coordinates, stageDef, screenpackDef, fightDef };

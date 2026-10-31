@@ -1,5 +1,328 @@
 # IKEMaker
 
+- Adds native compact CNS/ST and AIR Outline/Go-to-Symbol support. Legacy StateDefs own their controller sections; AIR actions show authored frame counts and comment labels without resolving Copy Action aliases or indefinite durations into invented timing.
+- Controller completion now offers a normal required-fields template and an explicit `(all parameters)` template for both ZSS and CNS. Optional fields stay commented until the author deliberately enables them.
+- Adds bounded, read-only syntax-hygiene diagnostics for semicolons, duplicate controller parameters, unknown controllers, braces/strings/headers, loop/switch control, and an opt-in unknown-trigger check. Every rule has an independent resource setting and external names can be allowlisted.
+
+## 0.79.244
+
+The AIR collision preview now provides readable, persistent appearance controls without changing AIR source: exact percentage opacity, independent Clsn1, Clsn1Default, Clsn2, Clsn2Default, and Push/Size colors, and line width with an explicit fixed-screen or zoom-scaled mode. Existing family and fill visibility controls remain independent, the legend updates with the chosen colors, and Reset restores the established IKEMaker collision scheme.
+
+## 0.79.243
+
+Palette Workshop now keeps palette and color controls on the left and the complete live image editor on the right. Two 256-index banks support cloning, Ctrl/Shift multi-selection, protected-index-aware drag and drop, and an explicit reversible **Mirror A in preview** mode that remains separate from real reviewed SFF palette linking. Channel-colored RGB/alpha and HSV sliders, exact numeric and hexadecimal entry, a hue/saturation wheel, mouse-wheel fine adjustment, and live sprite recoloring share one draft flow. Command & Movelist can open the exact configured glyph archive in this same editor, while text-color tags preview locally and change source only when explicitly accepted.
+
+## 0.79.242
+
+New Dev’s follow-up review hardened the new list browsers before release. SND waveform thumbnails are now loaded only near the visible viewport, in bounded batches, with bounded sampling for large sounds. AIR, SFF, and SND now separate functional categories from real metadata-backed name/comment lists, and SFF search/filter choices persist immediately.
+
+## 0.79.241
+
+AIR, SFF, and SND editors now share a prominent **Lists / Thumbnails** shortcut. A newly created companion browser opens as a compact floating window; if that browser already exists, the shortcut changes it to the requested browsing screen without changing its docked or floating placement. AIR exposes List, Thumbnails, and Combined views with text search and named-category filtering. SFF adds the same three explicit views plus group, category, review-status, and name/identity search. SND gains a dedicated List, Waveform Thumbnail, and Combined browser with group/category filters and exact selection handoff to its editor. Each floating browser remembers a user-adjusted width after starting at its minimum usable width.
+
+## 0.79.240
+
+Lua Coding Assistance now recognizes authored local and global functions, table and colon methods, assignment-form functions, varargs, and exact direct `require` exports. It supplies completion, hover, and Signature Help from source names and documentation without executing Lua or inventing types/defaults; lexical order, bounded parsing, exact module ownership, and source/dependency revalidation keep uncertain or stale results out of the editor. Code Navigation tabs now visibly and accessibly identify Lua files as **Lua**, including generic filenames whose active editor language is Lua. New Dev reviewed and expanded the scope and authority rules; eleven focused coding tests pass without rerunning the unrelated SFF suite.
+
+## 0.79.239
+
+Coding Assistance now suppresses stale function completion, hover, and Signature Help after source edits, assigned DEF/code changes, cancellation, later requests, or exact engine-target changes. A bounded validated function-catalog cache coalesces cold work, measures settled warm queries against a 25 ms budget, and fails closed when authority changes during construction. Live capability projection is centralized so the current Nightly's dynamic map-key, state-type, and animation-prefix assistance reaches the installed editor. New Dev reviewed the race and cache boundaries; twelve focused coding tests pass without rerunning the SFF suite.
+
+## 0.79.238
+
+Coding Assistance now models the exact current Nightly function grammar: arguments and returns are named untyped variables, with no invented declared types or default values. Multiline Signature Help, hover, completion, function browsing, duplicate diagnostics, named-return inference, and project String Flow share that corrected model. The exact `ee4791bcd5e2` Nightly gains gated assistance for dynamic map keys, dynamic StateDef/StateTypeSet strings, `AnimPrefix`, and ExplodVar/ProjVar `animPrefix`; indexed maps and typed-preserving MapSet/MapAdd remain disabled because they are still develop-only. New diagnostics explain string coercion, case-insensitive equality, mixed string/number comparison, invalid state-type values, and unsupported target contexts without retaining private string contents.
+
+## 0.79.193
+
+SFF Sprite Controls now present Onion reference and Onion opacity as complete compact steppers with arrows attached directly to their sliders, a visible opacity percentage, and Pin Current as a separate action. The universal top arrows are now explicitly labeled as viewer history. A new Connected SFF selector provides direct and previous/next access to the character archive plus proven character, configured, game, and fight FX archives without accepting raw paths from the webview.
+
+## 0.79.192
+
+Sprite Controls now keep their position slider bounded inside the compact rail instead of inheriting the viewer-wide full-width input rule, and the generated SFF workspace has one authoritative quick-action toolbar. Character Workbench startup now treats the character DEF's `[Files] sprite` entry as authoritative: discovered common and FX archives can remain connected, but they cannot replace or steal focus from the assigned character SFF. Text-editor navigation likewise ignores stale archive-family context while intentional SFF/AIR/SND viewer-to-viewer routing remains available.
+
+## 0.79.191
+
+The attached text-editor header now measures its actual compact controls and tab navigator, then fits the upper row to that content instead of reserving a fixed percentage of the screen. The fit is bounded so short displays retain the complete text-specific header, preserves the protected header-above-editor layout, and runs only once per header so later manual resizing is respected.
+
+## 0.79.190
+
+Character Workbench close now remains active until the entire restored character session has stayed empty, so VS Code cannot reveal SFF, AIR, or SND viewers one at a time and force repeated close attempts. In-flight character opening is cancelled before it can republish tabs or a false success message. AIR and SND now persist the same exact multi-character ownership used by SFF; shared viewers remain for their other owner, while unrelated inactive restored viewers are never claimed. SFF restoration refuses a closing owner before touching its viewer cache. One close produces one final result after the complete owned session is drained.
+
+## 0.79.189
+
+Character Workbench sessions now record explicit ownership of SFF viewers, including shared-template archives that are not directly assigned in the character DEF. Closing a character closes its sole-owned shared viewer, releases rather than destroys a viewer still used by another character, and leaves intentionally standalone viewers open. A viewer restored from an older build without ownership metadata offers a one-time explicit choice to close it with the active character, which repairs the stuck restored-session case without guessing.
+
+## 0.79.188
+
+Character Workbench close now uses one exact character-owner identity for Code Navigation, Character Connections, Character Health, and CNS Converter workspaces, including URI-less webview tabs. It adopts their connected native source tabs before closing, starts the close guard before draft preflight, and waits for VS Code's editor topology to become stably empty instead of treating a short-lived visible editor as a failure. Shared `chars/template` sources resolve to the current or explicitly chosen saved character and never invent a Template character; exact owner-DEF matching prevents two characters that share files from closing each other's tools.
+
+## 0.79.187
+
+The SFF sprite slider now commits its latest physical archive position while it moves, keeping the selected sprite, Group/Index data, canvas request, compact `N / total` readout, and universal context strip synchronized after release—even with duplicate group/index entries. Character Workbench close refreshes the character’s current on-disk DEF dependency graph before collecting tabs and visual workspaces, so connected shared assets such as a character-assigned SFF in `chars/template` are included instead of being falsely omitted while success is reported.
+
+## 0.79.186
+
+The SFF viewer once again opens on compact Sprite Controls and the sprite preview instead of forcing the retired embedded palette screen. Palette work is reached explicitly through the canonical **Palette Workshop…** action. A malformed generated navigation listener that caused every SFF control to be rejected by the browser is repaired and syntax-tested. Cold-start restoration now activates and immediately disposes cached legacy SFF Browser pages, while a live comparison browser has its own **Close Browser** action and guarded Escape exit. New Dev reviewed the restore, close, accessibility, navigation, and generated-client paths and approved the release slice.
+
+## 0.79.185
+
+Sprite, sound, palette, command-file, code-file, HitDef-file, and move-state navigation sliders now preview their position while dragging and commit one exact selection when released. Duplicate SFF sprite and SND sound identities retain their physical archive occurrence through browser selection, marks, anchors, saved state, thumbnails, Palette Workshop handoffs, and navigation history; ambiguous legacy references fail visibly instead of silently choosing the first match. Character Workbench closure now includes reserved `template`-folder asset viewers in the same atomic close transaction, preventing retained SFF/AIR/SND workspaces from reopening or blocking character closure.
+
+## 0.79.184
+
+Closing a character from Character Workbenches now follows the real editor topology instead of mistaking a still-loaded VS Code document for an open editor. It waits for tab and visible-editor events to settle, closes the exact character-owned visual workspaces afterward, and keeps unrelated tabs and project screens untouched. A genuine refusal now names the exact file or visual workspace that remains open instead of showing an unactionable generic warning.
+
+## 0.79.183
+
+Project & Team Manager now uses a compact, purpose-built local header instead of the asset-viewer menu and icon toolbar. A generated-client quoting error that prevented every tab and control from running is fixed and compile-tested. The screen has a visible **Close Manager** action, plus Escape and Alt+Left exits, while ordinary tab/window closing remains closed. Its header wraps cleanly at narrow widths without horizontal scrolling.
+
+## 0.79.182
+
+- AIR source opened from the Actions Browser keeps its exact return route as soon as the source editor opens. If window topology or the compact return header degrades afterward, IKEMaker restores the AIR browser but does not discard the source escape authority.
+- `Escape`, `Alt+Left`, the compact **Return to AIR Browser** strip, and the exact source close action provide redundant exits. Ordinary tab close, Close All, and window close are respected and never reopen or refocus the browser.
+- Palette Workshop adds reviewed palette-number compaction under Standard **Batch Tools** and Advanced **Sync / Remap / Repair**. It previews an exact old-to-new map, preserves requested gaps as order barriers, builds and compares a candidate, applies only after verification, and retains one reviewed Undo.
+- Compaction never rewrites source code. Affected, dynamic, unreadable, linked, oversized, or incomplete project-reference evidence blocks the operation; exact SFF, domain-registry, and source evidence is rechecked at Build, Compare, and Apply.
+- New Dev rejected three recovery and bounded-audit gaps during review, then approved the corrected slice. The AIR suite and all 106 Palette Workshop tests pass.
+
+## 0.79.180
+
+- AIR source opening no longer trusts editor-group topology across physical VS Code windows. A browser floated by IKEMaker must be explicitly returned to the main window before source opens; a browser detached with native controls keeps its own window focused and opens source locally beside itself.
+- Floating-state checks run before document admission and are repeated after awaited collision or hit-region evidence rebuilds. If the browser moves during navigation, no target source document or editor opens and the exact browser stays visible.
+- Manually closing a routed source returns to its exact live AIR browser. Dirty-close cancellation retains the source and route; delayed close events cannot focus twice; native Close All bursts, IKEMaker context shutdown, disposed browsers, and wrong origins do not reopen or steal focus.
+- New Dev reviewed the reported cross-window trap before implementation, found and rejected two remaining race paths during post-review, then approved the corrected release slice. Focused AIR, text companion, accessibility, and direct-write tests pass.
+
+## 0.79.179
+
+- Opening source from the AIR Actions Browser now verifies the live editor-tab topology at each handoff phase. A resolved window-focus command or a different numeric column is no longer accepted as proof that the source is safely separated from the browser.
+- Before the source opens, the exact AIR browser must be the visible active tab. Afterward, the exact source must be active in a different group, and the exact Code Navigation companion must expose the visible active **Return to AIR Browser** strip. The normal two-group layout is supported: the retained AIR browser may sit behind that companion in the header group.
+- Same-group takeovers, stale detached-window state, missing or hidden return strips, duplicate or missing exact tabs, and topology changes during the awaited handoff all fail closed. The provisional route is rolled back and the AIR browser is re-revealed without closing a source that may have become dirty.
+- New Dev reviewed the live repro before implementation, caught the hidden-tab and canonical two-group cases during post-review, and approved the corrected release slice. Focused AIR escape, text companion, accessibility, and direct-write tests pass.
+
+## 0.79.178
+
+- AIR source handoffs now wait for the exact visible **Return to AIR Browser** control to render and become interactive. A sealed one-use render acknowledgement is rechecked against the source, originating AIR browser, companion panel, and current route; timeouts, replacement panels, late acknowledgements, and shared-source rebinding restore the AIR browser instead of leaving an editor with no escape. Returning also restores keyboard focus to the source-launch control, while `Alt+Left` remains the compact keyboard route.
+- Palette Workshop Advanced → Sync / Remap / Repair now authors complete named multi-range RemapPal topology. Users can retain, add, remove, and reorder ranges; edit the name, description, enabled state, and linked master domains; see affected sprite bindings; and review expanded pairs, resolved/missing/ambiguous coordinates, conflicts, and delete cascades before Apply.
+- RemapPal metadata uses single-use reviewed authority bound to the exact SFF bytes and inventory plus registry hash, revision, archive identity, ordered draft, links, and diagnostics. Ambiguous or conflicting mappings stop, missing coordinates remain explicit metadata-only warnings, registry compare-and-swap prevents stale writes, reciprocal domain links update atomically, existing bindings are preserved, and the active SFF bytes are never changed by this metadata flow.
+
+## 0.79.177
+
+- Palette Workshop now offers a compact **Find useful animation** action beside the live preview. It scores the current exact index or trusted named group against the uniquely assigned AIR/SFF pair and presents up to eight visual suggestions; users never need to know an Action number.
+- Suggestions report visible matching pixels, distinct sprites, and authored frames. Repeated frames do not inflate the primary score, while linked palettes, truecolor sprites, missing or ambiguous references, and unknown runtime `RemapPal` behavior remain explicit.
+- **Use Preview** switches the existing embedded-versus-draft A/B view to the selected Action; **Open in AIR Viewer** opens that exact Action. Without a unique AIR owner, a complete bounded scan offers clearly labelled static-sprite matches instead of guessing.
+- Canonical paths, file hashes, exact DEF assignments, physical palette identity, working colors, and index/group membership are sealed and revalidated. Dirty, changed, oversized, incomplete, stale, replayed, or cross-scope evidence fails closed, and the workflow never writes project files.
+- Results use one narrow, keyboard-accessible column with a visible scope label and accessible status. Failed searches return control immediately instead of leaving the button busy.
+
+## 0.79.176
+
+- AIR source handoffs now require the exact Code Navigation header to confirm a visible, full-label **Return to AIR Browser** banner for the exact routed source. If that acknowledgement is missing or points at another file, the source handoff fails closed and restores the originating AIR Actions Browser.
+- The AIR return banner sits above the text-tab row, stacks vertically below 520 px, and does not depend on editor-title space, CodeLens, the status bar, or horizontal scrolling. **Close Source & Return** retains native dirty-close cancellation.
+- Closing or invalidating the originating browser no longer makes the escape row vanish. The exact bounded source-to-AIR identity becomes a temporary tombstone and the header shows **AIR Actions Browser closed** with **Reopen AIR Actions Browser**. Reopen uses only that sealed AIR path and never searches for another AIR or opens a picker; closing the routed source clears the tombstone.
+- Palette Workshop's existing quick-edit Scope selector now includes trusted named index groups without adding another pane or button stack. Group focus, copy, paste, restore/reset, randomize, and Undo operate only on freshly host-resolved exact membership; protected/transparent indices remain untouched and status reports applied versus skipped counts.
+- Named-group payloads expose identity evidence and counts but never authoritative palette indices. Wrong-palette, stale-authority, changed-membership, malformed, duplicate, out-of-range, and same-size-different-group cases fail closed; lost authority falls back to Current index with an assertive notice. All work remains in the retained Palette Workshop draft with no SFF, template, metadata, clipboard, or autosave write.
+
+## 0.79.175
+
+- SFF Creator now connects Palette Workshop's saved exact-color replacement rules to intake through one compact, collapsed **Saved color rules** card in the existing final-review step. Nothing is applied automatically: exact matches can be accepted individually or together, ignored for this intake, or opened in the canonical Palette Workshop.
+- Suggestions show source and destination swatches, the exact destination index, and affected image/pixel counts. Stale or conflicting rules stay visible with bounded reasons and truthful omitted counts instead of silently disappearing.
+- Opening Palette Workshop and returning a reviewed resolution are both single-use, exact-evidence handoffs. Target identity and bytes, master palette, ordered source bytes and decoded pixels, scan, rule registry, conversion profile, Creator generation, and draft revision are rechecked before use.
+- Accepted decisions change only the retained Creator draft. Source images, the active SFF, and the rule registry remain untouched; final manifest/package creation revalidates the sealed decision and records its rule provenance.
+- File, pixel, rule, occurrence, registry, and nested evidence budgets fail closed before expensive hashing or parsing. Post-prompt mutation, panel disposal, forged/replayed routes, same-byte different targets, stale returns, and oversized aggregate payloads are covered by regression tests.
+- New Dev approved the completed backend and UI slice with no remaining P0/P1 findings. All 147 selected Palette Workshop and SFF Creator suites pass, including the full recovery, replay, persistence, authority, narrow-layout, and accessibility set.
+
+## 0.79.174
+
+- Palette Workshop Advanced → Sync / Remap / Repair now provides a compact guided **Master domains & bindings** editor. Each domain requires an explicit unique master palette, palette membership, and at least one live sprite-group binding; optional RemapPal links remain visible and named.
+- Domain changes use **Review changes → Apply reviewed metadata**. The host validates the exact SFF inventory, generates new IDs, shows exact delete-cascade references, and applies the domain, reciprocal RemapPal links, and sprite-group bindings atomically in one metadata revision. The active SFF is never written by this workflow.
+- Review authority is single-use, expiring, bound to the exact SFF and metadata revision, and revoked by a newer review, refresh, publish, or panel disposal. Stale SFF/registry evidence, missing or ambiguous palettes, missing sprite groups, forged/replayed tokens, oversized registries, and unsafe paths fail closed.
+- The SFF browser keeps domain filters and swatch previews read-only and routes editing to the canonical Palette Workshop section. It no longer silently chooses the first domain or owns duplicate domain/binding mutation controls.
+- New Dev’s post-review caught and closed empty-binding, hidden-cascade, post-commit truthfulness, review-lifecycle, and registry-size edge cases. All 92 Palette-focused suites pass, along with SFF-browser, accessibility, command-contract, syntax, and direct-write audits.
+
+## 0.79.173
+
+- AIR Actions Browser source navigation now requires the standard Code Navigation text header instead of leaving a raw native editor as the primary source view. Routed AIR/ZSS/CNS sources keep visible **← AIR** and **×** controls in the compact header, including narrow auxiliary layouts.
+- If the header cannot be attached, IKEMaker restores the exact AIR Actions Browser rather than leaving the source editor in front without a dependable escape route. Existing browser tab, selection, filters, and persisted view state remain owned by the retained browser.
+- `Alt+Left` returns from an exact routed source to its originating AIR Actions Browser. CodeLens, editor-title, and status-bar actions remain redundant fallbacks; normal close and dirty-close cancellation retain native behavior.
+- New Dev identified the raw-editor lifecycle gap before implementation, then caught the CodeLens, retained-tab, and shared-owner edge cases during post-review. Focused AIR source, collision-reference, hit-region, character-context, narrow-header, toolbar, and capability tests pass.
+
+## 0.79.171
+
+- Command & Movelist can now export selected saved presets and import selected presets through reusable `.inp2` files. The compact, collapsed **Share saved presets** area sits beside the preset shelf, announces status accessibly, and becomes one vertical button column in narrow docked windows without adding toolbar clutter.
+- `.inp2` files use a strict data-only schema containing only preset names and exact native command text. Internal IDs, paths, glyph mappings, generated code, and project data are never exported. Strict UTF-8, duplicate-key, field, count, name, per-preset, aggregate, and native-command checks reject malformed or oversized files before review.
+- Import explicitly selects presets and resolves every case-insensitive name conflict with **Keep existing**, **Replace existing**, **Keep both** with a reviewed unique name, or **Cancel entire import**. Replace retains the existing identity; new entries receive collision-checked cryptographic identities rather than clock-based IDs.
+- Compatibility is recomputed against the exact active target. Nightly broad-direction presets can be retained on Stable for future use, but are visibly unavailable, not preselected, and cannot be applied until a verified supporting Nightly target is active.
+- Import authority binds the exact file hash, workspace-preset snapshot, target capabilities, selection plan, session, and generation. The source, store, and target are rechecked immediately before the serialized write, and workspace storage is independently read back afterward. Export uses transactional replacement plus exact-byte/hash reopen verification.
+- New Dev approved the slice with no release blocker. All 25 Commands/glyph test files pass, including a host lifecycle test proving that a changed `.inp2` source fails closed without editing presets or character files.
+
+## 0.79.170
+
+- AIR browser source navigation no longer opens a trapped native editor in a compact auxiliary window. IKEMaker-owned floated browsers return to the main workbench before source opens; manually detached browsers switch focus to main without merging unrelated auxiliary windows.
+- Non-owned AIR browser windows never disable the user's always-on-top choice, never invoke VS Code's merge-all restore command, and never claim that the browser moved. If main-window focus or owned restoration fails, the source stays closed and the exact AIR browser remains available.
+- Existing exact-line **← AIR** and **× Source** routes remain active for the opened source. Dirty close cancellation, normal tab/window close, source drift, and concurrent handoffs retain their previous fail-closed behavior.
+- New Dev approved the correction with no remaining P0/P1 blocker. All 86 AIR-focused test files pass.
+
+## 0.79.169
+
+- Command & Movelist now exposes verified Nightly broad-direction/string analysis only when both the exact target is Nightly and the matching capability is present. Stable, ownerless, legacy-flag, and contradictory capability snapshots remain private and show the correct unsupported-target diagnostic.
+- Glyph catalog intake now bounds configuration/mapping text, mapping rows and tokens, SFF bytes and declared entries, sprite dimensions/pixels, decoded sprites, and the complete serialized preview payload before expensive work. Repeated mappings can no longer multiply one decoded image beyond the browser budget.
+- The compact Glyph source area adds **Open Mapping Source** and **Open Glyph SFF**. Both resolve from the current config→motif assignment, use content hashes rather than timestamps, permit the expected focus transfer, and reject reassignment, same-size mutation, disposal, or stale generations.
+- Workspace command presets now use a strict data-only schema with per-name, per-preset, count, and aggregate limits. Save/delete operations serialize, compare-and-swap after prompts, and preserve the prior store on malformed data, races, or update failure.
+- The glyph source actions wrap and become one vertical column in narrow docked browsers. New Dev approved the slice with no remaining P0/P1 findings after the focused Commands/glyphs checkpoint passed.
+
+## 0.79.168
+
+- AIR source routes now register their exact browser return/close handoff before the native editor renders. Detached and narrow source windows therefore show **← AIR** and **× Source** immediately instead of trapping the user in the source editor.
+- Every main AIR source route uses the same exact-line escape handoff. A failed or invalid editor open rolls back only its own provisional route, so an older delayed failure cannot erase a newer successful browser route.
+- **× Source** now verifies that the editor really closed. Canceling an unsaved-file prompt leaves the source and its escape controls intact; successful close returns to the originating AIR browser without reopening closed surfaces.
+- Palette Library duplicate, rename, and delete operations now revalidate source bytes during commit and roll back moved files when either source or manifest authority changes. Active Palette Workshop candidates and the SFF remain unchanged on failure.
+- Palette Library save makes ACT alpha loss explicit, distinguishes tray removal from destructive file deletion, and surfaces the exact recovery receipt in the compact narrow-window flow.
+- New Dev approved both slices. All 91 AIR-focused tests and all 102 Palette-focused tests pass.
+
+## 0.79.167
+
+- AIR source handoffs can no longer strand a user in a narrow auxiliary editor. Routed sources display compact native **← AIR** and **× Source** controls at the exact revealed code line; directly opened AIR files show the valid Return action only.
+- Restored floating AIR browsers retain their window state before source routing. If CodeLens is disabled for the target source, the route fails closed and keeps the AIR browser visible instead of opening a source without its window-local escape controls.
+- Exact collision, collision-query, character-context, and hit-region routes share the same handoff. Normal source/window close removes the handoff without reopening either surface.
+- New Dev approved the slice. All 92 AIR-focused tests and the text-editor companion test pass.
+
+## 0.79.166
+
+- AIR sources opened from the Actions Browser now retain an exact compact escape path even when the native editor activates before its browser handoff is registered. Routed AIR/ZSS/CNS sources show **← AIR** and **× Source**; a directly opened AIR file with a live browser shows only the valid Return action.
+- Browser open, close, invalidation, source close, and bounded handoff eviction update an already-visible text header without requiring a focus change. The status-bar and editor-title routes remain available and exact-source scoped.
+- Palette Workshop Advanced now previews exact visual-template topology migrations and retains a keyboard/pointer placement board for newly added swatches. The candidate writer verifies every migrated pixel, revalidates retained authority/topology, derives placement evidence server-side, and preserves topology-only migrations when new swatches are deferred.
+- New Dev approved both slices. All 99 Palette test files and all 90 AIR test files plus the text-companion lifecycle suite pass.
+
+## 0.79.165
+
+- Palette Workshop Advanced now has one first-class **Palette Family & Image Sync** work area across image templates, named RemapPal ranges, Quick Browse, forward/reverse image sync, review, and finish steps. The familiar Standard palette workflows remain unchanged.
+- Quick Browse can switch between the exact indexed SFF sprite and the exact verified indexed template image. Template previews preserve the retained index plane, dimensions, transparent index, and candidate palette without writing a source or project file.
+- Active, paused, summary, and recovery work remains visible when moving through guided steps. Recovery appears as an additive compact card, so saving an indexed copy or continuing in Palette Workshop never replaces the retained Quick Browse state.
+- The former Index Layout & Migration entry is retained only as a compatibility route into the new family work area; it can no longer open an empty panel. Apply/Enter restores focus to the color field, and the controls reflow for narrow docked browsers.
+- New Dev approved the slice after all 86 Palette-focused test files passed, including exact-template authority, stale-source rejection, Standard/Advanced reachability, narrow layout, Quick Browse state, and recovery actions.
+
+## 0.79.164
+
+- Palette Workshop now keeps explicitly added ACT and indexed-PNG files in a reusable **Added** source tray instead of forgetting them after one preview. Folder discoveries remain visibly read-only.
+- Added sources are available from Standard Add and Replace as well as Advanced Modify. Remove selected and Clear added change only the working tray; source files are never deleted and staged build rows remain intact.
+- The tray preserves keyboard focus, marks missing, staged, and active-preview entries, wraps cleanly in narrow docked browsers, and scopes Delete/Backspace removal to the focused tray list or row.
+- Explicit Added sources take priority over large folder scans. The exact active candidate is pinned by file identity—even at the 2,000-row display limit—so a shifted row can never inherit the preview state. Omitted Added and Folder counts are reported separately.
+- New Dev approved the retained-source lifecycle after saturation, removal, focus, Standard/Advanced reachability, candidate, preview-set, selective-transfer, and full Palette regression checks.
+
+## 0.79.163
+
+- AIR source editors opened from the Actions Browser now show a persistent **← AIR Browser** status-bar control, so the return route remains visible in narrow and detached editor windows even when title actions are hidden.
+- The control is bound to the exact live AIR browser that opened the source, carries an accessible label and tooltip, and disappears for unrelated editors.
+- Deleting, renaming, or closing the originating AIR now clears the source handoff immediately, preventing a visible but dead return control.
+- New Dev approved the source-return lifecycle after focused escape, first-use, reference-authority, narrow-window, and Palette Workspace smoke tests.
+
+## 0.79.162
+
+- Palette Workshop Standard Add now visibly guides **Choose & Stage → Build & Verify** and automatically advances to the exact reviewed plan after staging.
+- The retained build card identifies the target and staged additions/deletions/shifts, asks for one explicit writer, and reports cancellation, failure, validation, adoption, interruption, and cleanup-recovery states without implying that the active SFF changed.
+- Shared build authority now blocks empty plans, concurrent launches, cleanup-recovery replays, changed SFF targets, changed plan files, and plans reviewed against an older SFF before writer selection. Viewer, toolbar, roster, and command-palette routes share the same gate.
+- A validated built-in candidate remains separate; SprMake2 adoption remains explicit. An adopted build with failed cleanup is visibly locked to recovery instead of being offered as a retry.
+- New Dev approved the completed Palette build path after focused workflow, retained-session, command-route, authority, narrow-layout, and accessibility tests.
+
+## 0.79.161
+
+- Opening source from a floated AIR Actions Browser now restores the browser to the main window before opening the native editor. If restoration fails, no source editor is opened and the browser remains available.
+- Every AIR source route uses the same fail-closed handoff, including direct AIR, animation references, collision sources, hit-region sources, and character-context sources.
+- Source editors reached from the AIR browser expose an exact **Return to AIR Actions Browser** title action. The handoff also works for routed ZSS/CNS sources and is removed when its source or origin closes.
+- New Dev approved the corrected source lifecycle after focused route, title-action, close, and accessibility regression tests.
+
+## 0.79.160
+
+- Opening an AIR source from the narrow Actions Browser now always opens it beside the browser instead of replacing it. Invalid or same-column placement fails safely and returns focus to the browser.
+- The attached AIR text header shows a compact **AIR↩** control only while that exact AIR browser remains available; the browser also has explicit **Focus AIR Viewer**, **Open AIR Source Beside**, and **Close Browser** actions.
+- AIR browser selection, filters, focused control, and scroll position survive source handoffs. Closing respects dirty forms and in-progress operations.
+- Narrow AIR and Coding Assistance browsers now share a no-horizontal-overflow layout contract with wrapping navigation and readable collision summaries.
+- Palette Workshop scratch Save is enabled by the real toolbar model and host lifecycle, guided destination intent is retained, and narrow task/step controls wrap without hiding options.
+- New Dev approved both the AIR source-return and Palette accessibility slices after focused regression checks.
+
+## 0.79.159
+
+- Palette Workshop now opens on the Standard/Advanced task choices instead of an unexplained expert editing desk. Live sprite and embedded-palette tools appear only for the tasks that use them and remain available from **All tools…**.
+- Sprite previews now open at normal full-palette brightness. **Dim other indexes** is an explicit retained inspection choice; legacy implicit dim state is cleared.
+- Added a strict lossless scratch-palette document foundation (`.ikpalette.json`) with 256 exact RGBA entries, locked transparent index 0, semantic hashing, tamper rejection, and ACT alpha-loss checks for the guided create-palette flow.
+
+## 0.79.158
+
+- Rebuilds Palette Workshop around a compact Standard / Advanced split. Standard keeps familiar Add, Replace, View/Edit, Library, and batch palette work immediately available; Advanced reveals guided palette-layout, visual-template, synchronization, RemapPal, repair, and candidate-review paths without placing every option on one long screen.
+- Adds the shared universal header and single-window asset lifecycle to Palette Workshop, keeps the sprite preview and exact 16×16 embedded palette grid visible as a reusable work desk, and defaults an existing SFF to the familiar Standard tools.
+- Adds retained batch-plan evidence before writing, reviewed-durable migration output gates, reclaimable unused index controls, keyboard-accessible topology movement, honest standalone-source guidance, named RemapPal range authoring, and protection against silently discarding multi-range mappings.
+- Palette-focused workspace, controller, migration, domain, toolbar, registry, and accessibility checks pass, and New Dev approved the corrected slice. The repository-wide runner still stops at the separate pre-existing AIR viewer reuse harness failure.
+
+## 0.79.157
+
+- Fixes the universal Commands / Movelist action from SFF, AIR, SND, CMD, and assigned code contexts so it opens or focuses the exact character's existing Commands browser instead of falling into a broad character/file search.
+- Preserves exact CMD and code-reference selection during the handoff, reuses retained Commands drafts, and revalidates genuinely shared ownership after the bounded character choice.
+- Refuses an unassigned seeded asset with a clear ownership message; only an intentionally context-free command invocation may open the explicit character picker.
+
+## 0.79.156
+
+- Gives the attached text-editor companion enough default height for its text-specific file navigation while preserving the same compact shared menu and icon dimensions. The complete tab band is visible by default, with vertical reachability retained for unusually short or scaled windows.
+- Restores the compact Commands, Movelist, and Connections navigation below the universal toolbar, adds keyboard tab navigation and live status semantics, and wires the canonical Restart action without adding another toolbar.
+- Validates the exact ordered 26-slot Commands toolbar contract so stale or reordered toolbar state cannot silently update the wrong controls.
+
+## 0.79.155
+
+- Corrects the live VS Code editor-group orientation so Code Navigation occupies the compact upper row and the native text editor occupies the large lower row.
+- Removes the permanent header recreation watchdog. Closing Character Workbench, Close All, a window, or Code Navigation now stays closed; explicit open/resume, validated serialization, and one bounded startup recovery remain the only creation paths.
+- Makes one-time startup recovery yield to an in-progress character/context close, preventing delayed reopen races.
+
+## 0.79.154
+
+- Fixes the protected Code Navigation/text-editor composite so its compact universal header is stacked above the native text editor. Startup, restoration, and self-repair now share one layout contract and explicitly reject the former left/right split.
+- Keeps the header in editor group 1 and all native text/viewer tabs in group 2 while retaining the existing header protection and visual-viewer suspension behavior.
+
+## 0.79.139
+
+- Connects the exact selected AIR Clsn1/Clsn2 slot to project collision code without claiming a simulated runtime result. The compact browser distinguishes source-proven meanings, candidate consumers, unresolved evidence, scope, and runtime uncertainty.
+- Recognizes the template's configured `Clsn2[2]` High and `Clsn2[0]` Low meanings, per-state hit-reaction and immunity assignments, dynamic `ClsnVar` reads, group-wide `ClsnOverlap` checks, and bounded Function call chains. Invalid, stale, duplicate, dynamic, or unrelated-state evidence fails closed.
+- Adds a compact selected-box meaning badge and progressive Code connections details with one-use exact-source routes, bounded diagnostics, and collapsed overflow. The main AIR viewer's `Clsn ↗` action carries the selected Action, frame, group, and slot into this existing browser.
+- Reports authored-label/effective-slot mismatches, configured or proven indexes outside the frame's effective slots, inherited/default ownership, and saved/recovery `OverrideClsn` or `TransformClsn` context while keeping runtime participation explicitly unresolved.
+
+## 0.79.138
+
+- Matches Fighter Factory overlap selection in the AIR canvas: a normal click starts with the first box under the pointer, while double-clicking advances through every individual overlapping Clsn1, Clsn2, and Size box—including multiple nested boxes of the same kind—and wraps through the cycle.
+
+## 0.79.137
+
+- Fixes overlapping AIR canvas selection so an ordinary click reaches Clsn1/Clsn2 boxes before an intersecting Size pushbox. Exact pushbox corners remain directly draggable, and repeated clicks still cycle overlapping candidates.
+
+## 0.79.136
+
+- Reworks the compact AIR Actions Browser around understandable tasks: Inspect boxes, Transform, Code recipes, Copy boxes, and Code connections.
+- Explains Clsn1/Clsn2 and authored, effective, and state-code collision evidence in short dock-friendly context, while moving technical detail behind expandable sections.
+- Replaces cryptic empty screens with one clear reason and next action; hides or disables controls that cannot operate until exact source, target, frame, or proposal evidence exists.
+- Fixes the Copy boxes layout at narrow widths and adds accessible labels, roving keyboard tabs, visible focus, non-color selection state, responsive wrapping, and clear disabled styling across the browser.
+
+## 0.79.135
+- Routes Viewer Browser to the active AIR or SFF browser instead of Coding Assistance.
+- Reserves the Code Navigation header group for the header only; auxiliary browsers and asset viewers now use a separate viewer group.
+- Adds an enabled Show / Hide Native Editor Tabs & Scrollbars command to every viewer's More menu and enables safe global More-menu commands.
+
+## 0.79.134
+- Stacks X offset above Y offset beside the AIR directional pad so both numeric controls retain usable width in the compact rail.
+
+## 0.79.133
+
+- Adds an explicit `1⇄2` reviewed conversion for one or more selected local Clsn1/Clsn2 boxes. Ctrl-click the collision list or canvas to build the exact selection.
+- Adds an explicit `L⇄D` reviewed ownership conversion between frame-local and Default collision blocks. Inherited defaults are safely materialized locally; changes that can affect later frames are disclosed in the review.
+- Both conversions revalidate the open AIR document after confirmation, apply as one VS Code Undo operation, and remain unsaved until Save AIR. Ambiguous, read-only, stale, or unsafe shared-target conversions fail closed.
+
+## 0.79.132
+
+- Reflows the compact AIR editor so Group/Index lead into one horizontal offset row containing the Fighter Factory-style arrow pad and X/Y fields. Contact-box and connected-code actions now follow interpolation and precede the editing-status note.
+- Adds color- and glyph-distinct access for Clsn1, Clsn1Default, Clsn2, Clsn2Default, effective Size/push, and capability-gated Nightly Dummy collision workflows.
+- Shows effective Size geometry on every frame by default, remembers the toggle and preview pose, distinguishes overridden Size with a dashed baseline, and labels whether the current preview comes from a frame override or character sizebox.
+- Adds compact Animation, Collision, and AIR-source connectors backed by the existing exact/unresolved reference system.
+
+## 0.79.131
+
+- Restores the missing Fighter Factory-style four-way offset pad in the compact AIR frame editor. Each arrow moves the current element one AIR pixel and uses the normal automatic, undoable AIR edit path.
+- Adds a visible compact contact-box action row for Clsn1, Clsn2, reviewed deletion, frame/action scopes, type/default ownership, previous-frame copy, and reuse workflows. Complex or shared operations continue in the exact collision browser instead of guessing at source ownership.
+- Adds pan- and zoom-aware pixel rulers along the top and left edges of both AIR animation and SFF sprite canvases.
+
 **Development and AI transparency:** IKEMaker is designed and directed by JustNoPoint (JNP), with OpenAI Codex used extensively to write code, review changes, and assist with testing and documentation. AI assistance is an explicit part of this project's development process. It does not mean every feature has been verified; release notes distinguish completed checks from known issues and outstanding testing.
 
 JustNoPoint brings years of hands-on fighting-game development, including writing and extensively reworking code across approximately 20 complex HDBZ characters as part of a full game. IKEMaker's direction draws on that experience: recognizing and adapting code in context, connecting related systems, and reducing the need to recall syntax from a blank file.
@@ -17,7 +340,79 @@ Upgrading IKEMaker does not remove or disable a Lua extension already installed,
 
 ## Source history
 
+Version 0.79.130 places the existing read-only AIR onion-skin preview directly in the compact selected-frame icon row. Its ◉ button cycles Off, one adjacent frame on each side, and two adjacent frames on each side; the icon shows the active depth, mirrors the authoritative toolbar control, persists with the AIR view, and refreshes the canvas immediately. The Animations menu retains the same action.
+
+Version 0.79.129 adds the clarified Fighter Factory-style AIR workflows. Compact field buttons apply the selected frame's offset, time, flip, transparency, scale, or angle to all following elements through exact frame tokens, reviewed source authority, one native Undo edit, and a modal target summary. Angle receives the same forward-application affordance even though Fighter Factory omits it. The compact Alignment Tool offsets every element in explicitly selected authored animations while excluding read-only Copy Action aliases. A persistent ◆ button and the Animations menu open the selected element in IKEMEN collision tools, exposing indexed properties, Dummy collision when supported, overlap/contact queries, TransformClsn scale/rotation/pivot, and controller bridges without crowding the main rail.
+
+Version 0.79.128 restores the labeled Fighter Factory-style AIR element controls to the main compact editor without duplicating source authority. Group/index, offsets, time, flip, transparency mode, source/destination alpha, scale, angle, LoopStart, and Blend/Offset/Scale/Angle interpolation edit the open AIR document with VS Code Undo. Numeric spinner arrows remain visible without hover. Directive edits preserve collision blocks and attached comments, and unsafe or ambiguous ownership stops instead of guessing. The unlabeled colored Fighter Factory action icons remain intentionally unmapped until their tooltips and exact behavior are confirmed.
+
+Version 0.79.127 keeps cross-viewer SFF/AIR/SND toolbar navigation in the source visual viewer's current editor group. Opening AIR from SFF now creates or reveals an AIR tab alongside the visual viewers instead of allowing the active native text-editor group beneath Code Navigation to capture it.
+
+Version 0.79.126 carries the Fighter Factory-style axis cross through the SFF viewer's post-load compact-sidebar reconstruction. The visible Sprite Controls rail now retains the cross container instead of flattening the relocated authoritative buttons back into an L-shaped flow.
+
+Version 0.79.125 arranges the SFF sprite-axis nudge buttons as a compact Fighter Factory-style directional cross: up above, left and right across the middle, and down below. The controls retain immediate one-pixel preview updates and the existing debounced safe-save behavior.
+
+Version 0.79.124 removes the misleading red **Closed** state from Code Navigation tabs: a file that remains reachable through the connected header is available, whether or not VS Code currently has its document buffer loaded. Tabs now have stable colors by file family, and their compact second line identifies meaningful ownership—**Character**, **Template**, **Shared**, **Stage**, **Screenpack**, or **Connected**—followed only by actionable state such as **Missing**, **Unsaved**, **Warning**, or **Error**.
+
+Version 0.79.123 places the Header-Only Text Layout toggle where it belongs: one compact, pressed-state-aware Code Navigation icon directly beside the tab-scroll arrows and slider, with the same option under **More**. Code Navigation's shallow header menus now expand as compact multi-column menus without their own vertical scrollbar; full-height visual viewers retain their existing menu layout.
+
+Version 0.79.122 adds the opt-in **Header-Only Text Layout**. It clearly warns that VS Code's native editor tabs and editor scrollbars are workspace-wide settings, preserves their exact prior workspace values before hiding them, and restores only values that were not independently changed while the mode was active. The IKEMaker Code Navigation toolbar and one-row scrollable tab header remain visible above genuine native editors. Lua files participate by filename rather than by ownership of the language service, so a separately installed Lua extension retains syntax coloring, diagnostics, completion, Undo, and saving. Character discovery now includes character-local `.lua` files in the same Code Navigation header even when they are not DEF-assigned.
+
+Version 0.79.121 tests the Coding Workspace as three coordinated surfaces: genuine VS Code text-editor tabs retain native syntax coloring, diagnostics, completions, Undo, and saving; a persistent Code Navigation header owns the same dropdown and invariant icon toolbars used by the visual viewers, followed by duplicated left/right tab-strip scroll controls on both sides of a horizontal scroll-position slider and one non-wrapping synchronized text-tab row; and a separate toolbar-free Coding Assistance Browser owns Code Navigator, project-data maps, recipes, controllers, Problems, search, and other expandable assistance screens. The arrows and slider move only the visible tab-strip viewport, while clicking a header tab activates its native text document. Slider dragging uses immediate scrolling so the tab row follows the thumb continuously instead of waiting for release; discrete arrow clicks remain smoothly animated. Clicking a genuine native editor tab keeps the header selection synchronized. Character Essentials and the explicit **Open Coding Viewer** command use this native workspace; the retired webview editor remains only for safe restoration and source regression coverage. Native remains the traditional-editor-only option. This build also repairs legacy restored navigation state that pointed native text into the Code Navigation group, restores AIR startup by declaring onion-skin state before initial persistence and rendering, and suppresses browser scrollbars around the Code Navigation header.
+
+Version 0.79.114 makes Text Editor Viewer mean an editable integrated coding surface. Explicit Open Coding Viewer actions always open or reuse the integrated Visual / Source / Split viewer instead of falling back to ordinary VS Code tabs because of the general presentation preference. The shared asset-viewer button now resolves a connected source into that integrated viewer, while Open Full Text remains the explicit escape hatch to the native editor. DEF and AIR retain their specialist visual launch cards but are now directly editable and saveable in Source/Split mode alongside ZSS, CNS, CMD and other supported authoring sources. Ordinary unconfigured TXT files remain native-only; opted-in code TXT files remain supported.
+
+Version 0.79.113 makes Character Essentials choose its visual asset destination once, then explicitly anchors SFF, AIR and every connected SND viewer to that same editor group. After the first visual tab resolves VS Code's symbolic “beside” placement to a real group, later viewers reuse that concrete group instead of each interpreting “beside” as a request for another pane. Direct single-viewer openings remain independently movable.
+
+Version 0.79.112 restores the hand-curated Quick Start section at the top of IKEMaker Tools after the canonical toolbar catalog had unintentionally replaced it. Open Character is again the first shortcut, followed by the common create, close, related-work, project, roster and launch actions. The complete Project/Edit/View/etc. catalog remains directly below Quick Start, so restoring the guided entry points does not remove toolbar parity or hide specialist tools.
+
+Version 0.79.111 refreshes the packaged extension so Character Essentials and Open All Character Code include the integrated grouped Coding Viewer that was present in reviewed source but absent from the previously installed 0.79.110 package. The route honors the first-run presentation preference: Integrated opens one cohesive Visual / Source / Split character viewer, Native retains ordinary VS Code text tabs, and Ask resolves once for the character task. DEF, AIR and connected ZSS/CNS/CMD sources retain exact character ownership and reuse one viewer; unsupported notes continue to open normally. Assigned AIR, SFF and SND viewers remain separate connected asset workspaces. Authoring Browser providers are stored without mutating VS Code's extension context, including hosts that make that object non-extensible. Focused activation, presentation, Character Essentials, text-toolbar and asset-routing regressions pass.
+
+Version 0.79.110 adds the guarded Ryu PSD reconstruction pass to SFF Creator. The author explicitly chooses separate indexing/master and display palettes, can protect the selected embedded master directly, and reconstructs bodies through the approved manifest with the current SFF as the exact axis/identity authority and fallback. Separate Layer 1 artwork uses base group +10000 with the same index and numeric axis. Missing Layer 1 pages are valid sparse entries rather than synthetic placeholders, so later identities never shift; palette-inexact layers are omitted and reported, while palette-inexact existing bodies are preserved for review. Full-canvas no-crop sources, immutable provenance, target backups, independent validation, the in-house test artifact, SprMake2 comparison, and final reviewed adoption remain part of the existing dual-writer safety path.
+
+The 0.79.109 SFF certification gate additionally limits aggregate decoded pixels, requires complete reviewed compression/crop/table-order evidence, rejects duplicate palette identities and noncanonical byte gaps, and isolates SprMake2's zero-filled padding and bounded unused offsets behind a named compatibility profile instead of weakening canonical built-in validation. For pre-release author testing, SFF Creator now builds the in-house test candidate first, rebuilds the same immutable specification with SprMake2, independently validates both, and requires semantic equivalence plus a final explicit confirmation. SprMake2 remains authoritative and updates the normal target SFF; only the exact in-house result is retained under an IKEMaker/backend-and-hash-labelled filename for hands-on comparison. This guarded workflow does not replace the outstanding real-IKEMEN and platform release gate.
+
 The reviewed 0.78.0 source was imported after its immutable prerelease as an honestly labeled baseline. The existing `v0.78.0` tag still identifies the original release commit and was not moved or rewritten. That baseline import removed personal path/name metadata and excluded the large prebuilt LuaLS VSIX from Git. Versions 0.78.1 through 0.78.4 are separate normal source commits; future release tags should identify their actual source commits.
+
+Version 0.79.109 completes another reviewed Phase 1 SFF slice. The SFF viewer's Change Image action now enters the shared Creator as an exact replacement plan, preserving identity, axis, palette, physical order and provenance instead of maintaining a second mutation path. Removing the final explicitly owned placeholder can delete its temporary palette and lifecycle record in the same validated atomic adoption, while remaining sprite/link/code references or changed review evidence keep it. Link indexes are bounds-checked, actual target-SFF sprites can serve as sealed automatic-axis references, and the runtime certification corpus now covers a deterministic empty archive, both reviewed crop orders, multihop image/palette links, all PNG filters, split image data and partial alpha. Axis-before-Crop now seals the exact cropped PNG and crop-origin axis delta before either backend runs; the bundled SprMake2 and built-in outputs are semantically golden-compared. A lossless SprMake2 adapter canonicalizes supported nonstandard PNG8 containers before its private build while retaining the exact approved original snapshot; partial palette alpha remains exact and clearly disables SprMake2 Build/Compare because that backend cannot preserve it. A fixed-seed 32-archive property matrix adds broad deterministic strict-validation coverage and a sealed aggregate corpus hash without weakening the remaining runtime/platform gate. Temporary ACT/PNG palettes now require an explicit Index or Reversed Photoshop table-order interpretation, which is reviewed, provenance-bound, and normalized identically for both backends. Creator Sources now has a bounded List / Contact Sheet switch with 48 hash-checked host-generated thumbnails per page; both modes share filters, marks and ordering, while exact numeric overrides remain in List mode. Its PNG/BMP/PCX preparation flow now previews the ordered old-to-new map, preserves originals, validates every copied or converted PNG before an atomic write, retains source/output hashes and format provenance, and cleans temporary conversion files. Standard indexed/RLE8 BMP, indexed PCX, 24/32-bit BMP and three-plane PCX conversion is in-house; configurable ImageMagick is only a fallback for uncommon variants. PNG-folder intake now explicitly chooses top-level or recursive scope, deterministically natural-sorts contained paths, skips links, fails whole batches at safety limits, and retains validated immutable working copies for restart recovery; no Creator intake route silently slices an over-limit batch. Missing rows remain visible, and imported plans open only explicit contained project-relative hints; one exact-hash relink action repairs unresolved rows without losing identity or reviewed overrides. Exact duplicate groups can be reviewed together or overridden per source. Mixed independent/share choices remain exact in the backend-neutral specification, while the package deliberately emits no runnable SprMake2 files because its one global duplicate switch cannot represent that plan. Portable SprMake2 CSV manifests and DEF packages can enter that same Creator review while preserving physical row order, identities, signed axes, autocrop, duplicate policy and source provenance. DEF intake supports both indexed-PNG-owned palettes and arbitrary per-row stored ACT assignments: every used table must be a contained, full `0,255` row with explicit `pal.reverseact`, exact hashes and a declared `sprite.usepal`; unused palette rows remain ignored. Creator List mode exposes those per-row palette assignments, and both its contact sheet and full axis/crop preview render the effective stored table rather than misleadingly showing the PNG's embedded colors. The built-in writer now treats the explicit stored palette as authoritative even when the PNG PLTE differs, matching physical SprMake2 semantics; deterministic goldens and the runtime-certification corpus cover that case. Partial ranges, missing tables, changed bytes, duplicate IDs, collisions and unknown table order fail closed. Creator's pre-release default builds and canonically validates the in-house test archive first, then runs and validates SprMake2 against the identical reviewed specification, requires semantic equivalence, records both hashes and the comparison report, and asks once more before atomically applying the exact SprMake2 candidate to the normal target. Only the built-in test result receives a separate IKEMaker/backend-and-hash-labelled filename. A mismatch, backend failure, cancellation or target change updates nothing. The direct SprMake2 build and legacy editable-text route remain available. IKEMaker and the separately packaged IkeMiner now each expose their own dropdown/actions plus one compact, failure-safe switch to the other extension.
+
+Version 0.79.108 deepens the Phase 1 SFF safety path. The runtime-certification fixture kit now emits a sealed, manifest-bound result ledger and runbook for Windows/Linux IKEMEN checks without enabling the built-in writer. SFF Creator also offers explicit, per-source automatic-axis review using silhouette anchors, a trusted reference, or reference consensus. Suggestions use the final crop coordinate space, low-confidence rows are opt-in, every accepted result requires visual preview approval, and a sealed evidence sidecar is bound to the immutable build specification and receipt.
+
+Version 0.79.107 adds the companion switch between the separate IKEMaker and IkeMiner extensions. IKEMaker exposes IkeMiner in its Tools menu and compact quick-icon row, while safely keeping the authoring workspace open when the private companion is unavailable.
+
+Version 0.79.106 completes the current viewer-cohesion pass. Shared dropdowns can extend beyond compact headers without being clipped, quick-button rows wrap instead of scrolling, and redundant visible zoom sliders are retired while Fit, 100%, and mouse-wheel zoom remain. Move Lab routes its former Advanced Tools actions through the shared Tools dropdown. Stage and Screenpack workspaces now use compact left-rail actions, previous/next navigation, selection sliders, readable selection status, and collapsed specialty controls without duplicating command ownership.
+
+Version 0.79.105 brings the cohesive toolbar model to normal text editors. Supported ZSS, CNS/ST, CMD/INP/JNP/DAT, AIR, DEF, Lua, and explicitly opted-in code TXT editors receive no more than four context-aware title actions, one nested IKEMaker right-click menu, searchable Actions access, and an optional companion toolbar that follows the active supported editor only while open. DEF roles choose character, stage, roster, or screenpack tools rather than showing every unrelated command. Ordinary TXT files remain untouched, existing commands retain mutation ownership, and automatic AIR companion opening is now off by default.
+
+Version 0.79.104 begins the all-viewer cohesion rollout. Every launch-control viewer now exposes the complete guarded SFF, AIR, and SND menus together with core Stage and Screenpack menus. Move Lab moves its persistent quick actions above Attack Library and adds a dedicated state/move slider with previous and next controls, separate from AIR playback and zoom.
+
+Version 0.79.103 moves the SFF quick-control sizing into the viewer's security-approved shared stylesheet. The earlier dynamically inserted rule was blocked by the webview content-security policy, leaving emoji-bearing SFF buttons at their natural widths. Every SFF quick action now receives the same enforced 28-by-28-pixel box as AIR and SND.
+
+Version 0.79.102 makes the AIR, SFF, and SND quick sidebars visually cohesive. Quick actions use fixed 28-pixel square icon buttons with detailed hover explanations; AIR frame actions now join the compact animation row instead of using oversized text controls, and SND file Open/Add actions have their own compact row. SFF axis arrows automatically batch nearby movements into a safe save, while typed axis values save on Enter or when leaving the field. The redundant visible Apply Axis button is removed.
+
+Version 0.79.101 aligns the SND workspace hierarchy with AIR and SFF. The left Organize rail now owns archive selection, Fighter Factory-style primary actions, archive navigation, group navigation, sorting, and quality filters. The center remains focused on playback and waveform editing. The Native Sound Controller bridge owns the right rail, with the Sounds list directly beneath it instead of stranded below the group list. Current group and sound rows identify their owning SND filename. A Sound file filter can show the current archive, one configured profile archive, or a catalog of all connected archives; every connected catalog row includes its source filename and opens the owning SND before editing.
+
+Version 0.79.100 consolidates the SND workspace under one page-level scrollbar: Organize, Sounds, Preview, and sound tools remain readable columns without independently trapping scroll input. Fighter Factory-style add/delete/change/export/play/loop/pause/stop controls remain both inside the viewer and in the persistent toolbar. The waveform adds working fit, horizontal zoom, pan, amplitude, and fit-to-selection controls above its playback slider. A new sound-file switcher groups configured archives as shared game sounds, character-specific FX, language voices, custom voice packs, or legacy combined archives. Guided setup can add any of those archive types with language metadata and reviewed CommonFX prefixes; single-SND projects continue to work without adopting the split workflow.
+
+Version 0.79.99 clarifies AIR operation scope and completes the SND viewer control pass. Whole-animation actions and selected-frame actions now form two labeled, hover-explained rows above the animation and frame sliders, so similar-looking Duplicate and Delete controls cannot be confused. The SND viewer gains previous/next controls around its archive slider, Fighter Factory-style sound actions, a persisted auto-play-while-browsing toggle beside Play, and a larger interactive waveform. SND guidance moves into the shared Help menu, while portable profile, build, reference, and CommonFX actions move into Sounds with detailed hover explanations; duplicated right-pane action buttons are retired. All shared viewer menu categories retain cross-viewer parity.
+
+Version 0.79.98 standardizes every SFF, AIR, and SND shortcut to the compact AIR-style icon size and applies semantic color families with per-action shades. Each asset viewer receives a subtle distinct surface tint; **IKEMaker › Viewer Color Coding** disables both the tint and semantic colors. The Actions search explains that Escape closes its window and restores viewer focus. SND gains persistent add/remove/replace and play/loop/pause/stop icons, preserves its volume and playback sliders, and automatically selects the first available sound so the waveform is populated immediately.
+
+Version 0.79.97 adds a compact, persistent two-row viewer toolbar backed by the same guarded actions as the dropdown menus. It includes Game, Infinite VS, and Training launch shortcuts, Go to Line, Comment / Uncomment Selected Lines, and direct SFF/AIR browser switches. The SFF and AIR browsers now open only when requested, bind directly to the current character asset without a file picker, and close from the same switch. Legacy duplicated header buttons are visually retired while their handlers remain available as a compatibility fallback; viewer navigation stays beside the left-side selection controls and canvas zoom remains mouse-driven.
+
+Version 0.79.96 moves the former standalone More dialog into a peer **More** dropdown beside the other viewer menus. Connected source code, asset auto-save, workspace mode, layout, reset-layout, and toolbar customization are now explicit menu entries. Every established shared toolbar shortcut is also represented in exactly one dropdown category, and an automated coverage check prevents later toolbar additions from becoming menu-only omissions. Existing direct buttons remain available during testing.
+
+Version 0.79.95 gives the SFF, AIR, and SND viewers matching dropdown choices across Edit, View, Palettes, Sprites, Animations, Sounds, Review, Build, Tools, and Help. A viewer-owned action selected elsewhere opens the connected owning viewer, waits for it to be ready, rechecks the destination control, and invokes only its allowlisted stable action identity. Dirty or busy handoffs, unknown actions, and routing loops stop safely. Project remains deliberately asset-specific so New, Open, and Save cannot target the wrong archive; SND does not claim a direct archive Save. Existing viewer buttons remain available.
+
+Version 0.79.94 packages the shared IKEMaker dropdown menu bar that was completed after the earlier 0.79.93 package was built. SFF, AIR, and SND retain their existing buttons while adding contextual Project, Edit, View, Palettes, Sprites, Animations, Sounds, Review, Build, Tools, and Help menus. The menu uses an explicit command allowlist, disables unavailable contextual actions, rejects duplicate action identities, supports keyboard navigation, and adds searchable actions, favorites, recent actions, and safe repeat where applicable. Opening or searching a menu does not modify project files.
+
+Version 0.79.21 adds **ZSS Structure & Logic** directly below the State Controller groups. It provides searchable, tab-through starting structures for conditions, selection, loops, functions, values, StateDefs, and common safety patterns. Supported structures insert at the cursor or wrap selected complete lines while preserving their relative indentation. The editor context menu adds fast wrappers for `if`, `if / else`, `for`, and target checks. The accompanying recognition-first learning criteria treats daily controller or logic review as useful progress without requiring an exercise, while retaining the complete catalog for project-led learning.
+
+Version 0.79.22 begins the **Authoring Catalog** foundation. The State Controllers sidebar now provides compact Favorites, Recent items, and shortcuts instead of attempting to display every reusable item. Dedicated Recipe Library, Project Symbols & Contracts, Example Templates, and Authoring Favorites pages share stable catalog identities and provenance. Initial recipes are universal, modular IKEMEN starting points; SF6, Darkstalkers, Darkstalkers 4, and Hyper Dragon Ball Z are present as honestly labeled offline reference-pack foundations while their full manifests and licensing are reviewed.
+
+Version 0.79.23 adds the current SF6 template **Standing Light Punch (sLP)** as the first real project recipe. It identifies the configured move, move-local State 200, command route, constants, wrapper function, shared light-punch implementation, State -4 lifecycle, cancel routes, and required AIR/SND assets without copying shared infrastructure into every move. Safe move-local sections can be inserted individually; shared project systems remain clearly labeled reference dependencies.
+
+Version 0.79.34 adds **Return to Main Window** directly to the floating workspace, using VS Code's native editor-restoration command. Version 0.79.33 added the reviewed AIR-style floating workspace prototype: one movable VS Code editor surface containing four IKEMaker-owned docking zones with draggable tabs, tab grouping, split resizing, collapse/restore controls, keyboard movement alternatives, narrow-window stacking, and workspace layout persistence. Both prototype routes remain non-writing.
 
 Version 0.79.20 fixes palette-library folder selection when IKEMaker is opened without a VS Code workspace. Palette libraries now save to the current workspace folder when one owns the asset, to workspace settings when a workspace is open, and to user settings for standalone files with no workspace. The same safe fallback is shared by adjacent SFF naming/build-profile and external image/audio editor preferences so they do not reproduce the failure. Palette Workspace's **Load Palettes / Images** picker also remembers the last successfully used source folder globally and returns there after VS Code restarts; cancelling the picker or losing that folder does not change project files or trigger an import. **Choose Palette Files…** beside **Choose Folder…** adds any number of explicitly selected ACT/indexed-PNG sources to the same reorderable Append/Insert review without replacing the configured library folder. Outside paths are accepted only when selected through the native picker during that viewer session, and selection alone never changes the SFF or staged plan.
 
@@ -36,6 +431,13 @@ Version 0.79.10 makes visual-editor persistence explicit. AIR, HitDef, Visual Co
 Version 0.79.9 is a critical AIR viewer hotfix for 0.79.8. Destination-color assembly had rewritten toolbar anchors before AIR-only controls were inserted, leaving required controls absent and stopping the viewer client before its animation model could render. AIR animations now display again, Open SFF retains its click binding and approved green SFF destination color, and regression checks require the AIR-only controls, shared toolbar, connected-viewer route, and Open SFF binding to survive final page generation. The complete 325-file source suite passes. The resizable-viewer-height and universal whole-editor vertical-scrolling requirements are recorded for later implementation; they are not claimed by this hotfix.
 
 Version 0.79.8 adds exact assigned Helper, Explod, and native Projectile creation sites to the shared Move Lab component browser. Each entry is bound to the character DEF, source file/hash, exact controller range/hash, kind, index, and enclosing StateDef/function. Nested ZSS execution paths and literal Root/Parent/P2 receiver names are displayed as context rather than inferred ownership. Selecting a creation site is read-only and never creates, converts, or rewrites code; Helper and Explod routes open their established specialist tools separately, while native Projectile remains exact-source navigation until a dedicated guarded editor exists. Every exact component also has a compact read-only catalog of its current assigned AIR actions with frame/tick totals, explicit LoopStart, and effective Clsn1/Clsn2 coverage. The user chooses one real action, that choice is remembered for the exact component revision, and opening it revalidates both the component and current AIR before handing off to the established AIR/Clsn workspace; IKEMaker never substitutes a StateDef/controller number as an animation guess or creates a second AIR write path. Direct HitDefs now summarize authored classic damage, pause, stun, slide, velocity, acceleration, and spark fields plus every other authored/custom option, while all mutation remains delegated to the existing guarded HitDef editor. The approved destination colors now have one shared accessible registry and are applied to universal AIR, SFF, SND, code, Maps, and recognized specialist routes; set `IKEMaker: Destination Colors` to `off` for neutral navigation controls without changing labels, focus behavior, routing, or files. Remaining screen-specific adoption stays explicit rather than silently claiming complete recoloring. Stage and Screenpack workspaces can navigate a selected background/UI element to its exact SFF sprite or embedded Begin Action; destination editors retain all mutation ownership and changed source is refreshed instead of retargeted. CNS/ZSS, shared files, unsaved editor text, and unsaved AIR text use the same guarded discovery path. The full source suite passes; no package, installation, live-game edit, or engine-runtime claim is made.
+
+The Command & Movelist input timeline uses top-level syntax boundaries rather
+than blindly splitting every comma, `+`, or `|`. Quoted and nested custom-parser
+expressions therefore remain one literal editable step, while ordinary native
+MUGEN/IKEMEN sequences retain their existing behavior. The displayed timeline,
+draft-overlap review, diagnostics, and narrow step edits share that rule; no
+custom expression is normalized or rewritten merely because it is inspected.
 
 Version 0.79.7 hardens **Command & Movelist** as a convention-preserving authoring surface. Timeline insertion, replacement, removal and reordering now patch only the selected step rather than normalizing every comma, tab and space. Reviewed Apply changes only fields the author actually changed, preserving comments, unknown/custom parser options, omitted defaults, neighboring definitions and mixed line endings. CMD, INP and JNP title entry follows the current dirty document and caret; a reused visual editor selects the exact matching occurrence only when doing so will not discard an unapplied visual draft. Shared command files list every owning character—including owners without a displayed movelist—instead of silently preferring the configured character. **Commands & Movelist** is also visible from Simple/Workspace Home, while Player remains code-free. Glyph warnings remain advisory and never rewrite or block authored movelist text. The full 325-file source suite passes; no installed-package or engine-interaction claim is made.
 
@@ -56,6 +458,13 @@ Version 0.79.0 begins the bounded one-Move-Lab consolidation. The primary worksp
 Version 0.78.9 adds visible **Move Earlier** and **Move Later** controls for a single AIR timeline element. Reordering carries the exact raw frame block—including explicit collision blocks, LoopStart, interpolation, inline comments, CSV tails, whitespace, and mixed line endings—through one reviewed narrow Undo edit, while standalone comment/blank trivia stays anchored between element positions. Persistent collision-default boundaries, unknown directives, saved element-indexed push/runtime plans, multiple marked frames, and unfinished form or visual drafts block the move rather than silently changing ownership.
 
 Version 0.78.8 adds visible **New Action**, **Duplicate Action**, and counted **Delete Selected** controls to the AIR action list. New actions use reviewed starter-frame values even when the sprite will be assembled later. Duplication preserves the raw action body—including comments, directives, unknown lines, whitespace, and mixed line endings—and changes only the copied header number. All three paths respect unfinished visual drafts, recheck the exact open AIR after confirmation, use one narrow undoable edit, preserve neighboring standalone section comments, and never renumber references or clone runtime-plan metadata.
+
+New Action now opens one reviewed form instead of a chain of prompts. It suggests
+a free action number, prefills the current frame's sprite, offsets, timing and
+flags when available, checks conflicts immediately, and can add an optional
+one-line source comment and explicit `LoopStart`. The final confirmation states
+that the AIR edit does not create or modify an SFF sprite; the same canonical
+source-baseline, Undo and Auto Save contracts still apply.
 
 Version 0.78.7 adds a nested **Source / Visual Editor** for displayed movelists. It resolves the active game motif and real glyph SFF, renders loaded compound motion/button artwork, and lets authors append, insert, replace, remove, or reorder glyphs without rewriting surrounding names, notes, color tags, separators, unknown syntax, or untouched line endings. Both views share one recoverable draft and retain explicit Apply/source-conflict protection. Missing or unmapped glyph references receive navigable, non-blocking warnings because reported engine behavior may stop loading later movelist content; project/preview failures are labeled separately. Ambiguous contexts remain unresolved until the author chooses a game folder.
 
@@ -250,7 +659,121 @@ lightbulb. The bundled explanation states what the finding means and lists
 review steps without applying an automatic fix. Coverage includes redirect and
 team validity, negative-state timing, custom-state ownership, cross-entity
 writes, forced ordering, loops, optional namespaces, AIR timing synchronization,
-and authored-function lookup/order/signature problems.
+authored-function lookup/order/signature problems, and critical literal command
+equality or inequality references in ZSS or classic CNS that are missing from a completely resolved
+character CMD/INP/JNP catalog.
+These appear as error-level diagnostics beginning with **CRITICAL**, because an
+unresolved command reference can prevent IKEMEN from loading or running the
+character correctly.
+Missing-command checks use unsaved assigned-command text when available and
+remain silent when character ownership or any assigned command file is
+unresolved; IKEMaker never invents or automatically renames a command.
+While typing inside a literal `command = "..."` or `command != "..."` reference, ZSS and classic CNS
+offer the exact names from that same completely resolved command catalog. The
+list follows the authored fragment and inserts a name only when the author
+chooses it; comments, unrelated strings, unresolved ownership, and dynamic
+command expressions receive no guessed suggestions.
+Go to Definition on an exact literal command reference opens its assigned native
+definition. Intentional same-name press/release or other variants are all
+returned rather than silently choosing one; incomplete catalogs return no
+guessed destination. Hovering the reference summarizes every exact definition's
+native sequence, whole-command time, step window, file, and line without
+selecting a preferred variant.
+Opening Command & Movelist while the caret is inside a valid ZSS or classic CNS
+command reference selects the first exact same-case native definition and keeps
+its full same-name family navigation available. Reusing an editor retains its
+unapplied visual draft; it refuses to switch definitions if that would discard
+the current form.
+The missing-command lightbulb also offers **Open the character Command &
+Movelist editor**. It carries the invoking ZSS/CNS document into the existing
+owner-resolution route; it does not insert a placeholder or change either file.
+
+Authored ZSS function assistance uses the owning character's assigned ZSS files,
+including unsaved assigned documents. Typing after `call` offers authored names
+and named parameter placeholders; native Signature Help tracks the active
+top-level argument across balanced multiline calls, and hover shows every
+matching declaration and source. Function headers follow the engine's actual
+untyped grammar: arguments and named returns are variables, not declared types,
+and current IKEMEN does not support default parameter values. IKEMaker diagnoses
+type/default-looking header syntax instead of interpreting it as a contract.
+Call-site value kinds are shown only as content-free inferred evidence, with
+string evidence gated by the selected exact runtime-string capability.
+Definition, References, and rename use that same owner catalog. A dirty owner
+DEF, missing dependency, unreadable assigned file, or unassigned current ZSS
+makes the catalog incomplete and disables these claims instead of mixing
+same-named functions from unrelated characters. Explicitly classified custom-
+extension ZSS files follow the same owner checks. Function-call audits report a
+missing name only when it matches a configured project-owned prefix, and report
+an argument-count mismatch only from a complete, uniquely resolved catalog;
+duplicate declarations are exposed as ambiguity and are never silently chosen.
+Same-source duplicates are errors; cross-file duplicates explain that IKEMEN
+uses the first compiled declaration while refusing to guess that compile order.
+StateDef, map, and variable Definition/References now use the same complete
+owner-assigned catalog rather than a workspace-wide name match. Map rename also
+stays inside that catalog and stops when ownership is incomplete, preventing a
+same-named symbol in an unrelated character from being edited.
+
+Literal asset fields in ZSS also use the owning character's assigned AIR, SFF,
+and SND. Native completion offers verified AIR actions, character-owned sound
+group/index pairs, and direct sprite pairs only in recognized fields. Literal
+AIR and SND completion also follows uniquely resolved runtime CommonFX loaded by
+the active game, fight screen, or character DEF. Unprefixed HitDef sparks and
+sounds use the resolved F archive, explicit F preserves that alias, and a typed
+custom prefix offers only its exact archive. Viewer-only shared definitions and
+sound-profile records never become runtime code claims. Problems reports a
+missing literal only when its exact character or shared catalog is complete.
+Unsaved AIR text is authoritative; dirty assignment files or binary archives,
+missing control files, duplicate prefixes, negative sentinels, dynamic,
+commented, and string-looking references fail closed. No asset or code is
+rewritten, and CommonFX direct sprite-pair inference remains unsupported.
+Literal sound lifecycle diagnostics additionally identify proven endless
+`PlaySnd` loops on an omitted/`-1` automatic channel, global `StopSnd` channel
+`-1`, and `ModifySnd position` with an omitted/`-1` channel (documented as
+undefined). Dynamic expressions and possible same-channel interruption remain
+silent because their runtime intent cannot be proven statically.
+
+Adding a documented option from Visual Code Structure remains owned by that
+existing workspace, but now uses a byte-local insertion plan. It preserves all
+existing comments, duplicate/custom fields, spacing, and mixed line endings,
+shows the exact inserted bytes in a native preview, and revalidates the source
+URI, version, and complete text after both the value prompt and preview before
+one edit. Unknown/custom options remain untouched and are never synthesized.
+
+Secondary ZSS editor actions are grouped under one **IKEMaker ZSS** right-click
+submenu. Function and symbol collections reuse the searchable Project Symbols &
+Contracts browser, while ordinary completion, Signature Help, hover, Definition,
+Peek, References, and Problems remain native editor features. No function
+controls are duplicated into AIR, SFF, SND, Palette, or other viewers.
+Function cards in that browser also list literal **Called by** and **Calls from
+this function** relationships with exact source links. These are read-only
+observations; dynamic or unparsed calls are left unknown rather than guessed.
+The browser's **Suggest literal resource ID…** action checks Helper, Explod, or
+Projectile namespaces independently and reports the first unobserved whole
+number at or above a user-chosen starting point. It never inserts code and marks
+the result as only a candidate when ownership, source reads, or dynamic IDs keep
+the scan from proving the literal inventory complete.
+Rename-impact previews capture each indexed file revision. If any source changes
+after indexing—even away from the displayed occurrence—the report marks its rows
+**refresh required** instead of presenting the old locations as exact. Partial
+ownership or read failures are disclosed, and the report remains non-writing.
+**Contextual Recommendations…** is a manual-only action in the same IKEMaker ZSS
+submenu. It recognizes a small set of literal code contexts, searches the
+existing Authoring Catalog, and explains why each proposed structure or recipe
+section was offered. Comments, strings, and uncertain contexts produce nothing;
+project/reference material is promoted only through an explicit Favorite or
+Recent choice. Insertion still uses the existing catalog owner and revalidates
+the exact document version and selection after the picker closes. No automatic
+popup, background rewrite, or viewer control is added.
+
+Personal Example Shelf entries can now become guarded working examples without
+making the unverified bundled reference packs executable. On a current or
+uniquely relocated exact block, the user explicitly marks non-overlapping byte
+ranges, assigns each a function/state/map/AIR/SND/SFF role, and chooses values
+from the complete exact-owner catalogs. **Adapt & Insert** preserves every other
+byte and custom syntax literally, previews the result, and revalidates the
+example source, assignments, destination URI/version/text, grammar, and cursor
+before one unsaved Undoable insertion. It never infers placeholders, imports
+dependencies, or executes SF6/DS/DS4/HDBZ reference packs.
 
 The Visual Code Structure workspace has separate native structure paths for
 ZSS, CNS, and Lua. CNS is parsed as StateDef sections containing State
@@ -728,6 +1251,20 @@ and plays the selected entry. Selection, marks, loop, and volume are retained.
 Single sounds or a marked batch can be exported as WAV, and a configured audio
 editor such as Audacity can be launched on an extracted working copy.
 
+Playback inspection is non-destructive. Click the waveform or use the precise
+seek slider; Space/K toggles playback, J/L moves one second, Left/Right moves
+50 ms, and Home/End moves to the boundaries. A/B audition points show the exact
+range duration and can loop without changing the WAV. Quality filters find and
+mark clipping/near-clipping, leading/trailing silence, DC offset, PCM format
+outliers, duplicate identities, and unusual durations. The selected sound shows
+its bounded PCM analysis and peak; large entries use a bounded representative
+scan so archive opening stays responsive. Visible results can be marked,
+inverted, or copied as ordered `group,index` identities for code and review
+notes. These checks never normalize, trim, fade,
+resample, replace, or rebuild audio automatically. **Export A–B WAV** can write
+the reviewed PCM range to a new user-chosen file; it never changes the source
+WAV, loaded SND, or reviewed manifest.
+
 The portable `.ikemen-sound-profile.json` beside a character describes separate
 character-FX, language voice, custom voice, shared-FX, or legacy archives. It
 stores relative paths, globally safe character-qualified CommonFX prefixes, and
@@ -1087,6 +1624,9 @@ Audit Workspace for Frame and Entity Safety** from the Command Palette.
 
 The audit identifies:
 
+- literal `command = "name"` checks whose exact name is absent from the resolved
+  character command catalog (reported as an error because this can prevent the
+  character from loading or running correctly)
 - `enemy`, `partner`, `target`, `helper`, and `parent` redirects without a
   nearby existence guard
 - opponent reads without `numEnemy`
@@ -1096,8 +1636,9 @@ The audit identifies:
 - `targetState` without `numTarget` or a documented custom-state contract
 - loops with no obvious condition update or `break`, and redirected loops
 - `RunFirst` and `RunLast` ordering overrides
-- missing owned functions, argument mismatches, forward calls, and duplicate
-  declarations
+- missing functions inside a configured project-owned namespace, argument
+  mismatches for resolved declarations, forward calls, and duplicate declarations;
+  unknown engine/global/custom calls outside those namespaces remain silent
 - owned maps/functions outside the configured project namespaces
 - stale `firstActiveElement` constants after AIR startup or active-frame edits
 
@@ -1330,7 +1871,8 @@ its line treatment:
 
 The inspector should explain the following native features when they are found:
 
-- `OverrideClsn`: target group (`Clsn1`, `Clsn2`, or `Size`), target index,
+- `OverrideClsn`: target group (`Clsn1`, `Clsn2`, `Size`, or Nightly-only
+  `Dummy` when the project opts into Nightly), target index,
   whether the operation replaces, appends, removes one, removes all, or clears
   active overrides, and its resulting rectangle when resolvable.
 - `TransformClsn`: effective scale and angle.
@@ -1411,6 +1953,16 @@ defender Clsn2; ReversalDef uses attack-box interaction; missing Clsn2 has
 legacy compatibility implications; and Size geometry can be used for throws.
 Rectangles used only as render windows are not collision geometry and must not
 be presented as Clsn boxes merely because they use the same four-number shape.
+
+Projects explicitly assigned to a pinned Nightly target also receive `Dummy`
+in the existing `OverrideClsn`, `ClsnVar`, `ClsnOverlap`, and
+`ProjClsnOverlap` group pickers. `Dummy` is logic-only geometry with no inherent
+attack or hurt behavior, making it the preferred authoring choice for custom
+grab regions, proximity sensors, parry/armor zones, helper interactions, and
+other mechanic-only regions. Stable 1.0 remains the default: those options are
+hidden and generation rejects `Dummy` unless the project target is Nightly.
+Nightly capability expansion must continue through this same target-aware rule;
+it must never silently change the code emitted for a stable project.
 
 The **Runtime** tab implements the first static authoring bridge for these
 features. It can save action/element plans and generate reviewed native code
@@ -1523,17 +2075,173 @@ relative/absolute directions and neutral, warns about mixed step operators, and
 flags the project's offline-only `m` compatibility input. Suggested negative-edge
 counterparts are guidance only; the editor does not implement a second input
 history or invent gameplay routing policy.
+The timeline header continuously reports the selected step, total step count,
+its parsed input basis, and whether the internal step clipboard is ready.
+Timing references have an explicit **Use Step Time** action that changes only
+the current draft's `steptime` and participates in timeline Undo; they never
+replace the sequence or write source by themselves.
+
+The timeline also accepts a literal custom native step such as `~30$B+x` and
+inserts it before or after only where requested. Timeline Undo/Redo is draft-local,
+and the selected step supports keyboard duplication, removal and reordering. It
+also has an internal exact-step clipboard, explicit selected-step conversion
+between facing-relative B/F and absolute L/R notation, and reusable relative or
+absolute quarter-circle, double-quarter-circle, dragon-punch, half-circle,
+charge, full-circle, and dash motion paths. Facing-independent down/up charge is
+listed separately rather than implying a direction policy.
+The exact-step clipboard supports Copy, Cut, Paste Before/After, and Replace
+with Copied Step. Cut and replacement are each one timeline Undo action and
+retain the selected top-level step literally, including custom-parser syntax;
+they do not use the operating-system clipboard or touch source before Apply.
+Each conversion,
+complete path insertion, or explicit selected-step motion replacement is one
+reversible draft action; custom
+parser expressions are never converted. **Combine +** and **Alternative |** add
+the currently chosen native input to the selected step without making the author
+type relation syntax, while refusing to create mixed `+`/`|` steps. Explicit
+**Replace with Choice** changes only the selected step to the chosen native
+input; **Motion Replace** expands the chosen recipe in that exact position.
+Explicit **Whole Command → Relative** and **Whole Command → Absolute** actions
+apply the same parser-aware conversion across every recognized native step as
+one Undo action. They preserve modifiers, relations, separators, vertical and
+neutral directions, and custom parser expressions instead of normalizing the
+sequence.
+The larger motion library is searchable and keeps persistent Favorites plus a
+bounded Recent group. Those views clear independently and never select an input
+policy or modify the command draft.
+An author can also save the exact current sequence as a named, workspace-local
+custom motion recipe. Custom recipes participate in the same search,
+Favorites, Recents, insert-before/after, and selected-step replacement paths;
+their internal custom parser syntax is retained. Updating or deleting a custom
+recipe never edits a command draft or source file, and retained recipe count,
+name, sequence length, and step count are bounded.
+The native input picker has matching search, Favorites, Favorites-only, and
+successful-use Recents across absolute, relative, hold/neutral, and button
+groups. Merely browsing an input never changes recency or authored syntax.
+The selected-step modifier editor can explicitly apply or remove native hold
+(`/`), release (`~` with an optional frame count), exact/consecutive (`>`), and
+legacy direction (`$`) markers. Its scope can be the selected step or the whole
+command; either choice edits every recognized atom in scope, preserves unrelated
+modifiers and operator spacing, leaves custom parser syntax untouched, and
+remains one timeline Undo action. Input, motion, custom-syntax,
+history, clipboard, modifier, and arrangement tools are visually separated so
+the expanded workflow remains scannable instead of becoming one flat toolbar.
+Explicit
+**Mirror Step** and **Mirror Command** actions swap recognized left/right and
+back/forward directions as one reversible draft action while leaving custom
+parser steps untouched. An independent whole-sequence clipboard can restore the
+exact authored command—including custom parser text and spacing—as one Undo
+action without using the operating-system clipboard. Insertion,
+replacement, duplication, movement, removal, new definitions, and saved preset
+application preserve the surrounding separator and LF/CRLF/classic-CR
+conventions instead of normalizing the file. **Duplicate Draft as New** carries
+the complete current definition into a separate pending entry (including
+intentional same-name alternates), while **Revert Command Draft** reloads source
+values without touching the source file.
+Only one unapplied new-definition draft is retained at a time. While it exists,
+the normal add route becomes **Resume Pending Command** and other counterpart/
+duplicate generators are disabled, preventing a second generated draft from
+silently replacing the first. Apply or Revert restores the normal add route.
+Duplicated, release, and mirrored pending definitions retain an immutable origin
+snapshot in the recovered workspace draft. Their review panel shows each exact
+origin-versus-draft field change while continuing to identify the operation as a
+new definition that cannot overwrite its source command.
+**Restore Duplicate Origin** returns every field in that pending definition to
+the retained snapshot without discarding the pending entry or reopening,
+rewriting, or changing the source command.
+**Duplicate as Release Draft** goes one step further: it creates a reviewed,
+pending same-name counterpart and adds plain release syntax only to unreleased
+native button atoms in the final step. Directions, relations, custom parser
+syntax, and the original definition remain untouched; the new definition still
+requires explicit Apply.
+**Duplicate as Mirrored Draft** creates another reviewed same-name counterpart
+with only recognized native left/right and back/forward directions swapped.
+Modifiers, relations, separators, timing fields, and custom parser expressions
+are retained exactly; the original definition remains untouched and the mirrored
+counterpart still requires explicit Apply.
+The adjacent direction-basis choice can instead **Duplicate in Chosen Basis** as
+a facing-relative B/F or absolute L/R pending counterpart. It uses the same
+parser-aware conversion and origin comparison, disables no-op choices, and never
+changes the source definition.
 
 The command browser is organized for real authoring work: multi-step motions and
 sequences are listed first, while one-step buttons, directions, holds, and button
 combinations are grouped under a collapsed **Basic / raw inputs** section. Search,
-family filters, and persistent per-command hiding affect only the editor view and
-never delete or rewrite native command definitions.
+family filters, diagnostics-only and same-name-family views, a shown/total count,
+an exact-identity **Favorites** view/group, a bounded and clearable **Recently
+opened** view/group, and persistent per-command hiding affect only the editor
+view and never delete or rewrite native command definitions. Search covers
+names, native sequences, and diagnostic explanations; `/` focuses it and Escape
+clears it without changing a definition.
+The current editor also shows its exact same-name definition family and provides
+Previous/Next navigation among those source definitions. This makes intentional
+press/release and other paired definitions directly reviewable without changing
+the command-browser filter or conflating differently cased command names.
 
 The movelist side edits the assigned native DAT text, previews IKEMEN glyph tokens,
 lists `movelist`, `movelist1`, and later DEF assignments, and can copy a native
-`ChangeMovelist` example. Writes require a reviewed confirmation and are applied
+`ChangeMovelist` example. Every listed slot identifies the file currently being
+edited, can switch that slot into the same visual editor, and can open its exact
+assigned source; opening a secondary DAT resolves
+its owner from every movelist slot rather than guessing from the base slot. The
+exact secondary slot also survives editor restoration and back/forward history;
+switching files never discards an unapplied displayed-movelist draft.
+Writes require a reviewed confirmation and are applied
 through VS Code documents so normal editor undo/history remains available.
+Its nested visual editor supports exact selected-line text, loaded glyph
+insertion/replacement/reordering, line insertion/duplication/reordering, and
+draft-local Undo/Redo. An internal exact-line clipboard can move custom-tagged
+or intentionally empty lines between positions without requiring operating-system
+clipboard permission, using the destination's local line-ending convention.
+The glyph picker can be filtered by token, friendly name, or sprite identity and
+reports its shown/total count without filtering the movelist itself. Successfully
+used configured glyphs move into a bounded recent group for quick reuse, while
+deliberately pinned glyph favorites have their own group and Favorites-only
+view. Recents and favorites clear independently and never alter the DAT.
+The visual editor also announces the exact selected line, glyph position, and
+configured token as navigation changes, without modifying the draft.
+An exact glyph clipboard can copy a configured token and paste it before or
+after a glyph on another line, with one reversible visual-draft edit.
+Selected glyphs and exact movelist lines can also be cut into their respective
+internal clipboards as one reversible draft edit. A copied glyph can replace
+the selected configured glyph directly, preserving every surrounding tag,
+separator, comment, and line ending.
+Step, line, and glyph clipboards have explicit clear controls that never change
+the current draft.
+Focused glyphs and lines also support keyboard removal,
+duplication and reordering. Plain arrows plus Home/End navigate glyph or line
+selection without editing, while Page Up/Down makes bounded five-step timeline
+or ten-line movelist jumps and Alt+arrows remain deliberate reorder actions.
+Selected command steps and movelist lines can also move directly to the start or
+end—with visible controls or Alt+Home/End—as one reversible draft action.
+Selected glyphs have the same direct start/end movement; only glyph contents
+rotate, so authored text, tags, and separators stay at their exact positions.
+All paths retain unsupported tags, unknown tokens, mixed
+line endings, and adjacent compound glyphs byte-for-byte until explicit Apply. A
+draft-local finder navigates ordinary text or glyph tokens in Source and Visual
+modes without filtering, normalizing, or changing the DAT. Next/Previous
+controls wrap through results; Enter and Shift+Enter navigate forward/backward,
+and an optional Match case setting controls literal matching. Replace Current,
+Replace Selected Line, and Replace All operate only on the retained draft and
+preserve mixed LF/CRLF/classic-CR boundaries plus custom markup outside the
+exact matched spans. The selected-line route is available only when that exact
+visual line contains a match, and each replacement operation is one visual Undo
+action. **Preview Replace
+All** reports the exact match count and affected one-based line numbers without
+changing the draft, while replacement controls remain unavailable when the live
+draft has no match. Nothing reaches the DAT until the existing reviewed Apply,
+and Escape clears the query without touching the draft.
+The Visual Editor also has **Preview Matching Glyphs** and **Replace All Matching
+Glyphs** for parser-aware token migration. Those actions operate only on exact
+configured glyph spans, protect quoted text, markup attributes, comments, and
+ordinary word fragments, preserve mixed line endings, and make the complete
+batch one visual Undo action. An explicit scope limits that operation to the
+selected line or applies it across the entire displayed movelist.
+**Previous Same Glyph** and **Next Same Glyph** wrap through those exact parsed
+occurrences—including compound chains and later lines—without editing the draft
+or requiring the author to copy a token into the general finder.
+Advisory glyph warnings also have wrapping Previous/Next navigation; visiting a
+warning never truncates, normalizes, or edits the displayed-movelist draft.
 
 The navigation parser is deliberately tolerant rather than a full compiler. It
 only depends on IKEMEN 1.0 ZSS declaration boundaries (`[StateDef ...]` and
@@ -1723,3 +2431,13 @@ In game, `F8` toggles the overlay. `F9` advances the selection. In a Test
 Session, `F10` marks pass, `F11` marks fail, and `F12` saves evidence. In a
 Diagnostic Session, `F10` executes the selected native operation. Project teams
 can create and edit `.ikemen/tests/project-tests.json` directly from the suite.
+
+### Palette Workshop certification status
+
+Palette-image registration is now a guided metadata workflow. Standard Batch Tools links directly to the compact Advanced Sync Images card, where indexed PNGs can be registered, relinked, enabled, disabled, or removed through an exact review. Ambiguous palette matches require an explicit choice, filename numbering is never treated as authority, and Save registrations does not rewrite the SFF or image files. A failed post-save verification remains visibly marked as committed or uncertain until the exact target is reloaded.
+
+The live palette editor now includes **Find useful animation**. It scans the exact character-assigned AIR and SFF under bounded, read-only authority, then presents up to eight visual Action suggestions based on visible use of the current palette index or reviewed named group. Each result explains matching pixels, distinct sprites, and authored frames; linked palettes, truecolor sprites, missing or ambiguous references, and unknown runtime `RemapPal` behavior remain explicit. A chosen result becomes the synchronized A/B preview without changing the retained palette draft or its original return route. When no unique AIR assignment can be proven, the same control offers a clearly labelled static-sprite fallback instead of guessing an owner.
+
+Palette Workshop source implementation now covers the ten reviewed slices: canonical workspace and source intake; collective exact-color inventory; named domains and RemapPal groups; copy-on-write index migration; manual color separation/reduction; palette library and gallery synchronization; temporary palette lifecycle metadata; exact cross-view SFF/AIR handoffs; and the append-only certification ledger. The SFF viewer/browser and AIR return routes carry exact file hashes plus physical sprite/palette coordinates. A changed, missing, or ambiguous target opens its origin without restoring a guessed selection. Immutable SFF build proposals remain separate from adoption and never authorize a direct SFF write.
+
+This is **source-certified, physical-pending**, not release-ready. Automated tests cannot mark `physical-passed`. Physical signoff still requires a human-recorded IKEMaker version, engine version, environment, scenario, and evidence hash for the SFF 2.0/2.1 palette matrix, AIR/SFF return paths, temporary-placeholder removal/build adoption, gallery round trips, and recovery after interruption. Certification metadata is append-only under `.ikemen-tools/palette-workspace/certification`; it does not alter active character assets.

@@ -1,0 +1,11 @@
+IKEMaker 0.79.386
+
+- Added one shared palette catalog to Palette Workshop and the SFF Palette Browser.
+- Added group, index, name/comment, role, usage, linked, unused, and exact-duplicate filtering.
+- Added compact 256-color tables and sprite previews to palette catalog entries.
+- Added editable persistent palette comments/display names without modifying the SFF until a reviewed build.
+- Added whole-palette drag payloads and ACT/indexed-image file drops, separate from Bank B color-index editing.
+- Preserved number-free filenames as palette metadata and parsed familiar group,index filename prefixes when present.
+- Added archive-wide exact-duplicate warnings, including duplicates in different groups.
+- Added gap-filling batch intake so new palettes use open numeric slots without overwriting existing palette IDs.
+- Kept true-color and unsupported image drops on the existing repair path instead of silently losing index identity.

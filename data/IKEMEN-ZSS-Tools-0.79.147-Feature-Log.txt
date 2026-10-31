@@ -1,0 +1,11 @@
+IKEMaker 0.79.147
+
+- Added one compact Match Setup window shared by Infinite Quick VS and Training.
+- Right-clicking either run icon opens Match Setup; ordinary left-click launch behavior is unchanged.
+- Added reusable per-game presets with save, rename, clone, delete, and last-used recall.
+- Added current-character, mirror, swap, browse, manual path, and Roster Manager / select-screen routes for fighters and stages.
+- Added matching Quick VS and Training team controls: Single, Simul, Turns, Tag, up to eight members, palettes, AI, input, life, maximum life, power, dizzy points, and guard points.
+- Added infinite time/round/draw defaults, concise match summaries, and advanced command previews.
+- Added exact pre-launch validation; missing, outside-game, or wrong-kind DEF paths block launch rather than silently changing the match.
+- Added keyboard parity for toolbar context actions with the Menu key and Shift+F10.
+- Added regression tests for path normalization, validation, interleaved team slots, and generated engine arguments.

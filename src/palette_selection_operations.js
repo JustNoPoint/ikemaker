@@ -52,7 +52,7 @@ function selectionClientScript() {
   const paletteBatchSelection=new Set();let paletteBatchAnchor=null;
   function paletteBatchIndices(){return normalizeIndices([...paletteBatchSelection])}
   function renderPaletteBatchSelection(){for(const swatch of document.querySelectorAll('#paletteGrid .palette-swatch'))swatch.classList.toggle('batch-selected',paletteBatchSelection.has(Number(swatch.dataset.index)));const indices=paletteBatchIndices(),status=document.getElementById('paletteSelectionStatus');status.textContent=indices.length+' index'+(indices.length===1?'':'es')+' selected'+(indices.length&&indices.length<12?' · '+indices.join(', '):'')}
-  function previewPaletteOperation(colors,label){importedPaletteColors=colors.map(color=>color.slice());previewPaletteIndex=null;showPalette(importedPaletteColors,label);renderPaletteBatchSelection();requestCurrentSprite();requestLayers();requestOnion()}
+  function previewPaletteOperation(colors,label){importedPaletteColors=colors.map(color=>color.slice());previewPaletteIndex=null;vscode.postMessage({type:'paletteDraft',colors:importedPaletteColors,label});showPalette(importedPaletteColors,label);renderPaletteBatchSelection();requestCurrentSprite();requestLayers();requestOnion()}
   function operationBase(){if(!displayedPaletteColors)throw new Error('Choose an embedded palette first.');return displayedPaletteColors}
   function operationError(error){document.getElementById('paletteSelectionReport').textContent=error.message}
   const paletteGridTarget=document.getElementById('paletteGrid');

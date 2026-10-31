@@ -1,0 +1,22 @@
+IKEMaker 0.79.261
+
+Text return and companion-browser startup repair
+
+- Open/Focus Text Editing now preserves unrelated viewers and custom editors in other editor groups instead of refusing the transition or rebuilding the entire layout.
+- A foreign tab inside the exact connected-source group remains protected and stops a destructive transition.
+- Restored AIR browsers now wait until IKEMaker's editor topology has settled, so the browser opens after the connected viewers instead of racing them during startup.
+- AIR, SFF, and SND floating browsers now wait for their rendered page before and after moving to a floating window, then rehydrate their active content.
+- Companion browsers start at their shared 420-pixel minimum width when no deliberate width has been saved.
+- On Windows, IKEMaker now adjusts the actual auxiliary VS Code window width after verifying that the foreground window belongs to Code.exe. It preserves position and height and never activates or reorders the window.
+- Startup-generated resize events are ignored; a deliberate later resize is remembered separately for AIR, SFF, and SND.
+- Stale width values from the previous browser-width implementation are not reused.
+
+New Dev review
+
+- New Dev reviewed and expanded the startup ordering, renderer-readiness, floating-window rehydration, and safe native-width behavior.
+
+Verification
+
+- Shared browser layout, lifecycle, Windows ownership, manual browser lifecycle, AIR float rehydration, SFF browser, and SND browser tests pass.
+- Text transition, text companion, and exact visual-group transition tests pass.
+- Syntax checks pass for every changed browser and text-transition module.

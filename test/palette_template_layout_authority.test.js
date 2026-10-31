@@ -1,0 +1,13 @@
+'use strict';
+
+const assert=require('assert'),fs=require('fs'),os=require('os'),path=require('path'),Module=require('module'),originalLoad=Module._load;
+const vscode={Uri:{file:fsPath=>({fsPath})},ViewColumn:{One:1,Beside:2},ConfigurationTarget:{WorkspaceFolder:1},commands:{executeCommand:async()=>false},workspace:{getConfiguration:()=>({get:(_key,fallback)=>fallback,update:async()=>{}})},window:{}};
+Module._load=function(request,parent,main){if(request==='vscode')return vscode;return originalLoad.call(this,request,parent,main)};
+
+try{
+  const {encodeRgbaPng,buildCollective}=require('../src/palette_collective_model'),{PaletteWorkspaceController}=require('../src/palette_workspace_controller'),{configurePaletteWorkspaceService,paletteWorkspaceService}=require('../src/palette_workspace_service');configurePaletteWorkspaceService({get:()=>({}),update:async()=>{}});
+  const root=fs.mkdtempSync(path.join(os.tmpdir(),'palette-layout-authority-')),files=[0,1,2].map(index=>{const filename=path.join(root,`sprite-${index}.png`);fs.writeFileSync(filename,encodeRgbaPng(1,1,Buffer.from([index+1,index+2,index+3,255])));return filename}),collective=buildCollective(files.map(filename=>({filename,buffer:fs.readFileSync(filename)}))),owner=new PaletteWorkspaceController({}),opened=paletteWorkspaceService().openSource(files[0]),patch=owner.collectivePatch(opened,collective,false);patch.selectedImageIds=collective.images.map(image=>image.imageId);let session=paletteWorkspaceService().promoteCollective(files[0],collective.evidence,patch);session=paletteWorkspaceService().mutateSource(files[0],{organizer:{...session.organizer,templateSwatches:{enabled:false},templateImageLayout:{revision:1,items:[{imageId:collective.images[1].imageId,x:10,y:20,z:0}]}}});owner.retainCollective(session,collective);
+  const authoritative=owner.templateLayoutSources(session,collective).prepared.filter(item=>!item.image.imageId.startsWith('ikemaker:'));assert.deepStrictEqual(authoritative.map(item=>item.image.imageId),[collective.images[1].imageId],'an existing canvas prepares only its retained layout layers, not every intake checkbox');assert.deepStrictEqual([...owner.templateImageCoverage(session,collective).selected],[collective.images[1].imageId],'canvas deletion coverage uses the actual template layers');
+  const intake=owner.templateLayoutSources(session,collective,{useSelected:true}).prepared.filter(item=>!item.image.imageId.startsWith('ikemaker:'));assert.strictEqual(intake.length,3,'explicit add/create intake can still prepare the selected source images');
+  console.log('Palette template layout-authority tests passed');
+}finally{Module._load=originalLoad;}

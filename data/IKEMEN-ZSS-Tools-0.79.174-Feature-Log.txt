@@ -1,0 +1,29 @@
+IKEMaker 0.79.174
+
+Palette Workshop master domains and bindings
+- Advanced > Sync / Remap / Repair > Arrange & Remap now includes one compact guided Master domains & bindings editor.
+- A domain explicitly names its unique master palette, exact palette membership, live sprite groups, and linked named RemapPal groups.
+- Every guided domain requires at least one exact live sprite group and an explicit binding. No first palette, first domain, or implicit binding is inferred.
+- Legacy domains without a master remain readable for compatibility but cannot authorize the new reviewed master workflow until the user explicitly chooses one.
+
+Reviewed metadata flow
+- Review changes validates the exact decoded SFF palette inventory, sprite groups, metadata revision, and project-contained target before Apply is enabled.
+- Apply reviewed metadata publishes the domain, reciprocal RemapPal links, and sprite-group bindings atomically in one registry revision.
+- Delete review lists the exact RemapPal and sprite-group references that will be cleared before Apply.
+- The workflow changes Palette Workshop metadata only. It never writes, rebuilds, or adopts the active SFF.
+
+Authority and recovery
+- Review tokens are opaque, expiring, single-use, and exact-target bound. A newer review, refresh, publish, or panel close revokes older authority.
+- Missing, duplicate, or ambiguous palette coordinates; missing sprite groups; unknown RemapPal links; stale SFF or registry evidence; replayed tokens; oversized metadata; and unsafe paths fail closed.
+- If the SFF changes immediately after metadata publication, IKEMaker reports the truthful committed-but-stale state and refreshes the committed metadata revision instead of claiming that nothing was applied.
+- Registry input is quarantined before parsing above the bounded size limit, and collection/range expansion limits prevent unbounded metadata work.
+
+One canonical editor
+- The SFF browser retains read-only domain filters, counts, and palette swatch previews.
+- Domain, master, and binding changes route to the canonical Palette Workshop panel and focus the Arrange & Remap section.
+- The prior hidden first-domain binding shortcut and duplicate SFF-browser mutation controls were removed.
+
+Accessibility and verification
+- The editor uses native form controls, fieldsets and legends, visible focus, live validation/review status, wrapping content, and a one-column narrow-dock layout without page-level horizontal scrolling.
+- New Dev reviewed the design before implementation and rejected the first post-build pass until empty-binding, exact-cascade, post-commit truthfulness, token lifecycle, and registry-size issues were corrected.
+- All 92 Palette-focused suites pass, plus SFF-browser, accessibility, UI-command, direct-write, and syntax checks.

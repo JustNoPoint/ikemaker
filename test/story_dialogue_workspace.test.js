@@ -5,6 +5,15 @@ const workspace = require('../src/story_dialogue_workspace'); Module._load = ori
 const page = workspace.html({ file:'C:/game/data/select.def', arcs:[{name:'ryu',displayname:'Ryu Story',path:'data/story/ryu.lua',unlock:'true'}], portraitGroup:9100, maxLines:20 }, 'player');
 assert.match(page, /STORY &amp; DIALOGUE BUILDER|STORY & DIALOGUE BUILDER/); assert.match(page, /IKEMEN 1\.0 NATIVE/); assert.match(page, /maximum 20/); assert.match(page, /Creator/); assert.match(page, /Rollback\/netplay/); assert.match(page, /Ryu Story/);
 assert.match(page, /Discard recovered draft/); assert.match(page, /ikemenCanKeepDraft/); assert.match(page, /ikemenNavigationSelection/); assert.match(page, /dialogueDraft/);
+assert.equal((page.match(/acquireVsCodeApi\(/g)||[]).length,1,'D1 uses one webview bridge');
+assert.equal((page.match(/<button[^>]+data-universal-slot=/g)||[]).length,29,'D1 renders all canonical universal slots');
+assert.match(page,/story-dialogue-content/);assert.match(page,/sourcePrevious/);assert.match(page,/sourceRange/);assert.match(page,/sourceSelect/);assert.match(page,/data-nav-mode="tabs"/);assert.match(page,/data-nav-mode="list"/);assert.match(page,/data-nav-mode="cards"/);
+assert.doesNotMatch(page,/launchControls|ikemenMapInsert|type:'openArc'|message\.path/,'retired generic/raw-path routes are absent');
+assert(workspace.validMessage({type:'storyRefresh',generation:3},3));
+assert(!workspace.validMessage({type:'storyRefresh',generation:3,extra:true},3));
+assert(!workspace.validMessage(Object.assign(Object.create({forged:true}),{type:'storyRefresh',generation:3}),3));
+assert(!workspace.validMessage({type:'storyRefresh',generation:2},3));
+const circular={type:'dialogueDraft',generation:3,revision:1};circular.draft=circular;assert(!workspace.validMessage(circular,3),'cyclic structured-clone traffic fails closed without throwing');
 const script = page.match(/<script>([\s\S]*)<\/script>/)[1]; assert.doesNotThrow(() => new Function(script));
 assert.strictEqual(workspace.gameRootFromSelect('C:/game/data/select.def').replace(/\\/g,'/'), 'C:/game');
 console.log('Story and dialogue workspace tests passed');

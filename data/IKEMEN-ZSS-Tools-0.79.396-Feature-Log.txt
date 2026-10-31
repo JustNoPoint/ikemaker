@@ -1,0 +1,17 @@
+IKEMaker 0.79.396 — Palette Workshop visible-content anchoring
+
+Retain a stable rendered UI element and its viewport offset rather than only
+numeric scrollY. Deferred toolbar/editor growth above the viewport is compensated
+even after the temporary 500ms transaction reservation has ended. Background
+focus restoration also retains the visible content position.
+
+Wheel, pointer, touch and keyboard gestures immediately release the old anchor.
+The new position is captured after scrolling settles. Explicit host navigation
+continues to work normally. Resize and DOM observers are event-driven and inspect
+only bounded rendered UI landmarks; no source/color inventory is traversed.
+
+Chromium CSP regression now performs three PageDowns, waits beyond 500ms,
+inserts 280px of delayed header layout, and verifies identical content position.
+The packaged 0.79.395 runtime fails this test with a measured +280px visual jump.
+The new runtime passes delayed layout, delayed focus, and subsequent PageUp checks,
+alongside the existing deep-scroll, rapid-update, disclosure and editor tests.

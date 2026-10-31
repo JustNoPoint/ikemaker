@@ -38,7 +38,7 @@ function client(initialMode){
     for(const label of document.querySelectorAll('[data-workspace-setup-summary]'))label.textContent=next.workspaceSetupSummary||'';
     globalThis.ikemenModeVisibilityChanged?.(next);
     if(mode==='player'&&focusWasInToolbar)document.querySelector('[data-player-command="ikemen.openHome"]')?.focus();
-    else if(mode!=='player'&&focusWasInPlayer)document.querySelector('[data-toolbar-more]')?.focus();
+    else if(mode!=='player'&&focusWasInPlayer)document.querySelector('[data-toolbar-menu="More"]>summary,[data-toolbar-search]')?.focus();
   }
   addEventListener('message',event=>{
     const m=event.data;

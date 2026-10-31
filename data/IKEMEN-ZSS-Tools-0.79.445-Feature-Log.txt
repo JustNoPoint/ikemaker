@@ -1,0 +1,8 @@
+IKEMaker 0.79.445
+
+- Corrects direct SFF deletion to preserve the distinct SFF v2.0 and v2.1 header layouts.
+- SFF v2.0 deletion now retains its 512-byte header and translated-data length; SFF v2.1 retains its 64-byte header.
+- Direct SFF deletion is covered by strict indexed v2.0 and true-color v2.1 validation.
+- SFF deletion, group deletion, group renumbering, Undo, and Redo now retain the intended nearby sprite selection consistently in the viewer and browser.
+- SND Undo and Redo now reload the restored archive, update its fingerprint, and refresh the companion browser.
+- The direct SFF group-delete prompt now describes the immediate action accurately.
