@@ -17,6 +17,6 @@ assert.match(source,/type:'paletteDomainRemapCommittedStale'/,'post-commit SFF d
 assert.match(source,/activeSffChangedByOperation:false/,'metadata apply never claims to mutate SFF bytes');
 assert.match(source,/\['putDomain','putBinding','deleteBinding','deleteDomain','putDomainTopology','putRemapPalGroup','putRemapPalTopology','deleteRemapPalGroup'\]/,'legacy generic metadata route blocks every RemapPal topology mutation');
 assert.match(source,/postDomainMatrix\(state,[\s\S]{0,150}domainTopologyAuthoring\.revoke\(state\.filename\)/,'refresh revokes stale range reviews');
-assert.match(source,/dispose: \(\) => \{ this\.domainTopologyAuthoring\.revoke\(target\)/,'owner disposal revokes range reviews');
+assert.match(source,/dispose: \(\) => \{[\s\S]{0,180}this\.domainTopologyAuthoring\.revoke\(target\)/,'owner disposal revokes range reviews');
 
 console.log('Palette RemapPal controller uses reviewed one-use CAS routes and truthful post-commit drift reporting');

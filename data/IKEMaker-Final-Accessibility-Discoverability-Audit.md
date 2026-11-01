@@ -6,7 +6,7 @@ This checkpoint does not claim installation, packaging, publication, desktop tak
 
 ## Authoritative evidence
 
-- [All-screen control-to-route audit](IKEMaker-All-Screen-Control-Route-Audit.md): 65 registered surfaces, 3,486 explicitly classified controls, 0 pending candidates inside the bounded static/generated inventory. The document distinguishes per-control evidence from shared implementation and retains dynamic/native and physical caveats.
+- [All-screen control-to-route audit](IKEMaker-All-Screen-Control-Route-Audit.md): 65 registered surfaces, 3,614 explicitly classified controls, 0 pending candidates inside the bounded static/generated inventory. The document distinguishes per-control evidence from shared implementation and retains dynamic/native and physical caveats.
 - [Structured control inventory](IKEMaker-Control-Route-Inventory.json): machine-readable owners, destinations, availability transitions, reasons, evidence, source locations, and shared-implementation aliases.
 - [End-to-end workflow audit](IKEMaker-End-to-End-Workflow-Audit.md): 16 currently advertised software workflow families audited, 0 partial, 0 queued. Row-level physical/backend limitations remain recorded.
 - [Structured workflow inventory](IKEMaker-End-to-End-Workflow-Inventory.json): guidance, destination, output, return, cancellation, evidence, and unresolved physical/backend boundaries for each advertised family.
@@ -79,7 +79,7 @@ Physical QA remains open until these results are recorded. The software matrices
 - Global viewer contract generation/test: passed.
 - Final surface-cohesion/accessibility gate: passed.
 - UI command/button/open-create contract gate: passed.
-- All-screen matrix gate: passed at 65 surfaces / 3,486 controls / 0 bounded pending candidates.
+- All-screen matrix gate: passed at 65 surfaces / 3,614 controls / 0 bounded pending candidates.
 - End-to-end matrix gate: passed at 16 / 16 advertised software families.
 - Direct-write authority audit: passed.
 - Connected AIR and SND composition suites: passed with independent New Dev review.

@@ -22,7 +22,7 @@ const session={context:{kind:'collective-source',section:'manual-reduction'},sou
 const html=sourceHtml({session}),inline=html.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(inline);assert.doesNotThrow(()=>new vm.Script(inline));
 for(const token of ['reductionControlAvailability','reductionKeyboardPoint','id="reductionExactX"','id="reductionExactY"','id="reductionApplyExact"','Apply tool at exact pixel','aria-describedby="paintStatus"'])assert(inline.includes(token),'missing reduction accessibility contract '+token);
-const bindingStart=inline.indexOf('const bindReductionExactControls='),bindingEnd=inline.indexOf(';\nconst vscode=',bindingStart);
+const bindingStart=inline.indexOf('const bindReductionExactControls='),bindingEnd=inline.indexOf(',contactResponseDecision=',bindingStart);
 assert(bindingStart>=0&&bindingEnd>bindingStart,'generated client must include the exact-pixel binding');
 const bindExact=vm.runInNewContext('('+inline.slice(bindingStart+'const bindReductionExactControls='.length,bindingEnd)+')');
 const messages=[],exactX={value:'12.9'},exactY={value:'-7'},applyButton={},preview={},status={textContent:''},tool={value:'brush',selectedIndex:0,options:[{text:'Exact-color brush'}]},widthInput={value:'3'},heightInput={value:'5'},pairs=[{from:[1,2,3,255],to:[4,5,6,255]}];

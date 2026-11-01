@@ -11,5 +11,5 @@ assert.match(source,/m\.type==='openCanonicalPaletteWorkshop'/,'the palette brow
 const companion=fs.readFileSync(path.join(__dirname,'..','src','palette_workshop_browser.js'),'utf8');
 assert.match(companion,/ikemenPaletteCompanion/,'Palette Workshop owns a distinct companion surface');
 assert.doesNotMatch(companion,/sff\.browseLists|sff\.openBrowser/,'Palette companion never routes through the generic SFF browser');
-assert.match(companion,/Banks & Color Editor[\s\S]*Remappen[\s\S]*Layers[\s\S]*CS Masks/,'Palette companion exposes direct routes to the workshop-owned editing areas');
+assert.match(companion,/Banks & Color Editor[\s\S]*Remap colors[\s\S]*Layers[\s\S]*CS Masks/,'Palette companion exposes direct routes to the workshop-owned editing areas');
 console.log('Palette Workshop owns editing and its distinct companion browser');

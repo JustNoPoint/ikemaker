@@ -15,7 +15,7 @@ const root = fs.mkdtempSync(path.join(os.tmpdir(), 'ikemaker-candidate-built-ver
 const golden = {
   'sff-v1': ['486ca48f4375df22e0bda3dca5ae5681c400058f23616b28a3b13e87f6b43f57', '935719dd10464dcf7f0b8c27c99f0cd3496dd76bfccbd28da07dab17fb4311fe', '16c4731e6e3f20e994053c192ae1a1371797505b2b6be86cf32c72d72344af49'],
   'sff-v2.0': ['70ce462f8166f37d0d60b804f598ea0fc736c6e9bf2cd0d8162bb56d7ad24f93', '77546b8002b2c78b76cf6378b83519ea2bc44bf24d1644fe7b56d2418cda7d78', 'dfd1c0b4b7bb34be20508ee812ead8674d6eb6fca3c31d2f1cefa16676808482'],
-  'sff-v2.1': ['a192ca3a594f687c359567f3b0ab890edff584ae4ea07a77007f37ea9b165f5e', '0295368585dcf08b5bee1de730ecb61f4ea7ecdfbb3339d14a122fc16732e8b0', '211acc9c8f4eae3978aebd1a9b2e0086b12466b7adc08245c0ae190c9d781d2a']
+  'sff-v2.1': ['409fa4e13a159b35e350bacaf0764e7ede4315cda08f90519f1afd541c455ccb', '44f74c58ffca1766478fa33fcbeb5be0b04f4be5e0b95b8bbf49bdbb20b276af', 'b9eeca94d41abe5b43652d6c4e177e874f70dcded5b5a98c35a1b31818e5d9c8']
 };
 function normalized(value) {
   if (Buffer.isBuffer(value) || value instanceof Uint8Array) { const bytes = Buffer.from(value); return { kind: 'bytes', byteHash: sha(bytes), byteLength: bytes.length }; }

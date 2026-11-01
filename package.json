@@ -2205,6 +2205,14 @@
           "when": "ikemen.interfaceMode == workspace"
         },
         {
+          "command": "ikemen.textToolbar.openPrimary",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
+          "command": "ikemen.help.credits",
+          "when": "ikemen.interfaceMode == workspace"
+        },
+        {
           "command": "ikemen.textToolbar.toggleCompanion",
           "when": "ikemen.interfaceMode == workspace"
         },

@@ -42,7 +42,7 @@ Module._load = function patched(request, parent, main) {
   if (request === 'vscode') return vscode;
   if (request === './character_picker') return { chooseCharacterDef: async () => selectedDef, isCharacterDef: () => true };
   if (request === './roster_palette_flow') return { characterSff: () => 'C:\\game\\chars\\Ryu\\Ryu.sff' };
-  if (request === './palette_workspace_controller') return { paletteWorkspaceController: () => controller };
+  if (request === './palette_workspace_controller') return { configurePaletteWorkspaceController: () => undefined, paletteWorkspaceController: () => controller };
   if (request === './palette_workshop_browser') return { register: () => undefined };
   return original.call(this, request, parent, main);
 };

@@ -3,7 +3,7 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.383';
+const PACKAGE_VERSION = '0.79.446';
 
 const FALLBACK_COMMANDS = [
   'ikemen.scaleReview.run', 'ikemen.scaleReview.toggleMonitoring', 'ikemen.scaleReview.configureConventions', 'ikemen.scaleReview.exportConventions', 'ikemen.scaleReview.importConventions',
@@ -298,6 +298,7 @@ async function activate(context) {
       ], { title: 'IKEMaker Text Editor Actions', placeHolder: 'Portable actions available in this browser editor' });
       if (picked) return vscode.commands.executeCommand(picked.command);
     }),
+    vscode.commands.registerCommand('ikemen.textToolbar.openPrimary', () => vscode.commands.executeCommand('ikemen.textActions.open')),
     vscode.commands.registerCommand('ikemen.textViewers.open', async () => {
       const picked = await vscode.window.showQuickPick([
         { label: 'Open Connected SFF Viewer', command: 'sff.openViewer' },
@@ -365,7 +366,7 @@ async function activate(context) {
       return entry ? new vscode.Hover(catalogHover(entry, document.languageId === 'lua' ? 'Lua API' : 'native symbol'), range) : undefined;
     }
   }));
-  const registered = new Set(['ikemen.openTools', 'ikemen.showVersion', 'ikemen.windowsFileAssociations.configure', 'ikemen.openLauncherSettings', 'ikemen.openExtensionSettings', 'ikemen.extensionUpdates.check', 'ikemen.extensionUpdates.settings', 'ikemen.experience.configure', 'ikemen.showPlatformCapabilities', 'ikemen.showBundledToolchain', 'ikemen.luaSupport.status', 'ikemen.luaSupport.installDefinitions', 'ikemen.openMobileFeatureMatrix', 'ikemen.openStageScreenpackSpec', 'ikemen.animationStandards.open', 'ikemen.authoringBridge.openGuide', 'ikemen.help.open', 'ikemen.help.credits', 'ikemen.docs.openOffline', 'sff.showNamingStandard', 'sff.showArtistHandoffGuide', 'zss.goToLine', 'zss.toggleLineComment', 'ikemen.codeStructure.openWorkspace', 'ikemen.authoringWorkspace.open', 'ikemen.authoringWorkspace.choosePresentation', 'ikemen.authoringBrowser.open', 'zss.audit.currentFile', 'zss.openControllers', 'zssControllers.insert', 'zssControllers.search', 'zssControllers.clearFilter', 'zssControllers.openDocs']);
+  const registered = new Set(['ikemen.openTools', 'ikemen.showVersion', 'ikemen.windowsFileAssociations.configure', 'ikemen.openLauncherSettings', 'ikemen.openExtensionSettings', 'ikemen.extensionUpdates.check', 'ikemen.extensionUpdates.settings', 'ikemen.experience.configure', 'ikemen.showPlatformCapabilities', 'ikemen.showBundledToolchain', 'ikemen.luaSupport.status', 'ikemen.luaSupport.installDefinitions', 'ikemen.openMobileFeatureMatrix', 'ikemen.openStageScreenpackSpec', 'ikemen.animationStandards.open', 'ikemen.authoringBridge.openGuide', 'ikemen.help.open', 'ikemen.help.credits', 'ikemen.docs.openOffline', 'sff.showNamingStandard', 'sff.showArtistHandoffGuide', 'zss.goToLine', 'zss.toggleLineComment', 'ikemen.textToolbar.openPrimary', 'ikemen.codeStructure.openWorkspace', 'ikemen.authoringWorkspace.open', 'ikemen.authoringWorkspace.choosePresentation', 'ikemen.authoringBrowser.open', 'zss.audit.currentFile', 'zss.openControllers', 'zssControllers.insert', 'zssControllers.search', 'zssControllers.clearFilter', 'zssControllers.openDocs']);
   for (const command of FALLBACK_COMMANDS) if (!registered.has(command)) context.subscriptions.push(vscode.commands.registerCommand(command, () => unavailable(command)));
   registerPlaceholderEditor(context, 'ikemen.sffWorkspace', 'SFF');
   registerPlaceholderEditor(context, 'ikemen.sndWorkspace', 'SND');

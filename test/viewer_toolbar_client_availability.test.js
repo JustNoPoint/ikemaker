@@ -34,7 +34,8 @@ function clientArrow(name, next) {
 function button(dataset = {}) {
   return {
     dataset: { ...dataset }, disabled: false, title: '', textContent: 'Open Browser',
-    getAttribute(name) { return name === 'aria-label' ? 'Open Browser shortcut' : null; },
+    getAttribute(name) { return name === 'aria-label' ? 'Open Browser shortcut' : (this[name] ?? null); },
+    setAttribute(name, value) { this[name] = value; },
     removeAttribute(name) { if (name === 'title') this.title = ''; },
     closest() { return menu; }
   };
@@ -52,21 +53,24 @@ const refreshContext = {
 vm.createContext(refreshContext);
 vm.runInContext(clientArrow('refreshMenu', 'syncIconStates') + ';this.refreshMenu=refreshMenu;', refreshContext);
 refreshContext.refreshMenu(menu);
-assert.strictEqual(original.disabled, true, 'actual refreshMenu disables a missing body owner');
+assert.strictEqual(original.disabled, false, 'unavailable menu actions remain hoverable so their reason can be read');
+assert.strictEqual(original['aria-disabled'], 'true', 'actual refreshMenu marks a missing body owner unavailable');
 assert.match(original.title, /not available in the current viewer/i);
 owner = button(); owner.title = 'Open the connected browser';
 refreshContext.owner = owner;
 refreshContext.document.getElementById = () => owner;
 refreshContext.refreshMenu(menu);
 assert.strictEqual(original.disabled, false, 'actual refreshMenu re-enables the action when its owner appears');
+assert.strictEqual(original['aria-disabled'], 'false', 'actual refreshMenu clears the accessible unavailable state');
 assert.strictEqual(original.title, owner.title, 'actual refreshMenu exposes the owner purpose when enabled');
 original.dataset.toolbarHostEnabled = 'false'; original.dataset.toolbarHostReason = 'Select an exact sprite first.';
 refreshContext.refreshMenu(menu);
-assert.strictEqual(original.disabled, true, 'actual refreshMenu preserves the authoritative host gate');
+assert.strictEqual(original.disabled, false, 'host-gated menu actions remain hoverable for their explanation');
+assert.strictEqual(original['aria-disabled'], 'true', 'actual refreshMenu preserves the authoritative host gate');
 assert.strictEqual(original.title, 'Select an exact sprite first.');
 
 const icon = button({ toolbarIconAction: original.dataset.toolbarActionId });
-const iconContext = { toolbar: { querySelectorAll: () => [icon] }, actionById: refreshContext.actionById };
+const iconContext = { toolbar: { querySelectorAll: () => [icon] }, actionById: refreshContext.actionById, menuUnavailable: button => button?.getAttribute('aria-disabled') === 'true' };
 vm.createContext(iconContext);
 vm.runInContext(clientArrow('syncIconStates', 'invokeResolved') + ';this.syncIconStates=syncIconStates;', iconContext);
 iconContext.syncIconStates();
@@ -89,7 +93,7 @@ class Node {
 const fakeDocument = { createElement: tag => new Node(tag) };
 const favoriteBar = new Node();
 const activity = { favorites: [original.dataset.toolbarActionId], recent: [], repeatable: '' };
-const favoriteContext = { favoriteBar, activity, actionById: refreshContext.actionById, refreshMenu: refreshContext.refreshMenu, document: fakeDocument, invoke() {}, openActionSearch() {} };
+const favoriteContext = { favoriteBar, activity, actionById: refreshContext.actionById, refreshMenu: refreshContext.refreshMenu, menuUnavailable: button => button?.getAttribute('aria-disabled') === 'true', document: fakeDocument, invoke() {}, openActionSearch() {} };
 vm.createContext(favoriteContext);
 const favoriteStart = client.indexOf('renderFavoriteBar=()=>{favoriteBar.replaceChildren()');
 const favoriteEnd = client.indexOf('};renderFavoriteBar();', favoriteStart);
@@ -107,6 +111,7 @@ const searchResults = new Node(), searchSummary = new Node();
 const searchContext = {
   searchInput, groupFilter, availableOnly, favoritesOnly, searchResults, searchSummary,
   activity, menuActions: [original], actionById: refreshContext.actionById, document: fakeDocument,
+  menuUnavailable: button => button?.getAttribute('aria-disabled') === 'true',
   searchTerms: value => value.split(/\s+/).filter(Boolean), actionLabel: item => item.textContent,
   showActionDetails() {}, persistActivity() {}, renderSearch() {}, invoke() {}, actionSearchInvoking: false,
   searchDialog: { close() {}, addEventListener() {} }

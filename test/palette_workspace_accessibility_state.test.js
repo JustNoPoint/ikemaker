@@ -60,7 +60,7 @@ assert.match(inline, /exactRegionRect\(values,sourceWidth,sourceHeight\)/);
 assert.match(inline, /primaryActionAvailability\(session,id,label\)/);
 assert.match(inline, /libraryControlAvailability\(libraryAvailabilityState,key\)/);
 assert.match(inline, /paletteTemplateLayout'\)acceptTemplatePlacementLayout\(event\.data\.model\)/, 'the real layout-response route consumes the correlated placement refresh');
-assert.match(inline, /renderContact=model=>\{captureTemplatePlacementBeforeContact\(\);renderContactWithoutPlacementCapture\(model\);sealTemplatePlacementAfterContact\(\)/, 'the real Contact route captures focus ownership before destroying the canvas and seals the post-render focus guard');
+assert.match(inline, /renderContact=model=>\{const viewportState=captureTemplateViewport\(\);captureTemplatePlacementBeforeContact\(\);renderContactWithoutPlacementCapture\(model\);sealTemplatePlacementAfterContact\(\);restoreTemplateViewport\(viewportState\)/, 'the real Contact route captures viewport and focus ownership before destroying the canvas, then seals and restores both guards');
 assert.match(inline, /paletteTemplatePlacementResult'&&event\.data\.ok===false\)rejectTemplatePlacement\(event\.data\)/, 'the real placement-result route clears a correlated rejected request');
 
 function clientFunctionSource(source, name) {
@@ -113,14 +113,14 @@ const accessibilityDocument = {
 activeDocument = accessibilityDocument;
 const accessibilityContext = {
   templateLayout: { layoutHash: 'LAYOUT', items: [{ imageId: 'first', name: 'First', x: 2, y: 3 }, { imageId: 'second', name: 'Second', x: 8, y: 9 }] },
-  templateSelectedImageId: '', templatePlacementPending: null, templatePlacementQueue: [], templatePlacementRefreshTicket: null, templatePlacementSequence: 0,
+  templateSelectedImageId: '', templatePlacementPending: null, templatePlacementQueue: [], templatePlacementRefreshTicket: null, templatePlacementSequence: 0, templateCanvasMutationPending: false, templateLayoutSessionRevision:0, templateAssetCache:new Map(), templateAssetNext:1, templateCanvasRevealPending:false, requestAnimationFrame(callback){callback();},
   templateKeyPosition: templateKeyboardPosition, templateImagePosition: templateCurrentPosition,
   board,
   document: accessibilityDocument, CSS: { escape(value) { return String(value); } },
-  post(action, payload) { posted.push({ action, payload }); }
+  post(action, payload) { posted.push({ action, payload }); }, sendQueuedTemplateCanvasMutation(){return false;}
 };
 vm.createContext(accessibilityContext);
-const placementClient = ['templatePlacementFocusKey', 'templatePlacementFocusElement', 'sendQueuedTemplatePlacement', 'queueTemplatePlacement', 'beginTemplatePlacementResponse', 'finishTemplatePlacementResponse', 'rejectTemplatePlacement', 'captureTemplatePlacementBeforeContact', 'sealTemplatePlacementAfterContact', 'acceptTemplatePlacementLayout', 'installTemplateCanvasAccessibility'].map(name => clientFunctionSource(inline, name)).join('\n');
+const placementClient = ['templatePlacementFocusKey', 'templatePlacementFocusElement', 'sendQueuedTemplatePlacement', 'queueTemplatePlacement', 'beginTemplatePlacementResponse', 'finishTemplatePlacementResponse', 'rejectTemplatePlacement', 'captureTemplatePlacementBeforeContact', 'sealTemplatePlacementAfterContact', 'templateAssetKey', 'rememberTemplateAsset', 'acceptTemplatePlacementLayout', 'installTemplateCanvasAccessibility'].map(name => clientFunctionSource(inline, name)).join('\n');
 vm.runInContext(placementClient + ';renderTemplateCanvas=()=>installTemplateCanvasAccessibility({},board);installTemplateCanvasAccessibility({},board)', accessibilityContext);
 assert.strictEqual(board.attributes.role, 'listbox');
 assert.strictEqual(firstImage.attributes.role, 'option');
@@ -141,16 +141,16 @@ accessibilityDocument.activeElement = null;
 vm.runInContext('sealTemplatePlacementAfterContact()', accessibilityContext);
 assert.strictEqual(vm.runInContext('sendQueuedTemplatePlacement()', accessibilityContext), false, 'queued edits remain blocked throughout the split Contact-to-Layout response');
 assert.strictEqual(posted.length, 1, 'no queued edit escapes with the old layout hash between Contact and Layout');
-const firstLayout = { layoutHash: 'LAYOUT2', assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 3, y: 3 }, { imageId: 'second', name: 'Second', x: 8, y: 9 }] };
+const firstLayout = { layoutHash: 'LAYOUT2', placementRequestId:'template-placement-1', sessionRevision:1, assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 3, y: 3 }, { imageId: 'second', name: 'Second', x: 8, y: 9 }] };
 firstImage = image('first', 3, 3); secondImage = image('second', 8, 9); imageMap.set('first', firstImage); imageMap.set('second', secondImage);
 accessibilityContext.firstLayout = firstLayout;
 vm.runInContext('acceptTemplatePlacementLayout(firstLayout)', accessibilityContext);
-assert.strictEqual(secondImage.focused, true, 'the real Contact-before-Layout order restores the image the user switched to before acknowledgement');
+assert.strictEqual(secondImage.focused, undefined, 'the Contact-before-Layout refresh does not force focus back into the canvas after its prior element was destroyed');
 assert.deepStrictEqual(JSON.parse(JSON.stringify(posted.at(-1))), { action: 'templatePlaceImage', payload: { requestId: 'template-placement-2', layoutHash: 'LAYOUT2', imageId: 'first', x: 4, y: 3 } }, 'the coalesced first-image position uses the fresh response layout hash');
 vm.runInContext('captureTemplatePlacementBeforeContact()', accessibilityContext);
 accessibilityDocument.activeElement = null;
 vm.runInContext('sealTemplatePlacementAfterContact()', accessibilityContext);
-const secondLayout = { layoutHash: 'LAYOUT3', assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 4, y: 3 }, { imageId: 'second', name: 'Second', x: 8, y: 9 }] };
+const secondLayout = { layoutHash: 'LAYOUT3', placementRequestId:'template-placement-2', sessionRevision:2, assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 4, y: 3 }, { imageId: 'second', name: 'Second', x: 8, y: 9 }] };
 firstImage = image('first', 4, 3); secondImage = image('second', 8, 9); imageMap.set('first', firstImage); imageMap.set('second', secondImage);
 accessibilityContext.secondLayout = secondLayout;
 vm.runInContext('acceptTemplatePlacementLayout(secondLayout)', accessibilityContext);
@@ -158,7 +158,7 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify(posted.at(-1))), { action: 'tem
 vm.runInContext('captureTemplatePlacementBeforeContact()', accessibilityContext);
 accessibilityDocument.activeElement = null;
 vm.runInContext('sealTemplatePlacementAfterContact()', accessibilityContext);
-const thirdLayout = { layoutHash: 'LAYOUT4', assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 4, y: 3 }, { imageId: 'second', name: 'Second', x: 9, y: 9 }] };
+const thirdLayout = { layoutHash: 'LAYOUT4', placementRequestId:'template-placement-3', sessionRevision:3, assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 4, y: 3 }, { imageId: 'second', name: 'Second', x: 9, y: 9 }] };
 firstImage = image('first', 4, 3); secondImage = image('second', 9, 9); imageMap.set('first', firstImage); imageMap.set('second', secondImage);
 accessibilityContext.thirdLayout = thirdLayout;
 vm.runInContext('acceptTemplatePlacementLayout(thirdLayout)', accessibilityContext);
@@ -170,7 +170,7 @@ vm.runInContext('captureTemplatePlacementBeforeContact()', accessibilityContext)
 accessibilityDocument.activeElement = null;
 vm.runInContext('sealTemplatePlacementAfterContact()', accessibilityContext);
 unrelated.focus();
-const noStealLayout = { layoutHash: 'LAYOUT5', assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 0, y: 3 }, { imageId: 'second', name: 'Second', x: 9, y: 9 }] };
+const noStealLayout = { layoutHash: 'LAYOUT5', placementRequestId:'template-placement-4', sessionRevision:4, assetPageCount: 0, items: [{ imageId: 'first', name: 'First', x: 0, y: 3 }, { imageId: 'second', name: 'Second', x: 9, y: 9 }] };
 firstImage = image('first', 0, 3); secondImage = image('second', 9, 9); imageMap.set('first', firstImage); imageMap.set('second', secondImage);
 accessibilityContext.noStealLayout = noStealLayout;
 vm.runInContext('acceptTemplatePlacementLayout(noStealLayout)', accessibilityContext);
