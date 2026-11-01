@@ -16,7 +16,7 @@ const api = {
 };
 const original = Module._load;
 Module._load = function patched(request, parent, main) { if (request === 'vscode') return api; return original.call(this, request, parent, main); };
-const { ZssRegistryProvider } = require('../src/zss_registry_provider');
+const { ZssRegistryProvider, emptyData } = require('../src/zss_registry_provider');
 Module._load = original;
 
 (async () => {
@@ -43,5 +43,28 @@ Module._load = original;
   const partialChildren = await provider.getChildren(retryRoots.find((item) => item.key === 'maps'));
   assert.strictEqual(partialChildren[0].label, 'Browse Maps…');
 
-  console.log('Project Data workspace scan failure/partial handling keeps Browse Maps and explicit empty guidance available');
+  const calls = [];
+  class RelativePattern { constructor(base, pattern) { this.base = base; this.pattern = pattern; } }
+  const fallbackApi = {
+    TreeItem, EventEmitter, RelativePattern,
+    TreeItemCollapsibleState: api.TreeItemCollapsibleState, ThemeIcon: api.ThemeIcon,
+    window: { activeTextEditor: { document: { uri: { fsPath: 'D:\\game\\chars\\ryu\\main.zss' } } } },
+    workspace: {
+      textDocuments: [],
+      getConfiguration: () => ({ get: (_key, fallback) => fallback }),
+      findFiles: async (include) => { calls.push(include); return typeof include === 'string' ? [] : [{ fsPath: 'D:\\game\\chars\\ryu\\main.zss' }]; },
+      openTextDocument: async () => ({ getText: () => '[Function Demo()]' }),
+      asRelativePath: () => 'chars/ryu/main.zss'
+    }
+  };
+  const fallbackProvider = new ZssRegistryProvider(fallbackApi, () => ({ ...emptyData(), functions: [{ name: 'Demo', line: 0 }] }));
+  await fallbackProvider.scan();
+  assert.strictEqual(fallbackProvider.scope, 'active-project', 'an empty workspace search falls back to the active project file');
+  assert.ok(calls[1] instanceof RelativePattern, 'the fallback performs a bounded project-root search');
+  assert.strictEqual(calls[1].pattern, '**/*.zss');
+  assert.match(fallbackProvider.statusText(), /Active-project ZSS inventory/);
+  const fallbackRoots = await fallbackProvider.getChildren();
+  assert.match(fallbackRoots.find((item) => item.key === 'functions').label, /Functions \(1\)/);
+
+  console.log('Project Data handles failure/partial scans and falls back from an empty workspace search to the active project');
 })().catch((error) => { console.error(error); process.exitCode = 1; });
