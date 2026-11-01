@@ -656,6 +656,13 @@ async function populate(panel, filename, session = {}) {
   return owner;
 }
 
+function normalizeSndReference(reference) {
+  if (!reference || typeof reference !== 'object') return null;
+  const group = Number(reference.group), index = Number(reference.index ?? reference.number);
+  if (!Number.isSafeInteger(group) || !Number.isSafeInteger(index)) return null;
+  return { ...reference, group, index, number: index };
+}
+
 async function openSndViewer(uri, column, reference, exactAuthority, session = {}) {
   let filename = uri && uri.fsPath;
   if (!filename) filename = await chooseFileOrFolder({ title: 'Open SND Archive', filters: { 'IKEMEN/MUGEN sounds': ['snd'] }, extensions: ['snd'], emptyMessage: 'No SND archives were found in that folder.' });
@@ -664,7 +671,7 @@ async function openSndViewer(uri, column, reference, exactAuthority, session = {
   if(ownerDefs.some(value=>typeof isClosingOwner==='function'&&isClosingOwner(value)))return;
   const suspendedTextHeader=vscode.commands?await vscode.commands.executeCommand('ikemen.textToolbar.suspendForVisualViewer'):false;
   if(suspendedTextHeader)column=vscode.window.tabGroups?.activeTabGroup?.viewColumn||vscode.ViewColumn.One;
-  filename=path.resolve(filename);if(exactAuthority&&(!reference||Number(reference.group)!==exactAuthority.group||Number(reference.index)!==exactAuthority.index))return vscode.window.showWarningMessage('The requested SND sound does not match its exact host authority. Nothing stale was opened or selected.');if(rejectStaleExactSnd(filename,exactAuthority))return;
+  filename=path.resolve(filename);reference=normalizeSndReference(reference);if(exactAuthority&&(!reference||reference.group!==exactAuthority.group||reference.index!==exactAuthority.index))return vscode.window.showWarningMessage('The requested SND sound does not match its exact host authority. Nothing stale was opened or selected.');if(rejectStaleExactSnd(filename,exactAuthority))return;
   if(!await require('./asset_workspace').beforeOpen(filename))return;
   if(rejectStaleExactSnd(filename,exactAuthority))return;
   const target = column || preferredViewerColumn(reusableViewColumn(sndPanels, vscode.ViewColumn.Beside)), existing = session.transferPinned===true?null:sndPanelsByFile.get(panelKey(filename));

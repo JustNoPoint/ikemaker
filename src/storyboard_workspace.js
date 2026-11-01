@@ -8,7 +8,9 @@ const { parseDef, setSectionEntry, tuple: defTuple } = require('./def_model');
 const { storyboardModel, validateStoryboard, appendScene, deleteScene, appendLayer } = require('./storyboard_model');
 const { transactionalWrite, optionsFromConfig, hash } = require('./mutation_safety');
 const { chooseFileOrFolder } = require('./open_target_picker');
-const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
+const viewerGroup = require('./viewer_group');
+const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = viewerGroup;
+const focusedVisualWorkspaceColumn = viewerGroup.focusedVisualWorkspaceColumn || (async fallback => preferredViewerColumn(fallback));
 const { registerAuthoringPanel } = require('./authoring_context_registry');
 const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = require('./launch_controls');
 const visualComponentModel = require('./visual_component_model');
@@ -356,7 +358,8 @@ async function openStoryboardWorkspace(uri) {
     const existing = openPanels.get(panelKey(filename));
     if (existing) { revealInViewerGroup(existing); return existing; }
     if (!/^\s*\[SceneDef\]/im.test(fs.readFileSync(filename,'utf8'))) throw new Error('That DEF is not an IKEMEN storyboard.');
-    panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenStoryboardWorkspace', `Storyboard: ${path.basename(filename)}`, preferredViewerColumn(vscode.ViewColumn.Active), {enableScripts:true,retainContextWhenHidden:true}));
+    const column = await focusedVisualWorkspaceColumn(vscode.ViewColumn.Active);
+    panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenStoryboardWorkspace', `Storyboard: ${path.basename(filename)}`, column, {enableScripts:true,retainContextWhenHidden:true}));
     await populate(panel, filename);
     return panel;
   } catch (error) { if (panel) panel.dispose(); await vscode.window.showErrorMessage(`Could not open storyboard: ${error.message}`); }

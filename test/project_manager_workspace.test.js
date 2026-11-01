@@ -29,8 +29,9 @@ assert.match(source,/const focus=focusToken\(\);setBusy\(true/,'the initiating f
 assert(source.includes('title="Choose another folder or registry"'));
 assert(source.includes('id="closeManager"'), 'manager must provide a visible local escape path');
 assert(source.includes("send('projectManagerClose')"), 'local Close and Escape must use the manager-owned close route');
-assert(!source.includes('data-universal-slot'), 'project manager must not embed asset-viewer universal chrome');
-assert(!source.includes('ikemaker-universal-toolbar'), 'project manager must keep its compact local header');
+assert(source.includes('data-universal-slot'), 'project manager must expose the same universal header actions as other IKEMaker workspaces');
+assert(source.includes('ikemaker-universal-toolbar'), 'project manager must render the shared IKEMaker header above its specialist controls');
+assert(source.includes('aria-label="IKEMaker menus"'), 'project manager must expose the shared dropdown menu header');
 assert(!source.includes("work project's folder"), 'generated JavaScript strings must not contain the unsafe apostrophe regression');
 const script = source.match(/<script>([\s\S]*?)<\/script>/)?.[1];
 assert(script, 'manager must emit its client script');

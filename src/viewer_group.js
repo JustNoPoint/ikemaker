@@ -51,6 +51,16 @@ function preferredViewerColumn(fallback, avoidColumn = 0) {
   if(fallbackIsReserved(fallback))return -2;
   return fallback === -1 ? -2 : fallback;
 }
+// Full IKEMaker workspaces replace the text-only companion layout.  The
+// companion owns an extra editor group, so merely asking for ViewColumn.Active
+// can leave a visual workspace beside it.  Suspend it first and use the joined
+// active group as the exact destination.
+async function focusedVisualWorkspaceColumn(fallback = 1, api = require('vscode')) {
+  let suspended = false;
+  try { suspended = await api.commands?.executeCommand?.('ikemen.textToolbar.suspendForVisualViewer') === true; } catch (_) {}
+  if (suspended) return api.window?.tabGroups?.activeTabGroup?.viewColumn || api.ViewColumn?.One || 1;
+  return preferredViewerColumn(fallback);
+}
 function restoredAssetColumn(groups, avoidColumn = 0) {
   const types=new Set(['ikemenAirWorkspace','ikemenSffViewer','ikemenSndViewer','ikemen.sffWorkspace','ikemen.sndWorkspace']);
   const group=(groups||[]).find(group=>valid(group.viewColumn)&&group.viewColumn!==avoidColumn&&(group.tabs||[]).some(tab=>types.has(panelViewType(tab.input?.viewType))));
@@ -157,4 +167,4 @@ function revealInViewerGroup(panel, preserveFocus = false, fallback = 1) {
 }
 function resetViewerGroupForTests() { column = 0; tracked.clear(); reservations.clear(); topologyProvider=null; }
 
-module.exports = { trackedPanels:()=>[...tracked], configureViewerTopology, preferredViewerColumn, trackViewerPanel, revealInViewerGroup, restoredAssetColumn, reserveViewerColumns, releaseViewerColumns, relocateReservedViewerPanels, closeViewerGroupForText, resetViewerGroupForTests };
+module.exports = { trackedPanels:()=>[...tracked], configureViewerTopology, preferredViewerColumn, focusedVisualWorkspaceColumn, trackViewerPanel, revealInViewerGroup, restoredAssetColumn, reserveViewerColumns, releaseViewerColumns, relocateReservedViewerPanels, closeViewerGroupForText, resetViewerGroupForTests };

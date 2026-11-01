@@ -24,7 +24,7 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
  Module._load=function(name,parent,main){
   if(name==='vscode')return vscode;
   if(name==='./character_context')return{...realCharacterContext,owningCharacterDefs:seed=>path.resolve(seed)===path.resolve(command)?[first]:[]};
-  if(name==='./viewer_group')return{preferredViewerColumn:()=>2,trackViewerPanel:p=>p,revealInViewerGroup:p=>p.reveal()};
+  if(name==='./viewer_group')return{focusedVisualWorkspaceColumn:async()=>2,trackViewerPanel:p=>p};
   if(name==='./viewer_toolbar')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};
   if(name==='./viewer_layout')return{style:()=>'',controlsHtml:()=>'',clientScript:()=>'',handle:async()=>false};
   return original.call(this,name,parent,main);
