@@ -3,23 +3,23 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.447",
+      "version": "0.79.452",
       "channel": "beta",
-      "publishedAt": "2026-11-01T01:53:22Z",
+      "publishedAt": "2026-11-01T03:00:55Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Project Data now restores ZSS discovery from the active character or game project when the workspace-wide search is empty",
-        "The Registry clearly identifies active-project fallback scope and retains Refresh, partial-scan, and failure guidance",
-        "Seventeen focused Registry, navigation, ZSS catalog, diagnostics, activation, web, and interface tests passed",
-        "The installed 0.79.447 test build was physically verified before publication"
+        "Focused coding, project, match, stage, UI, and storyboard tools now open as cohesive IKEMaker visual workspaces",
+        "Command & Movelist uses the complete colored universal header and text-editor editing shortcuts",
+        "AIR browser scrolling and exact current-authority SND opening are corrected",
+        "Sixteen focused tests passed and the installed 0.79.452 build was physically verified before publication"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.447/ikemen-zss-tools-0.79.447.vsix",
-        "sha256": "a294d0cfdd852d124089d92fc0a3c3fcd73c892db1613bba20b9151b51c51ccb",
-        "bytes": 24452195
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.452/ikemen-zss-tools-0.79.452.vsix",
+        "sha256": "963f81d1f3251b9e86174f25e013acba446ee38fc6ba41e04549e665646e3f18",
+        "bytes": 24455093
       }
     }
   ]
