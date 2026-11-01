@@ -17,7 +17,7 @@ const { workspaceExperience } = require('./experience_model');
 const { workflowFor, workflowHtml, advancedActionBarHtml, taskRecipesHtml, workflowClientScript } = require('./guided_workflows');
 const { chooseFileOrFolder } = require('./open_target_picker');
 const { registerAuthoringPanel } = require('./authoring_context_registry');
-const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
+const viewerGroup = require('./viewer_group'), trackViewerPanel = viewerGroup.trackViewerPanel, focusedVisualWorkspaceColumn = viewerGroup.focusedVisualWorkspaceColumn || (async fallback => viewerGroup.preferredViewerColumn(fallback));
 const { appendSection, appendUiElement } = require('./visual_def_authoring');
 const { pickSpriteReference } = require('./visual_sprite_picker');
 const { pickEmbeddedAction } = require('./visual_action_picker');
@@ -557,8 +557,9 @@ async function openUiWorkspace(uri, options = {}) {
   } catch (error) { return vscode.window.showErrorMessage(`Could not read UI DEF: ${error.message}`); }
   if(options.preset&&(!options.reference||options.reference.sourceHash!==hash(fs.readFileSync(filename,'utf8'))))return;
   const existing = openPanels.get(panelKey(filename, workspaceMode));
-  if (existing) { revealInViewerGroup(existing); return existing; }
-  try { const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenUiWorkspace', `UI: ${path.basename(filename)}`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true })); await populate(panel, filename, workspaceMode,options.preset?options.reference:null);return panel; }
+  const targetColumn = await focusedVisualWorkspaceColumn(vscode.ViewColumn.Active);
+  if (existing) { existing.reveal(targetColumn, false); return existing; }
+  try { const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenUiWorkspace', `UI: ${path.basename(filename)}`, targetColumn, { enableScripts: true, retainContextWhenHidden: true })); await populate(panel, filename, workspaceMode,options.preset?options.reference:null);return panel; }
   catch (error) { vscode.window.showErrorMessage(`Could not open UI workspace: ${error.message}`); }
 }
 

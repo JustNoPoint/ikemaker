@@ -15,6 +15,7 @@ const visualWorkspaces = [
   'story_dialogue_workspace.js', 'test_session_workspace.js', 'throw_creator_workspace.js',
   'hitdef_workspace.js', 'move_lab_workspace.js'
   , 'project_manager_workspace.js'
+  , 'quick_launch_workspace.js'
   , 'help_workspace.js'
 ];
 
@@ -23,6 +24,11 @@ for (const filename of visualWorkspaces) {
   assert(source.includes("require('./viewer_group')"), `${filename} must participate in the shared visual-viewer group`);
   assert(!/createWebviewPanel\([^\n]+ViewColumn\.(?:Beside|One|Two|Three)/.test(source), `${filename} must not force a separate viewer column`);
   assert(!/\.reveal\(vscode\.ViewColumn\.(?:Beside|One|Two|Three)/.test(source), `${filename} must not force an existing viewer into another column`);
+}
+
+for (const filename of ['quick_launch_workspace.js','project_manager_workspace.js','command_movelist_workspace.js','stage_workspace.js','screenpack_workspace.js','story_dialogue_workspace.js','storyboard_workspace.js']) {
+  const source = fs.readFileSync(path.join(sourceRoot, filename), 'utf8');
+  assert(source.includes('focusedVisualWorkspaceColumn'), `${filename} must suspend the text-only header and focus the joined visual workspace`);
 }
 
 console.log('Shared visual-viewer group coverage tests passed');

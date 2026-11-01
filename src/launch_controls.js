@@ -53,7 +53,7 @@ async function handleLaunchMessage(message, seed, kind = '', panel) {
     if(!plain||keys.length!==2||keys[0]!=='slotId'||keys[1]!=='type'||!known)return true;
     const browserRoute=require('./viewer_browser_route').forSurface(kind,seed),vscode=require('vscode'),command={
       recovery:'ikemen.mutations.openHistory',run:'ikemen.launchGame',versus:'ikemen.launchMirrorCurrent',training:'ikemen.launchTrainingCurrent',restart:'ikemen.restartRunning',
-      project:'ikemen.projectManager.open',stage:'ikemen.stage.openWorkspace',commands:'ikemen.commandMovelist.openEditor',states:'zss.openControllers',palettes:'ikemen.palette.openWorkspace',
+      project:'ikemen.projectManager.open',stage:'ikemen.stage.openWorkspace',commands:'ikemen.commandMovelist.openEditor',states:'zss.openControllers',palettes:'ikemen.palette.openWorkspace','code-structure':'ikemen.codeStructure.openWorkspace',
       'viewer-browser':browserRoute.command,'actions-search':'ikemen.textActions.open','suite-switch':'ikemen.switchToIkeMiner',help:'ikemen.help.open',settings:'ikemen.openExtensionSettings'
       ,updates:'ikemen.updates.checkAll'
     }[slot];

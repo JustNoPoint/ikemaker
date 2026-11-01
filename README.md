@@ -1,10 +1,19 @@
 # IKEMaker
 
+- **0.79.452** restores cohesive focused visual workspaces for Command & Movelist, Match Setup, Project & Team Manager, Stage, Screenpack/UI, and Storyboard tools. These screens now open as focused IKEMaker views with the shared menu/header order, complete semantic icon colors, exact connected-resource ownership, and guarded return paths. AIR browser scrolling and stale SND opening are also corrected.
 - **0.79.447** restores Project Data discovery when VS Code has no useful workspace folder. An empty workspace-wide ZSS search now falls back to the active file's character/game project root, reports that scope clearly, and keeps Refresh, partial-scan, and failure guidance intact.
 - **0.79.446** completes the unified AIR/SFF/Palette Workshop authoring pass. Direct SFF Delete, Delete Group, Rename Group, and Duplicate actions now operate immediately in the current viewer, retain Undo/Redo recovery, and no longer divert into the advanced build workflow. Palette Workshop includes standalone and SFF-backed template creation, true-color intake, indexed palette organization, session/PSD continuation, and direct reviewed outputs. AIR collision boxes support selection, dragging, resizing, clipboard operations, persistent appearance controls, and push-box guidance.
 - Adds native compact CNS/ST and AIR Outline/Go-to-Symbol support. Legacy StateDefs own their controller sections; AIR actions show authored frame counts and comment labels without resolving Copy Action aliases or indefinite durations into invented timing.
 - Controller completion now offers a normal required-fields template and an explicit `(all parameters)` template for both ZSS and CNS. Optional fields stay commented until the author deliberately enables them.
 - Adds bounded, read-only syntax-hygiene diagnostics for semicolons, duplicate controller parameters, unknown controllers, braces/strings/headers, loop/switch control, and an opt-in unknown-trigger check. Every rule has an independent resource setting and external names can be allowlisted.
+
+## 0.79.452
+
+- Command & Movelist now uses the same complete colored universal and editing shortcut header as the text editor, without duplicate controls.
+- Match Setup, Project & Team Manager, Stage, Screenpack/UI, Storyboard, and Story Dialogue open as focused visual workspaces instead of splitting the current text editor.
+- Focused workspace ownership and navigation preserve exact selected character/project resources and safe return behavior.
+- AIR browser scrolling uses one usable vertical owner, and SND opening rejects stale authority without trapping valid current selections.
+- Sixteen focused viewer, lifecycle, routing, accessibility, and toolbar tests passed; the installed 0.79.452 build was physically verified before publication.
 
 ## 0.79.447
 

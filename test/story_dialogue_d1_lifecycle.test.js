@@ -75,7 +75,7 @@ Module._load = function(request, parent, main) {
   if (request === 'vscode') return vscode;
   if (request === './authoring_context_registry') return { registerAuthoringPanel: (panel, value) => { registrations.push({ panel, value }); return { panel }; }, getContextModel: entry => contextFor(entry.panel) };
   if (request === './viewer_sessions') return { register() {} };
-  if (request === './viewer_group') return { preferredViewerColumn: () => 1, trackViewerPanel: value => value, revealInViewerGroup(panel) { panel.reveal(); } };
+  if (request === './viewer_group') return { focusedVisualWorkspaceColumn: async () => 1, trackViewerPanel: value => value };
   if (request === './webview_policy') return { protect: value => value };
   if (request === './viewer_close') return { support() {}, prepare: async () => prepareAllowed, clientScript: () => '' };
   return originalLoad.call(this, request, parent, main);

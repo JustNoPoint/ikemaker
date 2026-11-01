@@ -422,7 +422,13 @@ async function openConnected(seed, target, reference, sourceOrigin, fromPoint, o
   if(target==='sff'&&reference?.paletteReturnContext)reference={...reference,paletteReturnContext:{...reference.paletteReturnContext,sffPath:path.resolve(filename),sffByteHash:require('./mutation_safety').hash(fs.readFileSync(filename))}};
   if (target === 'air') opened=await require('./air_viewer').openAirPreview(vscode.Uri.file(filename), { preserveFocus: false, action: reference?.group, viewerColumn, ownerDef:def });
   const command = { sff: 'sff.openViewer', snd: 'snd.openViewer' }[target];
-  if (command) opened=await vscode.commands.executeCommand(command, vscode.Uri.file(filename), viewerColumn, reference, { ownerDef:def });
+  if (command) {
+    // SFF takes session ownership fourth; SND reserves fourth for exact sound authority.
+    const args = [vscode.Uri.file(filename), viewerColumn, reference];
+    if (target === 'snd') args.push(undefined);
+    args.push({ ownerDef:def });
+    opened=await vscode.commands.executeCommand(command, ...args);
+  }
   if(opened){await rememberArchive(filename,chosenContext);history.transition(fromPoint||(sourceOrigin?{...sourceOrigin,kind:'source'}:null),viewerPoint(filename,target,reference,opened.panel||opened));}
   return opened;
 }

@@ -17,7 +17,7 @@ const { workspaceExperience } = require('./experience_model');
 const { workflowFor, workflowHtml, advancedActionBarHtml, taskRecipesHtml, workflowClientScript } = require('./guided_workflows');
 const { launchStageRig } = require('./stage_rig');
 const { chooseFileOrFolder } = require('./open_target_picker');
-const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
+const viewerGroup = require('./viewer_group'), trackViewerPanel = viewerGroup.trackViewerPanel, focusedVisualWorkspaceColumn = viewerGroup.focusedVisualWorkspaceColumn || (async fallback => viewerGroup.preferredViewerColumn(fallback));
 const { registerAuthoringPanel } = require('./authoring_context_registry');
 const { appendStageBackground, duplicateSection, deleteSection } = require('./visual_def_authoring');
 const { pickSpriteReference } = require('./visual_sprite_picker');
@@ -803,9 +803,10 @@ async function openStageWorkspace(uri) {
     if (kind(parseDef(fs.readFileSync(filename, 'utf8'), filename)) !== 'stage') return vscode.window.showErrorMessage('Choose a stage DEF containing Camera, StageInfo, and BGDef sections.');
   } catch (error) { return vscode.window.showErrorMessage(`Could not read stage DEF: ${error.message}`); }
   const existing = openPanels.get(panelKey(filename));
-  if (existing) { revealInViewerGroup(existing); return existing; }
+  const targetColumn = await focusedVisualWorkspaceColumn(vscode.ViewColumn.Active);
+  if (existing) { existing.reveal(targetColumn, false); return existing; }
   try {
-    const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenStageWorkspace', `Stage: ${path.basename(filename)}`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
+    const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenStageWorkspace', `Stage: ${path.basename(filename)}`, targetColumn, { enableScripts: true, retainContextWhenHidden: true }));
     await populate(panel, filename);
     return panel;
   } catch (error) { vscode.window.showErrorMessage(`Could not open stage workspace: ${error.message}`); }

@@ -15,9 +15,9 @@ const vscode = { ViewColumn: { Active: 1 }, Uri: { file: fsPath => ({ fsPath }) 
 Module._load = function(request, parent, main) {
   if (request === 'vscode') return vscode;
   if (request === './viewer_sessions') return sessions;
-  if (request === './viewer_group') return { preferredViewerColumn: () => 2, trackViewerPanel: value => value };
+  if (request === './viewer_group') return { focusedVisualWorkspaceColumn: async () => 2, trackViewerPanel: value => value };
   if (request === './project_context_ui') return { readRegistry: selected => { roots.push(path.resolve(selected)); return { filename: registryFile, registry, issues: [] }; }, writeRegistry() {}, contextRoot() { return ''; }, workspaceRoot() { return ''; }, activeUri() { return undefined; } };
-  if (request === './viewer_close') return { support() {}, prepare: () => new Promise(resolve => {releaseClose=resolve;}) };
+  if (request === './viewer_close') return { support() {}, prepare: () => new Promise(resolve => {releaseClose=resolve;}), clientScript: () => '' };
   if (request === './webview_policy') return { protect: value => value };
   return original.call(this, request, parent, main);
 };

@@ -5,6 +5,8 @@ const path = require("path");
 const crypto = require("crypto");
 const vscode = require("vscode");
 const model = require("./quick_launch_presets");
+const viewerGroup = require('./viewer_group'), trackViewerPanel = viewerGroup.trackViewerPanel, focusedVisualWorkspaceColumn = viewerGroup.focusedVisualWorkspaceColumn || (async fallback => viewerGroup.preferredViewerColumn(fallback));
+const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = require('./launch_controls');
 
 const STORAGE_KEY = "ikemen.quickLaunchPresets.v1";
 let extensionContext = null;
@@ -64,6 +66,10 @@ function musicUris(panel, root, presets) {
   }
   return values;
 }
+function toolbarSeed(root, currentCharacter) {
+  const relative = model.normalizeRelative(currentCharacter), candidate = relative && path.resolve(root, relative), prefix = path.resolve(root) + path.sep;
+  return candidate && candidate.toLowerCase().startsWith(prefix.toLowerCase()) && fs.existsSync(candidate) ? candidate : '';
+}
 function html(panel, state) {
   const n = nonce(),
     safe = (value) => JSON.stringify(value).replace(/</g, "\\u003c"),
@@ -91,8 +97,9 @@ function html(panel, state) {
 })();
 </script></body></html>`;
   const bridge = `const ikemenAcquire=acquireVsCodeApi;let ikemenSharedApi,ikemenHostBusy=false;const ikemenBusyControls=()=>document.querySelectorAll('#save,#clone,#rename,#remove,#run,#close,[data-browse],[data-roster],#roster');const ikemenSetBusy=(value,text)=>{ikemenHostBusy=Boolean(value);for(const control of ikemenBusyControls()){if(ikemenHostBusy){if(!control.disabled)control.dataset.quickBusyDisabled='true';control.disabled=true;control.title='Wait for the current Match Setup action to finish.'}else if(control.dataset.quickBusyDisabled==='true'){delete control.dataset.quickBusyDisabled;control.disabled=false;if(control.title==='Wait for the current Match Setup action to finish.')control.removeAttribute('title')}}const status=document.getElementById('status');if(status&&text)status.textContent=text};addEventListener('message',event=>{if(event.data?.type==='quickLaunchBusy')ikemenSetBusy(event.data.busy,event.data.status)});globalThis.acquireVsCodeApi=()=>{if(ikemenSharedApi)return ikemenSharedApi;const raw=ikemenAcquire();ikemenSharedApi={getState:()=>raw.getState(),setState:value=>raw.setState(value),postMessage:message=>{if(ikemenHostBusy){const status=document.getElementById('status');if(status)status.textContent='Wait for the current Match Setup action to finish.';return false}if(message&&message.preset){const music=document.getElementById('music'),volume=document.getElementById('musicVolume'),start=document.getElementById('loopStart'),end=document.getElementById('loopEnd');message.preset.music=music?music.value.trim():'';message.preset.musicTest={volume:volume?Number(volume.value)||0:100,loopStart:start?Math.max(0,Number(start.value)||0):0,loopEnd:end?Math.max(0,Number(end.value)||0):0};}ikemenSetBusy(true,'Match Setup action in progress…');return raw.postMessage(message)}};return ikemenSharedApi};`;
-  const outcomeBridge=bridge.replace("if(event.data?.type==='quickLaunchBusy')ikemenSetBusy(event.data.busy,event.data.status)","if(event.data?.type==='quickLaunchBusy'){const status=document.getElementById('status'),prior=status?.textContent||'';ikemenSetBusy(event.data.busy,event.data.status);if(!event.data.busy&&prior&&!/(in progress|^Wait)/i.test(prior)&&status)status.textContent=prior}");
+  const outcomeBridge=bridge.replace("if(event.data?.type==='quickLaunchBusy')ikemenSetBusy(event.data.busy,event.data.status)","if(event.data?.type==='quickLaunchBusy'){const status=document.getElementById('status'),prior=status?.textContent||'';ikemenSetBusy(event.data.busy,event.data.status);if(!event.data.busy&&prior&&!/(in progress|^Wait)/i.test(prior)&&status)status.textContent=prior}").replace("postMessage:message=>{if(ikemenHostBusy)","postMessage:message=>{const infrastructure=/^(viewerToolbar|ikemaker\\.universal-toolbar\\.|ikemenCloseState|ikemenPresetState)/.test(String(message?.type||''));if(infrastructure)return raw.postMessage(message);if(ikemenHostBusy)");
   return page
+    .replace('<body>', `<body>${launchControlsHtml('quick_launch', { seed: state.toolbarSeed || '', includeLayout: false, enabledSlots: ['backup','run','versus','training','sprites','animations','commands','states','sounds','palettes','code-structure'] })}`)
     .replace('-loadmotif 1 -training 1', '-training 1')
     .replace('<header class="top"><b>Match Setup</b><button class="mode" data-mode="versus">Quick VS</button><button class="mode" data-mode="training">Training</button></header>','<header class="top"><b>Match Setup</b><span role="group" aria-label="Match mode"><button class="mode" data-mode="versus">Quick VS</button><button class="mode" data-mode="training">Training</button></span></header>')
     .replace('<button class="icon" id="audition" title="Play or pause selected music">▶</button>','<button class="icon" id="audition" title="Choose custom test music before auditioning" aria-label="Play or pause selected music" disabled>▶</button>')
@@ -100,7 +107,7 @@ function html(panel, state) {
     .replace("const bind=(selector,key)=>{const input=row.querySelector(selector);input.value=entry[key]??'';", "const bind=(selector,key)=>{const input=row.querySelector(selector),sideName=sideKey==='p1'?'Player 1':'Opponent',fieldName={character:'character',color:'palette',ai:'AI level',input:'input source',life:'life',lifeMax:'maximum life',power:'power',dizzyPoints:'dizzy points',guardPoints:'guard points'}[key]||key;input.setAttribute('aria-label',sideName+' member '+(index+1)+' '+fieldName);input.value=entry[key]??'';")
     .replace('count.disabled=side.teamMode===0;const rebuild=',"count.disabled=side.teamMode===0;count.title=count.disabled?'Single mode always has exactly one team member.':'Choose 2–8 team members.';const rebuild=")
     .replace('count.disabled=side.teamMode===0;count.value=',"count.disabled=side.teamMode===0;count.title=count.disabled?'Single mode always has exactly one team member.':'Choose 2–8 team members.';count.value=")
-    .replace(`<script nonce="${n}">`, `<script nonce="${n}">${outcomeBridge}`);
+    .replace(`<script nonce="${n}">`, `<script nonce="${n}">${outcomeBridge}const vscode=acquireVsCodeApi();${launchControlsClientScript()}`);
 }
 function exact(message, keys) {
   return (
@@ -262,9 +269,11 @@ async function open(options) {
     throw new Error("Quick launch presets are not initialized.");
   const mode = options.mode === "training" ? "training" : "versus",
     root = path.resolve(options.root);
+  const targetColumn = await focusedVisualWorkspaceColumn(vscode.ViewColumn.Active);
   if (active && !active.disposed && active.root === root) {
     active.mode = mode;
-    active.panel.reveal(undefined, true);
+    active.panel.reveal(targetColumn, false);
+    active.toolbarSeed = toolbarSeed(root, options.currentCharacter);
     active.panel.webview.html = html(active.panel, {
       root,
       mode,
@@ -273,6 +282,7 @@ async function open(options) {
       characters: files(root, "chars"),
       stages: files(root, "stages"),
       currentCharacter: options.currentCharacter || "",
+      toolbarSeed: active.toolbarSeed,
       defaultStage: options.defaultStage || "stages/stage0.def",
     });
     return active.panel;
@@ -281,10 +291,10 @@ async function open(options) {
   const panel = vscode.window.createWebviewPanel(
     "ikemenQuickLaunch",
     "IKEMEN Match Setup",
-    { viewColumn: vscode.ViewColumn.Beside, preserveFocus: false },
+    { viewColumn: targetColumn, preserveFocus: false },
     { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [vscode.Uri.file(root)] },
   );
-  require('./viewer_group').trackViewerPanel(panel);
+  trackViewerPanel(panel);
   const owner = {
     panel,
     root,
@@ -295,6 +305,7 @@ async function open(options) {
     isActive:()=>active===owner&&!owner.disposed,
     disposed: false,
     pending: false,
+    toolbarSeed: toolbarSeed(root, options.currentCharacter),
   };
   active = owner;
   panel.webview.html = html(panel, {
@@ -305,10 +316,12 @@ async function open(options) {
     characters: files(root, "chars"),
     stages: files(root, "stages"),
     currentCharacter: options.currentCharacter || "",
+    toolbarSeed: owner.toolbarSeed,
     defaultStage: options.defaultStage || "stages/stage0.def",
   });
   panel.webview.onDidReceiveMessage(
     async (message) => {
+      if (await handleLaunchMessage(message, owner.toolbarSeed || owner.root, 'quick_launch', panel)) return;
       if(owner.pending){await panel.webview.postMessage({type:'quickLaunchBusy',busy:true,status:'Wait for the current Match Setup action to finish.'});return;}
       owner.pending=true;await panel.webview.postMessage({type:'quickLaunchBusy',busy:true,status:'Match Setup action in progress…'});
       try{return await handle(owner,message)}catch(error){return panel.webview.postMessage({type:'status',text:error.message||String(error),error:true})}finally{owner.pending=false;if(!owner.disposed)await panel.webview.postMessage({type:'quickLaunchBusy',busy:false,status:'Match setup controls are ready.'})}
@@ -323,4 +336,4 @@ async function open(options) {
   return panel;
 }
 
-module.exports = { initialize, open, readRoot, writeRoot, html, handle, STORAGE_KEY };
+module.exports = { initialize, open, readRoot, writeRoot, html, handle, toolbarSeed, STORAGE_KEY };

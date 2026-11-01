@@ -9,6 +9,27 @@ const ROOT_CLASS = 'ikemaker-universal-toolbar';
 const surfaceById = new Map(SURFACES.map((surface) => [surface.id, surface]));
 const slotById = new Map(SLOTS.map((slot) => [slot.id, slot]));
 const specialistIds = new Set(SPECIALIST_ACTION_IDS);
+const TONE_HUES = Object.freeze({ danger: 2, create: 142, save: 215, run: 174, navigate: 268, edit: 34, view: 195, neutral: 220 });
+
+function buttonTone(value) {
+  const text = String(value || '').toLowerCase();
+  if (/delete|remove|discard|clear|stop|close|cancel/.test(text)) return 'danger';
+  if (/new|add|create|duplicate|insert/.test(text)) return 'create';
+  if (/save|export|backup|copy/.test(text)) return 'save';
+  if (/play|run|training|versus|launch|audition|loop|pause/.test(text)) return 'run';
+  if (/previous|next|back|forward|seek|move earlier|move later|home|end/.test(text)) return 'navigate';
+  if (/edit|replace|change|rename|apply|comment|crop|resize|rotate|align|remap/.test(text)) return 'edit';
+  if (/view|preview|fit|zoom|axis|grid|show|open|browser|search|find/.test(text)) return 'view';
+  return 'neutral';
+}
+
+function toneAttributes(value, key = value) {
+  const tone = buttonTone(value), source = String(key || value || '');
+  let hash = 0;
+  for (let index = 0; index < source.length; index++) hash = (hash * 31 + source.charCodeAt(index)) >>> 0;
+  const hue = (TONE_HUES[tone] + (hash % 19) - 9 + 360) % 360;
+  return ` data-button-tone="${tone}" style="--viewer-button-hue:${hue}"`;
+}
 
 const ICONS = deepFreeze({
   new: '+', close: '×', open: '↗', save: '▣', 'auto-save': '↻', 'save-as': '⎘', 'text-source': '✎', 'connected-resources': '⧉',
@@ -51,7 +72,7 @@ function renderUniversalToolbar(model, options = {}) {
       const title = slot.enabled ? slot.label : `${slot.label} — unavailable: ${reason}`;
       const pressed=slot.id==='auto-save'&&typeof slot.pressed==='boolean'?` aria-pressed="${slot.pressed?'true':'false'}"`:'';
       const saveCapable=slot.id==='save'?` data-manual-save-capable="${slot.manualSaveCapable===true?'true':'false'}" data-save-policy-owned="${slot.savePolicyOwned===true?'true':'false'}"`:'';
-      return `<button type="button" class="${ROOT_CLASS}__button" data-universal-slot="${escapeHtml(slot.id)}" data-universal-group="${slot.groupIndex}" data-universal-coordinate="${slot.groupIndex}:${slot.slotIndex}" aria-label="${escapeHtml(slot.label)}"${pressed}${saveCapable}${slot.enabled ? '' : ` disabled aria-disabled="true" aria-description="${escapeHtml(reason)}"`} title="${escapeHtml(title)}"><span class="${ROOT_CLASS}__icon" aria-hidden="true">${escapeHtml(ICONS[slot.id] || '•')}</span><span class="${ROOT_CLASS}__sr">${escapeHtml(slot.label)}</span></button>`;
+      return `<button type="button" class="${ROOT_CLASS}__button" data-universal-slot="${escapeHtml(slot.id)}" data-universal-group="${slot.groupIndex}" data-universal-coordinate="${slot.groupIndex}:${slot.slotIndex}"${toneAttributes(`${slot.id} ${slot.label}`, slot.actionId)} aria-label="${escapeHtml(slot.label)}"${pressed}${saveCapable}${slot.enabled ? '' : ` disabled aria-disabled="true" aria-description="${escapeHtml(reason)}"`} title="${escapeHtml(title)}"><span class="${ROOT_CLASS}__icon" aria-hidden="true">${escapeHtml(ICONS[slot.id] || '•')}</span><span class="${ROOT_CLASS}__sr">${escapeHtml(slot.label)}</span></button>`;
     }).join('');
     return `<div class="${ROOT_CLASS}__group" role="group" aria-label="${escapeHtml(group.id)}">${buttons}</div>`;
   }).join('');

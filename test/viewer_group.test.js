@@ -1,6 +1,6 @@
 'use strict';
 const assert = require('assert');
-const { configureViewerTopology, preferredViewerColumn, trackViewerPanel, revealInViewerGroup, reserveViewerColumns, releaseViewerColumns, resetViewerGroupForTests } = require('../src/viewer_group');
+const { configureViewerTopology, preferredViewerColumn, focusedVisualWorkspaceColumn, trackViewerPanel, revealInViewerGroup, reserveViewerColumns, releaseViewerColumns, resetViewerGroupForTests } = require('../src/viewer_group');
 
 resetViewerGroupForTests();
 assert.strictEqual(preferredViewerColumn(1), 1);
@@ -76,4 +76,4 @@ assert.strictEqual(asyncReveals,1,'restore-time tab storms cannot issue a second
 restoring.viewColumn=3;asyncState({webviewPanel:restoring});reserveViewerColumns('text-editor',[1]);
 assert.strictEqual(asyncReveals,1,'a safe view-state acknowledgement clears relocation without another move');
 resetViewerGroupForTests();
-console.log('Shared visual viewer group tests passed');
+(async()=>{let invoked='';const api={ViewColumn:{One:1},commands:{async executeCommand(command){invoked=command;return true;}},window:{tabGroups:{activeTabGroup:{viewColumn:6}}}};assert.strictEqual(await focusedVisualWorkspaceColumn(1,api),6,'a visual workspace replaces the text companion in the joined active editor group');assert.strictEqual(invoked,'ikemen.textToolbar.suspendForVisualViewer');console.log('Shared visual viewer group tests passed');})().catch(error=>{console.error(error);process.exitCode=1;});

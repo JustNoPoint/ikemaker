@@ -42,6 +42,13 @@ const Module = require('module');
     Module._load=function(request,parent,isMain){if(request==='./sff_reader'&&/viewer_navigation\.js$/.test(parent.filename))return{readSff:()=>({sprites:[{group:1,number:0}]})};return originalPatched.call(this,request,parent,isMain);};
     await nav.openConnected(air,'sff',{group:1,number:0},undefined,{filename:air,kind:'air',panel:{viewColumn:4}});
     assert.strictEqual(commands[0][0],'sff.openViewer');assert.strictEqual(commands[0][1].fsPath,sff);assert.strictEqual(commands[0][2],4,'cross-viewer SFF navigation stays in the source visual viewer group');assert.strictEqual(commands[0][3].group,1);assert.strictEqual(commands[0][3].number,0);
+    const snd=path.join(folder,'files','test.snd');fs.writeFileSync(snd,'fixture');fs.appendFileSync(def,'sound = files/test.snd\n');
+    const priorLoader=Module._load;Module._load=function(request,parent,isMain){if(request==='./snd_reader'&&/viewer_navigation\.js$/.test(parent.filename))return{readSnd:()=>({entries:[{group:10,index:20}]})};return priorLoader.call(this,request,parent,isMain);};
+    await nav.openConnected(air,'snd',undefined,undefined,{filename:air,kind:'air',panel:{viewColumn:4}});
+    const soundOpen=commands.at(-1);assert.strictEqual(soundOpen[0],'snd.openViewer');assert.strictEqual(soundOpen[1].fsPath,snd);assert.strictEqual(soundOpen[2],4);assert.strictEqual(soundOpen[3],undefined);assert.strictEqual(soundOpen[4],undefined,'opening the Sounds toolbar must not mistake owner metadata for exact sound authority');assert.deepStrictEqual(soundOpen[5],{ownerDef:def},'SND character ownership is the fifth command argument');
+    await nav.openConnected(air,'snd',{group:10,number:20},undefined,{filename:air,kind:'air',panel:{viewColumn:4}});
+    assert.deepStrictEqual(commands.at(-1)[3],{group:10,number:20});assert.strictEqual(commands.at(-1)[4],undefined);assert.deepStrictEqual(commands.at(-1)[5],{ownerDef:def},'sound references keep ownership separate from authority too');
+    assert.deepStrictEqual(commands[0][4],{ownerDef:def},'SFF retains its different fourth-argument session contract');
     const sourceOriginPanel={viewColumn:4},opened=[];vscode.ViewColumn={Beside:2};vscode.window.visibleTextEditors=[];
     vscode.workspace.openTextDocument=async uri=>({fileName:uri.fsPath,uri,getText:()=>fs.readFileSync(uri.fsPath,'utf8')});
     vscode.window.showTextDocument=async(document,options)=>{const editor={document,viewColumn:options.viewColumn};opened.push({document,options});vscode.window.activeTextEditor=editor;return editor;};
@@ -108,7 +115,7 @@ const Module = require('module');
   // Exercise the actual SND opening function's failure path. Malformed files
   // must report the error and dispose the panel instead of caching a blank tab.
   const source=fs.readFileSync(path.join(__dirname,'../src/snd_viewer.js'),'utf8');
-  const body=source.slice(source.indexOf('async function openSndViewer('),source.indexOf('async function deserializeSndPanel('));
+  const body=source.slice(source.indexOf('function normalizeSndReference('),source.indexOf('async function deserializeSndPanel('));
   let disposed=false,error='';const panel={dispose(){disposed=true;}};
   const context={require:name=>{assert.strictEqual(name,'./asset_workspace');return {beforeOpen:async()=>true};},path,preferredViewerColumn:value=>value,reusableViewColumn:()=>2,sndPanels:[],sndPanelsByFile:new Map(),panelKey:value=>value,trackViewerPanel:value=>value,characterLabel:()=> 'Test',isClosingOwner:()=>false,rejectStaleExactSnd:()=>false,populate:async()=>{throw new Error('Invalid SND data');},vscode:{ViewColumn:{Beside:2},commands:{executeCommand:async()=>false},window:{createWebviewPanel:()=>panel,showErrorMessage:message=>{error=message;}}}};
   vm.createContext(context);vm.runInContext(body,context);

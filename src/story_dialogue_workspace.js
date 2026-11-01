@@ -7,7 +7,7 @@ const vscode = require('vscode');
 const { parseSelectDef, insertionLine } = require('./select_def_model');
 const { storyArcs, linearStoryLua, dialogueController, storySourceReferences, resolveStorySource, validStorySourceReference, sha256 } = require('./story_dialogue_model');
 const { chooseFileOrFolder } = require('./open_target_picker');
-const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
+const viewerGroup = require('./viewer_group'), trackViewerPanel = viewerGroup.trackViewerPanel, revealInViewerGroup = viewerGroup.revealInViewerGroup || (panel => panel.reveal()), focusedVisualWorkspaceColumn = viewerGroup.focusedVisualWorkspaceColumn || (async fallback => viewerGroup.preferredViewerColumn(fallback));
 const { FormDrafts } = require('./form_drafts');
 const { sourceState } = require('./source_document_save');
 const { adapt } = require('./universal_toolbar_adapter');
@@ -324,11 +324,12 @@ function installOwner(owner, options = {}) {
 }
 async function openStoryDialogueWorkspace(uri, initialView = 'player', suppliedPanel = null, restored = null) {
   const file = await resolveSelect(uri); if (!file) { suppliedPanel?.dispose?.(); return; }
+  const targetColumn = suppliedPanel ? suppliedPanel.viewColumn : await focusedVisualWorkspaceColumn(vscode.ViewColumn.Active);
   const key = sessionKey(file), existing = sessions.get(key);
-  if (existing) { if (suppliedPanel && suppliedPanel !== existing.panel) suppliedPanel.dispose(); else { await refresh(existing, initialView); revealInViewerGroup(existing.panel, false, vscode.ViewColumn.Active); } return existing.panel; }
+  if (existing) { if (suppliedPanel && suppliedPanel !== existing.panel) suppliedPanel.dispose(); else { await refresh(existing, initialView); existing.panel.reveal(targetColumn, false); } return existing.panel; }
   const document = await vscode.workspace.openTextDocument(vscode.Uri.file(file));
   let candidate; try { candidate = await buildCandidate(file, null, document); } catch (_) { suppliedPanel?.dispose?.(); return; }
-  const panel = suppliedPanel || trackViewerPanel(vscode.window.createWebviewPanel('ikemenStoryDialogueWorkspace', 'IKEMEN Story & Dialogue', preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
+  const panel = suppliedPanel || trackViewerPanel(vscode.window.createWebviewPanel('ikemenStoryDialogueWorkspace', 'IKEMEN Story & Dialogue', targetColumn, { enableScripts: true, retainContextWhenHidden: true }));
   if (typeof panel.onDidChangeViewState !== 'function') panel.onDidChangeViewState = () => ({ dispose() {} });
   if (typeof panel.onDidDispose !== 'function') panel.onDidDispose = () => ({ dispose() {} });
   const recoveredDraft = formDrafts.read(draftKey(file));
