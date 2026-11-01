@@ -3,7 +3,7 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.446';
+const PACKAGE_VERSION = '0.79.447';
 
 const FALLBACK_COMMANDS = [
   'ikemen.scaleReview.run', 'ikemen.scaleReview.toggleMonitoring', 'ikemen.scaleReview.configureConventions', 'ikemen.scaleReview.exportConventions', 'ikemen.scaleReview.importConventions',

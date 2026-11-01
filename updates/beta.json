@@ -3,23 +3,23 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.446",
+      "version": "0.79.447",
       "channel": "beta",
-      "publishedAt": "2026-11-01T00:43:30Z",
+      "publishedAt": "2026-11-01T01:53:22Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Direct SFF delete, group delete, group rename, Undo, and Redo are available as immediate viewer actions",
-        "Palette Workshop, true-color SFF writing, AIR collision editing, and shared authoring workflows received the release accessibility and routing closeout",
-        "All 3,614 audited controls have explicit routes with zero pending controls",
-        "All 1,226 source test files and all five Windows release artifacts were verified"
+        "Project Data now restores ZSS discovery from the active character or game project when the workspace-wide search is empty",
+        "The Registry clearly identifies active-project fallback scope and retains Refresh, partial-scan, and failure guidance",
+        "Seventeen focused Registry, navigation, ZSS catalog, diagnostics, activation, web, and interface tests passed",
+        "The installed 0.79.447 test build was physically verified before publication"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.446/ikemen-zss-tools-0.79.446.vsix",
-        "sha256": "d07c3dd9b5758134b12213e5f12471c9a1ca94153478302a9bb470f6f4baa8dc",
-        "bytes": 24450917
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.447/ikemen-zss-tools-0.79.447.vsix",
+        "sha256": "a294d0cfdd852d124089d92fc0a3c3fcd73c892db1613bba20b9151b51c51ccb",
+        "bytes": 24452195
       }
     }
   ]

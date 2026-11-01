@@ -1,9 +1,17 @@
 # IKEMaker
 
+- **0.79.447** restores Project Data discovery when VS Code has no useful workspace folder. An empty workspace-wide ZSS search now falls back to the active file's character/game project root, reports that scope clearly, and keeps Refresh, partial-scan, and failure guidance intact.
 - **0.79.446** completes the unified AIR/SFF/Palette Workshop authoring pass. Direct SFF Delete, Delete Group, Rename Group, and Duplicate actions now operate immediately in the current viewer, retain Undo/Redo recovery, and no longer divert into the advanced build workflow. Palette Workshop includes standalone and SFF-backed template creation, true-color intake, indexed palette organization, session/PSD continuation, and direct reviewed outputs. AIR collision boxes support selection, dragging, resizing, clipboard operations, persistent appearance controls, and push-box guidance.
 - Adds native compact CNS/ST and AIR Outline/Go-to-Symbol support. Legacy StateDefs own their controller sections; AIR actions show authored frame counts and comment labels without resolving Copy Action aliases or indefinite durations into invented timing.
 - Controller completion now offers a normal required-fields template and an explicit `(all parameters)` template for both ZSS and CNS. Optional fields stay commented until the author deliberately enables them.
 - Adds bounded, read-only syntax-hygiene diagnostics for semicolons, duplicate controller parameters, unknown controllers, braces/strings/headers, loop/switch control, and an opt-in unknown-trigger check. Every rule has an independent resource setting and external names can be allowlisted.
+
+## 0.79.447
+
+- Project Data first searches the opened workspace as before.
+- If that search returns no ZSS files, it performs a bounded fallback search rooted at the active project file.
+- The tree identifies an active-project fallback instead of misleadingly reporting an empty workspace-wide inventory.
+- Added regression coverage for failure, partial scans, and the active-project fallback.
 
 ## 0.79.446
 

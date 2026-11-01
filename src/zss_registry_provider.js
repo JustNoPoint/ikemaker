@@ -1,7 +1,9 @@
 'use strict';
 
+const path = require('path');
 const vscode = require('vscode');
 const { collectRecords } = require('./analyzer');
+const { gameRoot } = require('./character_context');
 
 const GROUPS = [
   ['maps', 'Maps', 'symbol-variable'],
@@ -13,6 +15,28 @@ const GROUPS = [
 ];
 
 function emptyData() { return { maps: [], variables: [], functions: [], calls: [], states: [], resources: [] }; }
+
+function projectSeed(api) {
+  const active = api.window?.activeTextEditor?.document?.uri?.fsPath || api.window?.activeTextEditor?.document?.fileName;
+  if (active) return active;
+  return (api.workspace.textDocuments || []).map((document) => document?.uri?.fsPath || document?.fileName).find(Boolean) || '';
+}
+
+function projectFallbackRoot(api) {
+  const seed = projectSeed(api);
+  return seed ? gameRoot(seed) || path.dirname(seed) : '';
+}
+
+async function discoverZssUris(api, limit) {
+  const exclude = '**/{.git,node_modules}/**';
+  const workspaceUris = await api.workspace.findFiles('**/*.zss', exclude, limit);
+  if (workspaceUris.length) return { uris: workspaceUris, scope: 'workspace', root: '' };
+  const root = projectFallbackRoot(api);
+  if (!root || typeof api.RelativePattern !== 'function') return { uris: [], scope: root ? 'unsupported-fallback' : 'no-project', root };
+  const fallbackUris = await api.workspace.findFiles(new api.RelativePattern(root, '**/*.zss'), exclude, limit);
+  const unique = [...new Map(fallbackUris.map((uri) => [String(uri?.fsPath || uri).toLowerCase(), uri])).values()];
+  return { uris: unique, scope: 'active-project', root };
+}
 
 class RegistryItem extends vscode.TreeItem {
   constructor(label, collapsibleState, data = {}) { super(label, collapsibleState); Object.assign(this, data); }
@@ -30,10 +54,12 @@ class ZssRegistryProvider {
     this.status = 'idle';
     this.failure = '';
     this.skipped = 0;
+    this.scope = 'workspace';
+    this.scopeRoot = '';
   }
 
   refresh() {
-    this.revision += 1; this.cache = null; this.pending = null; this.status = 'idle'; this.failure = ''; this.skipped = 0;
+    this.revision += 1; this.cache = null; this.pending = null; this.status = 'idle'; this.failure = ''; this.skipped = 0; this.scope = 'workspace'; this.scopeRoot = '';
     this.changeEmitter.fire(undefined);
   }
 
@@ -44,7 +70,7 @@ class ZssRegistryProvider {
     this.status = 'scanning'; this.failure = ''; this.skipped = 0;
     this.pending = (async () => {
       const limit = api.workspace.getConfiguration('ikemenZss').get('maxAuditFiles', 1000);
-      const uris = await api.workspace.findFiles('**/*.zss', '**/{.git,node_modules}/**', limit);
+      const discovery = await discoverZssUris(api, limit), uris = discovery.uris;
       const all = emptyData(); let skipped = 0;
       for (const uri of uris) {
         try {
@@ -53,7 +79,7 @@ class ZssRegistryProvider {
           for (const key of Object.keys(all)) all[key].push(...records[key].map((record) => ({ ...record, uri })));
         } catch (_) { skipped += 1; }
       }
-      if (revision === this.revision) { this.cache = all; this.skipped = skipped; this.status = skipped ? 'partial' : 'ready'; }
+      if (revision === this.revision) { this.cache = all; this.skipped = skipped; this.scope = discovery.scope; this.scopeRoot = discovery.root; this.status = skipped ? 'partial' : 'ready'; }
       return all;
     })().catch((error) => {
       const all = emptyData();
@@ -71,6 +97,9 @@ class ZssRegistryProvider {
     if (this.status === 'failed') return `Workspace ZSS inventory failed: ${this.failure || 'unknown error'}. Use Refresh to retry.`;
     if (this.status === 'partial') return `Workspace ZSS inventory is partial: ${this.skipped} unreadable file(s) skipped. Use Refresh to retry.`;
     if (this.status === 'scanning' || this.status === 'idle') return 'Workspace ZSS inventory is scanning…';
+    if (this.scope === 'active-project') return `Active-project ZSS inventory · ${this.scopeRoot}`;
+    if (this.scope === 'no-project') return 'No workspace folder or active project file is available. Open a project file, then use Refresh.';
+    if (this.scope === 'unsupported-fallback') return 'The active project was found, but this editor cannot search outside a workspace folder.';
     return 'Workspace-wide ZSS inventory';
   }
 
@@ -120,4 +149,4 @@ class ZssRegistryProvider {
   getTreeItem(element) { return element; }
 }
 
-module.exports = { ZssRegistryProvider, emptyData };
+module.exports = { ZssRegistryProvider, emptyData, projectSeed, projectFallbackRoot, discoverZssUris };
