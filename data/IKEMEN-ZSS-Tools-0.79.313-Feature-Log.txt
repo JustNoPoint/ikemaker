@@ -1,0 +1,32 @@
+IKEMaker 0.79.313
+
+Synchronized entity headers and viewer switching
+
+- One desktop host now synchronizes the active character, stage, screenpack or
+  supported workspace across ordinary SFF, AIR and SND viewers, their companion
+  browsers, native Code Navigation, Code Structure, Stage and Screenpack.
+- Every participating surface retains bounded entity-specific navigation and UI
+  state, validates exact owner/source evidence, rejects stale loads, reuses its
+  existing panel and rolls back as one transaction if any surface cannot switch.
+- Missing or inapplicable resources show a truthful unavailable screen instead
+  of leaving prior-entity content under a new label.
+- The shared entity row provides search, previous-entity navigation, modified
+  and shared-file badges, duplicate-name details, reordering and pinning.
+- Restore Closed Entity retains navigation/view/selection state only. It never
+  claims to recover discarded edits and revalidates owner, type and resources.
+- Native Code Navigation adds separately persisted per-entity file ordering and
+  pinning. Grouped files remains off by default and restores prior workspace tab
+  settings when disabled.
+- Explicit SFF Transfer endpoints stay locally pinned and are not retargeted by
+  an ordinary global switch.
+- Entity switching does not write source assets.
+
+Verification
+
+- New Dev independently signed off the SFF, AIR browser, Code Navigation,
+  Grouped files, main AIR/SND and Restore Closed Entity slices.
+- A combined no-write host gate covers all ten ordinary viewer/browser surfaces.
+- 36 focused coordinator, adapter, retention, rollback, lifecycle, activation,
+  command and web-fallback suites pass.
+- Installed cross-viewer, detached/narrow-window and dirty-editor journeys remain
+  physical release acceptance and are not claimed by this source checkpoint.

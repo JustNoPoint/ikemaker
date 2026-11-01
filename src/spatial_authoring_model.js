@@ -5,6 +5,7 @@ const ANCHORS = ['p1', 'p2', 'front', 'back', 'left', 'right', 'none'];
 const SUBJECTS = ['self', 'target', 'parent', 'root', 'helper'];
 const POSITION_MODES = ['world', 'relative', 'screen-once', 'screen-lock'];
 const TRANSPARENCY_MODES = new Set(['default', 'none', 'add', 'addalpha', 'add1', 'sub', 'subadd']);
+const SCALE_POLICIES = new Set(['', 'follow', 'fixed', 'position', 'size', 'manual']);
 
 function number(value, fallback = 0) { const n = Number(value); return Number.isFinite(n) ? n : fallback; }
 function integer(value, fallback = 0) { return Math.trunc(number(value, fallback)); }
@@ -14,6 +15,7 @@ function pair(value, fallback = [0, 0]) { return Array.isArray(value) ? [number(
 function compact(value) { const n = number(value); return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(4))); }
 function cleanTrigger(value) { return String(value || 'time = 0').replace(/[\r\n{}]/g, ' ').trim() || 'time = 0'; }
 function cleanName(value, fallback) { return String(value || fallback).replace(/[\r\n]/g, ' ').trim().slice(0, 80) || fallback; }
+function scalePolicy(value) { const policy = String(value || '').toLowerCase(); return SCALE_POLICIES.has(policy) ? policy : ''; }
 
 function newExplod(overrides = {}) {
   return normalizeExplod({
@@ -47,7 +49,7 @@ function normalizeExplod(input = {}) {
     spritePriority: integer(input.spritePriority), layerNo: integer(input.layerNo), onTop: bool(input.onTop),
     ownPalette: bool(input.ownPalette), palette: pair(input.palette).map((v) => integer(v)),
     transparency: cleanName(input.transparency, 'default').toLowerCase(), ignoreHitPause: bool(input.ignoreHitPause),
-    removeOnGetHit: bool(input.removeOnGetHit), localCoord: pair(input.localCoord, [320, 240]),
+    removeOnGetHit: bool(input.removeOnGetHit), localCoord: pair(input.localCoord, [320, 240]), scalePolicy: scalePolicy(input.scalePolicy),
     timeline: Array.isArray(input.timeline) ? input.timeline.map(normalizeEvent).sort((a, b) => a.tick - b.tick) : []
   };
 }
@@ -81,7 +83,7 @@ function zssParams(p, mode = 'create', event = null) {
 }
 
 function zssExplod(input) {
-  const p = normalizeExplod(input), out = [`# ${p.name}`, `if ${p.trigger} { explod{${zssParams(p)}} }`];
+  const p = normalizeExplod(input), out = [`# ${p.name}`, ...(p.scalePolicy ? [`# IKEMaker scale convention: ${p.scalePolicy} (new-effect authoring note; not runtime enforcement)`] : []), `if ${p.trigger} { explod{${zssParams(p)}} }`];
   for (const e of p.timeline) {
     if (e.type === 'create') out.push(`if time = ${e.tick} { explod{${zssParams(p, 'create', e)}} }`);
     if (e.type === 'modify') out.push(`if time = ${e.tick} { modifyExplod{${zssParams(p, 'modify', e)}} }`);
@@ -111,7 +113,7 @@ function cnsExplodParams(p, event = null) {
 }
 function cnsExplod(input) {
   const p = normalizeExplod(input);
-  const out = [cnsBlock(p.name, 'Explod', p.trigger, cnsExplodParams(p))];
+  const out = [...(p.scalePolicy ? [`; IKEMaker scale convention: ${p.scalePolicy} (new-effect authoring note; not runtime enforcement)`] : []), cnsBlock(p.name, 'Explod', p.trigger, cnsExplodParams(p))];
   for (const e of p.timeline) {
     const trigger = `time = ${e.tick}`;
     if (e.type === 'create') out.push(cnsBlock(p.name, 'Explod', trigger, cnsExplodParams(p, e)));

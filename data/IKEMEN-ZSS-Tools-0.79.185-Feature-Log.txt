@@ -1,0 +1,15 @@
+IKEMaker 0.79.185
+
+Exact slider navigation and character close recovery
+- Discrete navigation sliders preview their position while dragging and commit one selection when released.
+- SFF sprite navigation retains the exact physical archive occurrence even when several sprites share the same group and index.
+- The SFF Browser preserves physical identity for selection, marks, range anchors, persistence, thumbnails, Palette Workshop handoffs, and main-viewer focus.
+- SND navigation and history preserve exact archive positions; ambiguous legacy sound identities no longer select the first match silently.
+- Command Viewer, Code Structure, HitDef, Move Constants, and Palette Workshop navigation use the same preview-then-commit behavior.
+- Character Workbench close includes character-owned SFF, AIR, and SND viewers under reserved template folders and closes the exact visual panels atomically.
+- The confirmed text-editor header remains unchanged.
+
+Verification
+- Duplicate sprite and sound regression coverage checks physical-occurrence restoration and fail-closed legacy behavior.
+- SFF Browser, SFF quick controls, SFF image navigation, SND, AIR, Palette Workshop, Commands, Code Structure, Move Constants, and character-close tests pass.
+- New Dev reviewed before implementation and performed the final physical-identity and close-lifecycle audit.

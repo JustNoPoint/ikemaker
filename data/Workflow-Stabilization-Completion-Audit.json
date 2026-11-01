@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "auditedAt": "2026-09-28",
-  "extensionVersion": "0.79.20",
+  "extensionVersion": "0.79.446",
   "requirements": [
     {
       "id": 1,
@@ -124,6 +124,7 @@
     }
   ],
   "automatedVerification": {
+    "scope": "Historical stabilization snapshot; current release-wide evidence is maintained by the final accessibility/discoverability audit.",
     "testFilesPassing": 304,
     "package": "ikemen-zss-tools-0.78.4.vsix",
     "packageInstalled": false,

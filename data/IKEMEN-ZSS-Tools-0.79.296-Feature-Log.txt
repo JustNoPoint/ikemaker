@@ -1,0 +1,11 @@
+IKEMaker 0.79.296
+
+Palette Workshop Remappen placement and picker correction:
+
+- Remappen heading, instructions, and old/new legend now occupy Bank A's actual lower-left blank cell. They no longer wait below the taller 100-pair grid or increase the space before Bank B.
+- Bank A, Bank B, and color-editor clicks now address the exact mounted sprite editor through a scoped event. They cannot silently target a stale global editor instance.
+- Left click assigns the selected pair's old/source index; right click assigns its new/replacement index. The workshop status reports the resulting pair values immediately.
+- Sampling an indexed color from the sprite now synchronizes the visible Bank A/Bank B selection and rectangular color controls without rebuilding the workshop or changing its scroll position.
+- Sprite sampling retains left-primary/right-secondary behavior, and Remappen mappings remain index-only.
+
+Focused sprite-editor, dual-bank palette, workspace-view, workspace-controller, and JavaScript syntax checks pass.

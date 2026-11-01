@@ -1,0 +1,30 @@
+IKEMaker 0.79.314
+
+Trigger argument selection
+
+- Right-click a documented trigger call and choose IKEMaker, Edit & Insert,
+  Trigger Arguments to edit one exact argument in place.
+- Known argument values are grouped under their real ordered position. For
+  example, EnvShakeVar has one param_name position with time, freq, ampl and dir
+  alternatives.
+- Manual expressions remain available. Every change previews the complete call,
+  applies as one native Undo step and leaves the source file unsaved.
+- Browse / Insert Trigger uses the same choices and retains editable snippet
+  placeholders where a value was not selected.
+- Hover, signature help and Authoring Browser share the same bounded argument
+  meanings, types and engine-target availability.
+- Nested calls, comments, strings and IKEMEN half-open range syntax are handled
+  without treating mixed brackets as syntax errors or call boundaries.
+- Trigger Favorites are available from the argument picker for commonly used
+  trigger names and continue to rank first in Browse / Insert. Recipe Library
+  remains the separate bundled recipe catalog.
+- Source, exact-call and target-capability changes cancel the reviewed operation;
+  cancellation never edits and IKEMaker never autosaves these changes.
+
+Verification
+
+- New Dev independently implemented and signed off the shared metadata/model
+  slice and reviewed the right-click architecture and Favorites reuse.
+- All 165 focused Coding Viewer acceptance files pass, including exact-call,
+  EnvShakeVar choice, editable-expression, cancellation and stale-source tests.
+- Installed editor context-menu interaction remains a physical release check.

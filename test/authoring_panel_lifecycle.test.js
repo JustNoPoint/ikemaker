@@ -7,9 +7,10 @@ const original=Module._load;Module._load=function(request,parent,main){return re
 const stage=require('../src/stage_workspace'),ui=require('../src/screenpack_workspace');Module._load=original;
 const root=fs.mkdtempSync(path.join(os.tmpdir(),'ikemaker-panel-lifecycle-'));
 (async()=>{const stageFile=path.join(root,'stage.def'),uiFile=path.join(root,'system.def');
+const values=new Map(),storage={get:(key,fallback)=>values.has(key)?values.get(key):fallback,update:async(key,value)=>values.set(key,value)};
 fs.writeFileSync(stageFile,'[Info]\nname=Stage\n[Camera]\nboundleft=-10\nboundright=10\n[StageInfo]\nlocalcoord=320,240\n[BGDef]\nspr=missing.sff\n');
 fs.writeFileSync(uiFile,'[Info]\nname=UI\n[Files]\nspr=missing.sff\nfight=fight.def\n[Title Info]\nmenu.pos=160,120\n');
-stage.registerStageWorkspace({subscriptions:[]});ui.registerScreenpackWorkspace({subscriptions:[]});
+stage.registerStageWorkspace({subscriptions:[],workspaceState:storage,globalState:storage});ui.registerScreenpackWorkspace({subscriptions:[],workspaceState:storage,globalState:storage});
 for(const [file,open,type] of [[stageFile,stage.openStageWorkspace,'ikemenStageWorkspace'],[uiFile,ui.openUiWorkspace,'ikemenUiWorkspace']]){
 const before=created.length;await open(vscode.Uri.file(file));const first=created.at(-1);await open(vscode.Uri.file(file));assert.equal(created.length,before+1,'reopen reuses the existing panel');assert.equal(first.reveals,1);
 first.dispose();await open(vscode.Uri.file(file));assert.equal(created.length,before+2,'closing allows a fresh panel');created.at(-1).dispose();

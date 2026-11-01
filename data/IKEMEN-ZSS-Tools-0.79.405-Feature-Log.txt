@@ -1,0 +1,11 @@
+IKEMaker 0.79.405
+
+Layered palette-template PSD stack correction
+
+- Places the opaque transparent-color/canvas preview at the bottom of the PSD
+  layer stack instead of appending it above the artwork.
+- Keeps color/index 0 blank (alpha zero) inside every sprite layer.
+- Places imported sprites and named swatch layers above the background.
+- Keeps manual separator lines above the artwork.
+- Names the base layer "Canvas background (bottom layer)" so its purpose and
+  intended position are unambiguous when the PSD opens in an external editor.

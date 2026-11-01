@@ -23,13 +23,14 @@ Module._load = original;
   const provider = new ZssRegistryProvider(api, () => ({}));
   const roots = await provider.getChildren();
   const maps = roots.find((item) => item.key === 'maps');
-  assert.ok(maps && /scanning/.test(maps.label), 'root groups render without waiting for the legacy scan');
+  assert.ok(maps && /scanning/.test(maps.label), 'root groups render without waiting for the workspace scan');
   await provider.pending;
   assert.strictEqual(provider.status, 'failed');
   assert.match(provider.failure, /discovery unavailable/);
   const children = await provider.getChildren(maps);
-  assert.strictEqual(children[0].label, 'Browse Maps…', 'Browse Maps remains first and available after a rejected legacy scan');
-  assert.strictEqual(children.length, 1, 'failed/empty inventory does not hide or duplicate the browser action');
+  assert.strictEqual(children[0].label, 'Browse Maps…', 'Browse Maps remains first and available after a rejected workspace scan');
+  assert.strictEqual(children[1].label, 'No maps found', 'failed/empty inventory renders an explicit empty result instead of a blank group');
+  assert.match(children[1].description, /Add or save ZSS sources|could not be read/);
   const failedRoots = await provider.getChildren();
   assert.ok(failedRoots.every((item) => /Use Refresh to retry/.test(item.description)), 'failed inventory state exposes an explicit retry path');
 
@@ -42,5 +43,5 @@ Module._load = original;
   const partialChildren = await provider.getChildren(retryRoots.find((item) => item.key === 'maps'));
   assert.strictEqual(partialChildren[0].label, 'Browse Maps…');
 
-  console.log('Project Data legacy scan failure/partial handling keeps Browse Maps available');
+  console.log('Project Data workspace scan failure/partial handling keeps Browse Maps and explicit empty guidance available');
 })().catch((error) => { console.error(error); process.exitCode = 1; });

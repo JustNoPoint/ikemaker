@@ -8,9 +8,9 @@ const comparison=require('../src/viewer_animation_comparison'),visual=require('.
  const elements=new Map(),buttons=[{dataset:{play:'0'}},{dataset:{play:'1'}}];
  const ctx=Object.fromEntries(['clearRect','fillRect','save','translate','scale','beginPath','moveTo','lineTo','stroke','restore','strokeRect'].map(n=>[n,()=>{}]));
  function element(id){if(!elements.has(id))elements.set(id,{checked:false,value:0,getContext:()=>ctx});return elements.get(id);}
- const sandbox={acquireVsCodeApi:()=>({postMessage(){},setState(){}}),document:{hidden:false,getElementById:element,querySelectorAll:()=>buttons},performance:{now:()=>0},requestAnimationFrame(){},Image:class{set src(value){this.onerror();}}};
+ const bridge={postMessage(){},setState(){}},sandbox={document:{hidden:false,getElementById:element,querySelectorAll:()=>buttons},performance:{now:()=>0},requestAnimationFrame(){},Image:class{set src(value){this.onerror();}}};
  const run=vm.runInNewContext('('+comparison.client.toString()+')',sandbox);
- run([{animation:action},{animation:action}],playback,comparison.bounds,visual);
+ run([{animation:action},{animation:action}],playback,comparison.bounds,visual,bridge);
  await new Promise(resolve=>setImmediate(resolve));
  assert.match(element('status-0').textContent,/Could not decode sprite 0,0/);
  assert(buttons.every(b=>b.disabled===false),'failed image does not leave playback disabled forever');

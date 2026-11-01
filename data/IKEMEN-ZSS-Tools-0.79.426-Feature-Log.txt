@@ -1,0 +1,16 @@
+IKEMaker 0.79.426
+
+Palette template completion and checkpoint flow
+
+- Adds a bottom "Complete project / save your place" action beside the palette-table workflow.
+- Returns the user to the final export controls without discarding active palette-table work.
+- Reviews four explicit choices before PNG/setup or merged-image export:
+  1. Finish and apply the palette table (default: yes).
+  2. Save image-session.ikemaker.json (default: no).
+  3. Save palette-template.ikemaker.json (default: no).
+  4. Finish and unload/reset the workshop (default: yes).
+- Lists the requested outputs and explains that unchecking reset preserves the current working session.
+- Keeps the required paired IKEMaker setup file with PNG template exports.
+- Writes every requested output as one reviewed transaction. A cancellation or failed write leaves the active workshop untouched.
+- Resets cached template/layout state only after all requested files save successfully.
+- Blocks a "palette table finished" export when retained colors are still missing from named groups.

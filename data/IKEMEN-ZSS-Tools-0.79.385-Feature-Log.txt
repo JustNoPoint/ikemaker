@@ -1,0 +1,8 @@
+IKEMaker 0.79.385
+
+- Fixed the AIR collision color/thickness dialog X and Done buttons so they close explicitly.
+- Made the collision appearance title bar draggable with pointer capture and viewport clamping.
+- Remembered the moved appearance-dialog position and re-clamped it after window resizing.
+- Prevented the dialog close button from accidentally starting a drag.
+- Kept the underlying collision menu from intercepting Escape while the appearance dialog is open.
+- Fixed the related AIR SFF Sprite Explorer Cancel button so shared button initialization cannot disable its close action.

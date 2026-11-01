@@ -1,0 +1,13 @@
+'use strict';
+
+function fail(message) { throw new Error(`SFF Creator execution start UI: ${message}`); }
+function freeze(value) { if (value && typeof value === 'object' && !Object.isFrozen(value)) { Object.values(value).forEach(freeze); Object.freeze(value); } return value; }
+function callable(value, label) { if (typeof value !== 'function') fail(`${label} must be a function.`); return value; }
+function createVscodeExecutionStartUi(vscode) {
+  const showWarningMessage = callable(vscode?.window?.showWarningMessage, 'vscode.window.showWarningMessage');
+  return freeze({ async confirmStart(item) { const action = 'Start Approved Execution'; return await showWarningMessage('Start the approved SFF execution?', { modal: true, detail: `Operation: ${item.operationId}\nApproval: ${item.approvalReceiptHash}\n\nThis records durable execution intent only. The executor is not invoked by this confirmation step, and the active SFF, candidate, and draft remain unchanged.` }, action) === action; } });
+}
+async function confirmStartApprovedExecution(input = {}) {
+  const runtime = input.runtime, ui = input.ui, continuationLocator = input.continuationLocator; if (!runtime || typeof runtime !== 'object' || !ui || typeof ui !== 'object' || !continuationLocator) fail('runtime, UI adapter, and reviewed ExecutionApproved locator are required.'); const approved = input.approvedExecution || callable(runtime.readApprovedExecution, 'runtime.readApprovedExecution')({ continuationLocator }); if (approved?.status !== 'approved-execution-awaiting-start-confirmation' || approved?.startDecisionTemplate?.intent !== 'start-approved-execution' || approved.writesAllowed !== false) fail('runtime did not return exact non-executing approval evidence.'); const accepted = await callable(ui.confirmStart, 'ui.confirmStart')(freeze({ operationId: approved.operationId, approvalReceiptHash: approved.approvalReceiptHash, intent: approved.startDecisionTemplate.intent })); if (accepted !== true) return freeze({ status: 'approved-execution-start-deferred', operationId: approved.operationId, continuationLocator, executionStarted: false, resetDraft: false, writesAllowed: false }); const retained = callable(runtime.startApprovedExecution, 'runtime.startApprovedExecution')({ continuationLocator, intent: approved.startDecisionTemplate.intent }); if (retained?.status !== 'execution-intent-retained-executor-not-started' || retained.executionStarted !== false || retained.writesAllowed !== false) fail('runtime did not stop after durable non-executing intent.'); return retained;
+}
+module.exports = { confirmStartApprovedExecution, createVscodeExecutionStartUi };

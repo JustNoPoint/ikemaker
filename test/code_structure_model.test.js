@@ -10,12 +10,14 @@ if command = "x" {
 
 [Function JNP_Test(value) ret]
 let ret = value;
+call JNP_Other(ret);
 `);
 const zssNodes = flatten(zss);
 assert.deepStrictEqual(zss.children.map((item) => item.kind), ['state', 'function']);
 assert.ok(zssNodes.some((item) => item.kind === 'condition' && item.title.includes('command')));
 assert.ok(zssNodes.some((item) => item.kind === 'controller' && item.title === 'changeState'));
 assert.ok(zssNodes.some((item) => item.kind === 'assignment' && item.title === 'let ret'));
+assert.ok(zssNodes.some((item) => item.kind === 'call' && item.title === 'JNP_Other' && /call JNP_Other/.test(item.signature)));
 
 const lua = parseLuaStructure(`local menu = require("menu")
 local function drawOptions()

@@ -1,6 +1,7 @@
 'use strict';
 
-const { zssControllerName, formatControllerSnippet } = require('./sctrl');
+const { zssControllerName, formatControllerSnippet, formatCnsControllerSnippet } = require('./sctrl');
+const {argumentSummary}=require('./trigger_argument_model');
 
 function catalogMap(entries, aliases = () => []) {
   const map = new Map();
@@ -87,7 +88,8 @@ function triggerInsert(entry) {
   if (!signature.includes('(')) return entry.name;
   const argumentsText = signature.slice(signature.indexOf('(') + 1, signature.lastIndexOf(')')).trim();
   if (!argumentsText || /^none$/i.test(argumentsText)) return `${entry.name}()`;
-  return `${entry.name}(\${1:${snippetPlaceholder(argumentsText)}})`;
+  const parameters=argumentsText.split(',').map(value=>value.trim()).filter(Boolean);
+  return `${entry.name}(${parameters.map((value,index)=>`\${${index+1}:${snippetPlaceholder(value)}}`).join(', ')})`;
 }
 
 function callableInsert(entry) {
@@ -99,6 +101,19 @@ function callableInsert(entry) {
   const values = signature.slice(open + 1, close).split(',').map((item) => item.trim()).filter(Boolean);
   const args = values.map((value, index) => `\${${index + 1}:${snippetPlaceholder(value.replace(/\*$/, ''))}}`).join(', ');
   return `${entry.name}(${args})`;
+}
+
+function luaAuthoringInsert(entry) {
+  if (entry?.kind !== 'hook') return callableInsert(entry);
+  const signature = String(entry.signature || '').trim(), open = signature.indexOf('('), close = signature.lastIndexOf(')');
+  if (open < 0 || close <= open) return entry.name || '';
+  let placeholder = 0;
+  const values = signature.slice(open + 1, close).split(',').map((part) => part.trim()).filter(Boolean).map((part) => {
+    if (/^(['"]).*\1$/.test(part)) return part;
+    placeholder += 1;
+    return `\${${placeholder}:${snippetPlaceholder(part)}}`;
+  });
+  return `${signature.slice(0, open)}(${values.join(', ')})`;
 }
 
 function luaCompletionModels({ linePrefix = '', experience = 'learning', api = [] }) {
@@ -132,24 +147,39 @@ function completionModels({ text, line, linePrefix = '', languageId = 'zss', exp
       if (!assigned.has(parameter.name.toLowerCase())) items.push(parameterCompletion(parameter, languageId));
     }
   } else if (languageId === 'ikemen-cns' && /^\s*type\s*=\s*[A-Za-z0-9_]*$/i.test(linePrefix)) {
-    for (const controller of controllers) items.push({
-      kind: 'controller', label: controller.name,
+    for (const controller of controllers) {
+      items.push({
+      kind: 'controller', label: controller.name, filterText: controller.name,
       detail: 'IKEMEN 1.0 state controller', documentation: controller.description,
-      insertText: controller.name
+      insertText: formatCnsControllerSnippet(controller, 'required')
     });
+      if ((controller.params || []).some(parameter => !parameter.required)) items.push({
+        kind: 'controller', label: `${controller.name} (all parameters)`, filterText: controller.name,
+        detail: 'IKEMEN 1.0 state controller · optional parameters commented', documentation: controller.description,
+        insertText: formatCnsControllerSnippet(controller, 'all')
+      });
+    }
   } else if (languageId === 'zss' && /^\s*[A-Za-z0-9_]*$/.test(linePrefix)) {
-    for (const controller of controllers) items.push({
-      kind: 'controller', label: zssControllerName(controller.name),
+    for (const controller of controllers) {
+      const name = zssControllerName(controller.name);
+      items.push({
+      kind: 'controller', label: name, filterText: name,
       detail: 'IKEMEN 1.0 state controller', documentation: controller.description,
       insertText: formatControllerSnippet(controller, experience)
     });
+      if ((controller.params || []).some(parameter => !parameter.required)) items.push({
+        kind: 'controller', label: `${name} (all parameters)`, filterText: name,
+        detail: 'IKEMEN 1.0 state controller · optional parameters commented', documentation: controller.description,
+        insertText: formatControllerSnippet(controller, experience, 'all')
+      });
+    }
   }
 
   const expressionLikely = /(?:\b(?:if|else\s+if)\s+|\btrigger\w*\s*=|[=:(,]|&&|\|\|)\s*[A-Za-z0-9_.]*$/i.test(linePrefix);
   if (expressionLikely) {
     for (const trigger of triggers) items.push({
       kind: trigger.kind || 'trigger', label: trigger.name,
-      detail: `${trigger.status === 'changed' ? 'Expanded' : 'Native'} IKEMEN 1.0 ${trigger.kind || 'trigger'}`,
+      detail: `${trigger.status === 'new'?'New':trigger.status === 'changed' ? 'Expanded' : 'Documented'} IKEMEN 1.0 ${trigger.kind || 'trigger'}`,
       documentation: trigger.description,
       insertText: triggerInsert(trigger), experience
     });
@@ -186,7 +216,7 @@ function hoverModel({ word, text, line, languageId = 'zss', experience = 'learni
     kind: trigger.kind || 'trigger', title: trigger.signature || trigger.name,
     summary: trigger.description,
     explanation: experience === 'learning'
-      ? `Return type: ${trigger.returnType || 'see the bundled reference'}. Arguments: ${trigger.arguments || 'see the signature or bundled reference'}.`
+      ? `Return type: ${trigger.returnType || 'see the bundled reference'}. Arguments: ${argumentSummary(trigger)} Status: ${trigger.status || 'documented'}. Source: ${trigger.source || 'bundled IKEMEN documentation'}.`
       : '',
     url: trigger.url
   };
@@ -203,6 +233,7 @@ module.exports = {
   hoverModel,
   triggerInsert,
   callableInsert,
+  luaAuthoringInsert,
   luaCompletionModels,
   luaHoverModel
 };

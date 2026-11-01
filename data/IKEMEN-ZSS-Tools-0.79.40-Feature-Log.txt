@@ -1,0 +1,6 @@
+IKEMaker 0.79.40 — AIR floating-window command repair
+
+- Repairs the experimental AIR Actions Browser Float Window button.
+- Uses VS Code's native editor-to-window command directly instead of relying on an internal context-key lookup.
+- Changes the button to Return to Main Window after the native move completes.
+- Preserves the Actions Browser selection, filter mode, and floating-window state.

@@ -1,0 +1,9 @@
+IKEMaker 0.79.30 — Narrow floating-viewer access correction
+
+- Keeps the shared viewer toolbar usable in narrow and detached editor windows.
+- Replaces the ambiguous More label with a fixed Sections route at compact widths; every shared destination remains reachable there.
+- Hides lower-priority toolbar customization buttons at compact widths instead of sacrificing the primary navigation rail.
+- Gives the SND workspace a sticky Organize / Sounds / Preview / Tools section navigator at narrow widths.
+- Stacks SND panes vertically below 650 px so Groups, sound selection, preview, and build tools cannot remain stranded offscreen.
+- Preserves the full multi-column SND layout at normal editor widths.
+

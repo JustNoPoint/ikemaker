@@ -1,0 +1,9 @@
+IKEMaker 0.79.437
+
+Real compact IKEMaker SFF build
+- Changed selected-writer IKEMaker builds for an existing SFF v2.0/v2.1 target to enter the reviewed production update lifecycle instead of the candidate-only test route.
+- The production route validates a private candidate and may update the active SFF only after the existing explicit review, approval, recovery, and completion safeguards succeed.
+- Kept separately named IKEMaker test-candidate actions available for diagnostics and new-archive review.
+- Compact Add Sprites Build Now retains a return-to-viewer intent.
+- After a successful independently verified Completed write, the Advanced Creator closes and the original SFF viewer is refreshed from disk and focused.
+- Failed, cancelled, deferred, or recovery-required builds remain in Advanced so their required action is not hidden.

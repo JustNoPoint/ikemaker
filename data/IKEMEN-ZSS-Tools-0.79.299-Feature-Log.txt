@@ -1,0 +1,11 @@
+IKEMaker 0.79.299
+
+Palette Workshop Remappen selection repair:
+
+- Fixed the 100-pair Remappen grid after it is moved beside Bank A.
+- Pair selection and Bank A/Bank B/color-editor assignments now redraw through a stable editor-owned grid reference.
+- Left click updates the selected pair's old/source index; right click updates its new/replacement index.
+- The active pair outline and both swatch colors refresh immediately without scrolling or rebuilding the workshop.
+- Added a regression check that rejects the obsolete lookup through the Remappen dock's former parent.
+
+Focused sprite-editor, dual-bank, Palette Workshop view, and JavaScript syntax checks pass.

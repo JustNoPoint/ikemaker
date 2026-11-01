@@ -1,0 +1,11 @@
+IKEMaker 0.79.108
+
+- Adds a sealed runtime-certification results ledger and runbook for the built-in SFF 2.1 PNG8 writer.
+- Binds physical Windows/Linux results to the exact generated fixture manifest and records each required IKEMEN check.
+- Keeps built-in SFF adoption disabled even when a ledger reports passing evidence; release adoption remains a separate explicit decision.
+- Adds reviewed automatic-axis suggestions directly to SFF Creator for marked incoming sources.
+- Supports silhouette anchors, one trusted reference, and multi-reference consensus with configurable safety limits.
+- Uses the exact final crop coordinate space, including mixed cropped and uncropped references.
+- Preselects only high-confidence results and requires visual preview approval for every accepted suggestion before packaging.
+- Retains confidence, source/reference hashes, axes, crop bases and algorithm evidence in a sealed sidecar bound to the immutable specification and receipt.
+- Invalidates stale evidence after manual axis/crop changes or changed reference inputs.

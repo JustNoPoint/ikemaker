@@ -3,7 +3,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { transactionalWrite } = require('./mutation_safety');
+const { hash, transactionalWrite } = require('./mutation_safety');
 const { pngPaletteRgba } = require('./palette_library');
 const { readAct } = require('./act_palette_order');
 
@@ -23,20 +23,34 @@ function palettePlanLocation(sffPath) {
 
 function readPalettePlan(sffPath) {
   const filename = palettePlanLocation(sffPath);
-  if (!fs.existsSync(filename)) return { version: 4, sourceSff: path.resolve(sffPath), palettes: [], shifts: [] };
+  if (!fs.existsSync(filename)) return { version: 5, sourceSff: path.resolve(sffPath), palettes: [], shifts: [], deletions: [] };
   const plan = JSON.parse(fs.readFileSync(filename, 'utf8').replace(/^\uFEFF/, ''));
-  if (![1, 2, 3, 4].includes(plan.version) || !Array.isArray(plan.palettes)) throw new Error('Palette build plan has an unsupported format.');
+  if (![1, 2, 3, 4, 5].includes(plan.version) || !Array.isArray(plan.palettes)) throw new Error('Palette build plan has an unsupported format.');
   return {
     ...plan,
-    version: 4,
+    version: 5,
     shifts: Array.isArray(plan.shifts) ? plan.shifts.map((entry) => ({ ...entry, group: Number(entry.group), start: Number(entry.start), amount: Number(entry.amount) || 1 })) : [],
+    deletions: Array.isArray(plan.deletions) ? plan.deletions.map((entry) => ({ ...entry, group: Number(entry.group), number: Number(entry.number), sourceGroup: Number(entry.sourceGroup ?? entry.group), sourceNumber: Number(entry.sourceNumber ?? entry.number) })) : [],
     palettes: plan.palettes.map((entry) => ({ kind: entry.kind || 'source', ...entry }))
   };
 }
 
 function writePalettePlan(sffPath, plan) {
   const filename = palettePlanLocation(sffPath);
-  transactionalWrite(fs, filename, `${JSON.stringify({ ...plan, version: 4, sourceSff: path.resolve(sffPath), palettes: plan.palettes || [], shifts: plan.shifts || [] }, null, 2)}\n`, { label: 'palette-build-plan' }); return filename;
+  transactionalWrite(fs, filename, `${JSON.stringify({ ...plan, version: 5, sourceSff: path.resolve(sffPath), palettes: plan.palettes || [], shifts: plan.shifts || [], deletions: plan.deletions || [] }, null, 2)}\n`, { label: 'palette-build-plan' }); return filename;
+}
+
+function completePalettePlan(sffPath, reviewedSnapshot, completion = {}) {
+  const filename = palettePlanLocation(sffPath);
+  if (!fs.existsSync(filename)) throw new Error('The reviewed palette plan disappeared before completion could be recorded.');
+  const bytes = fs.readFileSync(filename), current = readPalettePlan(sffPath);
+  if (JSON.stringify(current) !== String(reviewedSnapshot || '')) throw new Error('The palette plan changed before completion. The adopted SFF is preserved, but the newer plan was not cleared.');
+  const finished = {
+    version: 5, sourceSff: path.resolve(sffPath), sourceSffSHA256: sha256File(sffPath), palettes: [], shifts: [], deletions: [],
+    lastCompletion: { ...completion, completedAt: new Date().toISOString() }
+  };
+  transactionalWrite(fs, filename, `${JSON.stringify(finished, null, 2)}\n`, { label: 'palette-build-plan-completed', expectedHash: hash(bytes) });
+  return { filename, plan: finished };
 }
 
 function paletteId(group, number) { return `${Number(group)},${Number(number)}`; }
@@ -56,7 +70,7 @@ function paletteColorSignature(colors) {
 function duplicatePaletteClusters(existing = [], incoming = []) {
   const groups = new Map();
   for (const item of [...existing.map((entry) => ({ ...entry, incoming: false })), ...incoming.map((entry) => ({ ...entry, incoming: true }))]) {
-    const signature = paletteColorSignature(item.colors), key = `${Number(item.group)}:${signature}`;
+    const signature = paletteColorSignature(item.colors), key = signature;
     if (!groups.has(key)) groups.set(key, []);
     groups.get(key).push({ ...item, signature, colors: undefined });
   }
@@ -83,15 +97,20 @@ function batchPalettePreflight(sffPath, request = {}) {
   });
   const occupied = shiftedOccupied(request.occupiedIds || [], plan.shifts).map((id) => id.split(',').map(Number));
   const staged = plan.palettes.map((entry) => [Number(entry.group), Number(entry.number)]);
-  const current = [...occupied, ...staged], mode = request.mode === 'insert' ? 'insert' : 'append';
+  const current = [...occupied, ...staged], mode = request.mode === 'insert' ? 'insert' : request.mode === 'gap-fill' ? 'gap-fill' : 'append';
   const groupNumbers = current.filter(([g]) => g === group).map(([, number]) => number);
-  const start = mode === 'insert' ? Number(request.beforeNumber) : (groupNumbers.length ? Math.max(...groupNumbers) + 1 : 0);
+  const start = mode === 'insert' || mode === 'gap-fill' ? Number(request.beforeNumber ?? 0) : (groupNumbers.length ? Math.max(...groupNumbers) + 1 : 0);
   if (!validCoordinate(start)) throw new Error('The first palette number must be a whole value from 0 through 65535.');
-  const lastIncoming = start + normalized.length - 1;
+  const occupiedNumbers = new Set(groupNumbers), assignedNumbers=[];
+  if(mode==='gap-fill'){
+    for(let number=start;number<=65535&&assignedNumbers.length<normalized.length;number++)if(!occupiedNumbers.has(number))assignedNumbers.push(number);
+    if(assignedNumbers.length!==normalized.length)throw new Error(`The ${normalized.length}-palette batch does not fit in the open numeric gaps at or after ${group},${start}.`);
+  }else for(let index=0;index<normalized.length;index++)assignedNumbers.push(start+index);
+  const lastIncoming = assignedNumbers.at(-1);
   if (lastIncoming > 65535) throw new Error(`The ${normalized.length}-palette batch does not fit in group ${group}.`);
   const shifted = mode === 'insert' ? current.filter(([g, number]) => g === group && number >= start).sort((a, b) => a[1] - b[1]).map(([g, number]) => ({ from: { group: g, number }, to: { group: g, number: number + normalized.length } })) : [];
   if (shifted.some((entry) => entry.to.number > 65535)) throw new Error(`Palette group ${group} has no room to shift upward by ${normalized.length}.`);
-  const assigned = normalized.map((entry, index) => ({ ...entry, group, number: start + index }));
+  const assigned = normalized.map((entry, index) => ({ ...entry, group, number: assignedNumbers[index] }));
   const assignedIds = new Set(assigned.map((entry) => paletteId(entry.group, entry.number)));
   if (assignedIds.size !== assigned.length) throw new Error('The incoming palette batch contains duplicate destination IDs.');
   if (mode === 'append') {
@@ -140,12 +159,17 @@ function assertDestination(group, number, occupiedIds, plan) {
 function stagePalette(sffPath, source, group, number, occupiedIds = [], metadata = {}) {
   const file = path.resolve(source), g = Number(group), n = Number(number);
   if (!fs.existsSync(file) || !fs.statSync(file).isFile() || !/\.(?:act|png)$/i.test(file)) throw new Error('Staged palette source must be an existing ACT or indexed PNG file.');
+  const sourceBytes=fs.readFileSync(file),sourceHash=hash(sourceBytes),sffHash=hash(fs.readFileSync(sffPath));
+  const expectedSourceHash=metadata.expectedSourceHash?String(metadata.expectedSourceHash).toLowerCase():null,expectedSffHash=metadata.expectedSffHash?String(metadata.expectedSffHash).toLowerCase():null;
+  if(expectedSourceHash&&expectedSourceHash!==sourceHash)throw new Error('The palette source changed after it was reviewed. Reopen the preview before staging it.');
+  if(expectedSffHash&&expectedSffHash!==sffHash)throw new Error('The source SFF changed after palette-slot availability was reviewed. Reopen the preview before staging it.');
   const plan = readPalettePlan(sffPath); assertDestination(g, n, shiftedOccupied(occupiedIds, plan.shifts), plan);
   const parent = metadata.variantOf && validCoordinate(metadata.variantOf.group) && validCoordinate(metadata.variantOf.number)
     ? { variantOf: { group: Number(metadata.variantOf.group), number: Number(metadata.variantOf.number) } }
     : {};
   const tableOrder = metadata.tableOrder === 'reversed' ? 'reversed' : 'index';
-  plan.palettes.push({ kind: 'source', group: g, number: n, source: file, sourceSHA256: sha256File(file), name: path.basename(file), tableOrder, ...parent, stagedAt: new Date().toISOString() });
+  const name=String(metadata.name||'').trim().slice(0,128)||path.basename(file);
+  plan.palettes.push({ kind: 'source', group: g, number: n, source: file, sourceSHA256: (expectedSourceHash||sourceHash).toUpperCase(), ...(expectedSffHash?{reviewedSourceSffSHA256:expectedSffHash.toUpperCase()}:{}), name, tableOrder, ...parent, stagedAt: new Date().toISOString() });
   plan.palettes.sort((a, b) => a.group - b.group || a.number - b.number); const filename = writePalettePlan(sffPath, plan);
   return { filename, plan };
 }
@@ -221,11 +245,32 @@ function removeStagedBatch(sffPath, insertionId) {
   return { removed: removed.length, filename: writePalettePlan(sffPath, plan), plan };
 }
 
+function stagePaletteDeletion(sffPath, palette, review = {}) {
+  const plan = readPalettePlan(sffPath), sourceGroup = Number(palette?.group), sourceNumber = Number(palette?.number);
+  if (!validCoordinate(sourceGroup) || !validCoordinate(sourceNumber)) throw new Error('Choose one embedded palette to delete.');
+  const effective = applyPaletteShifts(sourceGroup, sourceNumber, plan.shifts), id = paletteId(effective.group, effective.number);
+  if (Number(review.spriteCount) > 0) throw new Error(`${review.spriteCount} indexed sprite(s) still use palette ${id}. Reassign or remove those sprites first.`);
+  if (Number(review.linkCount) > 0) throw new Error(`${review.linkCount} linked palette(s) still depend on palette ${id}. Remove or redirect those links first.`);
+  if (Array.isArray(review.externalReferences) && review.externalReferences.length) throw new Error(`Authored files still reference palette ${id}. Review those references before deletion.`);
+  if (Number(review.unresolvedReferenceCount) > 0) throw new Error('Dynamic or unresolved palette references remain. Palette deletion is blocked until they are reviewed.');
+  if (plan.palettes.some((entry) => entry.kind === 'alias' && paletteId(entry.targetGroup, entry.targetNumber) === id)) throw new Error(`A staged linked palette still depends on ${id}. Remove or redirect it first.`);
+  if (!plan.deletions.some((entry) => entry.sourceGroup === sourceGroup && entry.sourceNumber === sourceNumber)) plan.deletions.push({ sourceGroup, sourceNumber, group: effective.group, number: effective.number, paletteIndex: Number(palette.index), lifecycleId: String(review.lifecycleId || ''), note: String(review.note || ''), stagedAt: new Date().toISOString() });
+  plan.sourceSffSHA256 = sha256File(sffPath);
+  return { filename: writePalettePlan(sffPath, plan), plan };
+}
+
+function removeStagedPaletteDeletion(sffPath, group, number) {
+  const plan = readPalettePlan(sffPath), before = plan.deletions.length;
+  plan.deletions = plan.deletions.filter((entry) => entry.group !== Number(group) || entry.number !== Number(number));
+  return { removed: before !== plan.deletions.length, filename: before !== plan.deletions.length ? writePalettePlan(sffPath, plan) : palettePlanLocation(sffPath), plan };
+}
+
 function verifyPalettePlan(sffPath, occupiedIds = []) {
   const plan = readPalettePlan(sffPath);
   if (plan.sourceSffSHA256 && sha256File(sffPath) !== plan.sourceSffSHA256) throw new Error('The source SFF changed after its palette batch was staged. Review and restage the batch before building.');
   const entries = new Map(plan.palettes.map((entry) => [paletteId(entry.group, entry.number), entry]));
-  const available = new Set([...shiftedOccupied(occupiedIds, plan.shifts), ...entries.keys()]);
+  const deleted = new Set(plan.deletions.map((entry) => paletteId(entry.group, entry.number)));
+  const available = new Set([...shiftedOccupied(occupiedIds, plan.shifts), ...entries.keys()].filter((id) => !deleted.has(id)));
   for (const entry of plan.palettes) {
     if (entry.kind === 'alias') {
       const target = paletteId(entry.targetGroup, entry.targetNumber);
@@ -243,4 +288,4 @@ function verifyPalettePlan(sffPath, occupiedIds = []) {
   return plan;
 }
 
-module.exports = { palettePlanLocation, readPalettePlan, stagePalette, stagePaletteAlias, stagePaletteInsertion, paletteInsertionPreview, batchPalettePreflight, stagePaletteBatch, duplicatePaletteClusters, stagedPaletteColorInventory, paletteColorSignature, applyPaletteShifts, removeStagedPalette, removeStagedBatch, verifyPalettePlan, sha256File, paletteId };
+module.exports = { palettePlanLocation, readPalettePlan, completePalettePlan, stagePalette, stagePaletteAlias, stagePaletteInsertion, paletteInsertionPreview, batchPalettePreflight, stagePaletteBatch, duplicatePaletteClusters, stagedPaletteColorInventory, paletteColorSignature, applyPaletteShifts, removeStagedPalette, removeStagedBatch, stagePaletteDeletion, removeStagedPaletteDeletion, verifyPalettePlan, sha256File, paletteId };

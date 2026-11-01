@@ -1,0 +1,8 @@
+IKEMEN ZSS Tools 0.79.272
+
+- Palette Workshop Bank B now starts as an empty transparent scratch bank. It is populated from Bank A only through the explicit Clone A → B action.
+- Preview B is now a clear live-preview toggle. Turning it off restores Bank A; editing Bank B while preview is enabled updates the sprite immediately.
+- The sprite canvas supports pointer-centered mouse-wheel zoom with a non-passive wheel handler.
+- Image tools, layers, CS masks, and the SFF Browser have always-visible entry buttons above the palette banks.
+- The indexed sprite editor exposes layer masks created from rectangle, lasso, or magic-wand selections, alongside the existing tool rail and 100 Remap Pen pairs.
+- Opening the SFF Browser from Palette Workshop now waits for browser readiness and replays the Palette Browser route after the browser floats or rerenders.

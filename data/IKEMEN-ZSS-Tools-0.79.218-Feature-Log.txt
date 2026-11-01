@@ -1,0 +1,10 @@
+IKEMEN ZSS Tools 0.79.218
+
+Shared palette browser and visual palette application
+
+- The SFF companion browser now has a directly reachable Palettes tab, and Palette Workshop opens the same palette-focused browser.
+- Every embedded palette card shows both its compact 256-color table and a real indexed sprite rendered with that palette. Search and remembered thumbnail sizing make large palette sets practical.
+- The selected palette can play neighboring AIR animations without changing the SFF or AIR source.
+- Palette assignment now has clear Current sprite, Marked sprites / range, and All attached to master palette actions.
+- All assignment scopes retain the existing exact archive snapshot, source-palette filter, protected-master rules, confirmation, backup, and stale-file revalidation.
+- Palette-browser state restores correctly instead of falling back to Groups + Sprites.

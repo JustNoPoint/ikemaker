@@ -11,6 +11,7 @@ const audit = auditPaletteReferences([
 
 assert.strictEqual(audit.affected.length, 1);
 assert.deepStrictEqual(audit.affected[0].references.find((item) => item.field.startsWith('dest')).shiftedTo, { group: 1, number: 32 });
+const exact=audit.affected[0].references.find((item)=>item.field.startsWith('dest'));assert.strictEqual('remappal {\n source: 1, 1;\n dest: 1, 2;\n}'.slice(exact.start,exact.end),'1, 2','verified indexer exposes exact source ranges for candidate-only rewrites');
 assert.strictEqual(audit.unresolved.length, 1);
 assert.strictEqual(audit.unresolved[0].filename, 'dynamic.zss');
 assert.strictEqual(audit.findings.some((item) => item.filename === 'other.zss'), false);

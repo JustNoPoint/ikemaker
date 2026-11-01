@@ -1,0 +1,9 @@
+IKEMEN ZSS Tools 0.79.215
+
+Training launch crash fix
+
+- Training launches no longer combine `-loadmotif` with `-training`, which crashed the current IKEMEN nightly in `menu.lua`.
+- Current-character Training, configured Training, saved Training presets, and IKEMaker test/diagnostic sessions now use the safe Training-only launch path.
+- Quick VS keeps its existing game-mode `-loadmotif` launch behavior.
+- Match Setup now previews the same safe arguments that will actually be launched.
+- A shared launch guard and regression coverage prevent later Training entry points from restoring the crashing combination.

@@ -10,7 +10,8 @@
     "ikemen.showVersion", "ikemen.showPlatformCapabilities", "ikemen.openExtensionSettings", "ikemen.openTools",
     "ikemen.launchGame", "ikemen.launchMirrorCurrent", "ikemen.launchTrainingCurrent", "ikemen.launchTrainingConfigured",
     "ikemen.productionWorkflow.open", "ikemen.projectManager.open", "ikemen.testSessions.open", "ikemen.mutations.openHistory",
-    "ikemen.relatedWork.open", "ikemen.file.createNew", "ikemen.workbench.create", "ikemen.workbench.open", "ikemen.workbench.refresh"
+    "ikemen.relatedWork.open", "ikemen.file.createNew", "ikemen.workbench.create", "ikemen.workbench.open", "ikemen.workbench.refresh",
+    "ikemen.textToolbar.restoreNativeLayout", "ikemen.textToolbar.disableNativeLayout"
   ],
   "teamControls": ["team-assignment", "team-handoff", "team-review"],
   "soloControls": ["issue-reporting", "personal-tasks"],

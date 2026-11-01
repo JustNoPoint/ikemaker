@@ -1,0 +1,12 @@
+'use strict';
+const assert=require('assert');
+const model=require('../src/palette_workshop_external_conflict');
+const palette=seed=>Array.from({length:256},(_,index)=>[(index+seed)%256,index,index,index===0?0:255]);
+const baseline=palette(0),local=palette(0),external=palette(0);local[4]=[10,20,30,255];external[5]=[40,50,60,255];local[6]=[1,2,3,200];external[6]=[9,8,7,100];
+const sourceBefore={filename:'C:\\pals\\a.act',exists:true,byteHash:'a'.repeat(64),byteLength:768},sourceNow={...sourceBefore,byteHash:'b'.repeat(64)},target={filename:'C:\\game\\hero.sff',exists:true,byteHash:'c'.repeat(64),byteLength:9000};
+const review=model.create({baseline,local,external,sourceBefore,sourceNow,target,now:'2026-10-22T12:00:00.000Z'});assert.deepStrictEqual(review.entries.map(item=>item.index),[6]);let proposal=model.proposal(review);assert.deepStrictEqual(proposal.colors[4],local[4]);assert.deepStrictEqual(proposal.colors[5],external[5]);assert.deepStrictEqual(proposal.unresolved,[6]);
+const resolved=model.resolve(review,6,'local');proposal=model.proposal(resolved);assert.deepStrictEqual(proposal.colors[6],local[6]);assert.deepStrictEqual(proposal.unresolved,[]);assert.strictEqual(model.assertCurrent(resolved,{target,sourceNow}).reviewId,review.reviewId);
+assert.throws(()=>model.assertCurrent(resolved,{target,sourceNow:{...sourceNow,byteHash:'d'.repeat(64)}}),/changed again/);
+const missing=model.create({baseline,local,external:null,deleted:true,sourceBefore,sourceNow:{...sourceNow,exists:false,byteHash:'',byteLength:0},target});assert.strictEqual(missing.topology,'deleted');assert.throws(()=>model.proposal(missing),/missing or unreadable/);
+const nonOverlap=model.create({baseline,local,external,sourceBefore,sourceNow,target});nonOverlap.local[6]=baseline[6];assert.strictEqual(model.normalize(nonOverlap),null,'tampering with retained review colors invalidates its hashes');
+console.log('Palette Workshop external edit conflict/rebase tests passed');

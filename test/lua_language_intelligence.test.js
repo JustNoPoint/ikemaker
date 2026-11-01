@@ -3,7 +3,7 @@
 const assert = require('assert');
 const obsoleteBaseline = new RegExp(['night' + 'ly', 'release ' + 'candidate', '\\bR' + 'C\\d*\\b'].join('|'), 'i');
 const api = require('../data/lua-api.json');
-const { callableInsert, luaCompletionModels, luaHoverModel } = require('../src/language_intelligence');
+const { callableInsert, luaAuthoringInsert, luaCompletionModels, luaHoverModel } = require('../src/language_intelligence');
 
 assert.ok(api.length >= 330);
 assert.ok(api.every((entry) => entry.name && entry.signature && entry.description && entry.category));
@@ -13,6 +13,8 @@ const addChar = api.find((entry) => entry.name === 'addChar');
 assert.ok(addChar);
 assert.strictEqual(callableInsert(addChar), 'addChar(${1:defpath}, ${2:params})');
 assert.ok(addChar.parameters.includes('defpath'));
+const challenger = api.find((entry) => entry.name === 'game.challenger');
+assert.strictEqual(luaAuthoringInsert(challenger), 'hook.add("game.challenger", ${1:name}, ${2:func})', 'sidebar hook insertion preserves the exact hook id and prompts only for authored values');
 
 const completions = luaCompletionModels({ linePrefix: 'local ok = add', experience: 'learning', api });
 assert.ok(completions.some((entry) => entry.label === 'addChar'));

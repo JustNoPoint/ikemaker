@@ -3,23 +3,23 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.9",
+      "version": "0.79.446",
       "channel": "beta",
-      "publishedAt": "2026-09-27T13:41:30Z",
+      "publishedAt": "2026-11-01T00:43:30Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Critical AIR viewer startup regression fixed; animations display again",
-        "Open SFF restored with its approved green SFF destination identity",
-        "No AIR, SFF, character, stage, or game-file migration required",
-        "All 325 source test files and all five release artifacts verified"
+        "Direct SFF delete, group delete, group rename, Undo, and Redo are available as immediate viewer actions",
+        "Palette Workshop, true-color SFF writing, AIR collision editing, and shared authoring workflows received the release accessibility and routing closeout",
+        "All 3,614 audited controls have explicit routes with zero pending controls",
+        "All 1,226 source test files and all five Windows release artifacts were verified"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.9/ikemen-zss-tools-0.79.9.vsix",
-        "sha256": "2448175daff54db5536e1b841333a8106a6f4a4e87a42c1db599d468a6a4f136",
-        "bytes": 20278305
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.446/ikemen-zss-tools-0.79.446.vsix",
+        "sha256": "d07c3dd9b5758134b12213e5f12471c9a1ca94153478302a9bb470f6f4baa8dc",
+        "bytes": 24450917
       }
     }
   ]

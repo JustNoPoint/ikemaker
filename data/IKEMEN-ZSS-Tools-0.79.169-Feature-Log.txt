@@ -1,0 +1,18 @@
+IKEMaker 0.79.169
+
+Command and glyph release hardening
+- Nightly broad-direction and string-command analysis requires the exact Nightly target plus the exact capability. Stable, ownerless, legacy-only, and contradictory snapshots stay hidden.
+- Glyph source text, mapping rows/tokens, SFF bytes and declared entries, sprite dimensions/pixels, decoded previews, and the complete serialized preview payload have explicit admission budgets.
+- Production glyph SFF intake reads one bounded buffer, verifies its actual byte length, signature, supported version, and declared sprite/palette counts before the full parser runs.
+- Repeated glyph mappings are charged per emitted preview entry, preventing one decoded image from expanding into an unbounded webview payload.
+- Open Mapping Source and Open Glyph SFF resolve from the current config→motif chain and verify assignment plus content hashes across the focus handoff.
+
+Workspace command preset safety
+- Custom presets use an exact data-only schema with bounded labels, text, count, and aggregate storage.
+- Save and delete operations are serialized and compare-and-swap the fresh workspace store after user prompts.
+- Malformed storage, concurrent changes, and persistence failure leave the previous store intact and visibly report the problem.
+
+Accessibility and verification
+- Glyph source actions wrap normally and stack into one readable column in narrow docked browser windows.
+- Stable/Nightly payload, UI, diagnostics, SFF preflight, repeated-preview, exact handoff, same-size mutation, reassignment, disposal, forged message, and preset failure/race paths have focused regression coverage.
+- New Dev approved the slice with no remaining P0/P1 findings.

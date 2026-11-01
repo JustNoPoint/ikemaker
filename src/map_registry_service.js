@@ -28,13 +28,14 @@ function descendantBoundaries(root, configuredRoots = []) {
 }
 
 class MapRegistryService {
-  constructor(vscode, context) {
+  constructor(vscode, context, options = {}) {
     this.vscode = vscode;
     this.context = context;
     this.cache = new Map();
     this.listeners = new Set();
     this.dependencyWatchers = new Map();
     this.generation = 0;
+    this.capabilities = typeof options.capabilities === 'function' ? options.capabilities : () => ({ enabledCapabilities: [] });
   }
 
   key(seed) {
@@ -61,8 +62,9 @@ class MapRegistryService {
     this.dependencyWatchers.set(key, watcher); this.context?.subscriptions?.push(watcher);
   }
 
-  eligible(filename) {
+  eligible(filename, options = {}) {
     const uri = this.vscode.Uri.file(filename);
+    if (/\.def$/i.test(filename || '') && options.allowDef !== true) return false;
     return Boolean(supportedNative(filename) || textGrammar({ fileName: filename, uri, languageId: '' }, this.context));
   }
 
@@ -127,7 +129,7 @@ class MapRegistryService {
       const info = projectInfo(def), activeProject = info?.project, characterRoot = path.dirname(def), templateBase = info?.loaded?.root || '';
       const projectRoots = (activeProject?.roots || []).map((item) => path.isAbsolute(item) ? item : path.resolve(templateBase, item)).filter((item) => fs.existsSync(item));
       const configuredRoots = (info?.loaded?.registry?.projects || []).flatMap((project) => (project.roots || []).map((item) => path.isAbsolute(item) ? item : path.resolve(templateBase, item))).filter((item) => fs.existsSync(item));
-      const currentFile = filename && this.eligible(filename) ? path.resolve(filename) : (authoringOwnsSeed ? (authoring?.files || []).find((item) => this.eligible(item)) : '') || dependencies[0] || '';
+      const currentFile = filename && this.eligible(filename, { allowDef: path.resolve(filename || '').toLowerCase() === path.resolve(def).toLowerCase() }) ? path.resolve(filename) : (authoringOwnsSeed ? (authoring?.files || []).find((item) => this.eligible(item)) : '') || dependencies[0] || '';
       const characterDiscovery = this.recursiveCodeFiles(characterRoot, { boundaries: descendantBoundaries(characterRoot, configuredRoots) });
       const characterFiles = characterDiscovery.files;
       const universalFiles = this.directCodeFiles(templateBase);
@@ -137,8 +139,8 @@ class MapRegistryService {
       const templateFiles = [...new Set([...universalFiles, ...gameTemplateFiles].map((item) => path.resolve(item)))];
       const union = (...sets) => [...new Set(sets.flat().filter(Boolean).map((item) => path.resolve(item)))];
       const scopeFiles = {
-        current: union(currentFile), character: union(characterFiles), template: union(templateFiles),
-        assigned: union(dependencies), available: union(currentFile, characterFiles, templateFiles, dependencies)
+        current: union(currentFile), character: union(characterFiles, def), template: union(templateFiles),
+        assigned: union(dependencies, def), available: union(currentFile, characterFiles, templateFiles, dependencies, def)
       };
       const characterName = info?.character?.name || path.basename(characterRoot), label = activeProject?.name || characterName;
       return {
@@ -159,7 +161,8 @@ class MapRegistryService {
     const limit = Math.max(1, Number(this.vscode.workspace.getConfiguration('ikemenZss').get('maxAuditFiles', 1000)) || 1000);
     const generation = this.generation;
     const prioritized = [scope.scopeFiles?.assigned || [], scope.scopeFiles?.current || [], scope.scopeFiles?.character || [], scope.scopeFiles?.template || [], scope.scopeFiles?.available || []].flat();
-    const allFiles = [...new Set(prioritized.filter((item) => item && fs.existsSync(item) && this.eligible(item)).map((item) => path.resolve(item)))];
+    const defIdentity=scope.def?path.resolve(scope.def).toLowerCase():'';
+    const allFiles = [...new Set(prioritized.filter((item) => item && fs.existsSync(item) && this.eligible(item,{allowDef:Boolean(defIdentity&&path.resolve(item).toLowerCase()===defIdentity)})).map((item) => path.resolve(item)))];
     for (const filename of [...allFiles, scope.def].filter(Boolean)) this.watchDependency(filename);
     const selected = allFiles.slice(0, limit).map((item) => this.vscode.Uri.file(item));
     const open = new Map((this.vscode.workspace.textDocuments || []).map((document) => [path.resolve(document.fileName).toLowerCase(), document]));
@@ -172,7 +175,9 @@ class MapRegistryService {
         occurrences.push(...model.occurrences(document.getText(), uri.fsPath, language)); indexedFiles.push(path.resolve(uri.fsPath));
       } catch (error) { readFailures.push({ path: uri.fsPath, reason: error.message }); }
     }
-    const allEntries = model.aggregate(occurrences, { applicability: scope.resolved ? `Resolved project: ${scope.label}` : 'Unresolved workspace fallback' });
+    const aggregatedEntries = model.aggregate(occurrences, { applicability: scope.resolved ? `Resolved project: ${scope.label}` : 'Unresolved workspace fallback' });
+    let capabilitySnapshot;try{capabilitySnapshot=this.capabilities(scope.def?this.vscode.Uri.file(scope.def):seed);}catch(_){capabilitySnapshot={enabledCapabilities:[]};}
+    const allEntries = model.capabilityProjection(aggregatedEntries, capabilitySnapshot);
     // Confirmed Author > Game namespaces are filtered to the active game.
     // Unnamespaced entries remain available only when they were actually found
     // in this project's resolved files/dependencies and therefore represent
@@ -220,8 +225,9 @@ class MapRegistryService {
   }
 }
 
-function initialize(vscode, context) {
-  if (!singleton) singleton = new MapRegistryService(vscode, context);
+function initialize(vscode, context, options = {}) {
+  if (!singleton) singleton = new MapRegistryService(vscode, context, options);
+  else if(typeof options.capabilities==='function')singleton.capabilities=options.capabilities;
   return singleton;
 }
 

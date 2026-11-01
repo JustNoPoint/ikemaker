@@ -1,0 +1,33 @@
+'use strict';
+const assert=require('assert'),Module=require('module'),original=Module._load;
+Module._load=function(request,parent,main){if(request==='vscode')return{window:{},workspace:{}};return original.call(this,request,parent,main);};
+const menu=require('../src/menu_modes_workspace');Module._load=original;
+
+const empty=menu.menuModesNavigationAvailability({count:0,index:0});
+for(const key of ['previous','next','range','select','edit','undo','redo'])assert.strictEqual(empty[key].disabled,true,key+' must fail closed without a source record');
+assert.match(empty.previous.reason,/No source records/);assert.match(empty.edit.reason,/Choose a current/);
+const one=menu.menuModesNavigationAvailability({count:1,index:0});
+assert.strictEqual(one.previous.disabled,true);assert.strictEqual(one.next.disabled,true);assert.strictEqual(one.range.disabled,true);assert.strictEqual(one.select.disabled,false);assert.strictEqual(one.edit.disabled,false);assert.strictEqual(one.undo.disabled,false);assert.strictEqual(one.redo.disabled,false);assert.match(one.range.reason,/Only one/);
+const middle=menu.menuModesNavigationAvailability({count:3,index:1});
+assert.strictEqual(middle.previous.disabled,false);assert.strictEqual(middle.next.disabled,false);assert.strictEqual(middle.range.disabled,false);
+const last=menu.menuModesNavigationAvailability({count:3,index:99});
+assert.strictEqual(last.previous.disabled,false);assert.strictEqual(last.next.disabled,true);assert.match(last.next.reason,/last source record/);
+assert.strictEqual(menu.menuModesTabTarget('Home',1,2),0);assert.strictEqual(menu.menuModesTabTarget('End',0,2),1);
+assert.strictEqual(menu.menuModesTabTarget('ArrowRight',1,2),0);assert.strictEqual(menu.menuModesTabTarget('ArrowLeft',0,2),1);
+assert.strictEqual(menu.menuModesTabTarget('Enter',0,2),-1);assert.strictEqual(menu.menuModesTabTarget('ArrowRight',0,0),-1);
+
+const model={files:{systemFile:'C:/game/data/system.def',selectFile:'C:/game/data/select.def'},menu:[],nativeActions:[],recipes:[],orders:[],options:[],sourceRecords:[],evidence:{screenpack:'Screenpack',roster:'Roster',behavior:'Behavior'}};
+const page=menu.html(model,'player');
+assert.match(page,/role="tablist" aria-label="Menu and modes views"/);
+assert.match(page,/id="menuModesPlayerTab"[^>]+role="tab"[^>]+aria-controls="player"/);
+assert.match(page,/id="player" class="panel" role="tabpanel"[^>]+tabindex="0"/);
+assert.match(page,/role="region" aria-label="Exact source navigation"/);
+assert.match(page,/id="menuModesSourceStatus"[^>]+role="status" aria-live="polite"/);
+assert.match(page,/id="menuModesReadout" role="status" aria-live="polite"/);
+assert.match(page,/id="menuModesCollection" role="listbox" aria-label="Source records"/);
+assert.match(page,/aria-label="Current source record"/);
+assert.match(page,/@media\(max-width:680px\)/);
+assert.match(page,/menuModesTabTarget\(event\.key,index,viewTabs\.length\)/);
+assert.match(page,/function applyActionAvailability\(\)/);
+assert.match(page,/No exact source record is available\./);
+console.log('Menu Modes accessibility and actionable availability contracts passed');

@@ -13,11 +13,25 @@ const { hash, transactionalWrite, optionsFromConfig } = require('./mutation_safe
 const { preferredViewerColumn, trackViewerPanel } = require('./viewer_group');
 const { normalizeOrder, REVERSED_ORDER, orderLabel } = require('./act_palette_order');
 
+const PALETTE_PRESETS = new Set(['none','lighten','darken','grayscale','invert','hue-positive','hue-negative']);
+function plain(value){return Boolean(value&&typeof value==='object'&&!Array.isArray(value)&&(Object.getPrototypeOf(value)===Object.prototype||Object.getPrototypeOf(value)===null));}
+function exact(value,keys){return plain(value)&&Object.keys(value).sort().join('\0')===[...keys].sort().join('\0');}
+function replacementFlowMessage(message,targetIndices){
+  if(exact(message,['type'])&&message.type==='cancel')return Object.freeze({type:'cancel'});
+  if(!exact(message,['type','requestId','paletteIndex','flipTable','rememberOrder','preset'])||!['preview','apply'].includes(message.type)||!Number.isSafeInteger(message.requestId)||message.requestId<0||!Number.isSafeInteger(message.paletteIndex)||!targetIndices.has(message.paletteIndex)||typeof message.flipTable!=='boolean'||typeof message.rememberOrder!=='boolean'||!PALETTE_PRESETS.has(message.preset))return null;
+  return Object.freeze({...message});
+}
+function newPaletteFlowMessage(message){
+  if(exact(message,['type'])&&message.type==='cancel')return Object.freeze({type:'cancel'});
+  if(!exact(message,['type','requestId','flipTable','rememberOrder'])||!['preview','apply'].includes(message.type)||!Number.isSafeInteger(message.requestId)||message.requestId<0||typeof message.flipTable!=='boolean'||typeof message.rememberOrder!=='boolean')return null;
+  return Object.freeze({...message});
+}
+
 function escapeName(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function paletteSource(filename) {
   const data = fs.readFileSync(filename), png = /\.png$/i.test(filename);
   const colors = png ? pngPaletteRgba(data) : actRgba(data);
-  return { filename: path.resolve(filename), name: path.basename(filename), kind: png ? 'Indexed PNG' : 'ACT', colors };
+  return { filename: path.resolve(filename), name: path.basename(filename), kind: png ? 'Indexed PNG' : 'ACT', colors, byteHash: hash(data) };
 }
 
 function characterSff(defPath) {
@@ -57,8 +71,19 @@ function rawPage(model) {
   return `<!doctype html><html><head><meta charset="utf-8"><style>:root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;font:13px var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground)}header{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--vscode-panel-border)}main{padding:16px;max-width:1050px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid var(--vscode-panel-border);padding:12px;border-radius:5px}.image{height:360px;display:grid;place-items:center;background:repeating-conic-gradient(#333 0 25%,#222 0 50%) 50%/20px 20px}.image img{max-width:100%;max-height:100%;image-rendering:pixelated}button,select{font:inherit;padding:7px 10px;color:inherit;background:var(--vscode-input-background);border:1px solid var(--vscode-input-border)}button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}.warning{border-left:5px solid var(--vscode-charts-yellow)}.muted{color:var(--vscode-descriptionForeground)}.options{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}@media(max-width:720px){.compare{grid-template-columns:1fr}.image{height:260px}}</style></head><body><header><b>Replace Existing Palette — Preview</b><span>${escapeName(model.character)}</span><span>← ${escapeName(model.source.name)}</span></header><main><div class="card warning"><b>No changes have been made.</b> This screen previews replacing one existing stored palette. The SFF changes only after you choose Review Replacement and confirm the replacement warning. Sprites using other palettes—including FX—remain untouched.</div><div class="options"><label>Existing palette to replace <select id="target">${model.targets.map((item) => `<option value="${item.index}">${item.id} · ${item.role} · WILL BE REPLACED</option>`).join('')}</select></label><label><input id="flipTable" type="checkbox" ${model.defaultFlip?'checked':''}> Reverse ACT RGB table</label><label><input id="rememberOrder" type="checkbox" checked> Remember this ACT order</label><label>Simple adjustment <select id="preset"><option value="none">None</option><option value="lighten">Lighter</option><option value="darken">Darker</option><option value="grayscale">Grayscale</option><option value="invert">Invert colors</option><option value="hue-positive">Hue shift A</option><option value="hue-negative">Hue shift B</option></select></label></div><p class="muted">Active order: <b id="activeOrder"></b>. ACT has no producer marker; use the preview to choose file order (0 → 255) or reversed RGB order (255 → 0).</p><div class="compare"><section class="card"><h3>Existing palette before replacement</h3><div class="image"><img id="before"></div></section><section class="card"><h3>Replacement preview from ${model.source.kind}</h3><div class="image"><img id="after" src="${model.after}"></div></section></div><div class="card" id="facts"></div><p><button id="apply" class="primary">Review Replacement…</button> <button id="cancel">Cancel Without Changes</button></p></main><script>const vscode=acquireVsCodeApi(),model=${safe(model)},target=document.getElementById('target'),flip=document.getElementById('flipTable'),remember=document.getElementById('rememberOrder'),preset=document.getElementById('preset');function options(){return{paletteIndex:Number(target.value),flipTable:flip.checked,rememberOrder:remember.checked,preset:preset.value}}function request(){document.getElementById('activeOrder').textContent=flip.checked?'Reversed RGB table (255 → 0)':'ACT file order (0 → 255)';vscode.postMessage({type:'preview',...options()})}target.onchange=request;flip.onchange=request;preset.onchange=request;document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...options()});document.getElementById('cancel').onclick=()=>vscode.postMessage({type:'cancel'});addEventListener('message',event=>{if(event.data.type!=='preview')return;document.getElementById('before').src=event.data.before;document.getElementById('after').src=event.data.after;const s=event.data.summary;document.getElementById('facts').innerHTML='<b>Replacement summary — palette '+s.id+' will be replaced only after confirmation</b><p>'+s.changedCount+' of 256 RGB indices change · '+s.affectedSprites+' sprite(s) directly use '+s.id+'. Sprites using every other palette remain untouched.</p>'+(s.linkedChildren.length?'<p>Linked palette IDs that inherit this stored table: '+s.linkedChildren.join(', ')+'</p>':'<p>No linked child palettes inherit this table.</p>')});request();</script></body></html>`;
 }
 
+function enhanceReplacementPage(output){
+  return output
+    .replace('<img id="before">','<img id="before" alt="Character using the existing palette">')
+    .replace('<img id="after"','<img id="after" alt="Character using the proposed replacement palette"')
+    .replace('<div class="card" id="facts"></div>','<div class="card" id="facts" role="status" aria-live="polite">Choose a stored palette to review its exact replacement impact.</div><p id="flowStatus" class="muted" role="status" aria-live="polite">Palette replacement controls are ready.</p>')
+    .replace("preset=document.getElementById('preset');function options()", "preset=document.getElementById('preset'),controls=[target,flip,remember,preset,document.getElementById('apply')];let requestId=0,busy=false;function setBusy(value,message=''){busy=Boolean(value);for(const control of controls){control.disabled=busy;control.title=busy?'Wait for the current replacement review to finish.':''}document.getElementById('flowStatus').textContent=message||(busy?'Replacement review in progress…':'Palette replacement controls are ready.');if(!busy)queueMicrotask(()=>document.getElementById('apply').focus())}function options()")
+    .replace("vscode.postMessage({type:'preview',...options()})", "vscode.postMessage({type:'preview',requestId:++requestId,...options()})")
+    .replace("document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...options()})", "document.getElementById('apply').onclick=()=>{if(busy)return;setBusy(true,'Reviewing the exact palette replacement…');vscode.postMessage({type:'apply',requestId:++requestId,...options()})}")
+    .replace("addEventListener('message',event=>{if(event.data.type!=='preview')return;", "addEventListener('message',event=>{if(event.data.type==='flowBusy'){setBusy(event.data.busy,event.data.status);return}if(event.data.type!=='preview'||event.data.requestId!==requestId)return;");
+}
+
 function page(model) {
-  const output = rawPage(model)
+  const output = enhanceReplacementPage(rawPage(model))
     .replace('Reverse ACT RGB table', 'Reversed Photoshop method')
     .replace('Reversed RGB table (255 → 0)', 'Reversed Photoshop method (255 → 0)');
   if (model.source?.kind === 'ACT') return output;
@@ -76,33 +101,56 @@ async function rememberActOrder(config, chosen, api = vscode) {
   return effective === order;
 }
 
+function enhanceNewPalettePage(output){
+  return output
+    .replace('</style>','@media(max-width:720px){.compare{grid-template-columns:1fr}.image{height:260px}}</style>')
+    .replace('<img src="','<img alt="Current character color preview" src="')
+    .replace('<img id="after"','<img id="after" alt="Proposed new character color preview"')
+    .replace('<p><button class="primary" id="apply">','<p id="flowStatus" role="status" aria-live="polite">New-color controls are ready.</p><p><button class="primary" id="apply">')
+    .replace("remember=document.getElementById('rememberOrder');function values()", "remember=document.getElementById('rememberOrder'),controls=[flip,remember,document.getElementById('apply')];let requestId=0,busy=false;function setBusy(value,message=''){busy=Boolean(value);for(const control of controls){control.disabled=busy;control.title=busy?'Wait for the current color preparation to finish.':''}document.getElementById('flowStatus').textContent=message||(busy?'Color preparation in progress…':'New-color controls are ready.');if(!busy)queueMicrotask(()=>document.getElementById('apply').focus())}function values()")
+    .replace("vscode.postMessage({type:'preview',...values()})", "vscode.postMessage({type:'preview',requestId:++requestId,...values()})")
+    .replace("document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...values()})", "document.getElementById('apply').onclick=()=>{if(busy)return;setBusy(true,'Preparing the exact new color…');vscode.postMessage({type:'apply',requestId:++requestId,...values()})}")
+    .replace("addEventListener('message',event=>{if(event.data.type==='preview')document.getElementById('after').src=event.data.after})", "addEventListener('message',event=>{if(event.data.type==='flowBusy'){setBusy(event.data.busy,event.data.status);return}if(event.data.type==='preview'&&event.data.requestId===requestId)document.getElementById('after').src=event.data.after})");
+}
+
 async function openRosterPaletteFlow(defPath, sourcePath, preferredPaletteIndex = null) {
-  const source = paletteSource(sourcePath), resource = vscode.Uri.file(sourcePath), config = vscode.workspace.getConfiguration('ikemenZss', resource), rememberedOrder = normalizeOrder(config.get('actPaletteOrder', 'index')), sffPath = characterSff(defPath), archive = readSff(sffPath), sprite = representativeSprite(archive);
+  const source = paletteSource(sourcePath), resource = vscode.Uri.file(sourcePath), config = vscode.workspace.getConfiguration('ikemenZss', resource), rememberedOrder = normalizeOrder(config.get('actPaletteOrder', 'index')), sffPath = characterSff(defPath), archive = readSff(sffPath), sprite = representativeSprite(archive),sourceHash=source.byteHash;
   if (!sprite) throw new Error('No indexed sprite is available for a palette preview. True-color sprites use PalFX rather than embedded palette replacement.');
   const targets = archive.palettes.filter((palette) => palette.dataSize > 0 && palette.colors === 256).map((palette) => ({ index: palette.index, id: `${palette.group},${palette.number}`, role: paletteRole(palette) }));
   if (!targets.length) throw new Error('This SFF has no stored 256-color palette that can be replaced directly. Stage a new palette through the SFF workspace rebuild tools.');
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenRosterPalettePlacement', `${path.basename(defPath, '.def')} — Palette Preview`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true }));
   if (Number.isInteger(preferredPaletteIndex)) targets.sort((a, b) => (a.index === preferredPaletteIndex ? -1 : b.index === preferredPaletteIndex ? 1 : 0));
   panel.webview.html = require('./webview_policy').protect(page({ character: path.basename(defPath, '.def'), source: { name: source.name, kind: source.kind }, targets, after: spriteDataUri(archive, sprite, source.colors), defaultFlip: source.kind === 'ACT' && rememberedOrder === REVERSED_ORDER, rememberedOrder: orderLabel(rememberedOrder) }),panel.webview.cspSource);
-  panel.webview.onDidReceiveMessage(async (message) => {
-    if (message.type === 'cancel') return panel.dispose();
-    const paletteIndex = Number(message.paletteIndex), converted = playerPaletteConversion(source, message), summary = replacementSummary(archive, paletteIndex, converted);
-    if (message.type === 'preview') return panel.webview.postMessage({ type: 'preview', before: spriteDataUri(archive, sprite, paletteIndex), after: spriteDataUri(archive, sprite, converted.colors), summary });
-    if (message.type !== 'apply') return;
-    const answer = await vscode.window.showWarningMessage(`Replace palette ${summary.id} in ${path.basename(sffPath)} from ${source.name}?`, { modal: true, detail: `${summary.changedCount} RGB indices change. ${summary.affectedSprites} sprite(s) directly use this palette.${summary.linkedChildren.length ? ` Linked IDs ${summary.linkedChildren.join(', ')} will inherit it.` : ''}\n\nReview the affected sprites before applying this palette replacement.` }, 'Replace Palette');
-    if (answer !== 'Replace Palette') return;
-    if(source.kind==='ACT'&&message.rememberOrder)await rememberActOrder(config,message.flipTable?REVERSED_ORDER:'index');
-    const result = bufferWithPaletteReplacement(archive, paletteIndex, converted.colors), options = optionsFromConfig(vscode, sffPath, 'roster-palette-replace', { journalRoot: path.dirname(defPath), expectedHash: hash(archive.buffer) });
-    transactionalWrite(fs, sffPath, result.buffer, options); panel.dispose();
-    vscode.window.showInformationMessage(`Palette ${summary.id} was replaced in ${path.basename(sffPath)}. Use VS Code’s IKEMaker mutation history to review or restore it.`);
+  const targetIndices=new Set(targets.map(item=>item.index)),sffHash=hash(archive.buffer);let disposed=false,applyBusy=false;
+  panel.onDidDispose?.(()=>{disposed=true;});
+  panel.webview.onDidReceiveMessage(async (raw) => {
+    const message=replacementFlowMessage(raw,targetIndices);if(!message)return false;
+    if(message.type==='cancel'){disposed=true;panel.dispose();return true;}
+    const paletteIndex=message.paletteIndex,converted=playerPaletteConversion(source,message),summary=replacementSummary(archive,paletteIndex,converted);
+    if(message.type==='preview'){await panel.webview.postMessage({type:'preview',requestId:message.requestId,before:spriteDataUri(archive,sprite,paletteIndex),after:spriteDataUri(archive,sprite,converted.colors),summary});return true;}
+    if(applyBusy){await panel.webview.postMessage({type:'flowBusy',busy:true,status:'Wait for the current replacement review to finish.'});return false;}
+    applyBusy=true;try{
+      await panel.webview.postMessage({type:'flowBusy',busy:true,status:'Reviewing the exact palette replacement…'});
+      const answer=await vscode.window.showWarningMessage(`Replace palette ${summary.id} in ${path.basename(sffPath)} from ${source.name}?`,{modal:true,detail:`${summary.changedCount} RGB indices change. ${summary.affectedSprites} sprite(s) directly use this palette.${summary.linkedChildren.length?` Linked IDs ${summary.linkedChildren.join(', ')} will inherit it.`:''}\n\nReview the affected sprites before applying this palette replacement.`},'Replace Palette');
+      if(disposed)return false;
+      if(answer!=='Replace Palette')return true;
+      if(hash(fs.readFileSync(sourcePath))!==sourceHash)throw new Error('The palette source changed while the replacement preview was open. Reopen it and review the current colors.');
+      if(hash(fs.readFileSync(sffPath))!==sffHash)throw new Error('The SFF changed while the replacement confirmation was open. Reopen the preview and review the current file before replacing its palette.');
+      if(disposed)return false;
+      const result=bufferWithPaletteReplacement(archive,paletteIndex,converted.colors),options=optionsFromConfig(vscode,sffPath,'roster-palette-replace',{journalRoot:path.dirname(defPath),expectedHash:sffHash});
+      transactionalWrite(fs,sffPath,result.buffer,options);disposed=true;panel.dispose();
+      if(source.kind==='ACT'&&message.rememberOrder)try{await rememberActOrder(config,message.flipTable?REVERSED_ORDER:'index');}catch(error){vscode.window.showWarningMessage?.(`Palette ${summary.id} was replaced, but the ACT-order preference could not be saved: ${error.message||error}`);}
+      vscode.window.showInformationMessage(`Palette ${summary.id} was replaced in ${path.basename(sffPath)}. Use VS Code’s IKEMaker mutation history to review or restore it.`);return true;
+    }catch(error){if(!disposed)vscode.window.showErrorMessage?.(`Palette replacement stopped: ${error.message||error}`);return false;}
+    finally{applyBusy=false;if(!disposed)await panel.webview.postMessage({type:'flowBusy',busy:false,status:'Palette replacement controls are ready.'});}
   });
 }
 
 async function stageNewRosterPalette(defPath, sourcePath) {
-  const sffPath = characterSff(defPath), archive = readSff(sffPath), occupied = archive.palettes.map((palette) => `${palette.group},${palette.number}`);
+  const sffPath = characterSff(defPath), archive = readSff(sffPath), occupied = archive.palettes.map((palette) => `${palette.group},${palette.number}`),sffHash=hash(archive.buffer);
   const group = await vscode.window.showInputBox({ title: 'New palette group', value: '1', validateInput: (input) => /^\d+$/.test(input) ? undefined : 'Enter a whole number from 0 through 65535.' }); if (group === undefined) return;
   const number = await vscode.window.showInputBox({ title: 'New palette number', value: '1', validateInput: (input) => /^\d+$/.test(input) ? undefined : 'Enter a whole number from 0 through 65535.' }); if (number === undefined) return;
-  const source = paletteSource(sourcePath), resource = vscode.Uri.file(sourcePath), config = vscode.workspace.getConfiguration('ikemenZss', resource), rememberedOrder = normalizeOrder(config.get('actPaletteOrder', 'index')), sprite = representativeSprite(archive);
+  const source = paletteSource(sourcePath), resource = vscode.Uri.file(sourcePath), config = vscode.workspace.getConfiguration('ikemenZss', resource), rememberedOrder = normalizeOrder(config.get('actPaletteOrder', 'index')), sprite = representativeSprite(archive),sourceHash=source.byteHash;
   if (!sprite) throw new Error('No indexed character sprite is available to preview this color.');
   const defaultFlip = source.kind === 'ACT' && rememberedOrder === REVERSED_ORDER, before = spriteDataUri(archive, sprite), after = spriteDataUri(archive, sprite, playerPaletteConversion(source, { flipTable: defaultFlip }).colors), id = `${group},${number}`;
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenRosterPalettePlacement', `${path.basename(defPath, '.def')} — New Color Preview`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true }));
@@ -110,16 +158,25 @@ async function stageNewRosterPalette(defPath, sourcePath) {
     ? `<label><input id="flipTable" type="checkbox" ${defaultFlip ? 'checked' : ''}> Reversed Photoshop method (255 → 0)</label> <label><input id="rememberOrder" type="checkbox" checked> Remember this ACT order</label>`
     : '<label><input id="flipTable" type="checkbox"> Reverse RGB table</label><input id="rememberOrder" type="checkbox" hidden>';
   panel.webview.html = require('./webview_policy').protect(`<!doctype html><html><head><meta charset="utf-8"><style>:root{color-scheme:light dark}body{font:13px var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground);margin:0;padding:16px}main{max-width:1000px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid var(--vscode-panel-border);padding:12px}.image{height:360px;display:grid;place-items:center;background:#222}.image img{max-width:100%;max-height:100%;image-rendering:pixelated}.options{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}button{font:inherit;padding:8px 11px;border:0;background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}</style></head><body><main><h2>Preview new color ${id}</h2><p>Nothing has been saved. Compare the character below, then confirm only if this is the color you intended.</p><div class="options">${orderControl}<span>Active order: <b id="activeOrder"></b></span></div><div class="compare"><section class="card"><h3>Current character color</h3><div class="image"><img src="${before}"></div></section><section class="card"><h3>New color from ${String(source.name).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</h3><div class="image"><img id="after" src="${after}"></div></section></div><p><button class="primary" id="apply">Add Color ${id}</button> <button id="cancel">Cancel</button></p><details><summary>What happens after I confirm?</summary><p>IKEMaker safely prepares color slot ${id}. The original character file is not replaced yet. Player Mode then opens the reviewed SprMaker2 build path without exposing the general SFF editor.</p></details></main><script>const vscode=acquireVsCodeApi(),isAct=${source.kind === 'ACT'},flip=document.getElementById('flipTable'),remember=document.getElementById('rememberOrder');function values(){return{flipTable:flip.checked,rememberOrder:isAct&&remember.checked}}function preview(){document.getElementById('activeOrder').textContent=flip.checked?(isAct?'Reversed Photoshop method (255 → 0)':'Reversed RGB table (255 → 0)'):'File order (0 → 255)';vscode.postMessage({type:'preview',...values()})}flip.onchange=preview;document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...values()});document.getElementById('cancel').onclick=()=>vscode.postMessage({type:'cancel'});addEventListener('message',event=>{if(event.data.type==='preview')document.getElementById('after').src=event.data.after});preview();</script></body></html>`,panel.webview.cspSource);
-  panel.webview.onDidReceiveMessage(async (message) => {
-    if (message.type === 'cancel') return panel.dispose();
-    const converted = playerPaletteConversion(source, message);
-    if (message.type === 'preview') return panel.webview.postMessage({ type: 'preview', after: spriteDataUri(archive, sprite, converted.colors) });
-    if (message.type !== 'apply') return;
-    if (source.kind === 'ACT' && message.rememberOrder) await rememberActOrder(config, message.flipTable ? REVERSED_ORDER : 'index');
-    const result = stagePalette(sffPath, sourcePath, Number(group), Number(number), occupied, { tableOrder: message.flipTable ? REVERSED_ORDER : 'index' }); panel.dispose();
-    const action = await vscode.window.showInformationMessage(`Color ${id} is prepared. It will not appear in the game until IKEMaker finishes updating the character file.`, 'Finish Color Update', 'Later');
-    if (action === 'Finish Color Update') vscode.commands.executeCommand('ikemen.palettePlayer.finishStaged', vscode.Uri.file(sffPath));
-    return result;
+  panel.webview.html=enhanceNewPalettePage(panel.webview.html);
+  let disposed=false,applyBusy=false;panel.onDidDispose?.(()=>{disposed=true;});
+  panel.webview.onDidReceiveMessage(async (raw) => {
+    const message=newPaletteFlowMessage(raw);if(!message)return false;
+    if(message.type==='cancel'){disposed=true;panel.dispose();return true;}
+    const converted=playerPaletteConversion(source,message);
+    if(message.type==='preview'){await panel.webview.postMessage({type:'preview',requestId:message.requestId,after:spriteDataUri(archive,sprite,converted.colors)});return true;}
+    if(applyBusy){await panel.webview.postMessage({type:'flowBusy',busy:true,status:'Wait for the current color preparation to finish.'});return false;}
+    applyBusy=true;try{
+      await panel.webview.postMessage({type:'flowBusy',busy:true,status:`Preparing color ${id}…`});
+      if(disposed)return false;
+      if(hash(fs.readFileSync(sourcePath))!==sourceHash)throw new Error('The palette source changed while the new-color preview was open. Reopen it and review the current colors.');
+      if(hash(fs.readFileSync(sffPath))!==sffHash)throw new Error('The SFF changed while the new-color preview was open. Reopen it so palette-slot availability can be reviewed again.');
+      const result=stagePalette(sffPath,sourcePath,Number(group),Number(number),occupied,{tableOrder:message.flipTable?REVERSED_ORDER:'index',expectedSourceHash:sourceHash,expectedSffHash:sffHash});disposed=true;panel.dispose();
+      if(source.kind==='ACT'&&message.rememberOrder)try{await rememberActOrder(config,message.flipTable?REVERSED_ORDER:'index');}catch(error){vscode.window.showWarningMessage?.(`Color ${id} was prepared, but the ACT-order preference could not be saved: ${error.message||error}`);}
+      const action=await vscode.window.showInformationMessage(`Color ${id} is prepared. It will not appear in the game until IKEMaker finishes updating the character file.`,'Finish Color Update','Later');
+      if(action==='Finish Color Update')await vscode.commands.executeCommand('ikemen.palettePlayer.finishStaged',vscode.Uri.file(sffPath));return result;
+    }catch(error){if(!disposed)vscode.window.showErrorMessage?.(`Color preparation stopped: ${error.message||error}`);return false;}
+    finally{applyBusy=false;if(!disposed)await panel.webview.postMessage({type:'flowBusy',busy:false,status:'New-color controls are ready.'});}
   });
 }
 
@@ -132,4 +189,4 @@ async function routeRosterPalette(defPath, sourcePath) {
   if (choice && Number.isInteger(choice.paletteIndex)) return openRosterPaletteFlow(defPath, sourcePath, choice.paletteIndex);
 }
 
-module.exports = { paletteSource, characterSff, representativeSprite, replacementSummary, playerPaletteConversion, rememberActOrder, openRosterPaletteFlow, stageNewRosterPalette, routeRosterPalette };
+module.exports = { paletteSource, characterSff, representativeSprite, replacementSummary, playerPaletteConversion, rememberActOrder, replacementFlowMessage, newPaletteFlowMessage, openRosterPaletteFlow, stageNewRosterPalette, routeRosterPalette };

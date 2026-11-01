@@ -1,0 +1,11 @@
+IKEMaker 0.79.111
+
+- Refreshes the installed package with the integrated Character Coding Viewer files that were present in source but missing from the earlier 0.79.110 VSIX.
+- Character Essentials opens its editable DEF, AIR, ZSS, CNS/ST, CMD/INP/JNP/DAT and configured code-TXT sources in one grouped Visual / Source / Split viewer when Integrated presentation is selected.
+- Native presentation continues to open ordinary VS Code text editors, while Ask remains a per-character-task choice.
+- Reopening Character Essentials or Open All Character Code reuses the exact character-owned viewer instead of duplicating source owners.
+- Assigned AIR, SFF and SND workspaces still open through their specialist viewers and retain normal connected navigation.
+- Unsupported notes and data continue to use ordinary text tabs rather than being forced into a partial visual projection.
+- Focused Character Essentials, authoring-presentation, Coding Viewer, text-toolbar and asset-routing regressions pass.
+- Fixes activation on VS Code hosts that provide a non-extensible extension context; Authoring Browser providers now remain in module-owned state instead of being attached to the host object.
+- The broader regression run reached the unrelated long-running SFF execution/recovery matrix without a failure before it was deliberately stopped; this build does not claim a new full writer-certification pass.

@@ -523,7 +523,9 @@ Returns information related to the debug mode.
 **Arguments:**  
 >param_name  
 >The name of the parameter to check. Valid values are:  
->accel, clsndisplay, debugdisplay, lifebarhide, wireframedisplay, roundrestarted
+>accel, clsndisplay, debugdisplay, lifebarhide, wireframedisplay, roundreset
+>
+>`roundreset` is the spelling accepted by the IKEMEN GO 1.0.0 and reviewed Nightly compilers. The previously documented `roundrestarted` spelling is not accepted. DebugMode reflects development/debug state and should not be used as reliable gameplay logic.
   
 **Example:**  
 ```ini
@@ -705,14 +707,14 @@ value = 30
 
 ## <a name="new_envshakevar">EnvShakeVar</a>  
 
-Allows checking the (remaining) time, frequency and amplitude of the current EnvShake.
+Allows checking the (remaining) time, frequency, amplitude and stored base direction of the current EnvShake.
 
 **Format:**  
->EnvShakeVar  
+>EnvShakeVar(param_name)  
   
 **Arguments:**  
 >param_name  
->The name of the constant to check. Valid values are: time, freq, ampl  
+>The name of the constant to check. Valid values are: time, freq, ampl, dir  
   
 **Return type:**  
 >float  
@@ -722,7 +724,10 @@ Allows checking the (remaining) time, frequency and amplitude of the current Env
 trigger1 = EnvShakeVar(time) = 1
 trigger2 = EnvShakeVar(freq) = 60
 trigger3 = EnvShakeVar(ampl) = -4
+trigger4 = EnvShakeVar(dir) = 0
 ```
+
+IKEMaker source correction (2026-10-26): EnvShakeVar(dir) returns sys.envShake.dir as a float: the stored base direction in degrees, not the instantaneous direction after diradd. Both pinned compilers accept time, freq, ampl, dir. This is a trigger argument, not an added EnvShake controller parameter. Verified source revisions: Stable 81c6da71d689625e20db79586815b695da00dd6d; Nightly ee4791bcd5e2f4bcb16ef9d584e001fb4a7eedfc. Compiler opcode: OC_ex2_envshakevar_dir; runtime: PushF(sys.envShake.dir).
 
 
 ## <a name="new_explodvar">ExplodVar</a>

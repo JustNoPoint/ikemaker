@@ -16,5 +16,12 @@ assert.strictEqual(screenpackModel(screenpack).sff, 'system.sff');
 const fight = parseDef(fightDef());
 assert.strictEqual(kind(fight), 'lifebar');
 assert.strictEqual(screenpackModel(fight).sff, 'fight.sff');
+const wideStage = stageModel(parseDef(stageDef('Wide Stage', 'wide.sff', { localCoord: [1280, 720] })));
+assert.deepStrictEqual(wideStage.localCoord, [1280, 720]);
+const wideScreenpack = screenpackModel(parseDef(screenpackDef({ localCoord: [1280, 720] })));
+assert.deepStrictEqual(wideScreenpack.localCoord, [1280, 720]);
+assert.match(fightDef({ localCoord: [1280, 720] }), /p2\.pos = 1200,60/);
+assert.match(stageDef('Authored', 'authored.sff', { author: 'Test Author' }), /author = "Test Author"/);
+assert.match(screenpackDef({ name: 'My UI', author: 'Test Author' }), /name = "My UI"[\s\S]*author = "Test Author"/);
 
 console.log('Stage and UI starter-template tests passed');

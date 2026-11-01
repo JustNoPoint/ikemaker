@@ -1,0 +1,37 @@
+'use strict';
+const assert = require('assert');
+const preference = require('../src/sff_writer_preference');
+
+(async () => {
+  const values = new Map(), messages = [], warnings = [];
+  const context = { workspaceState: { get(key, fallback) { return values.has(key) ? values.get(key) : fallback; }, async update(key, value) { values.set(key, value); } } };
+  preference.register(context);
+  const panel = { webview: { postMessage(message) { messages.push(message); return true; } }, onDidDispose() { return { dispose() {} }; } };
+  preference.attach(panel);
+  assert.strictEqual(preference.snapshot().mode, 'ikemaker', 'IKEMaker is the workspace default');
+  await preference.handle({ type: 'sffWriterPreferenceChange', mode: 'both' }, { window: { showWarningMessage(message) { warnings.push(message); } } });
+  assert.strictEqual(values.get(preference.KEY), 'both');
+  assert.strictEqual(preference.snapshot().mode, 'both');
+  assert(messages.some(message => message.type === 'sffWriterPreferenceState' && message.mode === 'both'), 'all attached panels receive the acknowledged host value');
+  await preference.handle({ type: 'sffWriterPreferenceChange', mode: 'forged' }, { window: { showWarningMessage(message) { warnings.push(message); } } });
+  assert.strictEqual(preference.snapshot().mode, 'both', 'unknown client values never replace host authority');
+  assert(warnings.length, 'an invalid writer request is visible');
+  const pair = preference.outputPlan('both', 'C:\\out', { ikemaker: 'Ryu-IKEMaker.sff', sprmake2: 'Ryu-SprMake2.sff' }, () => false);
+  assert.strictEqual(pair.length, 2, 'Both retains two explicit output names');
+  assert.throws(() => preference.outputPlan('both', 'C:\\out', { ikemaker: 'Ryu.sff', sprmake2: 'RYU.SFF' }, () => false), /distinct filenames/i);
+  assert.throws(() => preference.outputPlan('ikemaker', 'C:\\out', { ikemaker: '..\\escape.sff' }, () => false), /without folders/i);
+  assert.throws(() => preference.outputPlan('sprmake2', 'C:\\out', { sprmake2: 'CON.sff' }, () => false), /reserved Windows/i);
+  let releaseUpdate;
+  const delayedValues = new Map([[preference.KEY, 'ikemaker']]);
+  preference.register({ workspaceState: { get(key, fallback) { return delayedValues.has(key) ? delayedValues.get(key) : fallback; }, update(key, value) { return new Promise(resolve => { releaseUpdate = () => { delayedValues.set(key, value); resolve(); }; }); } } });
+  const delayedChange = preference.handle({ type: 'sffWriterPreferenceChange', mode: 'sprmake2' }, { window: { showWarningMessage(message) { warnings.push(message); } } });
+  await Promise.resolve();
+  let settled = false;
+  const selectedBuildAuthority = preference.settledSnapshot().then(value => { settled = true; return value; });
+  await Promise.resolve();
+  assert.equal(settled, false, 'selected-build authority waits for an in-flight writer preference update');
+  releaseUpdate();
+  await delayedChange;
+  assert.equal((await selectedBuildAuthority).mode, 'sprmake2', 'selected-build authority observes the acknowledged writer, never the stale prior writer');
+  console.log('Shared SFF writer preference tests passed');
+})().catch(error => { console.error(error); process.exitCode = 1; });

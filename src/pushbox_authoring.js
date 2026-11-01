@@ -12,10 +12,21 @@ function validateRect(rect) {
 }
 
 function parseSizeboxes(text) {
-  const boxes = {};
-  String(text || '').split(/\r?\n/).forEach((line, index) => {
+  const source = String(text || ''), lines = source.split(/\r?\n/), value = (name) => {
+    const pattern = new RegExp(`^\\s*${name.replace(/\./g, '\\.')}\\s*=\\s*(-?\\d+(?:\\.\\d+)?)`, 'i');
+    for (let index = 0; index < lines.length; index += 1) { const match = pattern.exec(lines[index]); if (match) return { value: Number(match[1]), line: index + 1 }; }
+    return null;
+  };
+  const front = value('ground.front'), back = value('ground.back'), airFront = value('air.front'), airBack = value('air.back'), height = value('height');
+  const stand = [back ? -back.value : -16, height ? -height.value : -60, front ? front.value : 16, 0], air = [airBack ? -airBack.value : -12, stand[1], airFront ? airFront.value : 12, stand[3]];
+  const legacyLines = [front, back, airFront, airBack, height].filter(Boolean).map((item) => item.line), provenance = legacyLines.length ? 'legacy fallback' : 'engine default';
+  const boxes = {
+    stand: { box: [...stand], line: legacyLines[0] || null, provenance }, crouch: { box: [...stand], line: legacyLines[0] || null, provenance },
+    air: { box: [...air], line: legacyLines[0] || null, provenance }, down: { box: [...stand], line: legacyLines[0] || null, provenance }
+  };
+  lines.forEach((line, index) => {
     const match = /^\s*(stand|crouch|air|down)\.sizebox\s*=\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i.exec(line);
-    if (match) boxes[match[1].toLowerCase()] = { box: match.slice(2, 6).map(Number), line: index + 1 };
+    if (match) boxes[match[1].toLowerCase()] = { box: match.slice(2, 6).map(Number), line: index + 1, provenance: 'native sizebox' };
   });
   return boxes;
 }

@@ -137,7 +137,9 @@ class ExtensionUpdateService {
   configuration() {
     const source = this.vscode.workspace.getConfiguration('ikemenZss');
     const value = (key, fallback) => applicationSetting(source, `extensionUpdates.${key}`, fallback);
-    return { enabled: value('enabled', true), feedUrl: String(value('feedUrl', '') || '').trim(), channel: String(value('channel', 'beta') || 'beta'), intervalHours: Math.max(1, Number(value('intervalHours', 24)) || 24), trustedAssetHosts: value('trustedAssetHosts', []) || [], maxBytes: Math.max(1, Number(value('maxDownloadMB', 128)) || 128) * 1024 * 1024 };
+    const configuredMode = String(value('installMode', 'backup-and-update') || 'backup-and-update');
+    const installMode = ['backup-and-update', 'update-without-backup', 'keep-as-new-build'].includes(configuredMode) ? configuredMode : 'backup-and-update';
+    return { enabled: value('enabled', true), downloadInstallEnabled: value('downloadInstallEnabled', true) === true, autoUpdateEnabled: value('autoUpdateEnabled', false) === true, installMode, feedUrl: String(value('feedUrl', '') || '').trim(), channel: String(value('channel', 'beta') || 'beta'), intervalHours: Math.max(1, Number(value('intervalHours', 24)) || 24), trustedAssetHosts: value('trustedAssetHosts', []) || [], maxBytes: Math.max(1, Number(value('maxDownloadMB', 128)) || 128) * 1024 * 1024 };
   }
 
   async discover(manual = false) {
@@ -150,7 +152,7 @@ class ExtensionUpdateService {
     const feed = model.parseFeed(payload.toString('utf8'), feedUrl.toString()), current = this.context.extension?.packageJSON?.version || require('../package.json').version;
     const release = model.selectUpdate(feed, current, this.vscode.version, config.channel);
     await this.context.globalState.update(LAST_CHECK_KEY, Date.now());
-    return release ? { release, config, current, allowed, feedUrl: feedUrl.toString() } : null;
+    return release ? { release, feed, config, current, allowed, feedUrl: feedUrl.toString() } : null;
   }
 
   async check(manual = false) {
@@ -160,8 +162,11 @@ class ExtensionUpdateService {
       try {
         const found = await this.discover(manual);
         if (!found) { if (manual && this.configuration().feedUrl) await this.vscode.window.showInformationMessage('IKEMaker is up to date for the configured beta channel.'); return null; }
-        const choice = await this.vscode.window.showInformationMessage(`IKEMaker ${found.release.version} is available on the ${found.release.channel} channel.`, 'Review Update', 'Not now');
-        if (choice !== 'Review Update') return found;
+        if (!manual && found.config.autoUpdateEnabled && found.config.downloadInstallEnabled) {
+          accepted = true; await this.reviewAndInstall(found, { automatic: true }); return found;
+        }
+        const choice = await this.vscode.window.showInformationMessage(`IKEMaker ${found.release.version} is available on the ${found.release.channel} channel.`, found.config.downloadInstallEnabled ? 'Review Update' : 'View Update Details', 'Not now');
+        if (!['Review Update', 'View Update Details'].includes(choice)) return found;
         accepted = true; await this.reviewAndInstall(found); return found;
       } catch (error) {
         if (accepted) await this.vscode.window.showErrorMessage(`IKEMaker update was not installed: ${error.message} Run Check for Updates to retry; an exact verified cached package will be reused when available.`);
@@ -172,15 +177,27 @@ class ExtensionUpdateService {
     return this.pending;
   }
 
-  async reviewAndInstall(found) {
-    const { release, config, current, allowed, feedUrl } = found;
+  async reviewAndInstall(found, options = {}) {
+    const { release, feed, config, current, allowed, feedUrl } = found;
     const asset = model.trustedPackageUrl(release, config.trustedAssetHosts);
-    const detail = [`Installed: ${current}`, `Available: ${release.version} (${release.channel})`, `Feed: ${feedUrl}`, `Package: ${asset.origin}`, `Download: ${release.package.bytes} bytes`, `SHA-256: ${release.package.sha256}`, '', 'Release notes:', ...(release.notes.length ? release.notes.map((line) => `• ${line}`) : ['• No release notes supplied.']), '', 'The package will be staged outside projects, identity/size/hash-verified, and then passed to VS Code’s normal VSIX installer. Projects and settings are not modified.'].join('\n');
-    const answer = await this.vscode.window.showWarningMessage('Review IKEMaker update before installation', { modal: true, detail }, 'Download, Verify & Install');
-    if (answer !== 'Download, Verify & Install') return false;
+    const modeLabels = { 'backup-and-update': 'Make a backup, then update', 'update-without-backup': 'Update without a backup', 'keep-as-new-build': 'Keep as a new build package (do not replace the active build)' };
+    const detail = [`Installed: ${current}`, `Available: ${release.version} (${release.channel})`, `Method: ${modeLabels[config.installMode]}`, `Feed: ${feedUrl}`, `Package: ${asset.origin}`, `Download: ${release.package.bytes} bytes`, `SHA-256: ${release.package.sha256}`, '', 'Release notes:', ...(release.notes.length ? release.notes.map((line) => `• ${line}`) : ['• No release notes supplied.']), '', config.downloadInstallEnabled ? 'The package will be staged outside projects and identity/size/hash-verified. No project files or settings are modified.' : 'Downloading and installation are turned off. This is an informational review only.'].join('\n');
+    if (!config.downloadInstallEnabled) {
+      await this.vscode.window.showInformationMessage('IKEMaker update details', { modal: true, detail }, 'Close');
+      return false;
+    }
+    const action = config.installMode === 'keep-as-new-build' ? 'Download & Verify New Build' : config.installMode === 'backup-and-update' ? 'Back Up, Download & Install' : 'Download, Verify & Install';
+    if (!options.automatic) {
+      const answer = await this.vscode.window.showWarningMessage('Review IKEMaker update before continuing', { modal: true, detail }, action);
+      if (answer !== action) return false;
+    } else {
+      await this.vscode.window.showInformationMessage(`Automatically applying IKEMaker ${release.version}: ${modeLabels[config.installMode]}.`);
+    }
     const storage = path.join(this.context.globalStorageUri.fsPath, 'extension-updates'); await fs.promises.mkdir(storage, { recursive: true });
-    const name = `ikemaker-${safeVersion(release.version)}-${safeVersion(release.channel)}.vsix`, finalPath = path.join(storage, name), partial = `${finalPath}.part`;
+    const packageFolder = config.installMode === 'keep-as-new-build' ? path.join(storage, 'separate-builds') : storage; await fs.promises.mkdir(packageFolder, { recursive: true });
+    const name = `ikemaker-${safeVersion(release.version)}-${safeVersion(release.channel)}.vsix`, finalPath = path.join(packageFolder, name), partial = `${finalPath}.part`;
     try {
+      if (config.installMode === 'backup-and-update') await this.prepareRollback(storage, current, feed, config, allowed);
       await fs.promises.rm(partial, { force: true });
       if (!(await verifiedFile(finalPath, release))) {
         await fs.promises.rm(finalPath, { force: true });
@@ -190,11 +207,57 @@ class ExtensionUpdateService {
         validateVsix(bytes, release.version);
         await fs.promises.writeFile(partial, bytes, { flag: 'wx' }); await fs.promises.rename(partial, finalPath);
       }
+      if (config.installMode === 'keep-as-new-build') {
+        const reveal = await this.vscode.window.showInformationMessage(`IKEMaker ${release.version} was downloaded and verified as a separate build package. The active build was not replaced.`, 'Show Package', 'Later');
+        if (reveal === 'Show Package') await this.vscode.commands.executeCommand('revealFileInOS', this.vscode.Uri.file(finalPath));
+        return true;
+      }
       await this.install(this.vscode.Uri.file(finalPath));
       const reload = await this.vscode.window.showInformationMessage(`IKEMaker ${release.version} installed. Reload VS Code when ready to activate it.`, 'Reload Now', 'Later');
       if (reload === 'Reload Now') await this.vscode.commands.executeCommand('workbench.action.reloadWindow');
       await this.prune(storage, finalPath); return true;
     } catch (error) { try { await fs.promises.rm(partial, { force: true }); } catch (_) {} throw error; }
+  }
+
+  async prepareRollback(storage, current, feed, config, allowed) {
+    const exact = feed?.releases?.find((item) => item.version === current && item.channel === config.channel);
+    if (!exact) throw new Error(`A verified rollback package for installed IKEMaker ${current} is not present in the reviewed update feed. Choose Update without a backup for this update, or cancel.`);
+    model.trustedPackageUrl(exact, config.trustedAssetHosts);
+    const backups = path.join(storage, 'backups'); await fs.promises.mkdir(backups, { recursive: true });
+    const finalPath = path.join(backups, `ikemaker-${safeVersion(exact.version)}-${safeVersion(exact.channel)}.vsix`), partial = `${finalPath}.part`, manifest = `${finalPath}.json`;
+    if (!(await verifiedFile(finalPath, exact))) {
+      await fs.promises.rm(finalPath, { force: true }); await fs.promises.rm(partial, { force: true });
+      const bytes = await this.fetch(exact.package.url, { maxBytes: Math.min(config.maxBytes, exact.package.bytes), allowedHosts: allowed });
+      if (bytes.length !== exact.package.bytes || sha256(bytes) !== exact.package.sha256) throw new Error('The installed IKEMaker rollback package did not match its reviewed size and SHA-256.');
+      validateVsix(bytes, exact.version);
+      await fs.promises.writeFile(partial, bytes, { flag: 'wx' }); await fs.promises.rename(partial, finalPath);
+    }
+    await fs.promises.writeFile(manifest, JSON.stringify({ schemaVersion: 1, version: exact.version, channel: exact.channel, bytes: exact.package.bytes, sha256: exact.package.sha256, sourceUrl: exact.package.url, savedAt: new Date().toISOString() }, null, 2));
+    return finalPath;
+  }
+
+  async restoreBackup() {
+    const folder = path.join(this.context.globalStorageUri.fsPath, 'extension-updates', 'backups');
+    let names; try { names = await fs.promises.readdir(folder); } catch (_) { names = []; }
+    const records = [];
+    for (const name of names.filter((item) => /\.vsix\.json$/i.test(item))) {
+      try {
+        const manifestPath = path.join(folder, name), record = JSON.parse(await fs.promises.readFile(manifestPath, 'utf8'));
+        const filename = manifestPath.slice(0, -5), bytes = await fs.promises.readFile(filename);
+        if (bytes.length !== record.bytes || sha256(bytes) !== record.sha256) continue;
+        validateVsix(bytes, record.version); records.push({ ...record, filename });
+      } catch (_) { }
+    }
+    records.sort((a, b) => String(b.savedAt).localeCompare(String(a.savedAt)));
+    if (!records.length) { await this.vscode.window.showInformationMessage('No verified IKEMaker rollback packages are available.'); return false; }
+    const choice = await this.vscode.window.showQuickPick(records.map((record) => ({ label: `IKEMaker ${record.version}`, description: record.channel, detail: `Saved ${record.savedAt} · SHA-256 ${record.sha256}`, record })), { title: 'Restore Previous IKEMaker', placeHolder: 'Choose a verified rollback package.' });
+    if (!choice) return false;
+    const answer = await this.vscode.window.showWarningMessage(`Restore IKEMaker ${choice.record.version}?`, { modal: true, detail: 'The active IKEMaker extension will be replaced by this verified rollback package. Projects and settings are not changed.' }, 'Restore & Install');
+    if (answer !== 'Restore & Install') return false;
+    await this.install(this.vscode.Uri.file(choice.record.filename));
+    const reload = await this.vscode.window.showInformationMessage(`IKEMaker ${choice.record.version} restored. Reload VS Code when ready to activate it.`, 'Reload Now', 'Later');
+    if (reload === 'Reload Now') await this.vscode.commands.executeCommand('workbench.action.reloadWindow');
+    return true;
   }
 
   async prune(folder, keep) {
@@ -217,7 +280,7 @@ class ExtensionUpdateService {
 
 function registerExtensionUpdater(vscode, context) {
   const service = new ExtensionUpdateService(vscode, context);
-  context.subscriptions.push(vscode.commands.registerCommand('ikemen.extensionUpdates.check', () => service.check(true)), vscode.commands.registerCommand('ikemen.extensionUpdates.settings', () => vscode.commands.executeCommand('workbench.action.openSettings', 'ikemenZss.extensionUpdates')));
+  context.subscriptions.push(vscode.commands.registerCommand('ikemen.extensionUpdates.check', () => service.check(true)), vscode.commands.registerCommand('ikemen.extensionUpdates.settings', () => vscode.commands.executeCommand('workbench.action.openSettings', 'ikemenZss.extensionUpdates')), vscode.commands.registerCommand('ikemen.extensionUpdates.restoreBackup', () => service.restoreBackup()));
   service.schedule(); return service;
 }
 

@@ -67,7 +67,14 @@
         "name": "palinvertblend",
         "placeholder": "value",
         "required": false
-      }
+      },
+      { "name": "shader.playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the shader name at runtime."}] },
+      { "name": "shader.param0", "placeholder": "value (rename suffix 0–15)", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" }
     ],
     "status": "changed",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#afterimage-changed"
@@ -177,7 +184,11 @@
   {
     "description": "This is the same as DisplayToClipboard, except that message text is added on a new line, instead of overwriting whatever text is already on the clipboard. See DisplayToClipboard for a format description.",
     "name": "AppendToClipboard",
-    "params": [],
+    "params": [
+      { "name": "text", "placeholder": "\"format string\"", "required": true },
+      { "name": "params", "placeholder": "expression_1, expression_2, ...", "required": false },
+      { "name": "redirectid", "placeholder": "player_id", "required": false }
+    ],
     "status": "changed",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#appendtoclipboard-displaytoclipboard-changed"
   },
@@ -222,7 +233,7 @@
   {
     "description": "This controller allows (de)activating the player’s commands without any button presses. If the player has multiple commands with the same name, the controller will affect all of them.",
     "name": "AssertCommand",
-    "params": [],
+    "params": [{"name":"name","placeholder":"\"command_name\"","required":true,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the command name from a runtime string expression."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#assertcommand-new"
   },
@@ -428,7 +439,12 @@
       {
         "name": "value",
         "placeholder": "anim_no",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], anim_no",
+          "descriptionAppend": "A verified supporting build may evaluate the animation archive prefix from a string expression."
+        }]
       },
       {
         "name": "elem",
@@ -501,7 +517,12 @@
       {
         "name": "anim",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], anim_no",
+          "descriptionAppend": "A verified supporting build may evaluate the animation archive prefix from a string expression."
+        }]
       },
       {
         "name": "Continue",
@@ -588,7 +609,7 @@
   {
     "description": "Assigns dialogue data to be displayed either right before the lifebar calls the fight during first round (last frame of RoundState = 1) or at the last active frame of the final round (RoundState = 4, right before screen starts fading out). If more than 1 player calls this sctrl, who will end up initiating dialogue is chosen randomly.",
     "name": "Dialogue",
-    "params": [],
+    "params": [{"name":"text0","placeholder":"\"dialogue text\" (repeat as text1, text2, ...)","required":true,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression (repeat as text1, text2, ...)","descriptionAppend":"A newer verified Nightly evaluates each dialogue line from a runtime string expression."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#dialogue-new"
   },
@@ -603,7 +624,12 @@
       },
       {
         "name": "params",
-        "placeholder": "exp_1, exp_2, exp_3, exp_4, exp_5, exp_6",
+        "placeholder": "expression_1, expression_2, ...",
+        "required": false
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
         "required": false
       }
     ],
@@ -706,10 +732,25 @@
     "description": "The Explod controller is a flexible tool for displaying animations such as sparks, dust and other visual effects. Its functionality includes that of GameMakeAnim, which is now deprecated.",
     "name": "Explod",
     "params": [
+      { "name": "shader.shadow", "placeholder": "boolean_expression", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.reflection", "placeholder": "boolean_expression", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.afterimage", "placeholder": "boolean_expression", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the afterimage shader name at runtime."}] },
+      { "name": "afterimage.shader.param0", "placeholder": "value (rename suffix 0–15)", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
       {
         "name": "anim",
         "placeholder": "[F]anim_no",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], anim_no",
+          "descriptionAppend": "A verified supporting build may evaluate the animation archive prefix from a string expression."
+        }]
       },
       {
         "name": "ID",
@@ -992,7 +1033,8 @@
       {
         "name": "waveform",
         "placeholder": "wave_type",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates and validates sine, square, sinesquare, or off at runtime."}]
       },
       {
         "name": "time",
@@ -1035,7 +1077,12 @@
       {
         "name": "value",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], anim_no",
+          "descriptionAppend": "A verified supporting build may evaluate the animation archive prefix from a string expression."
+        }]
       },
       {
         "name": "under",
@@ -1059,7 +1106,7 @@
   {
     "description": "Changes a player’s GetHitVar directly, without requiring a hit.",
     "name": "GetHitVarSet",
-    "params": [],
+    "params": [{"name":"attr","placeholder":"attr_string","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the attribute string at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#gethitvarset-new"
   },
@@ -1117,7 +1164,12 @@
       {
         "name": "name",
         "placeholder": "*name_string*",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "string expression",
+          "descriptionAppend": "A verified supporting build may evaluate the Helper name from a string expression."
+        }]
       },
       {
         "name": "ID",
@@ -1253,7 +1305,8 @@
       {
         "name": "value",
         "placeholder": "attr_string OR value2 = attr_string",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates the allowed-hit attribute from a runtime string expression."}]
       },
       {
         "name": "time",
@@ -1279,6 +1332,18 @@
         "name": "PlayerID",
         "placeholder": "value",
         "required": false
+      },
+      {
+        "name": "clsn.group",
+        "placeholder": "collision_group",
+        "required": false,
+        "capabilityId": "collision.indexed-controls"
+      },
+      {
+        "name": "clsn.index",
+        "placeholder": "collision_index",
+        "required": false,
+        "capabilityId": "collision.indexed-controls"
       }
     ],
     "status": "changed",
@@ -1291,17 +1356,20 @@
       {
         "name": "attr",
         "placeholder": "hit_attribute",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates the HitDef attribute at runtime."}]
       },
       {
         "name": "hitflag",
         "placeholder": "hit_flags",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"hit-flag string expression","descriptionAppend":"A newer verified Nightly evaluates hit flags at runtime."}]
       },
       {
         "name": "guardflag",
         "placeholder": "hit_flags",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates guard flags at runtime."}]
       },
       {
         "name": "affectteam",
@@ -1346,12 +1414,22 @@
       {
         "name": "sparkno",
         "placeholder": "action_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], action_no",
+          "descriptionAppend": "A verified supporting build may evaluate the spark archive prefix from a string expression."
+        }]
       },
       {
         "name": "guard.sparkno",
         "placeholder": "action_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], action_no",
+          "descriptionAppend": "A verified supporting build may evaluate the guard-spark archive prefix from a string expression."
+        }]
       },
       {
         "name": "sparkxy",
@@ -1361,12 +1439,22 @@
       {
         "name": "hitsound",
         "placeholder": "snd_grp, snd_item",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], snd_grp, snd_item",
+          "descriptionAppend": "A verified supporting build may evaluate the hit-sound archive prefix from a string expression."
+        }]
       },
       {
         "name": "guardsound",
         "placeholder": "snd_grp, snd_item",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], snd_grp, snd_item",
+          "descriptionAppend": "A verified supporting build may evaluate the guard-sound archive prefix from a string expression."
+        }]
       },
       {
         "name": "ground.type",
@@ -1901,7 +1989,8 @@
       {
         "name": "attr",
         "placeholder": "attr_string",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates the override attribute at runtime."}]
       },
       {
         "name": "stateno",
@@ -1931,12 +2020,14 @@
       {
         "name": "guardflag",
         "placeholder": "value",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates override guard flags at runtime."}]
       },
       {
         "name": "guardflag.not",
         "placeholder": "value",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates excluded override guard flags at runtime."}]
       },
       {
         "name": "keepstate",
@@ -1996,7 +2087,7 @@
   {
     "description": "Displays text/sprites/anims synchronized with each other, using lifebar data. The intended use case is implementation of messages, often found in commercial fighting games.",
     "name": "LifebarAction",
-    "params": [],
+    "params": [{"name":"text","placeholder":"\"message\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the displayed text at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#lifebaraction-new"
   },
@@ -2025,7 +2116,8 @@
       {
         "name": "path",
         "placeholder": "“save_path” (string) Specifies the path of the file to be read (relative to the character folder). An error occurs if you make a mistake in the path.",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string path expression","descriptionAppend":"A newer verified Nightly evaluates the load path at runtime."}]
       },
       {
         "name": "maps",
@@ -2071,7 +2163,8 @@
       {
         "name": "map",
         "placeholder": "“map_name” (string) Specifies a name of the map that we add value to.",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"map-name string expression","descriptionAppend":"A newer verified Nightly evaluates the target map name at runtime."}]
       },
       {
         "name": "value",
@@ -2089,12 +2182,14 @@
       {
         "name": "exclude",
         "placeholder": "“exception_string“ (string) If a map’s name contains this string, it won’t be cleared.",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates each exclude filter at runtime."}]
       },
       {
         "name": "exclude2",
         "placeholder": "“exception_string“ (string) Extra filter parameters. Up to exclude8.",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression (repeat through exclude8)","descriptionAppend":"A newer verified Nightly evaluates each extra exclude filter at runtime."}]
       }
     ],
     "status": "new",
@@ -2103,21 +2198,28 @@
   {
     "description": "Sets value to player’s map. This state controller can be used to change a number that has already been set via character’s DEF file or to set a new map.",
     "name": "MapSet",
-    "params": [],
+    "params": [{"name":"map","placeholder":"\"map_name\"","required":true,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"map-name string expression","descriptionAppend":"A newer verified Nightly evaluates the target map name at runtime."}]},{"name":"value","placeholder":"numeric expression","required":true}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#mapset-new"
   },
   {
     "description": "Reset the round or match and resume. By default (when no optional parameters are set) has the same effect as F4 debug key (round restart). Optionally allows characters and stage reloading, which also changes the state controller functionality to work like shift+F4 debug key (match restart).",
     "name": "MatchRestart",
-    "params": [],
+    "params": [{"name":"stagedef","placeholder":"\"stage.def\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string path expression","descriptionAppend":"A newer verified Nightly evaluates the stage path at runtime."}]},{"name":"p1def","placeholder":"\"character.def\" (repeat through p8def)","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string path expression (repeat through p8def)","descriptionAppend":"A newer verified Nightly evaluates replacement character paths at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#matchrestart-new"
   },
   {
     "description": "Modifies the parameters of an existing stage background controller.",
     "name": "ModifyBGCtrl",
-    "params": [],
+    "params": [
+      { "name": "shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the shader name at runtime."}] },
+      { "name": "shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" }
+    ],
+    "capabilityAugmentations": [{ "capabilityId": "render.expanded-shaders", "descriptionAppend": "A verified supporting Nightly also accepts shader.name, shader.param0 through shader.param15, and two animation or sprite texture inputs." }],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifybgctrl-new"
   },
@@ -2147,7 +2249,12 @@
       {
         "name": "anim",
         "placeholder": "value",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], anim_no",
+          "descriptionAppend": "A verified supporting build may evaluate the animation archive prefix from a string expression."
+        }]
       },
       {
         "name": "animelem",
@@ -2181,42 +2288,60 @@
   {
     "description": "Using this state controller will update the specified parameters of the player’s currently active HitDef. Has no effect if no HitDef is active.",
     "name": "ModifyHitDef",
-    "params": [],
+    "params": [{"name":"attr","placeholder":"hit_attribute","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates the active HitDef attribute at runtime."}]},{"name":"hitflag","placeholder":"hit_flags","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"hit-flag string expression","descriptionAppend":"A newer verified Nightly evaluates hit flags at runtime."}]},{"name":"guardflag","placeholder":"guard_flags","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates guard flags at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifyhitdef-new"
   },
   {
     "description": "Allows changing some player parameters that are otherwise out of reach, or don’t justify having their own dedicated state controllers. Some parameters should be used with care.",
     "name": "ModifyPlayer",
-    "params": [],
+    "params": [{"name":"displayname","placeholder":"\"display name\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the display name at runtime."}]},{"name":"lifebarname","placeholder":"\"lifebar name\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the lifebar name at runtime."}]},{"name":"helpername","placeholder":"\"helper name\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the helper name at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifyplayer-new"
   },
   {
     "description": "Using this state controller will update the specified parameters for the projectiles with the specified ID. Syntax is essentially the same as for Projectile.",
     "name": "ModifyProjectile",
-    "params": [],
+    "params": [{"name":"attr","placeholder":"hit_attribute","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates the projectile attribute at runtime."}]},{"name":"hitflag","placeholder":"hit_flags","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"hit-flag string expression","descriptionAppend":"A newer verified Nightly evaluates projectile hit flags at runtime."}]},{"name":"guardflag","placeholder":"guard_flags","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates projectile guard flags at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifyprojectile-new"
   },
   {
     "description": "This state controller allows modifying parameters of a char’s Reflection",
     "name": "ModifyReflection",
-    "params": [],
+    "params": [
+      { "name": "shader.playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the shader name at runtime."}] },
+      { "name": "shader.param0", "placeholder": "value (rename suffix 0–15)", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.time", "placeholder": "ticks", "required": false, "capabilityId": "render.expanded-shaders" }
+    ],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifyreflection-new"
   },
   {
     "description": "Using this state controller will update the specified parameters of the player’s currently active ReversalDef. Has no effect if no ReversalDef is active.",
     "name": "ModifyReversalDef",
-    "params": [],
+    "params": [{"name":"reversal.attr","placeholder":"attr_string","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates reversal attributes at runtime."}]},{"name":"reversal.guardflag","placeholder":"guard_flags","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates reversal guard flags at runtime."}]},{"name":"reversal.guardflag.not","placeholder":"guard_flags","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates excluded reversal guard flags at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifyreversaldef-new"
   },
   {
     "description": "This state controller allows modifying parameters of a char’s Shadow",
     "name": "ModifyShadow",
-    "params": [],
+    "params": [
+      { "name": "shader.playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the shader name at runtime."}] },
+      { "name": "shader.param0", "placeholder": "value (rename suffix 0–15)", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.time", "placeholder": "ticks", "required": false, "capabilityId": "render.expanded-shaders" }
+    ],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifyshadow-new"
   },
@@ -2230,14 +2355,129 @@
   {
     "description": "This state controller allows modifying the stage’s BG elements. Refer to stage documentation for more information.",
     "name": "ModifyStageBG",
-    "params": [],
+    "params": [
+      { "name": "time", "placeholder": "duration", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "add", "placeholder": "add_r, add_g, add_b", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "mul", "placeholder": "mul_r, mul_g, mul_b", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "sinadd", "placeholder": "ampl_r, ampl_g, ampl_b, period", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "invertall", "placeholder": "boolean", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "color", "placeholder": "value", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "invertblend", "placeholder": "value", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "hue", "placeholder": "value", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "sinmul", "placeholder": "mul_r, mul_g, mul_b, period", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "sincolor", "placeholder": "amplitude, period", "required": false, "capabilityId": "stage.modify-bg-palfx" },
+      { "name": "sinhue", "placeholder": "amplitude, period", "required": false, "capabilityId": "stage.modify-bg-palfx" }
+    ],
+    "capabilityAugmentations": [{
+      "capabilityId": "stage.modify-bg-palfx",
+      "descriptionAppend": "A verified supporting build accepts the standard PalFX fields for the selected stage background element."
+    }],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifystagebg-new"
   },
   {
     "description": "This SCTRL lets a character modify basic stage parameters or “stage vars”, as declared in the stage .def file. Not all parameters are modifable for now, but the SCTRL could be expanded in the future to allow it.",
     "name": "ModifyStageVar",
-    "params": [],
+    "params": [
+      {
+        "name": "camera.zboundtop",
+        "placeholder": "depth_offset",
+        "description": "Sets the upper Z camera offset bound.",
+        "required": false,
+        "capabilityId": "stage.depth-camera"
+      },
+      {
+        "name": "camera.zboundbot",
+        "placeholder": "depth_offset",
+        "description": "Sets the lower Z camera offset bound.",
+        "required": false,
+        "capabilityId": "stage.depth-camera"
+      },
+      {
+        "name": "camera.ztension",
+        "placeholder": "depth_distance",
+        "description": "Sets the Z-axis camera tension distance.",
+        "required": false,
+        "capabilityId": "stage.depth-camera"
+      },
+      {
+        "name": "camera.ztensionvel",
+        "placeholder": "blend_speed",
+        "description": "Sets the Z-axis camera tension smoothing value.",
+        "required": false,
+        "capabilityId": "stage.depth-camera"
+      },
+      {
+        "name": "camera.zautocenter",
+        "placeholder": "boolean_expression",
+        "description": "Controls automatic centering of the Z camera.",
+        "required": false,
+        "capabilityId": "stage.depth-camera"
+      },
+      {
+        "name": "shadow.shader.name",
+        "placeholder": "\"shader_name\"",
+        "required": false,
+        "capabilityId": "render.expanded-shaders",
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the shadow shader name at runtime."}]
+      },
+      {
+        "name": "shadow.shader.tex1.anim",
+        "placeholder": "animation_number",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "shadow.shader.tex1.spr",
+        "placeholder": "group, image",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "shadow.shader.tex2.anim",
+        "placeholder": "animation_number",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "shadow.shader.tex2.spr",
+        "placeholder": "group, image",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "reflection.shader.name",
+        "placeholder": "\"shader_name\"",
+        "required": false,
+        "capabilityId": "render.expanded-shaders",
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the reflection shader name at runtime."}]
+      },
+      {
+        "name": "reflection.shader.tex1.anim",
+        "placeholder": "animation_number",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "reflection.shader.tex1.spr",
+        "placeholder": "group, image",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "reflection.shader.tex2.anim",
+        "placeholder": "animation_number",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      },
+      {
+        "name": "reflection.shader.tex2.spr",
+        "placeholder": "group, image",
+        "required": false,
+        "capabilityId": "render.expanded-shaders"
+      }
+    ],
+    "capabilityAugmentations": [{ "capabilityId": "render.expanded-shaders", "descriptionAppend": "A verified supporting Nightly adds shadow/reflection shader names, param0 through param15, and two animation or sprite texture inputs for each surface." }],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#modifystagevar-new"
   },
@@ -2262,12 +2502,25 @@
       {
         "name": "value",
         "placeholder": "attr_string OR value2 = attr_string",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates the blocked-hit attribute from a runtime string expression."}]
       },
       {
         "name": "time",
         "placeholder": "effective_time",
         "required": false
+      },
+      {
+        "name": "clsn.group",
+        "placeholder": "collision_group",
+        "required": false,
+        "capabilityId": "collision.indexed-controls"
+      },
+      {
+        "name": "clsn.index",
+        "placeholder": "collision_index",
+        "required": false,
+        "capabilityId": "collision.indexed-controls"
       }
     ],
     "status": "changed",
@@ -2459,7 +2712,7 @@
   {
     "description": "Plays back a music. Supported file formats: mp3, ogg, wav.",
     "name": "PlayBgm",
-    "params": [],
+    "params": [{"name":"bgm","placeholder":"\"music path\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string path expression","descriptionAppend":"A newer verified Nightly evaluates the music path at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#playbgm-new"
   },
@@ -2493,7 +2746,12 @@
       {
         "name": "value",
         "placeholder": "group_no, sound_no",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], group_no, sound_no",
+          "descriptionAppend": "A verified supporting build may evaluate the sound archive prefix from a string expression."
+        }]
       },
       {
         "name": "volumescale",
@@ -2647,7 +2905,11 @@
   {
     "description": "This controller is only useful for debugging. PrintToConsole prints a specified message to debug mode console, as well as terminal / command line window, if it’s opened.",
     "name": "PrintToConsole",
-    "params": [],
+    "params": [
+      { "name": "text", "placeholder": "\"format string\"", "required": true },
+      { "name": "params", "placeholder": "expression_1, expression_2, ...", "required": false },
+      { "name": "redirectid", "placeholder": "player_id", "required": false }
+    ],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#printtoconsole-new"
   },
@@ -2655,6 +2917,16 @@
     "description": "Creates a projectile for the player. The Projectile controller takes all the parameters of the HitDef controller, which control the HitDef for the projectile. In addition, Projectile has the following additional parameters:",
     "name": "Projectile",
     "params": [
+      { "name": "shader.shadow", "placeholder": "boolean_expression", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.reflection", "placeholder": "boolean_expression", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.afterimage", "placeholder": "boolean_expression", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the afterimage shader name at runtime."}] },
+      { "name": "afterimage.shader.param0", "placeholder": "value (rename suffix 0–15)", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage.shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
       {
         "name": "ProjID",
         "placeholder": "id_no",
@@ -2663,22 +2935,26 @@
       {
         "name": "projanim",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.runtime-strings","placeholder":"[string prefix expression], anim_no","descriptionAppend":"A verified supporting build may evaluate the animation archive prefix from a string expression."}]
       },
       {
         "name": "projhitanim",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.runtime-strings","placeholder":"[string prefix expression], anim_no","descriptionAppend":"A verified supporting build may evaluate the hit-animation archive prefix from a string expression."}]
       },
       {
         "name": "projremanim",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.runtime-strings","placeholder":"[string prefix expression], anim_no","descriptionAppend":"A verified supporting build may evaluate the removal-animation archive prefix from a string expression."}]
       },
       {
         "name": "projcancelanim",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.runtime-strings","placeholder":"[string prefix expression], anim_no","descriptionAppend":"A verified supporting build may evaluate the cancel-animation archive prefix from a string expression."}]
       },
       {
         "name": "projscale",
@@ -2894,7 +3170,7 @@
   {
     "description": "Remaps one sprite with another (or does this for multiple sprites at once, based on character’s CNS RemapPreset data)",
     "name": "RemapSprite",
-    "params": [],
+    "params": [{"name":"preset","placeholder":"\"preset name\"","required":false,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the remap preset name at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#remapsprite-new"
   },
@@ -2925,17 +3201,20 @@
       {
         "name": "reversal.attr",
         "placeholder": "attr_string",
-        "required": true
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"attribute string expression","descriptionAppend":"A newer verified Nightly evaluates reversal attributes at runtime."}]
       },
       {
         "name": "reversal.guardflag",
         "placeholder": "value",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates reversal guard flags at runtime."}]
       },
       {
         "name": "reversal.guardflag.not",
         "placeholder": "value",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"guard-flag string expression","descriptionAppend":"A newer verified Nightly evaluates excluded reversal guard flags at runtime."}]
       }
     ],
     "status": "changed",
@@ -2986,7 +3265,7 @@
   {
     "description": "Put specified data together and save it as binary. It uses gob, which is a serialized format for Go language, as the storage format. All characters specified by the character or helper who executed the function are stored at that time.",
     "name": "SaveFile",
-    "params": [],
+    "params": [{"name":"path","placeholder":"\"save path\"","required":true,"capabilityAugmentations":[{"capabilityId":"zss.expanded-string-expressions","placeholder":"string path expression","descriptionAppend":"A newer verified Nightly evaluates the save path at runtime."}]}],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#savefile-new"
   },
@@ -3083,17 +3362,20 @@
       {
         "name": "statetype",
         "placeholder": "state_type",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.dynamic-state-types","placeholder":"state type string expression","descriptionAppend":"The exact supporting Nightly evaluates S, C, A, L, or U from a runtime string expression."}]
       },
       {
         "name": "movetype",
         "placeholder": "move_type",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.dynamic-state-types","placeholder":"move type string expression","descriptionAppend":"The exact supporting Nightly evaluates I, A, or H from a runtime string expression."}]
       },
       {
         "name": "physics",
         "placeholder": "physics",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{"capabilityId":"zss.dynamic-state-types","placeholder":"physics string expression","descriptionAppend":"The exact supporting Nightly evaluates S, C, A, N, or U from a runtime string expression."}]
       }
     ],
     "status": "old",
@@ -3124,12 +3406,22 @@
       {
         "name": "anim",
         "placeholder": "anim_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], anim_no",
+          "descriptionAppend": "A verified supporting build may evaluate the animation archive prefix from a string expression."
+        }]
       },
       {
         "name": "sound",
         "placeholder": "snd_grp, snd_no",
-        "required": false
+        "required": false,
+        "capabilityAugmentations": [{
+          "capabilityId": "zss.runtime-strings",
+          "placeholder": "[string prefix expression], snd_grp, snd_no",
+          "descriptionAppend": "A verified supporting build may evaluate the sound archive prefix from a string expression."
+        }]
       },
       {
         "name": "pos",
@@ -3450,7 +3742,16 @@
   {
     "description": "Text controller is used for displaying text on screen.",
     "name": "Text",
-    "params": [],
+    "params": [
+      { "name": "shader.playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.name", "placeholder": "\"shader_name\"", "required": false, "capabilityId": "render.expanded-shaders", "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string expression","descriptionAppend":"A newer verified Nightly evaluates the shader name at runtime."}] },
+      { "name": "shader.param0", "placeholder": "value (rename suffix 0–15)", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex1.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.anim", "placeholder": "animation_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.tex2.spr", "placeholder": "group, image", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "shader.time", "placeholder": "ticks", "required": false, "capabilityId": "render.expanded-shaders" }
+    ],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#text-new"
   },
@@ -3485,7 +3786,39 @@
   {
     "description": "Changes the geometry or certain properties of the player’s collision boxes.",
     "name": "TransformClsn",
-    "params": [],
+    "params": [
+      {
+        "name": "group",
+        "placeholder": "collision_group",
+        "required": false
+      },
+      {
+        "name": "index",
+        "placeholder": "collision_index",
+        "required": false,
+        "capabilityId": "collision.indexed-controls"
+      },
+      {
+        "name": "scale",
+        "placeholder": "xscale, yscale",
+        "required": false
+      },
+      {
+        "name": "angle",
+        "placeholder": "degrees",
+        "required": false
+      },
+      {
+        "name": "pivot",
+        "placeholder": "x, y",
+        "required": false
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
+        "required": false
+      }
+    ],
     "status": "new",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#transformclsn-new"
   },
@@ -3727,5 +4060,208 @@
     ],
     "status": "changed",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#zoom-changed"
+  },
+  {
+    "description": "Sets or updates a custom shader on the selected character, with bounded numeric parameters, optional sprite or animation textures, and optional routing to shadow, reflection, or afterimage rendering.",
+    "name": "ShaderSet",
+    "params": [
+      { "name": "redirectid", "placeholder": "player_id", "required": false },
+      { "name": "playerno", "placeholder": "player_number", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "name", "placeholder": "\"shader_name\"", "required": false, "capabilityAugmentations": [{ "capabilityId": "zss.expanded-string-expressions", "placeholder": "string expression", "descriptionAppend": "A newer verified supporting build evaluates the shader name at runtime." }] },
+      { "name": "param0", "placeholder": "value (repeat through param15)", "required": false },
+      { "name": "tex1.anim", "placeholder": "animation_number", "required": false },
+      { "name": "tex1.spr", "placeholder": "group, image", "required": false },
+      { "name": "tex2.anim", "placeholder": "animation_number", "required": false },
+      { "name": "tex2.spr", "placeholder": "group, image", "required": false },
+      { "name": "time", "placeholder": "ticks", "required": false },
+      { "name": "shadow", "placeholder": "boolean", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "reflection", "placeholder": "boolean", "required": false, "capabilityId": "render.expanded-shaders" },
+      { "name": "afterimage", "placeholder": "boolean", "required": false, "capabilityId": "render.expanded-shaders" }
+    ],
+    "status": "new",
+    "source": "Bundled IKEMEN controller reference plus exact compiler source",
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#new_shaderset"
+  },
+  {
+    "description": "Runs another state's code without leaving the current state. StateNo, Time, and persistent counters continue to belong to the calling state.",
+    "name": "RunState",
+    "params": [
+      {
+        "name": "value",
+        "placeholder": "state_number",
+        "required": true
+      },
+      {
+        "name": "playerno",
+        "placeholder": "player_number",
+        "required": false
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
+        "required": false
+      }
+    ],
+    "status": "new",
+    "capabilityId": "zss.run-state",
+    "source": "IKEMEN GO source ce1bf6bf5f851dfd046081f206ad5d8010ee8e1e",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/ce1bf6bf5f851dfd046081f206ad5d8010ee8e1e"
+  },
+  {
+    "description": "Controls whether the player is constrained to the stage's depth bounds and whether clamping may move the z camera.",
+    "name": "DepthBound",
+    "params": [
+      {
+        "name": "value",
+        "placeholder": "boolean",
+        "required": false
+      },
+      {
+        "name": "movecamera",
+        "placeholder": "boolean",
+        "required": false
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
+        "required": false
+      }
+    ],
+    "status": "new",
+    "capabilityId": "stage.depth-camera",
+    "source": "IKEMEN GO source 3ebb37b36526ceda8fa9016954b5cc30992207d6",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/3ebb37b36526ceda8fa9016954b5cc30992207d6"
+  },
+  {
+    "description": "Plays the specified storyboard during a match. Placement and binding options require a verified supporting Nightly.",
+    "name": "Storyboard",
+    "params": [
+      {
+        "name": "path",
+        "placeholder": "\"storyboard_path\"",
+        "required": true,
+        "capabilityAugmentations": [{"capabilityId":"zss.expanded-string-expressions","placeholder":"string path expression","descriptionAppend":"A newer verified Nightly evaluates the storyboard path at runtime."}]
+      },
+      {
+        "name": "id",
+        "placeholder": "storyboard_id",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "space",
+        "placeholder": "stage_or_screen",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "pos",
+        "placeholder": "x, y",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "scale",
+        "placeholder": "xscale, yscale",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "facing",
+        "placeholder": "facing",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "bindid",
+        "placeholder": "player_id",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "bindtime",
+        "placeholder": "ticks",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
+        "required": false,
+        "capabilityId": "storyboard.runtime-controls"
+      }
+    ],
+    "status": "new",
+    "url": "https://potsmugen.github.io/ikemen-merged-docs/sctrl#storyboard-new"
+  },
+  {
+    "description": "Changes placement and binding fields on a running storyboard selected by owner and optional ID.",
+    "name": "ModifyStoryboard",
+    "params": [
+      {
+        "name": "id",
+        "placeholder": "storyboard_id",
+        "required": false
+      },
+      {
+        "name": "space",
+        "placeholder": "stage_or_screen",
+        "required": false
+      },
+      {
+        "name": "pos",
+        "placeholder": "x, y",
+        "required": false
+      },
+      {
+        "name": "scale",
+        "placeholder": "xscale, yscale",
+        "required": false
+      },
+      {
+        "name": "facing",
+        "placeholder": "facing",
+        "required": false
+      },
+      {
+        "name": "bindid",
+        "placeholder": "player_id",
+        "required": false
+      },
+      {
+        "name": "bindtime",
+        "placeholder": "ticks",
+        "required": false
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
+        "required": false
+      }
+    ],
+    "status": "new",
+    "capabilityId": "storyboard.runtime-controls",
+    "source": "IKEMEN GO source fb6a1014d6343f62fb4d9bc585e3581ef3b1b00f",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/fb6a1014d6343f62fb4d9bc585e3581ef3b1b00f"
+  },
+  {
+    "description": "Removes running storyboards owned by the selected player, optionally restricted to one storyboard ID.",
+    "name": "RemoveStoryboard",
+    "params": [
+      {
+        "name": "id",
+        "placeholder": "storyboard_id",
+        "required": false
+      },
+      {
+        "name": "redirectid",
+        "placeholder": "player_id",
+        "required": false
+      }
+    ],
+    "status": "new",
+    "capabilityId": "storyboard.runtime-controls",
+    "source": "IKEMEN GO source fb6a1014d6343f62fb4d9bc585e3581ef3b1b00f",
+    "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/fb6a1014d6343f62fb4d9bc585e3581ef3b1b00f"
   }
 ]

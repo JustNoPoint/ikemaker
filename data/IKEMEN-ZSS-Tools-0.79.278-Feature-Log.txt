@@ -1,0 +1,10 @@
+IKEMaker 0.79.278
+
+Single-screen text workspace restoration
+
+- Restored the guarded visual-to-text transition for the normal Text Editor toolbar action.
+- Opening source from SFF, AIR, SND, Back to Source, or a connected viewer now safely closes the originating visual group.
+- Code Navigation returns as one compact header row with the native text editor in the work area below it.
+- The selected source remains focused after the transition and the complete connected character file list remains available in the header.
+- Explicit Open Beside and Open in New Window choices remain available and do not use the single-screen transition.
+- If a viewer has an unapplied or busy edit, the transition is refused and the viewer is kept intact instead of producing a partial layout.

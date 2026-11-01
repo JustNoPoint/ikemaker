@@ -34,15 +34,25 @@ function snippetPlaceholder(value) {
   return safePlaceholder(value).replace(/[\\$}]/g, '\\$&');
 }
 
-function formatControllerSnippet(controller, experience = 'learning') {
+function formatControllerSnippet(controller, experience = 'learning', mode = 'required') {
   const name = zssControllerName(controller.name);
-  const required = (Array.isArray(controller.params) ? controller.params : []).filter((parameter) => parameter.required);
-  if (!required.length) return `${name}{}`;
+  const params = (Array.isArray(controller.params) ? controller.params : []).slice(0, 128);
+  const required = params.filter((parameter) => parameter.required);
+  if (!params.length) return `${name}{}`;
   const lines = [`${name}{`];
   required.forEach((parameter, index) => lines.push(`\t${parameter.name}: \${${index + 1}:${snippetPlaceholder(parameter.placeholder)}};`));
-  if (experience === 'learning') lines.push('\t# Add optional options here with editor completion.');
+  if (mode === 'all') {
+    params.filter(parameter => !parameter.required).forEach(parameter => lines.push(`\t# ${parameter.name}: ${safePlaceholder(parameter.placeholder)};`));
+  } else if (experience === 'learning') lines.push('\t# Add optional options here with editor completion.');
   lines.push('}');
   return lines.join('\n');
 }
 
-module.exports = { zssControllerName, formatController, formatControllerSnippet, safePlaceholder, snippetPlaceholder };
+function formatCnsControllerSnippet(controller, mode = 'required') {
+  const params = (Array.isArray(controller.params) ? controller.params : []).slice(0, 128), required = params.filter(parameter => parameter.required), lines = [controller.name, 'trigger1 = ${1:condition}'];
+  required.forEach((parameter, index) => lines.push(`${parameter.name} = \${${index + 2}:${snippetPlaceholder(parameter.placeholder)}}`));
+  if (mode === 'all') params.filter(parameter => !parameter.required).forEach(parameter => lines.push(`; ${parameter.name} = ${safePlaceholder(parameter.placeholder)}`));
+  return lines.join('\n');
+}
+
+module.exports = { zssControllerName, formatController, formatControllerSnippet, formatCnsControllerSnippet, safePlaceholder, snippetPlaceholder };

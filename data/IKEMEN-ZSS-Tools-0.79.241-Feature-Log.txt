@@ -1,0 +1,9 @@
+IKEMaker 0.79.241
+
+- Added one consistent Lists / Thumbnails toolbar shortcut to the SFF, AIR, and SND editors.
+- New companion browsers open in compact floating mode; existing browsers keep their current docked or floating placement.
+- Added explicit List, Thumbnails, and Combined browsing views.
+- Added text search, numeric-group filtering, and named-category filtering across the applicable asset browsers.
+- Added a dedicated SND waveform-thumbnail browser with exact sound selection handoff to the SND editor.
+- Preserved review-status filtering and physical sprite identity in the SFF browser.
+- Floating browser widths start at the shared minimum and remember deliberate user resizing.

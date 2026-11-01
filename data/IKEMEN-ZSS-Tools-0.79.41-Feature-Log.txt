@@ -1,0 +1,5 @@
+IKEMaker 0.79.41 — Floating-state persistence
+
+- Persists the AIR Actions Browser floating state before VS Code recreates the webview in its new window.
+- A floated browser now immediately labels the control Return to Main Window.
+- Returning the browser likewise restores the Float Window label.

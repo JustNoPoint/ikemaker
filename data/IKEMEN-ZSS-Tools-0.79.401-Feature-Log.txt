@@ -1,0 +1,15 @@
+IKEMaker 0.79.401 - connected template separator chains
+
+The image-template separator tool now remains active across turns. The first
+click starts a chain, each following single click adds a connected segment,
+and double-click finishes and saves the entire chain as one retained edit.
+
+Escape or right-click cancels the unfinished chain. The live preview follows
+the pointer, committed draft segments stay visible while drawing, and every
+segment retains the selected thickness and darkest named-swatch-group color.
+
+The host validates the exact current canvas, color group, bounds, segment
+lengths, thickness and 512-segment template limit before accepting the chain.
+Regression coverage checks connected turns, double-click completion, both
+cancel gestures, atomic submission, bounded coordinates and zero-length
+rejection.

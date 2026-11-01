@@ -1,0 +1,9 @@
+IKEMaker 0.79.384
+
+- Fixed template-canvas Delete and Remove from Template so each action receives a correlated completion or cancellation result.
+- Serialized canvas move, add, and remove operations to prevent stale layout hashes and silent no-ops.
+- Preserved manually moved sprite positions when swatch, filler, and related template settings refresh.
+- Stopped canvas-only changes from rebuilding the contact sheet and moving the outer workspace scroll position.
+- Added draggable Palette Workshop Browser sprite rows and accepted their SFF sprite payload on compatible template canvases.
+- Routed Batch Tools palette-add and reusable-library buttons to their working target-bound workflows.
+- Added layout revision guards so older background responses cannot replace a newer template canvas.

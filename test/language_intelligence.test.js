@@ -41,15 +41,20 @@ const controllerItems = completionModels({ text: 'hit', line: 0, linePrefix: 'hi
 assert.strictEqual(controllerItems[0].label, 'hitDef');
 assert.ok(controllerItems[0].insertText.includes('attr: ${1:state, attack};'));
 assert.ok(controllerItems[0].insertText.includes('Add optional options'));
+assert.strictEqual(controllerItems[1].label, 'hitDef (all parameters)');
+assert.ok(controllerItems[1].insertText.includes('# ground.velocity: x, y;'));
 const advancedControllerItems = completionModels({ text: 'hit', line: 0, linePrefix: 'hit', languageId: 'zss', experience: 'advanced', controllers, triggers: [] });
 assert.ok(!advancedControllerItems[0].insertText.includes('Add optional options'));
 
 const cnsItems = completionModels({ text: '[State 200]\ntype = Hit', line: 1, linePrefix: 'type = Hit', languageId: 'ikemen-cns', controllers, triggers: [] });
-assert.strictEqual(cnsItems[0].insertText, 'HitDef');
+assert.ok(cnsItems[0].insertText.startsWith('HitDef\ntrigger1 = ${1:condition}'));
+assert.strictEqual(cnsItems[1].label, 'HitDef (all parameters)');
+assert.ok(cnsItems[1].insertText.includes('; ground.velocity = x, y'));
 
 const triggerItems = completionModels({ text: 'if move', line: 0, linePrefix: 'if move', languageId: 'zss', controllers: [], triggers });
 assert.ok(triggerItems.some((item) => item.label === 'MoveCountered'));
 assert.ok(triggerItems.some((item) => item.label === 'HelperIndex'));
+const clampItem=completionModels({text:'if Clamp',line:0,linePrefix:'if Clamp',languageId:'zss',controllers:[],triggers}).find(item=>item.label==='Clamp');assert.strictEqual(clampItem.insertText,'Clamp(${1:value}, ${2:min}, ${3:max})');assert.match(clampItem.detail,/New IKEMEN/,'completion labels new and expanded compatibility honestly');
 
 const learningHover = hoverModel({ word: 'ground.velocity', text: zss, line: 2, languageId: 'zss', experience: 'learning', controllers, triggers });
 assert.strictEqual(learningHover.title, 'HitDef.ground.velocity');
@@ -57,9 +62,11 @@ assert.ok(learningHover.explanation.includes('belongs to HitDef'));
 const advancedHover = hoverModel({ word: 'MoveCountered', text: '', line: 0, experience: 'advanced', controllers, triggers });
 assert.strictEqual(advancedHover.explanation, '');
 assert.ok(advancedHover.summary.includes('attack contact'));
+const learningTriggerHover=hoverModel({word:'Clamp',text:'',line:0,experience:'learning',controllers,triggers});assert(learningTriggerHover.explanation.includes('Status: new')&&learningTriggerHover.explanation.includes('Triggers-(new).md'),'learning hover exposes bundled provenance and compatibility status');
 
 assert.ok(triggers.length >= 150);
 assert.ok(triggers.every((entry) => entry.name && entry.description && entry.url));
-assert.ok(!obsoleteBaseline.test(JSON.stringify(triggers)));
+const userFacingTriggerCatalog=JSON.stringify(triggers,(key,value)=>key==='capabilityId'?undefined:value);
+assert.ok(!obsoleteBaseline.test(userFacingTriggerCatalog));
 
 console.log('Language intelligence tests passed');

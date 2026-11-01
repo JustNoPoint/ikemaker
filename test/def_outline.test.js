@@ -1,0 +1,11 @@
+'use strict';
+const assert=require('assert');
+const {outline}=require('../src/def_outline');
+const source='; character\n[Info]\nname = "Ryu"\n\n[Map]\nSession.Mode = "training"\nRounds = 2\n\n[Constants]\nProject.Label = "Ryu"\n\n[Files]\nst = states.zss\n';
+const model=outline(source,'Ryu.def');
+assert.deepStrictEqual(model.map(section=>[section.label,section.startLine,section.endLine]),[['[Info]',1,3],['[Map]',4,7],['[Constants]',8,10],['[Files]',11,13]]);
+assert.deepStrictEqual(model[1].children.map(item=>[item.label,item.kind,item.line]),[['Session.Mode','map',5],['Rounds','map',6]]);
+assert.strictEqual(model[2].children[0].kind,'constant');
+assert.strictEqual(model[3].children[0].kind,'file');
+assert(!JSON.stringify(model).includes('character'),'comments are not fabricated into outline symbols');
+console.log('Character DEF outline groups sections, maps, constants, and assignments');

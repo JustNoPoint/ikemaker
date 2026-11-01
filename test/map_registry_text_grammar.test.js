@@ -11,6 +11,7 @@ const context = { workspaceState: { get: () => choices } };
 assert.strictEqual(textGrammar(document('move.zss')), 'zss');
 assert.strictEqual(textGrammar(document('commands.cmd')), 'ikemen-cns');
 assert.strictEqual(textGrammar(document('states.st')), 'ikemen-cns');
+assert.strictEqual(textGrammar(document('Ryu.def')), 'ikemen-def');
 assert.strictEqual(textGrammar(notes, context), 'zss');
 assert.strictEqual(textGrammar(legacy, context), 'ikemen-cns');
 assert.strictEqual(textGrammar(document('readme.txt')), '');

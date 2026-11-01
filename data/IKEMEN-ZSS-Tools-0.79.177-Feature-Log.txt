@@ -1,0 +1,19 @@
+IKEMaker 0.79.177
+
+Palette Workshop useful animation discovery
+- Live palette editing now offers one compact Find useful animation action, so users do not need to know or enter AIR action numbers.
+- The exact current palette index or reviewed named group is scored against the uniquely assigned character AIR and SFF. Results show thumbnails plus visible matching pixels, distinct sprites, and authored frame counts.
+- Up to eight suggestions are presented in one narrow, keyboard-accessible column. A result can become the synchronized embedded-versus-draft A/B preview or open at the exact Action in the AIR Viewer.
+- Repeated frames do not inflate the primary pixel score. Transparent index 0 is not treated as visible evidence.
+- If no unique AIR assignment can be proven, the complete bounded SFF scan offers explicitly labelled static-sprite matches rather than guessing an owner.
+- Linked palettes, truecolor sprites, missing or duplicate coordinates, undecodable images, and unknown runtime RemapPal behavior remain visible. Incomplete scans are never labelled strongest.
+
+Authority and safety
+- Search results bind the canonical SFF, DEF, and AIR paths; their byte hashes; the exact assignment; physical palette identity and working-color hash; and current index or named-group membership.
+- Dirty files, reassignment, same-size mutation, scope drift, replay, unsafe dimensions, oversized files, incomplete inventory, or oversized browser payloads fail closed.
+- DEF and AIR byte limits are checked before and after reads. AIR action/frame counts are bounded before parsing, and aggregate indexed pixels are bounded before decompression.
+- Searches, suggestions, A/B adoption, and AIR navigation are read-only. They do not write the SFF, AIR, DEF, palette draft, template metadata, or original return context.
+
+Verification
+- New Dev reviewed the design before implementation and performed a separate post-implementation authority, lifecycle, accessibility, and narrow-layout audit.
+- Palette useful-animation, workspace controller/view, named-group, A/B playback, handoff, accessibility, and direct-write suites pass.

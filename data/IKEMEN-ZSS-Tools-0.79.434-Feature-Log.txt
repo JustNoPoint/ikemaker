@@ -1,0 +1,6 @@
+IKEMaker 0.79.434
+
+Add Sprites palette control correction
+- The Too many colors choices are now visible only when Needs Palette is selected.
+- True Color, image-palette, and embedded-palette intake no longer display an irrelevant 256-color reduction choice.
+- The hidden tiling control is also disabled so it cannot participate in keyboard or submitted UI state outside Needs Palette.

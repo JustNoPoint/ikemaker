@@ -1,0 +1,7 @@
+IKEMaker 0.79.113
+
+- Character Essentials chooses one visual asset group per launch.
+- The first opened SFF, AIR, or SND viewer resolves the destination to a concrete editor group.
+- Every later SFF, AIR, and connected SND viewer in that launch opens as a tab in the same group instead of creating another pane from VS Code's symbolic “beside” placement.
+- Direct single-viewer commands remain independently movable and existing viewer tabs are reused.
+- Focused asset placement, AIR reuse, Character Essentials, renamed-assignment and shared-viewer-group regressions pass.

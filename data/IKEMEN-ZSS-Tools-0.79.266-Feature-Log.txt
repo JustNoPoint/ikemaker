@@ -1,0 +1,8 @@
+IKEMaker 0.79.266
+
+Visual viewer to text editor handoff
+
+- Fixed Open / Focus Text Editor falsely treating a refused mixed-tab layout transition as a successful open.
+- The current AIR or other text asset is now the explicit focus target instead of whichever connected document happened to be focused previously.
+- If the full visual-to-text layout cannot be rearranged safely, IKEMaker opens the exact native text file without closing unrelated tabs and attaches Code Navigation to that connected file set.
+- Connected text routing now recognizes ST, JNP, and Lua files in addition to DEF, AIR, CNS, ZSS, CMD, and TXT.

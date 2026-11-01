@@ -1,0 +1,19 @@
+IKEMaker 0.79.176
+
+AIR source escape and recovery
+- Opening AIR source from the narrow AIR Actions Browser now requires the exact text header to render a persistent origin banner above its file tabs.
+- The banner provides Return to AIR Browser and, for routed disposable sources, Close Source & Return. It remains readable and keyboard reachable in narrow docked windows without horizontal scrolling.
+- Header attachment returns structured evidence for the exact selected file and rendered AIR return control. Missing, stale, or wrong-file evidence restores the originating AIR browser instead of leaving an editor-only surface in front.
+- If the exact browser closes while its source remains open, the banner changes to AIR Actions Browser closed and offers a sealed exact-path reopen. It never chooses another AIR or opens a picker. Source close removes the bounded tombstone.
+- Editor-title, status-bar, CodeLens, and Alt+Left routes remain redundant fallbacks. Dirty-close cancellation still leaves the source and return controls intact.
+
+Palette Workshop named-group quick scope
+- Trusted named index groups appear in the existing Scope selector; no new pane or button sea was added.
+- Group focus dims colors outside exact membership. Copy, paste, restore/reset, randomize, and Undo operate on the exact group and report applied versus protected/locked counts.
+- The browser receives group identity hashes, labels, and counts only. Authoritative indices are freshly resolved by the host against the exact SFF, palette, template authority, and membership before every operation.
+- Stale, wrong-palette, malformed, duplicate, out-of-range, and same-size-different group evidence fails closed. Lost authority returns the UI to Current index with an accessible alert, and no first group is inferred.
+- Transparent index 0 and locked indices remain protected. Operations affect only the retained Workshop draft and make no SFF, metadata, template, system-clipboard, or autosave writes.
+
+Verification
+- New Dev reviewed the AIR fix before and after implementation, including the browser-disposal ordering regression, and approved it with no remaining P0/P1 findings.
+- Named-group authority and UI agents jointly verified their contract. Focused model, controller, view, reachability, accessibility, and direct-write suites pass.

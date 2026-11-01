@@ -1,6 +1,7 @@
 'use strict';
 
 const path = require('path');
+const fs = require('fs');
 
 const FILE_VALUE = /(?:^|[\\/])[^;]+\.(?:sff|snd|air|cns|zss|cmd|def|lua|ogg|mp3|wav|flac|fnt|ttf|otf|png|pcx|spr)(?:\s*$|\s*,)/i;
 const DEFAULT_COMMON_MARKERS = ['common', 'shared', 'template', 'universal', 'external'];
@@ -31,7 +32,7 @@ function references(text, filename, markers = DEFAULT_COMMON_MARKERS) {
     const assignment = /^(\s*)([^;=#]+?)(\s*=\s*)([^;]*?)(\s*)(?:;.*)?$/.exec(source); if (!assignment) continue;
     const key = assignment[2].trim(), raw = assignment[4], value = raw.trim(), classification = classifyReference(filename, key, value, markers); if (!classification) continue;
     const start = assignment[1].length + assignment[2].length + assignment[3].length + raw.indexOf(value);
-    output.push({ line, start, length: value.length, key, value, ...classification });
+    output.push({ line, start, length: value.length, key, value, resolvedPath:path.resolve(path.dirname(filename),cleanValue(value)), ...classification });
   }
   return output;
 }
@@ -53,8 +54,8 @@ function registerDefSemanticHighlighting(vscode, context) {
         const markers = vscode.workspace.getConfiguration('ikemenZss', document.uri).get('defCommonPathMarkers', DEFAULT_COMMON_MARKERS);
         const item = references(document.getText(), document.uri.fsPath, markers).find((entry) => entry.line === position.line && position.character >= entry.start && position.character < entry.start + entry.length);
         if (!item) return undefined;
-        const label = item.ownership === 'common' ? 'Shared / common reference' : 'Character-local reference';
-        return new vscode.Hover(new vscode.MarkdownString(`**${label}**\n\n${item.reason}.`), new vscode.Range(item.line, item.start, item.line, item.start + item.length));
+        const label = item.ownership === 'common' ? 'Shared / common reference' : 'Character-local reference',clean=value=>String(value||'').replace(/`/g,'\\`'),exists=fs.existsSync(item.resolvedPath);
+        return new vscode.Hover(new vscode.MarkdownString(`**${label}**\n\n${item.reason}.\n\nResolved target: \`${clean(item.resolvedPath)}\`\n\nTarget status: **${exists?'available':'missing'}**.${exists?' Use Go to Definition to open the exact connected file.':' The native Problems list reports the same missing assignment; IKEMaker does not create or substitute a file.'}`), new vscode.Range(item.line, item.start, item.line, item.start + item.length));
       }
     })
   );

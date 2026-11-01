@@ -1,0 +1,5 @@
+IKEMaker 0.79.49
+
+- Wakes the connected SFF editor before forwarding a browser selection.
+- Preserves focus in the floating SFF Browser while updating the main viewer.
+- Keeps group/index selection and marked-range synchronization on the same archive.

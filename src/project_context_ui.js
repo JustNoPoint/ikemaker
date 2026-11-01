@@ -7,7 +7,8 @@ const registryModel = require('./project_registry');
 const contextModel = require('./project_context_model');
 const metadataRegistry = require('./metadata_registry');
 const characterContext = require('./character_context');
-const { transactionalWrite } = require('./mutation_safety');
+const { transactionalWrite, hash } = require('./mutation_safety');
+const { notifyProjectRegistryChanged } = require('./project_registry_events');
 
 const REGISTRY = path.join('.ikemen', 'project-registry.json');
 
@@ -49,7 +50,9 @@ function readRegistry(root) {
 }
 function writeRegistry(filename, registry, label, expectedHash) {
   const options = { label, journalRoot: path.dirname(path.dirname(filename)), expectedHash: expectedHash || undefined };
-  return transactionalWrite(fs, filename, `${JSON.stringify(registry, null, 2)}\n`, options);
+  const result = transactionalWrite(fs, filename, `${JSON.stringify(registry, null, 2)}\n`, options);
+  notifyProjectRegistryChanged(filename, label || 'write');
+  return result;
 }
 function safeId(value) { return String(value || '').trim().toLowerCase().replace(/[^a-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, ''); }
 function relativeRoot(registryFilename, projectRoot) {
@@ -98,9 +101,14 @@ async function createProjectProfile() {
     { label: 'Enable source-reference research tools', value: true, description: 'Only appropriate when the project and material permit it.' }
   ], { title: 'Optional source-reference research' });
   if (!research) return;
-  let registry;
-  if (fs.existsSync(filename)) {
-    try { registry = JSON.parse(fs.readFileSync(filename, 'utf8').replace(/^\uFEFF/, '')); }
+  let registry, registryBytes, registryExisted = true;
+  try { registryBytes = fs.readFileSync(filename); }
+  catch (error) {
+    if (error?.code !== 'ENOENT') return vscode.window.showErrorMessage(`The project registry could not be read: ${error.message}`);
+    registryBytes = Buffer.alloc(0); registryExisted = false;
+  }
+  if (registryExisted) {
+    try { registry = JSON.parse(registryBytes.toString('utf8').replace(/^\uFEFF/, '')); }
     catch (error) { return vscode.window.showErrorMessage(`The project registry is invalid JSON: ${error.message}`); }
   } else {
     registry = { schemaVersion: registryModel.CURRENT_SCHEMA, registryVersion: 1, name: `${name.trim()} Registry`, projects: [{ id: 'universal', name: 'Universal Template', roots: ['chars/template'], distributionIntent: 'undecided', contentBasis: 'mixed', sourceResearch: false }], characters: [], aliases: {}, assets: {}, requirements: {}, sffBuildProfiles: {}, appearances: {}, palettes: {}, sounds: {}, attacks: {}, workflow: {}, validation: { enabledLevels: registryModel.VALIDATION_LEVELS, disabledConventionRules: [] } };
@@ -110,8 +118,8 @@ async function createProjectProfile() {
   if (normalized.projects.some((item) => item.id === stableId)) return vscode.window.showWarningMessage(`Project ID “${stableId}” already exists in ${filename}.`);
   normalized.projects.push(registryModel.normalizeProject({ id: stableId, name: name.trim(), roots: [relativeRoot(filename, projectRoot)], workflowProfile: '', sourceAuthority: '', completionModel: '', distributionIntent: distribution.value, contentBasis: basis.value, sourceResearch: research.value }));
   normalized.registryVersion = (Number(normalized.registryVersion) || 1) + 1;
-  const prior = fs.existsSync(filename) ? fs.readFileSync(filename) : null;
-  writeRegistry(filename, normalized, 'create-game-project-profile', prior ? require('./mutation_safety').hash(prior) : '');
+  try { writeRegistry(filename, normalized, 'create-game-project-profile', hash(registryBytes)); }
+  catch (error) { return vscode.window.showErrorMessage(`Could not create game profile “${name.trim()}”. The project registry was not overwritten: ${error.message}`); }
   await vscode.commands.executeCommand('ikemen.projectManager.open', vscode.Uri.file(projectRoot));
   return vscode.window.showInformationMessage(`Created game profile “${name.trim()}”. Work projects and teams can now be assigned in Project & Team Manager.`);
 }
@@ -160,7 +168,7 @@ function registerProjectContext(context) {
     const uri = activeUri(), root = contextRoot(uri); if (!root) return vscode.window.showWarningMessage('Open a folder before migrating a project registry.');
     const loaded = readRegistry(root); if (loaded.issues.some((item) => item.code === 'invalid-json')) return vscode.window.showErrorMessage(`Project registry is invalid JSON: ${loaded.issues[0].message}`);
     if (loaded.exists && !loaded.migrationNeeded) { update(); return vscode.window.showInformationMessage(`Project registry already uses schema ${registryModel.CURRENT_SCHEMA}. ${loaded.issues.length ? `${loaded.issues.length} review item(s) remain.` : 'No registry issues found.'}`); }
-    if (loaded.exists) { const answer = await vscode.window.showWarningMessage(`Migrate project metadata from schema ${loaded.sourceSchema} to ${registryModel.CURRENT_SCHEMA}? A recovery backup and mutation record will be created.`, { modal: true }, 'Preview accepted — migrate'); if (answer !== 'Preview accepted — migrate') return; }
+    if (loaded.exists) { const answer = await vscode.window.showWarningMessage(`Migrate project metadata from schema ${loaded.sourceSchema} to ${registryModel.CURRENT_SCHEMA}? The exact registry is replaced atomically after a stale-file check. No persistent backup is created by this action.`, { modal: true }, 'Preview accepted — migrate'); if (answer !== 'Preview accepted — migrate') return; }
     const before = loaded.exists ? fs.readFileSync(loaded.filename) : null;
     writeRegistry(loaded.filename, loaded.registry, loaded.exists ? 'migrate-project-registry' : 'create-project-registry', before ? require('./mutation_safety').hash(before) : '');
     update(); return vscode.window.showInformationMessage(`Project registry is valid at schema ${registryModel.CURRENT_SCHEMA}. ${loaded.issues.length ? `${loaded.issues.length} review item(s) remain.` : 'No registry issues found.'}`);
@@ -172,7 +180,7 @@ function registerProjectContext(context) {
     if (!result.indexed.length && !result.conflicts.length) return vscode.window.showInformationMessage('No unindexed legacy metadata sources were found.');
     const detail = [...result.indexed.map((item) => `${item.domain}: ${path.relative(root, item.file)}`), ...result.conflicts.map((item) => `${item.domain}: REVIEW — ${item.reason}`)].join('\n');
     if (!result.indexed.length) return vscode.window.showWarningMessage(`Metadata candidates require manual classification.\n${detail}`);
-    const answer = await vscode.window.showWarningMessage(`Index ${result.indexed.length} existing metadata source(s) in the authoritative registry?`, { modal: true, detail: `${detail}\n\nThe source files remain in place; the registry records their ownership. A backup and recovery entry are created.` }, 'Index Sources');
+    const answer = await vscode.window.showWarningMessage(`Index ${result.indexed.length} existing metadata source(s) in the authoritative registry?`, { modal: true, detail: `${detail}\n\nThe source files remain in place; only the authoritative registry is replaced atomically after a stale-file check. No persistent backup is created by this action.` }, 'Index Sources');
     if (answer !== 'Index Sources') return;
     const before = loaded.exists ? fs.readFileSync(loaded.filename) : null;
     writeRegistry(loaded.filename, result.registry, 'index-authoritative-metadata', before ? require('./mutation_safety').hash(before) : ''); update();

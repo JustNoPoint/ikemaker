@@ -1,0 +1,15 @@
+IKEMaker 0.79.167
+
+AIR source escape and auxiliary-window safety
+- Routed source editors show compact Return to AIR and Close Source controls at the exact revealed source line.
+- Direct AIR sources with an existing browser show Return only.
+- Unrelated source files never inherit an AIR return route.
+- Restored floating browser state is retained before source routing.
+- Language/resource-scoped disabled CodeLens fails closed before a source editor opens and leaves the browser visible.
+- Closing the source, its window, the browser, or the workbench removes handoff state without reopening a surface.
+
+Verification
+- Deep collision-reference and AIR-collision routes retain their exact line after 899 preceding lines.
+- All 92 AIR-focused test files pass.
+- Text-editor companion lifecycle tests pass.
+- New Dev approved the release slice with no remaining P0/P1 blocker.

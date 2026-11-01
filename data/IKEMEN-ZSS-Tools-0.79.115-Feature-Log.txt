@@ -1,0 +1,7 @@
+IKEMaker 0.79.115
+
+- New integrated Coding Viewers open directly on Source so the editable code surface is immediately visible.
+- Visual and Split remain available beside Source.
+- A user's later Visual, Source, or Split selection remains scoped to and remembered for that authoring context.
+- Existing draft recovery, exact document ownership, guarded apply/save behavior and Open Full Text native-editor access are unchanged.
+- Focused view-state, Coding Viewer, Character Essentials, authoring-shell and draft-safety regressions pass.

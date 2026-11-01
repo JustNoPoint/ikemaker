@@ -1,0 +1,7 @@
+IKEMaker 0.79.242
+
+- SND waveform thumbnails load only near the visible viewport and are requested in batches of eight.
+- Waveform previews use bounded sampling, preventing large sound archives from blocking the editor while preserving a useful visual shape.
+- AIR, SFF, and SND separate functional categories from metadata-backed names, comments, and sound-profile roles.
+- SFF list and filter choices are saved immediately.
+- Focused behavioral tests cover bounded waveform work, generated browser scripts, metadata-backed filters, and persisted filter state.

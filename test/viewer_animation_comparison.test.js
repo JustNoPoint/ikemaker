@@ -9,6 +9,7 @@ assert.deepStrictEqual(bounds(action),{left:-10,right:12,top:-33,bottom:0});
 const snapshot={identity:'AIR 200',filename:'<test.air>',detail:'test',animation:action};
 const page=html(snapshot,snapshot,'abc');assert(!page.includes('<test.air>'));assert.match(page,/&lt;test.air&gt;/);assert.doesNotThrow(()=>new Function(page.match(/<script nonce="abc">([\s\S]*)<\/script>/)[1]));
 assert.match(page,/Go to Tick/);assert.match(page,/Reset Both/);
+assert.match(page,/id="comparisonStatus"[^>]+role="status" aria-live="polite"/);assert.match(page,/id="play-both" disabled title="Wait for both frozen animations/);assert.match(page,/id="swap" aria-describedby="comparisonStatus"/);assert.match(page,/data-play="0" disabled title="Wait for this frozen animation/);assert.match(page,/role="group" aria-label="Animation comparison controls"/);
 assert.deepStrictEqual([0,1,2,4,5,7,8].map(tick=>frameAt(action,tick)),[0,0,2,2,2,2,2]);
 const loop={loopStart:1,frames:[{rawTime:2},{rawTime:3},{rawTime:4}]};
 assert.deepStrictEqual([0,2,5,8,9,12].map(t=>frameAt(loop,t)),[0,1,2,2,1,2]);
@@ -16,4 +17,5 @@ assert.strictEqual(frameAt({loopStart:0,frames:[{rawTime:0},{rawTime:0}]},1e9),1
 assert.strictEqual(frameAt({loopStart:0,frames:[{rawTime:2},{rawTime:4},{rawTime:-1}]},1e9),2,'final indefinite frames remain held');
 assert.deepStrictEqual(build('[Begin Action 1]\n9,9,0,0,1',1,archive,()=>'' ).missing,['9,9']);
 assert.throws(()=>build('[Begin Action 1]\n9,9,0,0,1',2,archive,()=>''),/missing/);
+assert.throws(()=>build('[Begin Action 1]\n; no frames',1,archive,()=>''),/no frames/);
 console.log('AIR comparison frame timing, zero/indefinite durations, loops, offsets and shared sprite images passed');

@@ -1,0 +1,6 @@
+IKEMaker 0.79.52
+
+- Adds the main SFF group and sprite list controls to the floating browser.
+- Adds group filtering, visible marking, clearing, marked counts, review filtering, thumbnail toggle and sizing, and Next Flag.
+- Adds compact minus/plus controls for resizing the Groups and Sprites panes.
+- Automatically launches the floating SFF Browser whenever the SFF viewer opens, matching the AIR workflow.

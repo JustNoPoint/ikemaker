@@ -14,6 +14,7 @@ if map(JNP_UI_event_type) = 1 {
   map(JNP_UI_event_serial) += 1;
 }
 map(Simple) = 4;
+map(MoveName) := "sLP";
 `;
 
 const occurrences = model.occurrences(source, 'common.zss', 'zss');
@@ -23,6 +24,7 @@ assert.strictEqual(type[0].observedValue, '1');
 assert.ok(type[0].notes.map((note) => note.text).join('\n').includes('0 = none'));
 assert.strictEqual(occurrences.find((item) => item.name === 'JNP_UI_event_serial').access, 'read-write');
 assert.strictEqual(occurrences.find((item) => item.name === 'Simple').access, 'read', 'equality must never be treated as a writer');
+assert.strictEqual(occurrences.find((item)=>item.name==='MoveName').valueKind,'string');
 
 const entries = model.aggregate(occurrences);
 const event = entries.find((entry) => entry.name === 'JNP_UI_event_type');
@@ -33,6 +35,7 @@ assert.ok(event.notes[0].filename.endsWith('common.zss'));
 const serial = entries.find((entry) => entry.name === 'JNP_UI_event_serial');
 assert.strictEqual(serial.displayReads, 1, 'read-write must count as visible read activity');
 assert.strictEqual(serial.displayWrites, 1, 'read-write must count as visible write activity');
+const moveName=entries.find(entry=>entry.name==='MoveName');assert.deepStrictEqual(moveName.valueKinds,['string']);assert.strictEqual(moveName.stringWrites,1);
 assert.deepStrictEqual(model.namespaceFor('JNP_SF6_UI_event_type'), { author: 'JNP', game: 'SF6', confirmed: true });
 assert.deepStrictEqual(model.namespaceFor('TeamZ2_HDBZ_guard_mode'), { author: 'TeamZ2', game: 'HDBZ', confirmed: true });
 assert.strictEqual(model.namespaceFor('JNP_cfg_shared').confirmed, false);
@@ -55,6 +58,11 @@ assert.deepStrictEqual(cns.filter((item) => item.name === 'collection').map((ite
 assert.strictEqual(cns.find((item) => item.name === 'total').access, 'write');
 const cnsOrder = model.occurrences('[State Set]\ntrigger1 = Map(condition) = 1\nMap(target) = 4\ntype = MapSet\n[State Add]\ntrigger1 = Map(otherCondition) = 1\ntype = MapAdd\nMap(accumulator) = 2', 'ordered.cns', 'ikemen-cns');
 assert.deepStrictEqual(cnsOrder.map((item) => [item.name, item.access]), [['condition', 'read'], ['target', 'write'], ['otherCondition', 'read'], ['accumulator', 'read-write']]);
+const def=model.occurrences('[Info]\nname = "Ryu"\n[Map]\nGame.Mode = "training" ; comment\nRounds = 2\nScale = 1.25\n', 'Ryu.def', 'ikemen-def');
+assert.deepStrictEqual(def.map(item=>[item.name,item.valueKind,item.observedValue]),[['Game.Mode','string',''],['Rounds','integer','2'],['Scale','float','1.25']],'character DEF [Map] defaults join the registry with automatic kinds and no retained string contents');
+const defEntries=model.aggregate(def),defMode=defEntries.find(item=>item.name==='Game.Mode');assert.deepStrictEqual(defMode.valueKinds,['string']);assert.deepStrictEqual(defMode.observedValues,[]);assert.strictEqual(defMode.stringWrites,1);
+const stableDef=model.capabilityProjection(defEntries,{enabledCapabilities:[]}),nightlyDef=model.capabilityProjection(defEntries,{enabledCapabilities:['def.auto-typed-maps','zss.runtime-strings']});assert(stableDef.every(item=>item.valueKinds.length===0&&item.stringWrites===0),'1.0 projection hides all later DEF map kind claims');assert.deepStrictEqual(nightlyDef.map(item=>item.valueKinds[0]),['string','integer','float'],'exact supporting capabilities expose DEF map kinds');
+const stableRuntime=model.capabilityProjection(entries,{enabledCapabilities:[]}),nightlyRuntime=model.capabilityProjection(entries,{enabledCapabilities:['zss.runtime-strings']});assert(!stableRuntime.find(item=>item.name==='MoveName').valueKinds.includes('string'));assert(nightlyRuntime.find(item=>item.name==='MoveName').valueKinds.includes('string'),'string-valued runtime maps remain absent for 1.0 and visible only under the verified string capability');
 assert.throws(() => model.snippet('total', 'set', '4', 'ikemen-cns'), /controller-specific/);
 
 console.log('Map registry model tests passed');

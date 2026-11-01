@@ -62,7 +62,8 @@ function prepare(fs, filename, content, options, id) {
   if (expectedHash && hash(before || Buffer.alloc(0)) !== expectedHash) {
     throw new Error(`The file changed after it was loaded and was not overwritten: ${target}`);
   }
-  if (exists && options.allowExisting === false) throw new Error(`A file already exists and was not replaced: ${target}`);
+  const allowExisting = typeof options.allowExisting === 'function' ? options.allowExisting(target) : options.allowExisting;
+  if (exists && allowExisting === false) throw new Error(`A file already exists and was not replaced: ${target}`);
   const temporary = path.join(path.dirname(target), `.${path.basename(target)}.${id}.tmp`);
   const rollback = path.join(path.dirname(target), `.${path.basename(target)}.${id}.rollback`);
   fs.writeFileSync(temporary, data);

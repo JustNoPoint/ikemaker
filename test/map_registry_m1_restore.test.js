@@ -1,0 +1,30 @@
+'use strict';
+const assert = require('assert'), fs = require('fs'), os = require('os'), path = require('path'), Module = require('module');
+const { pathToFileURL, fileURLToPath } = require('url');
+const root = fs.mkdtempSync(path.join(os.tmpdir(), 'map-m1-restore-')), def = path.join(root, 'Hero.def'), code = path.join(root, 'Hero.zss');
+fs.writeFileSync(def, '[Info]\nname=Hero\n'); fs.writeFileSync(code, 'map(alpha)\n');
+const uri = { file: filename => ({ fsPath: path.resolve(filename), scheme: 'file', toString: () => pathToFileURL(path.resolve(filename)).toString() }), parse: value => ({ fsPath: fileURLToPath(value), scheme: 'file', toString: () => value }) };
+const occurrence = { name: 'alpha', filename: code, language: 'zss', line: 0, character: 4, access: 'read', source: 'map(alpha)', scopeIds: ['assigned'] };
+const registry = { root, def, cacheKey: 'restore', projectId: 'test', indexedFiles: [code], dependencies: [code], defaultScope: 'assigned', scopes: [{ id: 'assigned', label: 'Assigned' }], detail: 'ready', entries: [{ name: 'alpha', family: 'alpha', files: [code], notes: [], observedValues: [], displayWrites: 0, displayReads: 1, ownership: 'character', runtimeReceiver: 'player', applicability: '', scopeIds: ['assigned'], suggestedPath: ['alpha'], sourceBadges: ['Assigned'], occurrences: [occurrence] }] };
+let context = { identity: `character:${root}`, revision: 1, selectionRevision: 0, activeSurfaceId: 'foreign', selection: { surfaceId: 'foreign', uri: 'file:///foreign' } }, updates = 0, commands = 0;
+const contextModel = { snapshot: () => ({ ...context }), update(change) { updates++; context = { ...context, ...change }; } };
+const makePanel = () => { const host = [], view = [], dispose = []; return { active: false, disposed: false, title: '', webview: { cspSource: 'test:', html: '', postMessage: async () => true, onDidReceiveMessage(fn) { host.push(fn); return { dispose() {} }; } }, onDidChangeViewState(fn) { view.push(fn); return { dispose() {} }; }, onDidDispose(fn) { dispose.push(fn); return { dispose() {} }; }, dispose() { if (this.disposed) return; this.disposed = true; for (const fn of dispose) fn(); } }; };
+const vscode = { Uri: uri, workspace: { textDocuments: [], onDidChangeTextDocument: () => ({ dispose() {} }), onDidSaveTextDocument: () => ({ dispose() {} }), onDidCloseTextDocument: () => ({ dispose() {} }) }, window: { showQuickPick: async () => undefined }, commands: { executeCommand: async () => (commands++, true) } };
+const service = { scan: async () => registry, scope: () => ({ def, root, identity: def, dependencies: [code] }), onDidChange: () => ({ dispose() {} }) };
+const original = Module._load;
+Module._load = function (request, parent, main) {
+  if (request === 'vscode') return vscode;
+  if (request === './authoring_context_registry' && /map_registry_ui/.test(parent?.filename || '')) return { registerCharacterToolPanel: panel => ({ panel }), registerAuthoringPanel: panel => ({ panel }), getContextModel: () => contextModel };
+  if (request === './webview_policy') return { protect: value => value };
+  if (request === './viewer_group') return { preferredViewerColumn: () => 1, trackViewerPanel: value => value };
+  return original.call(this, request, parent, main);
+};
+(async () => { try {
+  const maps = require('../src/map_registry_ui'), candidate = maps.candidateFor(registry), panel = makePanel();
+  const state = { version: 1, seedUri: uri.file(def).toString(), contextIdentity: context.identity, scopeId: 'assigned', path: [], search: '', wide: false, navMode: 'cards', selectedEntry: candidate.entries[0].reference, selectedOccurrence: candidate.rows[0].reference };
+  assert.equal(await maps.restorePanel(vscode, {}, service, panel, state), true, 'exact hidden serializer state restores');
+  assert.equal(panel.disposed, false); assert.equal(updates, 0, 'hidden restore does not claim shared context'); assert.equal(commands, 0, 'hidden restore does not auto-open source or Browser');
+  panel.dispose();
+  const stale = makePanel(); assert.equal(await maps.restorePanel(vscode, {}, service, stale, { ...state, path: ['unknown'] }), false); assert.equal(stale.disposed, true, 'stale semantic state disposes cleanly');
+  console.log('Maps Registry M1 hidden restore, exact state, no-claim and no-auto-open tests passed');
+} finally { Module._load = original; fs.rmSync(root, { recursive: true, force: true }); } })().catch(error => { console.error(error); process.exitCode = 1; });

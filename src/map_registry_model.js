@@ -1,6 +1,8 @@
 'use strict';
 
 const path = require('path');
+const { classifyRuntimeValue } = require('./runtime_value_kind');
+const { enabledCapabilityIds } = require('./catalog_capability_filter');
 
 const MAP_PATTERN = /\bmap\s*\(\s*([A-Za-z_][A-Za-z0-9_.]*)\s*\)/gi;
 
@@ -75,6 +77,21 @@ function observedValue(rest) {
 
 function occurrences(text, filename, language = 'zss') {
   const lines = String(text || '').split(/\r?\n/), result = [], contracts = contractBlocks(lines);
+  if (language === 'ikemen-def') {
+    let section = '';
+    lines.forEach((raw, line) => {
+      const code = maskedCode(raw, language), header = /^\s*\[\s*([^\]]+)\s*\]/.exec(code);
+      if (header) { section = header[1].trim().toLowerCase(); return; }
+      if (section !== 'map') return;
+      let quote = '', escaped = false, end = raw.length;
+      for (let index = 0; index < raw.length; index += 1) { const character = raw[index]; if (quote) { if (escaped) escaped = false; else if (character === '\\') escaped = true; else if (character === quote) quote = ''; } else if (character === '"' || character === "'") quote = character; else if (character === ';') { end = index; break; } }
+      const initial = /^\s*([A-Za-z_][A-Za-z0-9_.]*)\s*=\s*(.*?)\s*$/.exec(raw.slice(0, end));
+      if (!initial || !initial[2].trim()) return;
+      const value = initial[2].trim(), kind = classifyRuntimeValue(value).kind;
+      result.push({ name: initial[1], filename, language, line, character: raw.indexOf(initial[1]), access: 'write', observedValue: kind === 'string' ? '' : value, valueKind: kind, valueSummary: kind === 'string' ? `string literal · ${Math.max(0, value.length - 2)} source character(s)` : '', source: raw.trim(), notes: sourceNotes(lines, line, initial[1]), capabilityIds: kind === 'string' ? ['def.auto-typed-maps', 'zss.runtime-strings'] : ['def.auto-typed-maps'], sourceKind: 'character DEF [Map] default' });
+    });
+    return result;
+  }
   const controllers = new Array(lines.length).fill('');
   if (language !== 'zss') {
     for (let start = 0; start < lines.length; start += 1) {
@@ -92,22 +109,24 @@ function occurrences(text, filename, language = 'zss') {
     let match;
     MAP_PATTERN.lastIndex = 0;
     while ((match = MAP_PATTERN.exec(code))) {
-      const rest = code.slice(match.index + match[0].length);
+      const rest = code.slice(match.index + match[0].length), rawRest=raw.slice(match.index+match[0].length), observed=observedValue(rawRest);
       const actualMapParameter = !code.slice(0, match.index).trim() && /^\s*=/.test(rest);
       const cnsWrite = language !== 'zss' && actualMapParameter && /^(?:mapset|parentmapset|rootmapset|teammapset)$/.test(cnsController);
       const cnsReadWrite = language !== 'zss' && actualMapParameter && /^(?:mapadd|parentmapadd|rootmapadd|teammapadd)$/.test(cnsController);
       const access = cnsWrite ? 'write' : cnsReadWrite ? 'read-write' : classifyRest(rest);
+      const valueKind=access==='write'?classifyRuntimeValue(observed).kind:'unknown';
       result.push({
         name: match[1], filename, language, line, character: match.index + match[0].indexOf(match[1]),
-        access, observedValue: access === 'write' ? observedValue(rest) : '',
+        access, observedValue: access === 'write' && valueKind !== 'string' ? observed : '', valueKind,
+        capabilityIds:valueKind==='string'?['zss.runtime-strings']:[],
         source: raw.trim(), notes: sourceNotes(lines, line, match[1])
       });
     }
     if (language !== 'zss') {
       const named = /^\s*map\s*=\s*["']([A-Za-z_][A-Za-z0-9_.]*)["']/i.exec(raw);
-      if (named && /^(?:mapset|parentmapset|rootmapset|teammapset|mapadd|parentmapadd|rootmapadd|teammapadd)$/.test(cnsController)) result.push({ name: named[1], filename, language, line, character: raw.indexOf(named[1]), access: cnsController.endsWith('add') ? 'read-write' : 'write', observedValue: '', source: raw.trim(), notes: sourceNotes(lines, line, named[1]) });
+      if (named && /^(?:mapset|parentmapset|rootmapset|teammapset|mapadd|parentmapadd|rootmapadd|teammapadd)$/.test(cnsController)) result.push({ name: named[1], filename, language, line, character: raw.indexOf(named[1]), access: cnsController.endsWith('add') ? 'read-write' : 'write', observedValue: '', valueKind:'unknown', source: raw.trim(), notes: sourceNotes(lines, line, named[1]) });
       const initializer = /^\s*map\.([A-Za-z_][A-Za-z0-9_.]*)\s*=\s*(.+?)(?:\s*;.*)?$/i.exec(raw);
-      if (initializer && cnsController === 'helper') result.push({ name: initializer[1], filename, language, line, character: raw.indexOf(initializer[1]), access: 'write', observedValue: initializer[2].trim(), source: raw.trim(), notes: sourceNotes(lines, line, initializer[1]) });
+      if (initializer && cnsController === 'helper') result.push({ name: initializer[1], filename, language, line, character: raw.indexOf(initializer[1]), access: 'write', observedValue: initializer[2].trim(), valueKind:classifyRuntimeValue(initializer[2]).kind, source: raw.trim(), notes: sourceNotes(lines, line, initializer[1]) });
     }
   });
   for (const item of result) {
@@ -142,13 +161,14 @@ function aggregate(items, options = {}) {
     groups.get(key).occurrences.push(item);
   }
   return [...groups.values()].map((entry) => {
-    const notes = [], seenNotes = new Set(), values = new Set();
+    const notes = [], seenNotes = new Set(), values = new Set(), valueKinds=new Set();
     for (const occurrence of entry.occurrences) {
       for (const sourceNote of occurrence.notes || []) {
         const block = sourceNote.text.trim();
         if (block && !seenNotes.has(`${occurrence.filename}\0${sourceNote.start}\0${block}`)) { seenNotes.add(`${occurrence.filename}\0${sourceNote.start}\0${block}`); notes.push({ text: block, filename: occurrence.filename, line: sourceNote.start, endLine: sourceNote.end }); }
       }
-      if (occurrence.observedValue) values.add(occurrence.observedValue);
+      if (occurrence.observedValue && occurrence.valueKind !== 'string') values.add(occurrence.observedValue);
+      if(occurrence.valueKind&&occurrence.valueKind!=='unknown')valueKinds.add(occurrence.valueKind);
     }
     const files = [...new Set(entry.occurrences.map((item) => item.filename))];
     const namespace = namespaceFor(entry.name);
@@ -165,12 +185,21 @@ function aggregate(items, options = {}) {
       displayReads: entry.occurrences.filter((item) => item.access === 'read' || item.access === 'read-write').length,
       displayWrites: entry.occurrences.filter((item) => item.access === 'write' || item.access === 'read-write').length,
       author: namespace.author, game: namespace.game, namespaceConfirmed: namespace.confirmed,
-      files, notes, observedValues: [...values],
+      files, notes, observedValues: [...values], valueKinds:[...valueKinds].sort(), stringWrites:entry.occurrences.filter(item=>item.access==='write'&&item.valueKind==='string').length,
+      capabilityIds:[...new Set(entry.occurrences.flatMap(item=>item.capabilityIds||[]))].sort(),
       ownership: options.ownership?.(files) || 'Unknown',
       runtimeReceiver: 'Unknown',
       applicability: options.applicability || 'Current indexed project'
     };
   }).sort((a, b) => a.name.localeCompare(b.name, undefined, { numeric: true, sensitivity: 'base' }));
+}
+
+function capabilityProjection(entries, capabilities) {
+  const enabled=enabledCapabilityIds(capabilities);
+  return (entries||[]).map(entry=>{
+    const visibleKindSites=(entry.occurrences||[]).filter(item=>(item.capabilityIds||[]).every(id=>enabled.has(String(id).toLowerCase()))),valueKinds=[...new Set(visibleKindSites.map(item=>item.valueKind).filter(kind=>kind&&kind!=='unknown'))].sort(),observedValues=[...new Set(visibleKindSites.map(item=>item.observedValue).filter(Boolean))];
+    return {...entry,valueKinds,observedValues,stringWrites:visibleKindSites.filter(item=>item.access==='write'&&item.valueKind==='string').length};
+  });
 }
 
 function buildTree(entries) {
@@ -208,4 +237,4 @@ function snippet(name, operation = 'read', value = '1', language = 'zss') {
   throw new Error(`Unsupported map insertion operation: ${operation}`);
 }
 
-module.exports = { occurrences, aggregate, buildTree, search, snippet, suggestedPath, namespaceFor, classifyRest, sourceNotes, contractBlocks };
+module.exports = { occurrences, aggregate, capabilityProjection, buildTree, search, snippet, suggestedPath, namespaceFor, classifyRest, sourceNotes, contractBlocks };

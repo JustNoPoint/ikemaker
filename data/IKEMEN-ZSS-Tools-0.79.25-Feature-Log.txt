@@ -1,0 +1,14 @@
+IKEMaker 0.79.25 — Phase 1 docking evaluation begins
+
+- Adds a safe, non-writing docking prototype in Workspace mode.
+- Provides four native movable Views: Project Knowledge, Controllers & Favorites,
+  Source Preview (read-only), and Problems & QA.
+- Adds an inert editor surface for editor-group, split, tab, and floating-window
+  testing.
+- Preserves harmless per-view selection and notes so hide/move/restore behavior
+  can be observed without touching project files.
+- Adds live viewport measurements and visible lifecycle status.
+- Makes the prototype available from IKEMaker Tools under Personal Workspace and
+  Preferences.
+- Establishes the first bounded test of VS Code's native docking limits before
+  any production AIR, SFF, SND, code, or Project Knowledge UI is migrated.

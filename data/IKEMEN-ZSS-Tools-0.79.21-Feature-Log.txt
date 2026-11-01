@@ -1,0 +1,17 @@
+IKEMaker 0.79.21 — ZSS Structure & Logic
+================================================
+
+- Added a ZSS Structure & Logic group below the State Controller groups.
+- Added searchable templates for conditions, switch selection, for loops,
+  functions, calls, lets, maps, expressions, StateDefs, and safety patterns.
+- Added real tab-through placeholders so authors fill meaningful gaps instead
+  of recalling opening syntax and punctuation from memory.
+- Supported insertion at the cursor and wrapping of selected complete lines.
+- Added editor-context wrappers for if, if/else, for, and target guards.
+- Preserved selected comments, blank lines, and relative indentation.
+- Added the catalog to the IKEMaker Tools ZSS section.
+- Added recognition-first ZSS learning criteria: daily exposure and review are
+  valid progress, exercises are optional, and application can happen naturally
+  when current project work requires the topic.
+- Kept loops and functions available from the beginning rather than hiding
+  them behind a fixed lesson sequence.

@@ -1,0 +1,7 @@
+IKEMaker 0.79.29 — Docking prototype reveal correction
+
+- Makes the docking prototype available in Simple and Workspace modes.
+- Opens/focuses the native Panel before focusing Project Knowledge.
+- Prevents the Tools entry from targeting a View excluded by the active mode.
+- Reports a routing error instead of silently doing nothing.
+- Keeps the normal route docked-first and non-writing.

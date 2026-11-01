@@ -24,9 +24,11 @@ result=query('air','/fx/shared.air',{group:210});assert.strictEqual(result.match
 const {html}=require('../src/viewer_used_by');
 const page=html({identity:'AIR 210',filename:'<archive>',owner:'<owner>',files:1,unresolved:0,diagnostics:['<bad>'],matches:[{filename:'/char/<file>.zss',line:3,text:'<script>alert(1)</script>'}]},'nonce');
 assert(!page.includes('<script>alert'));assert(page.includes('&lt;script&gt;'));assert(page.includes('Open &lt;file&gt;.zss:4'));
+assert.strictEqual((page.match(/data-universal-slot=/g)||[]).length,29);assert.strictEqual((page.match(/ikemaker-universal-toolbar__group"/g)||[]).length,4);assert.strictEqual((page.match(/acquireVsCodeApi\(\)/g)||[]).length,1);assert(page.includes('width:27px')&&page.includes('height:27px')&&page.includes('flex-wrap:wrap')&&page.includes('overflow-x:hidden'));assert(page.includes('Open / Focus Text Editor — unavailable:')&&page.includes('Connected Resources — unavailable:'));assert(!page.includes('data-dispatch')&&!page.includes('snd.element.'));
 const script=page.match(/<script nonce="nonce">([\s\S]*?)<\/script>/)[1];assert.doesNotThrow(()=>new Function(script));
-const fields={filter:{value:''},count:{textContent:''},'empty-filter':{hidden:true},refresh:{}},rows=[{dataset:{search:'moves.zss anim: 210'},hidden:false}];let saved;
-require('vm').runInNewContext(script,{acquireVsCodeApi:()=>({getState:()=>({filter:'missing'}),setState:value=>saved=value,postMessage(){}}),document:{getElementById:id=>fields[id],querySelectorAll:selector=>selector==='article'?rows:[]}});
+const fields={filter:{value:''},count:{textContent:''},'empty-filter':{hidden:true},refresh:{id:'refresh'}},rows=[{dataset:{search:'moves.zss anim: 210'},hidden:false}];let saved;
+require('vm').runInNewContext(script,{acquireVsCodeApi:()=>({getState:()=>({filter:'missing'}),setState:value=>saved=value,postMessage(){}}),addEventListener(){},queueMicrotask:callback=>callback(),document:{getElementById:id=>fields[id],querySelector:()=>null,querySelectorAll:selector=>selector==='.used-by-content article'?rows:selector==='#refresh,[data-line]'?[fields.refresh]:[]}});
 assert.strictEqual(fields.count.textContent,'0 of 1 exact reference(s) shown.');assert.strictEqual(fields['empty-filter'].hidden,false);
+assert.match(fields.refresh.title,/Rescan exact current and unsaved source contents/,'ready-state Refresh guidance exists before the first host action');
 fields.filter.value='moves';fields.filter.oninput();assert.strictEqual(rows[0].hidden,false);assert.strictEqual(fields['empty-filter'].hidden,true);assert.strictEqual(saved.filter,'moves');
 console.log('Used By exact lines, shared ownership, same-line references, comments, constants, ambiguity and safe HTML passed');

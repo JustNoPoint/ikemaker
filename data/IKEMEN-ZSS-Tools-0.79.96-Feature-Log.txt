@@ -1,0 +1,12 @@
+IKEMaker 0.79.96
+
+- Replaces the standalone More dialog button with a peer More dropdown in the
+  shared menu row.
+- Adds connected source code, asset auto-save, workspace mode, layout,
+  reset-layout, and toolbar customization as explicit menu entries.
+- Verifies every established shared toolbar shortcut is available in a
+  dropdown category, while retaining the direct buttons for hands-on testing.
+- Adds regression coverage that fails when a toolbar action has no menu route.
+- Preserves the cross-viewer allowlist and asset-specific Project safety rules.
+- The complete 407-file automated source suite passes. Installed visual and
+  interaction testing remains required.

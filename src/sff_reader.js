@@ -2,6 +2,7 @@
 
 const fs = require('fs');
 const zlib = require('zlib');
+const { readIndexedPng } = require('./palette_indexed_png');
 
 const SIGNATURE = 'ElecbyteSpr\0';
 function friendlyVersion(version = []) { return Array.isArray(version) && version.length >= 3 ? `${Number(version[0]) || 0}.${Number(version[2]) || 0}` : String(version || '?'); }
@@ -382,6 +383,34 @@ function spritePng(archive, selected, paletteOverride = null, preserveIndices = 
   return rgbaPng(source.width, source.height, rgba);
 }
 
+function spriteIndexPlane(archive, selected) {
+  const source = resolvedSprite(archive, selected);
+  if (![5, 8].includes(Number(source.colorDepth))) throw new Error('The selected sprite is truecolor and has no palette index plane.');
+  ensure(archive.buffer, source.dataOffset, source.dataSize, `sprite data ${source.index}`);
+  let indices;
+  if (source.legacy && source.pcx) {
+    const data = archive.buffer.subarray(source.dataOffset, source.dataOffset + source.dataSize);
+    indices = pcx8(data, source.width, source.height, source.pcx.bytesPerLine, source.pcx.encoding === 1);
+  } else if (source.format === 10) {
+    if (source.dataSize < 4) throw new Error('Embedded indexed PNG sprite is truncated.');
+    const decoded = readIndexedPng(archive.buffer.subarray(source.dataOffset + 4, source.dataOffset + source.dataSize));
+    if (decoded.width !== source.width || decoded.height !== source.height) throw new Error('Embedded indexed PNG dimensions do not match the SFF sprite header.');
+    indices = decoded.indices;
+  } else {
+    const expected = source.width * source.height;
+    if (source.format === 0) indices = Buffer.from(archive.buffer.subarray(source.dataOffset, source.dataOffset + source.dataSize));
+    else {
+      if (source.dataSize < 4) throw new Error('Compressed indexed sprite is truncated.');
+      const data = archive.buffer.subarray(source.dataOffset + 4, source.dataOffset + source.dataSize);
+      indices = source.format === 2 ? rle8(data, expected) : source.format === 3 ? rle5(data, expected) : source.format === 4 ? lz5(data, expected) : null;
+      if (!indices) throw new Error(`Unsupported indexed SFF sprite format ${source.format}.`);
+    }
+  }
+  const expected = source.width * source.height;
+  if (indices.length !== expected) throw new Error(`Indexed sprite decoded ${indices.length} of ${expected} pixels.`);
+  return { width: source.width, height: source.height, indices: Buffer.from(indices), sourcePhysicalIndex: source.index };
+}
+
 function spriteDataUri(archive, sprite, paletteOverride = null) { return `data:image/png;base64,${spritePng(archive, sprite, paletteOverride).toString('base64')}`; }
 
-module.exports = { friendlyVersion, parseSffBuffer, readSff, resolvedPalette, paletteRgba, paletteAct, actRgba, spritePng, spriteDataUri, rle8, rle5, lz5, pcx8, rgbaPng, indexedPngWithSffPalette };
+module.exports = { friendlyVersion, parseSffBuffer, readSff, resolvedPalette, paletteRgba, paletteAct, actRgba, spritePng, spriteIndexPlane, spriteDataUri, rle8, rle5, lz5, pcx8, rgbaPng, indexedPngWithSffPalette, indexedSourcePng };

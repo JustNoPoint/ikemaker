@@ -1,0 +1,14 @@
+IKEMaker 0.79.402 - separator-chain Undo and Redo
+
+The connected image-template separator tool now has its own retained history.
+Undo removes an entire completed multi-segment chain in one step; Redo restores
+that complete chain. Clearing all separator lines is also one undoable action.
+
+Local Undo and Redo buttons appear beside the separator controls. Ctrl+Z
+performs Undo. Ctrl+Y and Ctrl+Shift+Z both perform Redo. Native editing
+shortcuts inside text, number, and selection fields remain untouched.
+
+History is bounded to 30 exact before/after checkpoints, rejects empty Undo or
+Redo operations, and revalidates the current template canvas before applying a
+checkpoint. Regression coverage verifies atomic chain Undo/Redo, both common
+Redo shortcuts, empty-history safety, and the existing connected-line flow.

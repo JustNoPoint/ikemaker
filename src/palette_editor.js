@@ -125,6 +125,7 @@ function bufferWithPaletteAssignments(archive, spriteIndices, paletteIndex) {
     const sprite = archive.sprites[index];
     if (!sprite) throw new Error(`Sprite archive index ${index} does not exist.`);
     if (sprite.colorDepth !== 8) throw new Error(`Sprite ${sprite.group},${sprite.number} is not indexed and cannot receive an SFF palette assignment.`);
+    if (sprite.dataSize === 0) throw new Error(`Sprite ${sprite.group},${sprite.number} is a linked destination and cannot receive a direct palette assignment. Assign its physical source sprite, or detach/rebuild it first.`);
     sprites.push(sprite);
   }
   const output = Buffer.from(archive.buffer), changed = sprites.filter((sprite) => sprite.paletteIndex !== targetPalette);
@@ -141,10 +142,12 @@ function paletteScopedSprites(sprites, sourcePaletteIndex) {
   if (!Number.isInteger(paletteIndex) || paletteIndex < 0) throw new Error('A valid source palette index is required.');
   const source = Array.isArray(sprites) ? sprites : [];
   const indexed = source.filter((sprite) => sprite && sprite.colorDepth === 8);
-  const matching = indexed.filter((sprite) => sprite.paletteIndex === paletteIndex);
+  const sourcePaletteMatches = indexed.filter((sprite) => sprite.paletteIndex === paletteIndex);
+  const matching = sourcePaletteMatches.filter((sprite) => sprite.dataSize !== 0);
   return {
     matching,
-    skippedOtherPalettes: indexed.length - matching.length,
+    skippedLinkedDestinations: sourcePaletteMatches.length - matching.length,
+    skippedOtherPalettes: indexed.length - sourcePaletteMatches.length,
     skippedNonIndexed: source.length - indexed.length
   };
 }

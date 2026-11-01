@@ -450,7 +450,8 @@ Expression containing the value to convert. (float)  </p>
 <blockquote>
 <p>param_name<br/>
 The name of the parameter to check. Valid values are:<br/>
-accel, clsndisplay, debugdisplay, lifebarhide, wireframedisplay, roundrestarted</p>
+accel, clsndisplay, debugdisplay, lifebarhide, wireframedisplay, roundreset</p>
+<p><code>roundreset</code> is the spelling accepted by the IKEMEN GO 1.0.0 and reviewed Nightly compilers. The previously documented <code>roundrestarted</code> spelling is not accepted. DebugMode reflects development/debug state and should not be used as reliable gameplay logic.</p>
 </blockquote>
 <p><strong>Example:</strong> </p>
 <pre><code class="language-ini">trigger1 = DebugMode(accel) != 0
@@ -615,16 +616,18 @@ trigger1 = DrawPal(group) = 1 &amp;&amp; DrawPal(index) = 12
 value = 30
 </code></pre>
 <h2 id="envshakevar"><a name="new_envshakevar">EnvShakeVar</a></h2>
-<p>Allows checking the (remaining) time, frequency and amplitude of the current EnvShake.</p>
+<p>Allows checking the (remaining) time, frequency, amplitude and stored base direction of the current EnvShake.</p>
 <p><strong>Format:</strong> </p>
 <blockquote>
-<p>EnvShakeVar  </p>
+<p>EnvShakeVar(param_name)</p>
 </blockquote>
 <p><strong>Arguments:</strong> </p>
 <blockquote>
 <p>param_name<br/>
-The name of the constant to check. Valid values are: time, freq, ampl  </p>
+The name of the constant to check. Valid values are: time, freq, ampl, dir  </p>
 </blockquote>
+<p>IKEMaker source correction (2026-10-26): EnvShakeVar(dir) returns sys.envShake.dir as a float: the stored base direction in degrees, not the instantaneous direction after diradd. Both pinned compilers accept time, freq, ampl, dir. This is a trigger argument, not an added EnvShake controller parameter. Verified source revisions: Stable 81c6da71d689625e20db79586815b695da00dd6d; Nightly ee4791bcd5e2f4bcb16ef9d584e001fb4a7eedfc. Compiler opcode: OC_ex2_envshakevar_dir; runtime: PushF(sys.envShake.dir).</p>
+
 <p><strong>Return type:</strong> </p>
 <blockquote>
 <p>float  </p>

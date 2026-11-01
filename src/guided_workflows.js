@@ -6,7 +6,7 @@ const ADVANCED_ACTIONS = Object.freeze({
   sff: [
     { label: 'Next unresolved', action: 'control:nextUnresolved' },
     { label: 'Batch axis offset', action: 'control:axisOffset' },
-    { label: 'Palette inspector', action: 'panel:palettePanel' },
+    { label: 'Palette Workshop', action: 'control:openPaletteWorkshop' },
     { label: 'Save SFF', action: 'control:saveSff' }
   ],
   air: [
@@ -189,7 +189,7 @@ function workflowFor(workspace, context = {}) {
     return [
       step('archive', 'Load and identify the sprite archive', sprites ? 'complete' : 'current', sprites ? `${sprites} sprites are available.` : 'Add sprites or open a populated SFF.', 'anchor:groups'),
       step('classify', 'Review group, index, axis, and layer ownership', unresolved ? 'current' : 'review', unresolved ? `${unresolved} sprites carry unresolved review flags.` : 'Use review filters and optional naming-profile warnings.', 'panel:reviewPanel'),
-      step('palette', 'Protect and verify palette data', palettes ? 'review' : 'current', palettes ? `${palettes} embedded palettes are available; protect the full master before destructive edits.` : 'Add or assign a palette before indexed-sprite production.', 'panel:palettePanel'),
+      step('palette', 'Protect and verify palette data', palettes ? 'review' : 'current', palettes ? `${palettes} embedded palettes are available; protect the full master before destructive edits.` : 'Add or assign a palette before indexed-sprite production.', 'control:openPaletteWorkshop'),
       step('validate', 'Run required-sprite, animation, and palette audits', 'review', 'Audits report missing or inconsistent data without silently inventing classifications.', 'anchor:right2'),
       step('commit', 'Save direct edits or rebuild from the reviewed manifest', 'pending', 'Direct SFF edits and SprMaker2 rebuilds remain separate save authorities.', 'control:saveSff')
     ];
@@ -255,10 +255,10 @@ function workflowHtml(steps = []) {
 }
 
 function advancedActionBarHtml(workspace, experience = {}) {
-  if (experience.mode !== 'advanced') return '';
-  const actions = ADVANCED_ACTIONS[workspace];
-  if (!actions) throw new Error(`Unknown Advanced action workspace: ${workspace}`);
-  return `<div class="advanced-actions"><b>Advanced shortcuts</b><div>${actions.map((item) => `<button type="button" data-workflow-action="${escapeHtml(item.action)}">${escapeHtml(item.label)}</button>`).join('')}</div></div>`;
+  if (experience.mode === 'advanced' && !ADVANCED_ACTIONS[workspace]) throw new Error(`Unknown Advanced action workspace: ${workspace}`);
+  // Advanced shortcuts are catalogued in the standard Tools dropdown. Keeping
+  // a second action bar made the same controls move between viewers and modes.
+  return '';
 }
 
 function taskRecipesHtml(workspace, experience = {}) {

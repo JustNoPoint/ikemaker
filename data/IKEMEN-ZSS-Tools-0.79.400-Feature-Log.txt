@@ -1,0 +1,18 @@
+IKEMaker 0.79.400 - faster image-template paging and deletion
+
+Image-template deletion now removes the selected layer from view immediately
+while retained-color coverage is checked. Cancelling or failing the protected
+removal restores the authoritative canvas. Unchanged template layer previews
+are reused instead of being regenerated after every canvas mutation.
+
+Reviewed image color sets, derived coverage, page ordering, color totals and
+encoded thumbnails now use bounded helper caches. Page changes reuse the
+information already collected during image intake; the next thumbnail page is
+prefetched. Cache identities include the exact source inventory, cleanup
+regions, retained-color choices, selected image set and focus mode so relevant
+changes invalidate stale results without discarding work for unrelated UI
+updates.
+
+Regression coverage checks thumbnail reuse, helper-cache availability,
+optimistic deletion, cancellation restoration, unchanged layer reuse and the
+existing unique-retained-color removal warning.

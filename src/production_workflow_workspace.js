@@ -17,8 +17,9 @@ const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = 
 const { registerCharacterToolPanel } = require('./authoring_context_registry');
 const { preferredViewerColumn, trackViewerPanel, revealInViewerGroup } = require('./viewer_group');
 
-let activeSession = null,actionQueue=Promise.resolve();
+let activeSession = null;
 const workflowSessions=new Map();
+const workflowActionQueues=new Map();
 const sessionKey=file=>path.resolve(file).toLowerCase();
 const {WorkflowDrafts}=require('./workflow_drafts');
 let drafts=new WorkflowDrafts();
@@ -26,7 +27,19 @@ const workflowFiles=state=>[state.progressPath,state.ticketPath];
 function autoSave(state){return vscode.workspace.getConfiguration?.('ikemenZss',vscode.Uri.file(state.character.defPath)).get('autoSave',false)||false;}
 async function stageWorkflow(state,file,value,expectedHash){await drafts.stage(file,value,expectedHash);if(autoSave(state))await drafts.save(workflowFiles(state));}
 async function previewData(filename,value){const document=await vscode.workspace.openTextDocument({language:'json',content:JSON.stringify(value,null,2)+'\n'});await vscode.window.showTextDocument(document,{preview:false});}
-function cohesive(page) { return page.replace('</header>', `${launchControlsHtml('production_workflow')}</header>`).replace('</script></body>', `${require('./workflow_selection').clientScript()}${launchControlsClientScript()}</script></body>`); }
+function productionAccessibilityClientScript(){return `(()=>{
+const tabs=[...document.querySelectorAll('.tabs [data-view]')],status=document.getElementById('workflowActionStatus'),save=document.getElementById('saveWorkflow'),discard=document.getElementById('discardWorkflow');let busy=false,focusToken=null;
+const token=control=>control?{id:control.id||'',view:control.dataset.view||'',dataset:{...control.dataset}}:null;
+const findToken=value=>{if(!value)return null;if(value.id&&document.getElementById(value.id))return document.getElementById(value.id);if(value.view){const tab=tabs.find(item=>item.dataset.view===value.view);if(tab)return tab}const entries=Object.entries(value.dataset||{});if(!entries.length)return null;return[...document.querySelectorAll('#content button,#content select,#content input')].find(control=>entries.every(([key,item])=>control.dataset[key]===item))||null};
+function syncDraft(){const hasDraft=/Unsaved changes/.test(document.getElementById('saveStatus')?.textContent||'');for(const control of [save,discard]){if(!control)continue;if(!busy){control.disabled=!hasDraft;control.title=hasDraft?(control===save?'Write the retained Workflow draft through reviewed recovery-backed storage.':'Review and discard the retained Workflow draft.'):'No unsaved Workflow changes are currently retained.'}}}
+function syncTabs(){for(const tab of tabs){const active=tab.classList.contains('active');tab.setAttribute('aria-selected',String(active));tab.tabIndex=active?0:-1}}
+function setBusy(value,message=''){busy=Boolean(value);for(const control of document.querySelectorAll('header button,#content button,#content select,#content input')){if(control.closest('.tabs'))continue;if(busy){if(!control.disabled)control.dataset.workflowBusyDisabled='true';control.disabled=true;control.title='Wait for the current Production Workflow action to finish.'}else if(control.dataset.workflowBusyDisabled==='true'){delete control.dataset.workflowBusyDisabled;control.disabled=false;if(control.title==='Wait for the current Production Workflow action to finish.')control.removeAttribute('title')}}if(status)status.textContent=message||(busy?'Production Workflow action in progress…':'Production Workflow controls are ready.');syncDraft()}
+function begin(control,event){if(busy){event?.preventDefault();event?.stopImmediatePropagation();if(status)status.textContent='Wait for the current Production Workflow action to finish.';return false}focusToken=token(control);queueMicrotask(()=>{if(!busy)setBusy(true,'Starting Production Workflow action…')});return true}
+for(const tab of tabs){tab.setAttribute('role','tab');tab.setAttribute('aria-controls','content');tab.onclick=((base)=>event=>{base?.call(tab,event);syncTabs()})(tab.onclick);tab.onkeydown=event=>{let index=tabs.indexOf(tab);if(event.key==='Home')index=0;else if(event.key==='End')index=tabs.length-1;else if(event.key==='ArrowRight')index=(index+1)%tabs.length;else if(event.key==='ArrowLeft')index=(index-1+tabs.length)%tabs.length;else return;event.preventDefault();tabs[index].focus();tabs[index].click()}}
+document.addEventListener('click',event=>{const control=event.target.closest('button');if(!control||control.closest('.tabs')||control.type==='reset'||control.id==='newReport')return;begin(control,event)},true);
+document.addEventListener('change',event=>{const control=event.target.closest('[data-status],[data-ticket-column],[data-ticket-task]');if(control)begin(control,event)},true);
+addEventListener('message',event=>{if(event.data?.type==='workflowBusy')setBusy(event.data.busy,event.data.status);if(event.data?.type==='state'){queueMicrotask(()=>{syncTabs();syncDraft();findToken(focusToken)?.focus()})}});syncTabs();syncDraft()})();`}
+function cohesive(page,data) { let enhanced=page.replace('</header>', `${launchControlsHtml('production_workflow')}</header><div id="workflowActionStatus" class="intro" role="status" aria-live="polite">Production Workflow controls are ready.</div>`).replace('<nav class="tabs">','<nav class="tabs" role="tablist" aria-label="Production Workflow sections">').replace('<div id="content"></div>','<div id="content" role="tabpanel" aria-label="Selected Production Workflow section"></div>');return enhanced.replace('</script></body>', `${require('./workflow_selection').clientScript()}${productionAccessibilityClientScript()}${launchControlsClientScript()}</script></body>`); }
 function safeId(value) { return String(value || 'character').replace(/[^A-Za-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '') || 'character'; }
 function isCharacterDef(filename) { try { const doc = parseDef(fs.readFileSync(filename, 'utf8'), filename), files = sections(doc, 'Files')[0]; return Boolean(files && (value(files, 'sprite') || value(files, 'anim') || value(files, 'cns') || value(files, 'st'))); } catch (_) { return false; } }
 function characterContext(defPath) {
@@ -175,7 +188,7 @@ document.querySelectorAll('.tabs button').forEach(b=>b.onclick=()=>{view=b.datas
 </script></body></html>`; }
 
 const productionHtml = html;
-html = (data) => cohesive(productionHtml(data));
+html = (data) => cohesive(productionHtml(data),data);
 
 function workflowCharacterChoices(seed) {
   const candidates = [], seen = new Set(), add = (filename) => { const resolved = path.resolve(filename || ''); if (!filename || seen.has(resolved.toLowerCase()) || !isCharacterDef(resolved)) return; seen.add(resolved.toLowerCase()); candidates.push(resolved); };
@@ -285,7 +298,7 @@ async function handle(context, session, message) {
   let state = session.state, actor = actorFor(state.character);
   if(message.type==='issueDraft'){if(path.resolve(String(message.defPath||'')).toLowerCase()!==path.resolve(state.character.defPath).toLowerCase())return;const values=message.values&&typeof message.values==='object'?Object.fromEntries(Object.entries(message.values).filter(([key,value])=>typeof value==='string'&&key.length<80).map(([key,value])=>[key,value.slice(0,100000)])):undefined;await context.workspaceState.update(issueDraftKey(state.character),values);return;}
   if(message.type==='saveWorkflow'){await drafts.save(workflowFiles(state));await refresh(context,session);return;}
-  if(message.type==='discardWorkflow'){if(!state.hasDraft)return;const answer=await vscode.window.showWarningMessage('Discard unsaved Workflow changes for this character and project board?',{modal:true},'Discard Changes');if(answer==='Discard Changes'){await drafts.discard(workflowFiles(state));await refresh(context,session);}return;}
+  if(message.type==='discardWorkflow'){if(!state.hasDraft)return vscode.window.showInformationMessage('There are no unsaved Workflow changes to discard.');const answer=await vscode.window.showWarningMessage('Discard unsaved Workflow changes for this character and project board?',{modal:true},'Discard Changes');if(answer==='Discard Changes'){await drafts.discard(workflowFiles(state));await refresh(context,session);}return;}
   if (message.type === 'issueDefinition') {
     const picked = await vscode.window.showOpenDialog({ title: 'Read item name and version from definition', canSelectMany: false, filters: { 'IKEMEN definition': ['def'] } });
     if (!picked?.[0]) return;
@@ -361,19 +374,22 @@ async function openProductionWorkflow(context, uri,options={}) {
   const key=sessionKey(defPath),existing=workflowSessions.get(key);if(existing&&!existing.disposed){activeSession=existing;revealInViewerGroup(existing.panel,false,vscode.ViewColumn.Active);return existing.panel;}
   let state; try { state = loadState(context, characterContext(defPath)); } catch (error) { return vscode.window.showErrorMessage(`Could not open Production Workflow: ${error.message}`); }
 
-  const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenProductionWorkflow', `${state.character.name} — Production Workflow`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true })), session = { panel, state }; registerCharacterToolPanel(panel, defPath, state.character.name, [state.progressPath]); activeSession = session; panel.webview.html = require('./webview_policy').protect(html(state), panel.webview.cspSource); workflowSessions.set(key,session);
+  const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenProductionWorkflow', `${state.character.name} — Production Workflow`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true })), session = { panel, state, actionPending:false }; registerCharacterToolPanel(panel, defPath, state.character.name, [state.progressPath]); activeSession = session; panel.webview.html = require('./webview_policy').protect(html(state), panel.webview.cspSource); workflowSessions.set(key,session);
   require('./viewer_close').support(panel,{isBusy:()=>!!session.pendingCount});
   panel.webview.onDidReceiveMessage(message=>{
     if(session.disposed)return;
     session.pendingCount=(session.pendingCount||0)+1;
     if(message.type==='issueDraft'){session.issuePending=(session.issuePending||Promise.resolve()).catch(()=>{}).then(()=>handle(context,session,message)).catch(error=>vscode.window.showErrorMessage('The issue draft could not be stored: '+error.message)).finally(()=>{session.pendingCount--;});return session.issuePending;}
-    actionQueue=actionQueue.catch(()=>{}).then(async()=>{
+    if(session.actionPending){session.pendingCount--;return panel.webview.postMessage({type:'workflowBusy',busy:true,status:'Wait for the current Production Workflow action to finish.'});}
+    session.actionPending=true;void panel.webview.postMessage({type:'workflowBusy',busy:true,status:'Production Workflow action in progress…'});
+    const actionQueueKey=sessionKey(session.state.ticketPath||session.state.progressPath||session.state.character.defPath),priorQueue=workflowActionQueues.get(actionQueueKey)||Promise.resolve();
+    const queued=priorQueue.catch(()=>{}).then(async()=>{
       if(session.disposed)return;
       // Separate panels can share a game board. Re-read staged work before each action.
       session.state=loadState(context,session.state.character);
       await handle(context,session,message);
-    }).catch(async error=>{vscode.window.showErrorMessage(`Production Workflow could not complete that action: ${error.message}`);if(!session.disposed)await refresh(context,session);}).finally(()=>{session.pendingCount--;});
-    session.pending=actionQueue;return actionQueue;
+    }).catch(async error=>{vscode.window.showErrorMessage(`Production Workflow could not complete that action: ${error.message}`);if(!session.disposed)await refresh(context,session);}).finally(()=>{if(workflowActionQueues.get(actionQueueKey)===queued)workflowActionQueues.delete(actionQueueKey);session.actionPending=false;session.pendingCount--;if(!session.disposed)void panel.webview.postMessage({type:'workflowBusy',busy:false,status:'Production Workflow controls are ready.'});});
+    workflowActionQueues.set(actionQueueKey,queued);session.pending=queued;return queued;
   });
   panel.onDidDispose(() => {session.disposed=true;if(workflowSessions.get(key)===session)workflowSessions.delete(key);if(activeSession===session)activeSession=null;});return panel;
 }

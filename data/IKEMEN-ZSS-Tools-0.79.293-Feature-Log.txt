@@ -1,0 +1,11 @@
+IKEMaker 0.79.293
+
+Cold-start AIR ownership correction:
+
+- Opening an AIR viewer from the native text header now preserves the exact AIR file and its proven character DEF instead of inheriting an older shared-FX archive selection.
+- The AIR viewer resolves its SFF, constants, and state sources from that exact owner DEF, including unsaved open DEF text.
+- A reused AIR panel with a mismatched sprite archive is discarded and rebuilt with the correct owner/SFF binding.
+- Restored AIR panels revalidate their saved owner-to-AIR-to-SFF relationship before loading.
+- Shared archive context remains available for intentional visual-viewer handoffs, but cannot leak into cold text-origin launches.
+
+Verified against the live Ryu chain: Ryu.def -> Sf6Ryu.air -> Sf6Ryu.sff. Focused text-header, viewer navigation, shared archive, history, AIR reuse, and AIR HTML tests pass.

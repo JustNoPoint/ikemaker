@@ -1,0 +1,13 @@
+'use strict';
+const assert=require('assert');
+const picker=require('../src/palette_workshop_pixel_picker');
+assert.deepStrictEqual(picker.pixelFromNormalized(4,2,0,0),{x:0,y:0});
+assert.deepStrictEqual(picker.pixelFromNormalized(4,2,1,1),{x:3,y:1},'the inclusive preview edge clamps to the last exact pixel');
+assert.deepStrictEqual(picker.pixelFromNormalized(4,2,0.5,0.5),{x:2,y:1});
+assert.deepStrictEqual(picker.pickExactIndex({width:4,height:2,indices:Buffer.from([7,7,9,9,0,2,2,3])},0.01,0.99),{x:0,y:1,index:0,transparentConvention:true});
+assert.strictEqual(picker.pickExactIndex({width:2,height:1,indices:Buffer.from([4,9])},0.75,0.5).index,9,'selection uses stored indexes rather than RGBA reverse matching');
+assert.throws(()=>picker.pixelFromNormalized(2,2,-0.1,0.2),/between 0 and 1/);
+assert.throws(()=>picker.pixelFromNormalized(2,2,null,0.2),/between 0 and 1/);
+assert.throws(()=>picker.pickExactIndex({width:2,height:2,indices:Buffer.from([1])},0.5,0.5),/unavailable or inconsistent/);
+const token=picker.previewToken({resourceHash:'a'.repeat(64),sprite:{physicalIndex:3,group:200,number:0},indexPlane:{width:2,height:1,sourcePhysicalIndex:1,indices:Buffer.from([4,9])}});assert.match(token,/^[0-9a-f]{64}$/);assert.notStrictEqual(token,picker.previewToken({resourceHash:'a'.repeat(64),sprite:{physicalIndex:3,group:200,number:0},indexPlane:{width:2,height:1,sourcePhysicalIndex:1,indices:Buffer.from([4,8])}}),'index-plane bytes participate in preview generation identity');
+console.log('Palette Workshop exact indexed-pixel picker tests passed');

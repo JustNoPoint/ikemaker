@@ -1,0 +1,10 @@
+IKEMaker 0.79.280
+
+Palette Workshop image-tool repair
+
+- Replaced the fragile browser atob call with a bounded indexed-pixel decoder that accepts standard and URL-safe Base64.
+- Stopped a failed image-tool initialization from recursively producing duplicate error messages.
+- Restored loading for the hand, selection, picker, pen, eraser, remap, bucket, layer, mask, zoom, and pixel-grid controls.
+- Removed the redundant Source tools / Preview A rail beside Bank A.
+- Kept Clone A to B in the shared controls above the banks, before the Preview B toggle.
+- Turning Preview B off continues to restore the normal Bank A preview without a separate Preview A button.

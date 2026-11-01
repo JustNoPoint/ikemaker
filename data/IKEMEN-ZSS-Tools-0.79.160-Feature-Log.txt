@@ -1,0 +1,16 @@
+IKEMaker 0.79.160
+
+AIR Actions Browser
+- Source links open beside the browser and cannot replace its only escape route.
+- Exact AIR browser sessions can be restored from the attached text header with AIR↩.
+- Browser state survives source navigation; Close Browser retains dirty/busy protections.
+- Narrow AIR and Coding Assistance layouts wrap without root horizontal scrolling.
+
+Palette Workshop
+- Scratch Save uses the real universal-toolbar capability and host save lifecycle.
+- Guided destination intent survives handoff into the scratch document.
+- Standard/Advanced task and step controls remain reachable at narrow widths.
+
+Verification
+- AIR and Palette focused suites pass.
+- New Dev independently approved both release slices with no remaining P0/P1 finding.

@@ -132,7 +132,7 @@ async function executeTarget(choice, assets, root) {
 }
 
 async function openRelatedWork(seed, kind = '') {
-  const start=fileSeed(seed),navigation=require('./viewer_navigation'),owner=await navigation.resolveOwner(start,false);
+  const start=fileSeed(seed),navigation=require('./viewer_navigation'),owner=await navigation.resolveOwner(start,false,{allowArchiveContext:navigation.allowsArchiveContext(start)});
   if(!owner)return;
   const {def,inherited}=owner,root=gameRoot(start||def),assets=resolveAssigned(def);
   if(inherited)for(const target of ['sff','air','snd'])assets[target]=inherited.record[target]||'';

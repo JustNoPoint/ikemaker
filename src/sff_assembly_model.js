@@ -39,7 +39,6 @@ function buildAssembly(base, source, operations = []) {
       cursor = targetNumber + 1;
     }
   }
-  rows = rows.sort((a, b) => a.group - b.group || a.number - b.number);
   return { rows, changes, conflicts };
 }
 

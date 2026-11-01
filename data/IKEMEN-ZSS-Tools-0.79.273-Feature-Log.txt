@@ -1,0 +1,7 @@
+IKEMaker 0.79.273
+
+- Changed the shared SFF, AIR, and SND header Undo/Redo buttons so they operate on the active asset viewer rather than an accidentally focused text input.
+- SFF axis autosaves now retain exact before/after coordinates and can be undone and redone safely. Pressing Undo while an axis autosave is pending waits for that save, then reverses it.
+- AIR viewer Undo/Redo now targets the exact connected AIR document and refreshes the animation viewer after the editor history operation.
+- SND profile and build-manifest edits now retain reversible session snapshots. Undo/Redo refuses to overwrite a file that changed outside the viewer.
+- Kept Text / Input Undo and Redo as separately labeled Edit-menu commands.

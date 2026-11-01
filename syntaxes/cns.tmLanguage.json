@@ -5,6 +5,7 @@
   "patterns": [
     { "include": "#comments" },
     { "include": "#sections" },
+    { "include": "#commands" },
     { "include": "#assignments" }
   ],
   "repository": {
@@ -26,6 +27,26 @@
             "2": { "name": "entity.name.section.ikemen-cns" },
             "3": { "name": "punctuation.definition.section.ikemen-cns" }
           }
+        }
+      ]
+    },
+    "commands": {
+      "patterns": [
+        {
+          "name": "meta.command.sequence.ikemen-cns",
+          "begin": "^\\s*(command)(\\s*=\\s*)",
+          "beginCaptures": {
+            "1": { "name": "variable.other.constant.ikemen-cns" },
+            "2": { "name": "keyword.operator.assignment.ikemen-cns" }
+          },
+          "end": "$",
+          "patterns": [
+            { "include": "#comments" },
+            { "name": "keyword.operator.command.modifier.ikemen-cns", "match": "(?:~\\d*|[/>$*])" },
+            { "name": "constant.language.command.direction.ikemen-cns", "match": "(?<![A-Za-z])(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRN])(?![A-Za-z])" },
+            { "name": "variable.language.command.button.ikemen-cns", "match": "(?<![A-Za-z])[xyzabcswm](?![A-Za-z])" },
+            { "name": "keyword.operator.command.relation.ikemen-cns", "match": "[,|+]" }
+          ]
         }
       ]
     },

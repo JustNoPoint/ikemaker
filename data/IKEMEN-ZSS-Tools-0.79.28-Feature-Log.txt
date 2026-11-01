@@ -1,0 +1,9 @@
+IKEMaker 0.79.28 — Native docking direction accepted
+
+- Uses VS Code native docking as the Phase 1 workspace foundation.
+- Accepts Hold Shift when VS Code requests it while crossing docking domains.
+- Adds a concise native-docking checklist to the Project Knowledge prototype.
+- Adds an explicit button for the optional editor/floating-window probe.
+- Keeps the normal docking command docked-first and non-writing.
+- Defers a custom internal docking engine unless a required workflow later proves
+  impossible with native Views, editor groups, and floating editor windows.

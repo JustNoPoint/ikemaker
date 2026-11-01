@@ -1,0 +1,11 @@
+IKEMaker 0.79.424
+
+Palette template annotation and filler clarity
+
+- Named swatch-group text and manual separator lines now share one template annotation color.
+- The default annotation color is the darkest retained color found across the imported sprite images, rather than the darkest color inside each named group.
+- The separator controls include a Text & separator color picker plus a one-click reset to the darkest retained image color.
+- Changing the shared annotation color recolors existing separator lines and regenerated swatch labels, and the setting survives separator clear/undo/redo and IKEMaker sidecar reloads.
+- Reserved filler gaps now visibly display the configured filler color in the 16x16 palette table.
+- Filler cells remain disabled semantic placeholders: they cannot be selected, dragged, assigned to groups, or counted as retained sprite colors.
+- The palette-table preview uses the effective reduced filler gap when necessary, matching indexed export behavior while protecting transparent index 0.

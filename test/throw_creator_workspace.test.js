@@ -31,5 +31,7 @@ assert.match(profile, /gameMode = "training"/);
 assert.match(profile, /playerNo = 1/);
 assert.match(profile, /playerNo = 2/);
 assert.match(workspace.previewProfileSource(plan, false), /ignoreHitPause if 0/);
-assert.doesNotThrow(() => new Function(page.match(/<script>([\s\S]*)<\/script>/)[1]));
+const scripts=[...page.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match=>match[1]);
+assert(scripts.length>=1,'Throw Creator emits executable client script blocks');
+for(const script of scripts)assert.doesNotThrow(()=>new Function(script));
 console.log('Throw Creator workspace tests passed');

@@ -1,0 +1,9 @@
+IKEMaker 0.79.114
+
+- Renames the universal Text / Source action to Text Editor Viewer to state its purpose clearly.
+- Explicit Open Coding Viewer requests now always open or reuse the integrated editor, independently of the preference used for ordinary character-file opening.
+- SFF, AIR and SND viewers can open a connected source directly in the integrated Text Editor Viewer.
+- DEF and AIR retain their specialist visual launch cards while gaining editable, saveable Source and Split panes.
+- Open Full Text remains available inside the viewer for users who deliberately want the traditional VS Code editor.
+- Ordinary unconfigured TXT files remain native-only; TXT files explicitly configured as code remain editable in the viewer.
+- Focused authoring-shell, draft safety, Character Essentials, universal-toolbar, asset-source routing and UI-contract regressions pass.

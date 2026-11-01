@@ -1,0 +1,5 @@
+IKEMaker 0.79.307
+
+- Removed the duplicate Darken unselected sprite colors control.
+- Kept one authoritative toggle beside Review Sprite Replacement.
+- Remove stale preview copies during Palette Workshop rerenders.

@@ -31,10 +31,13 @@ function timingAnalysis(delaysMs = [], tickRate = 60) {
 function gifActionBlock(options = {}) {
   const action = Number(options.action), group = Number(options.group), startIndex = Number(options.startIndex || 0), count = Number(options.frameCount), x = Number(options.x || 0), y = Number(options.y || 0), ticks = Number(options.ticks || 1), delays = Array.isArray(options.delaysMs) ? options.delaysMs : [];
   if (![action, group, startIndex, count, x, y, ticks].every(Number.isFinite) || !Number.isInteger(count) || count < 1) throw new Error('Action, sprite range, offsets, timing, and frame count must be valid numbers.');
+  const spriteRefs = Array.isArray(options.spriteRefs) ? options.spriteRefs.map((item) => ({ group: Number(item?.group), index: Number(item?.index) })) : [];
+  if (spriteRefs.length && (spriteRefs.length < count || spriteRefs.slice(0, count).some((item) => !Number.isInteger(item.group) || !Number.isInteger(item.index)))) throw new Error('Every GIF frame needs one reviewed SFF sprite identity.');
   const plan = options.useGifTiming ? (options.resampleTo60 ? resampleTiming(delays.slice(0, count)) : cumulativeTiming(delays.slice(0, count))) : Array.from({ length: count }, (_, sourceIndex) => ({ sourceIndex, ticks: Math.max(1, Math.round(ticks)), delayMs: 0 }));
   const lines = [`; Imported intentionally from GIF: ${options.sourceName || 'source.gif'}`, options.resampleTo60 ? '; GIF timing resampled to 60 Hz; source frames not sampled at a game tick were omitted.' : options.useGifTiming ? '; GIF timing cumulatively quantized to 60 Hz; every source frame was retained.' : '; GIF timing ignored; uniform AIR timing was chosen.', '; Review sprite identities, offsets, collisions, and timing before saving.', `[Begin Action ${action}]`];
   for (const item of plan) {
-    lines.push(`${group},${startIndex + item.sourceIndex},${x},${y},${item.ticks}${options.useGifTiming ? ` ; GIF reference ${item.delayMs} ms` : ''}`);
+    const sprite = spriteRefs[item.sourceIndex] || { group, index: startIndex + item.sourceIndex };
+    lines.push(`${sprite.group},${sprite.index},${x},${y},${item.ticks}${options.useGifTiming ? ` ; GIF reference ${item.delayMs} ms` : ''}`);
   }
   return lines.join('\r\n');
 }

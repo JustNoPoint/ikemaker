@@ -1,0 +1,9 @@
+IKEMaker 0.79.274
+
+Release-blocking text editor access
+
+- Viewer header icons and toolbar actions now open the requested native text document first.
+- Code Navigation attachment remains available, but can no longer prevent or delay access to the source editor when a visual-layout transition is refused.
+- AIR viewer source buttons no longer require the AIR browser or its return-path layout to open successfully before showing the AIR source.
+- Existing native source tabs are reused and the requested source receives final focus after optional companion setup.
+- Regression coverage verifies direct source access when companion commands refuse, fail, or are unavailable.

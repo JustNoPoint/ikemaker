@@ -1,0 +1,54 @@
+'use strict';
+const assert = require('assert');
+const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const Module = require('module');
+
+const vscode = { Uri: { file: fsPath => ({ fsPath, toString: () => `file:${fsPath}` }) }, window: { visibleTextEditors: [] }, workspace: { textDocuments: [] }, commands: {}, ViewColumn: { Active: 1 } };
+const original = Module._load;
+Module._load = function(request, parent, main) { if (request === 'vscode') return vscode; return original.call(this, request, parent, main); };
+const workspace = require('../src/helper_workspace');
+const helper = require('../src/helper_authoring_model');
+Module._load = original;
+
+const source = fs.readFileSync(require.resolve('../src/helper_workspace'), 'utf8');
+for (const marker of ['helper-spawn-section', 'helper-state-section', 'helper-creation-controller', 'insert-all-at-cursor', 'append-helper-atomic', 'replace-creation-controller']) assert(source.includes(marker), `${marker} is wired into the production Helper host`);
+assert(source.includes("excluded = new Set([assigned.commands, assigned.constants]"), 'CMD and constants are excluded from Helper state targets');
+assert(source.includes("edit.insert(spawn.document.uri") && source.includes("edit.insert(state.document.uri"), 'two-file append is one WorkspaceEdit');
+assert(source.includes("edit.replace(document.uri") && source.includes('helper-creation-controller'), 'replacement owns only the exact creation controller artifact');
+assert(source.includes('owner.queue.then'), 'messages are serialized per Helper owner');
+assert(source.includes('owner.authorityEpoch+=1') && source.includes('owner.disposed=true'), 'dispose tombstones late Helper work');
+
+const plan = helper.newHelper({ name: 'Authority helper', id: 7300, stateNo: 7300 });
+const owner = { generation: 4, model: { plan }, descriptor: { type: 'project', key: 'helper-private:test', private: true }, panel: { active: true }, sourceRole: 'spawn', selectedSources: { spawn: '', state: '' }, contextModel: { snapshot: () => ({ identity: 'helper-private:test', revision: 2, selectionRevision: 1, activeSurfaceId: 'code.helper', selection: null }) } };
+const snapshot = workspace.helperGeneratedSnapshot(owner);
+assert.deepStrictEqual(snapshot.artifacts.map(item => item.id), ['helper-spawn-section', 'helper-state-section', 'helper-creation-controller']);
+assert.deepStrictEqual(workspace.HELPER_GENERATED_OPERATIONS.map(item => [item.id, item.atomicity]), [['insert-all-at-cursor','all'], ['append-helper-atomic','all'], ['replace-creation-controller','single']]);
+assert.strictEqual(workspace.validHelperMessage({type:'helperSourceRole',role:'spawn'}),true);
+assert.strictEqual(workspace.validHelperMessage({type:'helperSourceRole',role:'spawn',forged:true}),false);
+assert.strictEqual(workspace.validHelperMessage({type:'helperSourceNavigate',requestId:1,role:'state',action:'select',id:'x'}),true);
+assert.strictEqual(workspace.validHelperMessage({type:'helperSourceNavigate',requestId:-1,role:'state',action:'select',id:'x'}),false);
+const legacyFields={source:'C:/char/a.zss',stateSource:'C:/char/b.zss',code:'a\nb',spawnCode:'spawn\n',stateCode:'state\n'};
+assert.strictEqual(workspace.validHelperMessage({type:'recheck',...legacyFields}),true,'the closed legacy bridge accepts its exact bounded envelope');
+assert.strictEqual(workspace.validHelperMessage({type:'recheck'}),false,'partial legacy envelopes fail closed');
+assert.strictEqual(workspace.validHelperMessage({type:'recheck',...legacyFields,forged:true}),false,'extra legacy fields fail closed');
+assert.strictEqual(workspace.validHelperMessage({type:'recheck',...legacyFields,code:'x'.repeat(262145)}),false,'oversized generated text fails closed');
+assert.strictEqual(workspace.validHelperMessage({type:'ikemaker.universal-toolbar.invoke',slotId:'forged'}),false,'unknown universal-toolbar slots fail closed');
+assert.strictEqual(workspace.validHelperMessage({type:'ikemenCloseState',id:1,clean:true,busy:false,canKeepDraft:true,verified:true,forged:true}),false,'close compatibility envelopes reject extra fields');
+assert.strictEqual(workspace.validHelperMessage({type:'ikemenPresetState',id:1,reference:{defPath:'C:/char/c.def',view:'create',mode:'basic',editingUid:''}}),true);
+assert.strictEqual(workspace.validHelperMessage({type:'ikemenPresetState',id:1,reference:{defPath:'C:/char/c.def',view:'wrong',mode:'basic',editingUid:''}}),false);
+
+const navigation = workspace.helperNavigation(['C:/char/a.zss', 'C:/char/b.cns'], 'C:/char/b.cns', 'cards');
+assert.strictEqual(navigation.mode, 'cards');
+assert.strictEqual(navigation.currentId.endsWith('b.cns'), true);
+const ownerRoot=fs.mkdtempSync(path.join(os.tmpdir(),'helper-owner-')),defA=path.join(ownerRoot,'A.def'),defB=path.join(ownerRoot,'B.def'),one=path.join(ownerRoot,'one.zss'),two=path.join(ownerRoot,'two.zss'),controller=path.join(ownerRoot,'controller.zss'),ownerKey=value=>path.resolve(value).toLowerCase();for(const file of [defA,defB,one,two,controller])fs.writeFileSync(file,'');const ownerLoad=Module._load;let ownerMap=new Map([[ownerKey(one),[defA]],[ownerKey(two),[defA]],[ownerKey(controller),[defB]]]);Module._load=function(request,parent,main){if(request==='./viewer_navigation'&&/helper_workspace/.test(parent?.filename||''))return{associatedDefs:file=>ownerMap.get(ownerKey(file))||[]};return ownerLoad.call(this,request,parent,main);};assert.strictEqual(workspace.helperDescriptor([one,two]).type,'character');assert.strictEqual(workspace.helperDescriptor([one,two,controller]).root,'','a loaded controller owned elsewhere forces private context');ownerMap.set(ownerKey(one),[defA,defB]);assert.strictEqual(workspace.helperDescriptor([one,two]).root,'','an ambiguous target forces private context even when another target has one owner');ownerMap.set(ownerKey(one),[defA]);ownerMap.set(ownerKey(two),[defB]);assert.strictEqual(workspace.helperDescriptor([one,two]).root,'','cross-owner targets force private context');Module._load=ownerLoad;fs.rmSync(ownerRoot,{recursive:true,force:true});
+const html = workspace.page({ context:{project:'P',character:'C'}, defPath:'C:/char/c.def', graph:{nodes:[{uid:'root',type:'root',name:'Root',children:[]}],flows:[],reads:[],totals:{}}, plan, generated:helper.generateHelper(plan), flow:helper.normalizeFlow({}), flowCode:'', suggestion:{id:1,stateNo:1,source:''}, defaultsSource:'', readiness:{status:'not-applicable',checks:[]}, preview:{}, assets:{air:'',sff:''}, roles:helper.ROLES,postypes:helper.POSTYPES,flowScopes:helper.FLOW_SCOPES,flowOperations:helper.FLOW_OPERATIONS,builtinScaffolds:helper.BUILTIN_SCAFFOLDS,recipes:[],editing:null,sources:[],reference:{defPath:'C:/char/c.def',view:'create',mode:'basic',editingUid:''},navigation:{spawn:{...require('../src/authoring_navigation_model').projectNavigation(workspace.helperNavigation([],''))},state:{...require('../src/authoring_navigation_model').projectNavigation(workspace.helperNavigation([],''))}},sourceRole:'spawn' });
+assert.match(html, /data-toolbar-contract="universal-v1"/);
+assert.doesNotMatch(html, /class="launch-controls"/);
+assert.match(html, /aria-label="Helper creation source"/);
+assert.match(html, /aria-label="Owned StateDef source"/);
+assert.match(html, /Recheck targets/);
+assert.match(html, /ikemaker\.generated-code\.invoke/);
+for (const script of [...html.matchAll(/<script>([\s\S]*?)<\/script>/g)].map(match => match[1])) assert.doesNotThrow(() => new Function(script));
+console.log('Helper Lab universal toolbar, role navigation, exact-source, G1 artifact, atomicity, and lifecycle contract passed');

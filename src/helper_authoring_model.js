@@ -8,6 +8,7 @@ const FLOW_SCOPES = ['self', 'parent', 'root', 'helper', 'playerid', 'team'];
 const FLOW_OPERATIONS = ['read', 'set', 'add'];
 const HELPER_RECIPES = ['custom', 'basic-fireball', 'super-fireball', 'visual-follower', 'companion', 'input-reader', 'hitbox-proxy', 'emitter'];
 const PROJECTILE_RECIPES = ['basic-fireball', 'super-fireball'];
+const SCALE_POLICIES = new Set(['', 'follow', 'fixed', 'position', 'size', 'manual']);
 const BUILTIN_SCAFFOLDS = [
   { id: 'visual-follower', label: 'Visual / part follower', detail: 'Owner-relative visual helper with an explicit mode map.' },
   { id: 'companion', label: 'Companion', detail: 'Persistent-behavior starting point with owner communication maps.' },
@@ -32,6 +33,7 @@ function key(value, fallback = 'value') { return clean(value, fallback).replace(
 function oneOf(value, list, fallback) { return list.includes(value) ? value : fallback; }
 function pair(value, fallback = [0, 0]) { return Array.isArray(value) ? [num(value[0], fallback[0]), num(value[1], fallback[1])] : fallback.slice(); }
 function compact(value) { const n = num(value); return Number.isInteger(n) ? String(n) : String(Number(n.toFixed(4))); }
+function scalePolicy(value) { const policy = String(value || '').toLowerCase(); return SCALE_POLICIES.has(policy) ? policy : ''; }
 function uid(value) { return crypto.createHash('sha1').update(String(value)).digest('hex').slice(0, 12); }
 
 function normalizeMap(entry = {}) { return { name: key(entry.name), value: clean(entry.value, '0'), purpose: clean(entry.purpose), direction: oneOf(entry.direction, ['private', 'input', 'output', 'shared'], 'private') }; }
@@ -68,7 +70,7 @@ function normalizeHelper(input = {}) {
     immortal: bool(input.immortal), clsnProxy: bool(input.clsnProxy), ownProjectile: bool(input.ownProjectile),
     ownClsnScale: bool(input.ownClsnScale), inheritJuggle: Math.max(0, Math.min(2, int(input.inheritJuggle))),
     inheritChannels: Math.max(0, Math.min(2, int(input.inheritChannels))), preserve: bool(input.preserve), standby: int(input.standby, -1),
-    pauseMoveTime: int(input.pauseMoveTime), superMoveTime: int(input.superMoveTime), maps: (input.maps || []).map(normalizeMap), recipe,
+    pauseMoveTime: int(input.pauseMoveTime), superMoveTime: int(input.superMoveTime), maps: (input.maps || []).map(normalizeMap), recipe, scalePolicy: scalePolicy(input.scalePolicy),
     projectile: normalizeProjectile(input.projectile, stateNo, recipe),
     cleanup: { destroyOnStateEnd: bool(input.cleanup?.destroyOnStateEnd, true), recursive: bool(input.cleanup?.recursive, true), removeExplods: bool(input.cleanup?.removeExplods, true) }
   };
@@ -80,7 +82,7 @@ function applyRecipe(recipe, input = {}) {
   // Built-in starting points are complete, clean presets. Keep only the user's
   // routing identity so switching from (for example) a fireball to a visual
   // helper cannot leak projectile ownership, collision, maps, or pause rules.
-  const seed = newHelper({ language: base.language, trigger: base.trigger, id: base.id, stateNo: base.stateNo });
+  const seed = newHelper({ language: base.language, trigger: base.trigger, id: base.id, stateNo: base.stateNo, scalePolicy: base.scalePolicy });
   if (!['basic-fireball', 'super-fireball'].includes(kind)) {
     const presets = {
       'visual-follower': { name: 'Visual Part Follower', role: 'visual', ownPal: true, maps: [{ name: 'mode', value: '0', purpose: 'Owner-selected visual mode', direction: 'input' }] },
@@ -161,7 +163,7 @@ function zssHelper(input) {
   const instanceMap = `IKEMaker_Helper_${p.id}_PlayerID`;
   const projectileRecipe = PROJECTILE_RECIPES.includes(p.recipe);
   const stateHeader = projectileRecipe ? `[StateDef ${p.stateNo}; type: A; movetype: A; physics: N; anim: ${p.projectile.animation}; ctrl: 0;]` : `[StateDef ${p.stateNo}]`;
-  const lines = [`# ${p.role} helper · ${p.name}${projectileRecipe ? ` · ${p.recipe} recipe` : ''}`, `if ${p.trigger} && !numHelper(${p.id}) {`, `\thelper{${params.join('; ')}}`, `\tmap(${instanceMap}) := lastPlayerID;`, '}', '', stateHeader, `# The helper confirms its exact runtime PlayerID on its first tick.`, `if time = 0 { parentMapSet{map: "${instanceMap}"; value: id} }`];
+  const lines = [`# ${p.role} helper · ${p.name}${projectileRecipe ? ` · ${p.recipe} recipe` : ''}`, ...(p.scalePolicy ? [`# IKEMaker scale convention: ${p.scalePolicy} (new-effect authoring note; not runtime enforcement)`] : []), `if ${p.trigger} && !numHelper(${p.id}) {`, `\thelper{${params.join('; ')}}`, `\tmap(${instanceMap}) := lastPlayerID;`, '}', '', stateHeader, `# The helper confirms its exact runtime PlayerID on its first tick.`, `if time = 0 { parentMapSet{map: "${instanceMap}"; value: id} }`];
   if (projectileRecipe) lines.push('', ...zssProjectileBody(p));
   else if (p.cleanup.destroyOnStateEnd) lines.push('', '# Replace this reviewed lifetime condition.', `if time > 300 { destroySelf{recursive: ${p.cleanup.recursive ? 1 : 0}; removeexplods: ${p.cleanup.removeExplods ? 1 : 0}} }`);
   return lines.join('\n');
@@ -178,7 +180,7 @@ function cnsHelper(input) {
   ];
   const instanceMap = `IKEMaker_Helper_${p.id}_PlayerID`;
   const projectileRecipe = PROJECTILE_RECIPES.includes(p.recipe), q = p.projectile, hits = `IKEMaker_Projectile_${p.id}_Hits`;
-  const lines = [`; ${p.role} helper · ${p.name}${projectileRecipe ? ` · ${p.recipe} recipe` : ''}`, `[State Helper ${p.id}]`, 'type = Helper', `trigger1 = ${p.trigger}`, `trigger1 = NumHelper(${p.id}) = 0`, ...params, '', `[State Helper ${p.id}, capture exact instance]`, 'type = MapSet', `trigger1 = NumHelper(${p.id}) > 0`, `trigger1 = Map(${instanceMap}) = 0 || !PlayerIDExist(Map(${instanceMap}))`, `map = "${instanceMap}"`, 'value = LastPlayerID', '', `[Statedef ${p.stateNo}]`, ...(projectileRecipe ? ['type = A', 'movetype = A', 'physics = N', `anim = ${q.animation}`, 'ctrl = 0'] : []), '', `[State ${p.stateNo}, confirm exact instance]`, 'type = ParentMapSet', 'trigger1 = Time = 0', `map = "${instanceMap}"`, 'value = ID'];
+  const lines = [`; ${p.role} helper · ${p.name}${projectileRecipe ? ` · ${p.recipe} recipe` : ''}`, ...(p.scalePolicy ? [`; IKEMaker scale convention: ${p.scalePolicy} (new-effect authoring note; not runtime enforcement)`] : []), `[State Helper ${p.id}]`, 'type = Helper', `trigger1 = ${p.trigger}`, `trigger1 = NumHelper(${p.id}) = 0`, ...params, '', `[State Helper ${p.id}, capture exact instance]`, 'type = MapSet', `trigger1 = NumHelper(${p.id}) > 0`, `trigger1 = Map(${instanceMap}) = 0 || !PlayerIDExist(Map(${instanceMap}))`, `map = "${instanceMap}"`, 'value = LastPlayerID', '', `[Statedef ${p.stateNo}]`, ...(projectileRecipe ? ['type = A', 'movetype = A', 'physics = N', `anim = ${q.animation}`, 'ctrl = 0'] : []), '', `[State ${p.stateNo}, confirm exact instance]`, 'type = ParentMapSet', 'trigger1 = Time = 0', `map = "${instanceMap}"`, 'value = ID'];
   if (projectileRecipe) lines.push('', `[State ${p.stateNo}, no push]`, 'type = PlayerPush', 'trigger1 = 1', 'value = 0', '', `[State ${p.stateNo}, initial velocity]`, 'type = VelSet', 'trigger1 = Time = 0', `x = ${compact(q.velocity[0])}`, `y = ${compact(q.velocity[1])}`, '', `[State ${p.stateNo}, attack]`, 'type = HitDef', `trigger1 = Map(${hits}) < ${q.maxHits}`, `attr = ${q.attribute}`, 'hitflag = MAF', 'guardflag = M', `damage = ${q.damage}, ${q.guardDamage}`, `pausetime = ${q.hitPause.join(', ')}`, `ground.hittime = ${q.groundHitTime}`, `guard.hittime = ${q.guardHitTime}`, `ground.velocity = ${q.groundVelocity.map(compact).join(', ')}`, `air.velocity = ${q.airVelocity.map(compact).join(', ')}`, `yaccel = ${compact(q.yAccel)}`, `fall = ${q.fall ? 1 : 0}`, 'sparkno = -1', 'guard.sparkno = -1', '', `[State ${p.stateNo}, count contacts]`, 'type = MapAdd', 'trigger1 = MoveContact', `map = "${hits}"`, 'value = 1', '', `[State ${p.stateNo}, reset contact]`, 'type = MoveHitReset', 'trigger1 = MoveContact', '', `[State ${p.stateNo}, projectile lifetime]`, 'type = DestroySelf', `trigger1 = Map(${hits}) >= ${q.maxHits}`, `trigger2 = Time >= ${q.lifetime}`, 'recursive = 1', 'removeexplods = 1');
   else if (p.cleanup.destroyOnStateEnd) lines.push('', `[State ${p.stateNo}, reviewed cleanup]`, 'type = DestroySelf', 'trigger1 = Time > 300', `recursive = ${p.cleanup.recursive ? 1 : 0}`, `removeexplods = ${p.cleanup.removeExplods ? 1 : 0}`);
   return lines.join('\n');

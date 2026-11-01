@@ -294,6 +294,11 @@ map(any_map_name) := 1
 assert.ok(!noPrefixAudit.issues.some((entry) => entry.code === 'map-prefix'));
 assert.ok(!noPrefixAudit.issues.some((entry) => entry.code === 'function-prefix'));
 
+const staleCommentAudit=analyzeZss('# Purpose.\n# @param old — Old value.\n[Function Compute(current)]\n');
+const staleComment=staleCommentAudit.issues.find(entry=>entry.code==='stale-function-comment');assert(staleComment&&staleComment.severity==='information');assert.match(staleComment.help,/Missing: current/);assert.match(staleComment.help,/no longer in signature: old/);
+assert.ok(!analyzeZss('# Purpose.\n# @param current — Current value.\n[Function Compute(current)]\n').issues.some(entry=>entry.code==='stale-function-comment'),'matching authored parameter documentation stays quiet');
+const scopedNameAudit=analyzeZss('[Function Compute(value)]\nlet scaled := $value;\nlet out := $missing;\n');assert.ok(!scopedNameAudit.issues.some(entry=>entry.code==='unresolved-scoped-name'&&entry.message.includes('$value')),'valid untyped parameters retain their scoped name');assert.ok(scopedNameAudit.issues.some(entry=>entry.code==='unresolved-scoped-name'&&entry.message.includes('$missing')&&entry.severity==='information'),'an unresolved $name is reported only against its exact parsed function scope');assert.ok(analyzeZss('[Function Invalid(value = 1)]').issues.some(entry=>entry.code==='invalid-function-header'),'default parameter syntax is diagnosed instead of being treated as a declaration');
+
 const generalP2Audit = analyzeZss(`
 [StateDef 200]
 if p2, life < 500 { changeState{value: 210} }

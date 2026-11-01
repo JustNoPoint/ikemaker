@@ -1,0 +1,14 @@
+IKEMaker 0.79.100
+
+- The SND workspace uses one page-level vertical scrollbar instead of separate Organize, Sounds, Preview, and Tools scroll traps.
+- Fighter Factory-style add, delete, change, export, play, loop, pause, and stop actions are visible inside the viewer and remain available as persistent toolbar shortcuts.
+- The persistent Delete shortcut now has a functional routed owner instead of appearing unavailable.
+- Playback, auto-play, volume, loop, A–B selection, and waveform controls are grouped above the waveform.
+- Waveform Fit, horizontal zoom, pan, amplitude scaling, and Fit A–B controls are functional and include hover explanations.
+- A sound-file switcher groups configured SND archives by shared FX, character FX, language voice, custom voice, legacy, or single-archive role.
+- Previous/next archive selection and explicit Open Selected SND avoid accidental file changes.
+- Guided Add sound file setup records archive role, optional language or variant tag, portable relative path, CommonFX DEF path, and a reviewed globally safe prefix.
+- Missing configured archives stay visible in the selector but cannot be opened.
+- Conventional single-SND projects remain fully supported without requiring a sound profile.
+
+Verification: all 408 automated test files passed.

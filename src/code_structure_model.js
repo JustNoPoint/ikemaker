@@ -12,6 +12,7 @@ const ZSS_DOCS = {
   condition: { title: 'Conditional branch', summary: 'Runs its nested controllers only while the condition is true. ignoreHitPause and persistent wrappers change evaluation timing.' },
   loop: { title: 'Loop', summary: 'Repeats nested code. Confirm that a counter changes or a break can be reached.' },
   controller: { title: 'State controller', summary: 'An engine action such as ChangeState, HitDef, MapSet, Helper, or Explod. Expand this card to review its owning block and source line.' },
+  call: { title: 'Authored function call', summary: 'Calls an authored ZSS function. Use native Go to Definition, Peek, references, signature help, or Project Knowledge to inspect the exact assigned declaration and uses.' },
   assignment: { title: 'Value assignment', summary: 'Updates a local variable, map, or other writable value. Map updates are rollback-safe when authored in deterministic ZSS gameplay code.' },
   block: { title: 'Code block', summary: 'A nested scope grouped by braces.' }
 };
@@ -52,9 +53,11 @@ function parseZssStructure(text) {
     else if (conditional) item = node('condition', label(conditional[2], 'if'), index, braceDepth, { signature: code.replace(/\s*\{\s*$/, '') });
     else if (loop) item = node('loop', label(loop[1], code.split(/\s+/)[0]), index, braceDepth, { signature: code.replace(/\s*\{\s*$/, '') });
     else {
+      const call = code.match(/^call\s+([A-Za-z_][A-Za-z0-9_.]*)\s*(?:\(|;|$)/i);
       const controller = code.match(/^([A-Za-z_][A-Za-z0-9_]*)\s*\{/);
       const assignment = code.match(/^(.+?)(?::=|(?<![<>=!])=(?!=))\s*(.+?);?$/);
-      if (controller && !/^(if|else|for|while|switch)$/i.test(controller[1])) item = node('controller', controller[1], index, braceDepth, { signature: code.replace(/\s*\{.*$/, '') });
+      if(call)item=node('call',call[1],index,braceDepth,{signature:code.replace(/;\s*$/,'')});
+      else if (controller && !/^(if|else|for|while|switch)$/i.test(controller[1])) item = node('controller', controller[1], index, braceDepth, { signature: code.replace(/\s*\{.*$/, '') });
       else if (assignment) item = node('assignment', assignment[1].trim(), index, braceDepth, { signature: code.replace(/;\s*$/, '') });
     }
     if (item) {

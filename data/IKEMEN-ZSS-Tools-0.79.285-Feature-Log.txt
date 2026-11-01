@@ -1,0 +1,14 @@
+IKEMaker 0.79.285
+
+Fixed visual-to-text workspace switching: recognize VS Code's internal
+mainThreadWebview- prefix when matching IKEMaker viewer tabs. Clean viewers
+can now transition to the focused native text editor with Code Navigation
+above it instead of being mistaken for unrelated tabs.
+
+Informational close notices no longer block navigation until dismissed.
+Actual save/discard decisions remain protected. A refused visual close no
+longer automatically opens a side-by-side source editor.
+
+Validation: seven focused navigation, close, companion, layout and activation
+suites pass, including host-prefixed tabs and never-dismissed notifications.
+Installed-window interaction remains for user verification after Reload Window.

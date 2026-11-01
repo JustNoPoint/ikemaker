@@ -5,16 +5,16 @@ const os = require('os');
 const path = require('path');
 const Module = require('module');
 
-const commands = new Map(), panels = [], stored = {}, registrations = [], closeSupport = new Map();
+const commands = new Map(), panels = [], stored = {}, registrations = [], closeSupport = new Map(), errors = [];
 function makePanel() {
   const receivers = [], disposers = [];
-  const panel = { viewColumn: 2, active: true, webview: { cspSource: 'test', html: '', onDidReceiveMessage(fn) { receivers.push(fn); }, postMessage() { return true; } }, onDidDispose(fn) { disposers.push(fn); }, reveal() {}, dispose() { for (const fn of disposers) fn(); }, receivers };
+  const posted = [], panel = { viewColumn: 2, active: true, webview: { cspSource: 'test', html: '', onDidReceiveMessage(fn) { receivers.push(fn); }, postMessage(message) { posted.push(message); return true; } }, onDidDispose(fn) { disposers.push(fn); }, reveal() {}, dispose() { for (const fn of disposers) fn(); }, receivers, posted };
   panels.push(panel); return panel;
 }
 const vscode = {
   ViewColumn: { Active: 1 }, Uri: { file: fsPath => ({ fsPath }) }, workspace: { getConfiguration: () => ({ get: (_key, fallback) => fallback }) },
   commands: { registerCommand(id, fn) { commands.set(id, fn); return { dispose() {} }; }, executeCommand: async () => undefined },
-  window: { createWebviewPanel: makePanel, showErrorMessage(message) { throw new Error(message); }, activeTextEditor: null }
+  window: { createWebviewPanel: makePanel, showErrorMessage(message) { errors.push(message); }, activeTextEditor: null }
 };
 const original = Module._load;
 Module._load = function(request, parent, main) {
@@ -26,7 +26,8 @@ Module._load = function(request, parent, main) {
   return original.call(this, request, parent, main);
 };
 const intake = require('../src/artist_intake_workspace');
-const storage = { get(key, fallback) { return stored[key] ?? fallback; }, async update(key, value) { stored[key] = value; } };
+let holdUpdate = false, releaseUpdate;
+const storage = { get(key, fallback) { return stored[key] ?? fallback; }, async update(key, value) { if (holdUpdate) await new Promise(resolve => { releaseUpdate = resolve; }); stored[key] = value; } };
 intake.registerArtistIntake({ workspaceState: storage, subscriptions: [] });
 
 (async () => {
@@ -44,7 +45,35 @@ intake.registerArtistIntake({ workspaceState: storage, subscriptions: [] });
     const host = first.receivers[0], draft = { assignments: [{ indices: [0], category: 'Special', name: 'Special 00', group: 1000, startIndex: 0, axisX: 3, axisY: 4 }], selected: [], fields: { category: 'Special', name: 'Special 01', group: 1010, start: 0, axisX: 3, axisY: 4 } };
     host({ type: 'artistDraft', identity, revision: 1, draft });
     await new Promise(resolve => setImmediate(resolve)); await closeSupport.get(first).keepDraft();
+    assert(first.posted.some(message => message.type === 'artistDraftStored' && message.identity === identity && message.revision === 1), 'draft acknowledgement is exact-source and revision bound');
+    const beforeErrors = errors.length;
+    host({ type: 'artistDraft', identity, revision: 2, draft, extra: true });
+    host({ type: 'package', identity, revision: 0, assignments: draft.assignments });
+    host({ type: 'package', identity, revision: 1, assignments: [{ ...draft.assignments[0], indices: [99] }] });
+    await new Promise(resolve => setImmediate(resolve));
+    assert(errors.length >= beforeErrors + 3, 'extra-field, stale-revision, and out-of-range package requests fail closed');
+    let releasePicker; vscode.window.showOpenDialog = () => new Promise(resolve => { releasePicker = resolve; });
+    host({ type: 'source', kind: 'folder' }); host({ type: 'source', kind: 'folder' });
+    await new Promise(resolve => setImmediate(resolve));
+    assert(first.posted.some(message => message.type === 'artistActionState' && /Finish the current/.test(message.status)), 'overlapping source pickers receive actionable single-flight guidance');
+    releasePicker(undefined); await new Promise(resolve => setImmediate(resolve));
+    assert(first.posted.some(message => message.type === 'artistActionState' && message.busy === false && /cancelled/.test(message.status)), 'cancelled source picker restores terminal availability');
+    let releasePackage; vscode.window.showQuickPick = () => new Promise(resolve => { releasePackage = resolve; });
+    host({ type: 'package', identity, revision: 1, assignments: draft.assignments });
+    await new Promise(resolve => setImmediate(resolve));
+    const acknowledgements = first.posted.filter(message => message.type === 'artistDraftStored').length, errorsBeforeRace = errors.length;
+    host({ type: 'artistDraft', identity, revision: 2, draft: { ...draft, fields: { ...draft.fields, name: 'Raced edit' } } });
+    await new Promise(resolve => setImmediate(resolve));
+    assert(errors.length > errorsBeforeRace && /Finish the current/.test(errors.at(-1)), 'draft changes cannot race a package dialog');
+    assert.strictEqual(first.posted.filter(message => message.type === 'artistDraftStored').length, acknowledgements, 'rejected package-race draft receives no stale acknowledgement');
+    releasePackage(undefined); await new Promise(resolve => setImmediate(resolve));
+    holdUpdate = true;
+    host({ type: 'artistDraft', identity, revision: 2, draft });
+    await new Promise(resolve => setImmediate(resolve));
+    host({ type: 'discardArtistDraft', identity });
+    await new Promise(resolve => setImmediate(resolve));
     first.dispose();
+    holdUpdate = false; releaseUpdate(); await new Promise(resolve => setImmediate(resolve)); await new Promise(resolve => setImmediate(resolve));
     const reopened = await open(vscode.Uri.file(png), { preset: true, reference });
     assert.match(reopened.webview.html, /Special 00/);
     assert.match(reopened.webview.html, /Recovered assignments for this exact source/);
@@ -62,7 +91,8 @@ intake.registerArtistIntake({ workspaceState: storage, subscriptions: [] });
     fs.writeFileSync(png, Buffer.from('source-c'));
     assert.strictEqual(await open(vscode.Uri.file(png), { preset: true, reference: currentReference }), undefined, 'an already-open session is not reused after its source changes');
     current.dispose();
-    assert.deepStrictEqual(intake.safeDraft({ assignments: [{ indices: [0, 0, -1, '1'], category: 'X', name: 'Y' }], selected: [0, -1] }).assignments[0].indices, [0]);
+    assert.strictEqual(intake.safeDraft({ assignments: [{ indices: [0, 0, -1, '1'], category: 'X', name: 'Y' }], selected: [0, -1] }), null, 'malformed legacy drafts fail closed instead of being silently rewritten');
+    assert.deepStrictEqual(intake.safeDraft(draft, 1), draft, 'exact current drafts remain recoverable');
     console.log('Artist Intake source-bound drafts and typed preset restoration passed');
   } finally {
     Module._load = original;

@@ -1,0 +1,5 @@
+IKEMaker 0.79.62
+
+- Fixed embedded PalFX readability by supplying explicit dark-theme colors, readable typography, input contrast, borders, active tabs, and responsive composer layouts inside the isolated frame.
+- Removed the redundant global IKEMaker navigation and launch toolbar from the embedded PalFX panel.
+- Improved Display mode readability with a bounded content width, grouped rows, clearer separation, and consistent panel backgrounds.

@@ -9,9 +9,17 @@ const STORE_KEY = 'ikemaker.personalExamples.v1';
 const key = value => path.resolve(String(value || '')).replace(/\\/g, '/').toLowerCase();
 const fingerprint = value => crypto.createHash('sha256').update(String(value || ''), 'utf8').digest('hex');
 const language = filename => /\.lua$/i.test(filename) ? 'lua' : /\.cns$/i.test(filename) ? 'cns' : 'zss';
+const editorLanguage = filename => language(filename) === 'cns' ? 'ikemen-cns' : language(filename);
 
 function normalizedLines(text) { return String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/); }
 function blockText(lines, startLine, endLine) { return lines.slice(startLine, endLine + 1).join('\n'); }
+function exactBlockText(text, startLine, endLine) {
+  const value = String(text || ''), starts = [0];
+  for (let index = 0; index < value.length; index += 1) if (value[index] === '\n') starts.push(index + 1);
+  const start = starts[Math.max(0, startLine)] ?? value.length, after = starts[Math.max(0, endLine) + 1] ?? value.length;
+  const block = value.slice(start, after).replace(/\r?\n$/, '');
+  return start === 0 ? block.replace(/^\uFEFF/, '') : block;
+}
 function meaningfulNode(node) { return !['assignment', 'require', 'statement'].includes(node.kind); }
 
 function blockAt(text, line, filename = '') {
@@ -21,13 +29,13 @@ function blockAt(text, line, filename = '') {
     .sort((a, b) => (a.endLine - a.startLine) - (b.endLine - b.startLine) || b.depth - a.depth);
   const found = nodes[0];
   if (found) {
-    const source = blockText(lines, found.startLine, found.endLine);
+    const source = exactBlockText(text, found.startLine, found.endLine);
     return { kind: found.kind, title: found.title || found.signature || `Lines ${found.startLine + 1}-${found.endLine + 1}`, signature: String(found.signature || found.title || '').trim(), startLine: found.startLine, endLine: found.endLine, text: source, fingerprint: fingerprint(source) };
   }
   let startLine = selected, endLine = selected;
   while (startLine > 0 && lines[startLine - 1].trim()) startLine--;
   while (endLine + 1 < lines.length && lines[endLine + 1].trim()) endLine++;
-  const source = blockText(lines, startLine, endLine);
+  const source = exactBlockText(text, startLine, endLine);
   return { kind: 'excerpt', title: `Lines ${startLine + 1}-${endLine + 1}`, signature: '', startLine, endLine, text: source, fingerprint: fingerprint(source) };
 }
 
@@ -44,7 +52,8 @@ function createPin({ owner, filename, text, line, label }) {
 
 function normalizePin(pin) {
   if (!pin || typeof pin.id !== 'string' || typeof pin.owner !== 'string' || typeof pin.filename !== 'string' || !path.isAbsolute(pin.owner) || !path.isAbsolute(pin.filename) || typeof pin.text !== 'string' || typeof pin.fingerprint !== 'string') return null;
-  return { ...pin, label: String(pin.label || pin.signature || path.basename(pin.filename)), scope: pin.scope === 'shared' ? 'shared' : 'character', startLine: Math.max(0, Number(pin.startLine) || 0), endLine: Math.max(Math.max(0, Number(pin.startLine) || 0), Number(pin.endLine) || 0) };
+  const parameters = Array.isArray(pin.parameters) ? pin.parameters.map(normalizeParameter).filter(Boolean) : [];
+  return { ...pin, label: String(pin.label || pin.signature || path.basename(pin.filename)), scope: pin.scope === 'shared' ? 'shared' : 'character', startLine: Math.max(0, Number(pin.startLine) || 0), endLine: Math.max(Math.max(0, Number(pin.startLine) || 0), Number(pin.endLine) || 0), parameters };
 }
 function normalizeStore(value) {
   const output = { version: 1, byOwner: {} }, source = value && typeof value === 'object' ? value.byOwner : null;
@@ -80,6 +89,55 @@ function replacePin(store, owner, id, replacement) {
   return next;
 }
 
+const PARAMETER_KINDS = Object.freeze(['function', 'state', 'map', 'animation', 'sound', 'sprite']);
+function normalizeParameter(parameter) {
+  if (!parameter || typeof parameter.id !== 'string' || !PARAMETER_KINDS.includes(parameter.kind) || typeof parameter.label !== 'string' || typeof parameter.original !== 'string' || !parameter.original) return null;
+  const ranges = Array.isArray(parameter.ranges) ? parameter.ranges.map(range => ({ start: Number(range?.start), end: Number(range?.end) })).filter(range => Number.isInteger(range.start) && Number.isInteger(range.end) && range.start >= 0 && range.end > range.start) : [];
+  if (!ranges.length) return null;
+  return { id: parameter.id, kind: parameter.kind, label: parameter.label.trim() || parameter.original, original: parameter.original, ranges };
+}
+function exactOccurrences(text, value) {
+  const source = String(text || ''), exact = String(value || ''), ranges = [];
+  if (!exact) return ranges;
+  for (let start = 0; (start = source.indexOf(exact, start)) >= 0; start += exact.length) ranges.push({ start, end: start + exact.length });
+  return ranges;
+}
+function withParameter(pin, definition) {
+  const current = normalizePin(pin); if (!current) throw new Error('The personal example is invalid.');
+  const parameter = normalizeParameter({ ...definition, id: definition?.id || fingerprint(`${definition?.kind}\n${definition?.label}\n${definition?.original}\n${JSON.stringify(definition?.ranges)}`).slice(0, 20) });
+  if (!parameter) throw new Error('Choose a supported parameter kind and at least one exact source occurrence.');
+  const occupied = current.parameters.flatMap(item => item.ranges.map(range => ({ ...range, id: item.id })));
+  for (const range of parameter.ranges) {
+    if (current.text.slice(range.start, range.end) !== parameter.original) throw new Error('A selected parameter range no longer matches the exact example text.');
+    if (occupied.some(other => range.start < other.end && other.start < range.end)) throw new Error('Parameter ranges cannot overlap.');
+  }
+  return { ...current, parameters: [...current.parameters, parameter] };
+}
+function removeParameter(pin, id) { const current = normalizePin(pin); return current ? { ...current, parameters: current.parameters.filter(item => item.id !== id) } : pin; }
+function adaptationPlan(pin, replacements = {}) {
+  const current = normalizePin(pin); if (!current) throw new Error('The personal example is invalid.');
+  const edits = [];
+  for (const parameter of current.parameters) {
+    if (!Object.prototype.hasOwnProperty.call(replacements, parameter.id)) continue;
+    const value = String(replacements[parameter.id]);
+    if (!value || /[\r\n]/.test(value)) throw new Error(`${parameter.label} must be one explicit value.`);
+    for (const range of parameter.ranges) {
+      if (current.text.slice(range.start, range.end) !== parameter.original) throw new Error(`${parameter.label} no longer matches the pinned source bytes.`);
+      edits.push({ ...range, value, parameterId: parameter.id });
+    }
+  }
+  edits.sort((a, b) => a.start - b.start || a.end - b.end);
+  for (let index = 1; index < edits.length; index += 1) if (edits[index].start < edits[index - 1].end) throw new Error('Adaptation ranges overlap.');
+  let text = current.text;
+  for (const edit of [...edits].reverse()) text = text.slice(0, edit.start) + edit.value + text.slice(edit.end);
+  return { text, edits, sourceFingerprint: current.fingerprint, unchangedBytes: current.text.length - edits.reduce((sum, edit) => sum + edit.end - edit.start, 0) };
+}
+function adaptationDependencies(text){
+  const dependencies=require('./similar_code_model').dependencySummary(text),parts=[];
+  for(const [kind,values] of Object.entries(dependencies))if(values.length)parts.push(`${kind}: ${values.join(', ')}`);
+  return {dependencies,summary:parts.join(' · ')||'No supported literal code or asset dependency was identified.'};
+}
+
 function lineOfOffset(text, offset) { return String(text).slice(0, offset).split(/\r?\n/).length - 1; }
 function exactMatches(text, source) {
   const output = []; let offset = 0;
@@ -90,7 +148,7 @@ function resolvePin(pin, options = {}) {
   const allowed = options.allowedFiles && new Set([...options.allowedFiles].map(key));
   if (allowed && !allowed.has(key(pin.filename))) return { ...pin, status: 'unlinked', detail: 'Source is no longer assigned to this character or an explicitly linked shared source.' };
   if (!fs.existsSync(pin.filename)) return { ...pin, status: 'missing', detail: 'Source file is missing.' };
-  const text = options.readText ? options.readText(pin.filename) : fs.readFileSync(pin.filename, 'utf8'), lines = normalizedLines(text), original = blockText(lines, pin.startLine, pin.endLine);
+  const text = options.readText ? options.readText(pin.filename) : fs.readFileSync(pin.filename, 'utf8'), lines = normalizedLines(text), original = exactBlockText(text, pin.startLine, pin.endLine);
   if (fingerprint(original) === pin.fingerprint && original === pin.text) return { ...pin, status: 'current', resolvedStartLine: pin.startLine, resolvedEndLine: pin.endLine, detail: 'Original source block is unchanged.' };
   const exact = exactMatches(String(text).replace(/\r\n/g, '\n'), String(pin.text).replace(/\r\n/g, '\n'));
   if (exact.length === 1) return { ...pin, status: 'moved', resolvedStartLine: exact[0].startLine, resolvedEndLine: exact[0].endLine, detail: 'Source block moved; the unique content match was found.' };
@@ -105,4 +163,4 @@ function excerpt(pin, resolved, maxLines = 8) {
   return preview + (lines.length > maxLines ? '\n…' : '');
 }
 
-module.exports = { STORE_KEY, key, fingerprint, blockAt, isShared, createPin, normalizeStore, pinsFor, putPin, renamePin, removePin, replacePin, resolvePin, excerpt };
+module.exports = { STORE_KEY, PARAMETER_KINDS, key, fingerprint, language, editorLanguage, exactBlockText, blockAt, isShared, createPin, normalizePin, normalizeParameter, normalizeStore, pinsFor, putPin, renamePin, removePin, replacePin, exactOccurrences, withParameter, removeParameter, adaptationPlan, adaptationDependencies, resolvePin, excerpt };

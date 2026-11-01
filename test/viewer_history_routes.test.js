@@ -1,5 +1,7 @@
 'use strict';
 const assert=require('assert'),fs=require('fs'),path=require('path'),os=require('os'),Module=require('module'),vm=require('vm');
+const navigationSource=fs.readFileSync(path.join(__dirname,'../src/viewer_navigation.js'),'utf8');
+assert(navigationSource.includes("point.kind==='sff'?{ownerDef:point.archiveContext?.ownerDef"),'SFF history restore must pass its saved character owner instead of reopening standalone or inheriting another active viewer');
 (async()=>{
   const folder=fs.mkdtempSync(path.join(os.tmpdir(),'history-routes-'));
   const air=path.join(folder,'test.air'),cns=path.join(folder,'test.cns');
@@ -105,7 +107,8 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),os=require(
   const stageBranch=stageSource.slice(stageStart).match(/^if \(message.type === 'openSource'\) \{[\s\S]*?return;\s*\}/)[0];
   const calls=[],stagePanel={};
   await vm.runInNewContext('(async()=>{'+stageBranch+'})()',{
-    message:{type:'openSource',line:17},filename:'stage.def',panel:stagePanel,
+    message:{type:'openSource',line:17,navigationSelection:{backgroundName:'Floor',backgroundType:'normal'}},filename:'stage.def',panel:stagePanel,
+    payload:{model:{backgrounds:[{name:'Floor',type:'normal',line:17,actionLine:null}]}},owner:{selected:0},stageAuthority:()=>({}),assertStageAuthority(){},
     currentPoint:(filename,kind,message,panel)=>({filename,kind,panel}),
     openViewerSource:async(...args)=>calls.push(args)
   });

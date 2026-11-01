@@ -1,0 +1,10 @@
+'use strict';
+const assert=require('assert'),fs=require('fs'),path=require('path');
+const root=path.resolve(__dirname,'..'),read=file=>fs.readFileSync(path.join(root,file),'utf8');
+const capabilities=JSON.parse(read('data/interface-capabilities.json')),pkg=JSON.parse(read('package.json')),toolbar=read('src/viewer_toolbar.js'),sff=read('src/sff_viewer.js'),air=read('src/air_viewer.js'),browser=read('src/sff_browser.js'),controller=read('src/palette_workspace_controller.js'),handoff=read('src/palette_workspace_handoff_contract.js'),ledger=read('src/palette_workshop_certification_ledger.js'),readme=read('README.md'),backlog=read('data/Post-Testing-Feature-Backlog.md');
+assert(capabilities.player.includes('ikemen.palette.openWorkspace'));assert(pkg.contributes.commands.some(item=>item.command==='ikemen.palette.openWorkspace'));assert(toolbar.includes('Palette Workspace…'));
+for(const marker of ['↩ Exact Return','Open Origin','Cross-view handoff & certification','Physical certification pending','release-ready: no'])assert(browser.includes(marker),`missing compact Palette Workspace marker ${marker}`);assert(controller.includes("physicalStatus:'physical-pending'"));
+assert(sff.includes('paletteWorkspaceSession'));assert(air.includes('paletteReturnContext'));assert(controller.includes('createHandoff')&&controller.includes('verifyHandoff'));
+assert(handoff.includes('activeSffChanged: false')&&handoff.includes('adoptionAuthorized: false'));assert(!handoff.includes('transactionalWrite'));
+assert(ledger.includes("'source-certified','physical-pending','physical-passed','blocked'"));assert(readme.includes('source-certified, physical-pending'));assert(backlog.includes('Slices 1–10')&&backlog.includes('physical-pending'));
+console.log('Palette Workshop Slice 10 capability, compact cross-surface parity, documentation, and pending-physical audit passed');

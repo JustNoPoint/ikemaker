@@ -20,6 +20,7 @@ async function beforeOpen(file){
  return true;
 }
 function decorate(panel,file,kind,page,explicitSelection=false){
+ require('./viewer_group').trackViewerPanel(panel);
  const firstAttachment=!panels.has(panel);
  if(firstAttachment){
   panels.set(panel,{file,kind});panel.onDidDispose(()=>{panels.delete(panel);if(current===panel)current=undefined;for(const request of [...pending.values()])if(request.panel===panel)request.finish(false);});
@@ -55,7 +56,6 @@ async function chooseMode(){return require('./interface_mode').choose();}
 function register(context){context.subscriptions.push(vscode.commands.registerCommand('ikemen.configureAssetWorkspace',chooseMode));}
 function client(){
  if(document.body.dataset.simpleAssets==='true'){
-  for(const section of document.querySelectorAll('.advanced-actions')){const details=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Advanced tools';section.before(details);details.append(summary,section);}
   const toolbar=document.querySelector('body > header, body > .toolbar, body > .header');
   if(toolbar){const tools=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Tools & view';tools.append(summary);
    for(const id of ['experience','openSff','airSource','gifToAir','actionLog','axisLayer','exportPreview','saveAirPalette','saveAirGroupPalette','clearAirGroupPalette','palFx','openEditor','copyCall','exportMarked','chooseEditor']){const button=document.getElementById(id);if(button&&toolbar.contains(button))tools.append(button);}

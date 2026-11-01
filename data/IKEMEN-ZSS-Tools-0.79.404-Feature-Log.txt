@@ -1,0 +1,16 @@
+IKEMaker 0.79.404
+
+Palette Workshop image-session checkpoints
+
+- Added Save image session JSON and Load image session JSON to Sources & Preflight.
+- The checkpoint retains every opened image's exact source fingerprint, dimensions,
+  decoded RGBA pixels, indexed pixel plane when present, per-image color counts,
+  combined color inventory, cleanup decisions, selected images, template placement,
+  named swatch groups, and separator lines.
+- Decoded pixels and index planes are compressed inside the JSON so reopening a
+  large image folder can skip PNG decoding and color rescanning.
+- Unchanged files use fast size/timestamp validation during browsing. A timestamp
+  mismatch falls back to exact byte hashing, and final output actions continue to
+  perform exact source verification.
+- The cache is integrity hashed, bounded by the existing image and pixel safety
+  limits, and refuses changed, missing, malformed, or oversized source sets.

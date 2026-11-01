@@ -1,0 +1,10 @@
+IKEMaker 0.79.418 — Protected template index 0 and draggable organized palette
+
+- Fixed the organized 16×16 preview incorrectly displaying the first named-group color at index 0.
+- Index 0 now visibly contains the assigned transparent/background RGB and is labeled as protected.
+- Named-group colors begin at index 1, matching the actual generated palette and indexed sprite output.
+- Added a regression test proving the generated 256-entry palette preserves transparent index 0 and maps the first named color to index 1.
+- Colors after index 0 can now be dragged within the organized palette table.
+- Dropping on an occupied color inserts before it; dropping in an empty area uses the nearest named group position.
+- Reordering uses exact RGBA identities, so indexed sprite pixels remain connected to the moved color value.
+- Index 0 cannot be dragged, replaced, or used as a drop target.

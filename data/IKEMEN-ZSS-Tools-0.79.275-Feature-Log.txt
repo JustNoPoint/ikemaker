@@ -1,0 +1,12 @@
+IKEMaker 0.79.275
+
+Palette Workshop bank and sprite-editor correction
+
+- Bank A is now a read-only local source selector. Switching it never creates, resets, applies, or blocks on a retained palette draft.
+- Bank B starts at None with an empty transparent scratch palette.
+- Explicitly selecting a palette for Bank B immediately loads those colors into B without adopting them.
+- Clone A to B remains an explicit local action; only Use B as current draft changes the retained draft.
+- Image editing tools are presented beside Bank B and remain available after bank switches.
+- Failed indexed-sprite editor startup is visible and retryable instead of being permanently suppressed.
+- The sprite canvas supports pointer-centered mouse-wheel zoom, a checkerboard transparency field, and a toggleable pixel grid that appears at editing zoom levels.
+- HSV, RGBA, alpha, and exact hexadecimal/numeric color controls continue to update Bank B and its live preview.

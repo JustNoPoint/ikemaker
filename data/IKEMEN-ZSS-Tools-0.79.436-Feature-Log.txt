@@ -1,0 +1,8 @@
+IKEMaker 0.79.436
+
+Compact AIR and SND intake parity
+- Confirmed compact AIR authoring already applies reviewed changes directly to the open AIR document and preserves ordinary editor Undo; AIR has no archive-writer build phase to stage separately.
+- Added Apply & Build SND beside Apply to Manifest in compact SND batch intake.
+- Apply & Build SND retains the reviewed WAV sources, updates the exact SndMaker manifest, then immediately runs the same validated and protected SndMaker route used by the SND viewer.
+- The SND viewer and compact intake now share one builder implementation, including capability checks, manifest validation, mutation recovery, selected tool resolution, and visible completion reporting.
+- Manifest-only intake remains available when the user wants to review or build later.

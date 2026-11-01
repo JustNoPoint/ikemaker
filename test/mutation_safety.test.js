@@ -34,6 +34,11 @@ try {
   assert.throws(() => transactionalWriteSet(fs, [[one, 'x']], { allowExisting: false, journalRoot: root, token: 'conflict' }), /already exists/);
   assert.strictEqual(fs.readFileSync(one, 'utf8'), 'after');
 
+  const protectedOutput = path.join(root, 'protected-output.png'); fs.writeFileSync(protectedOutput, 'artist file');
+  assert.throws(() => transactionalWriteSet(fs, [[one, 'allowed replacement'], [protectedOutput, 'generated']], { allowExisting: target => target === path.resolve(one), journalRoot: root, token: 'selective-conflict' }), /already exists/);
+  assert.strictEqual(fs.readFileSync(one, 'utf8'), 'after', 'A later selectively protected target must abort the complete write set.');
+  assert.strictEqual(fs.readFileSync(protectedOutput, 'utf8'), 'artist file');
+
   const four = path.join(root, 'four.txt'), five = path.join(root, 'five.txt');
   transactionalWriteSet(fs, [[four, 'four'], [five, 'five']], { journal: true, label: 'bulk export', journalRoot: root, token: 'bulk', aggregateJournal: true });
   const journal = JSON.parse(fs.readFileSync(journalPath(root), 'utf8'));

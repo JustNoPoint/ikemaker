@@ -1,0 +1,8 @@
+IKEMaker 0.79.46
+
+- Adds an experimental SFF Browser comparison window with Groups, Sprites, and Details.
+- Keeps the existing SFF editor unchanged while the new layout is evaluated.
+- Synchronizes the active sprite and marked sprite range between both SFF surfaces.
+- Supports filtering, review-state filtering, lazy thumbnails, related AIR navigation, floating, return-to-main-window, and always-on-top behavior.
+- Uses compact tabs at narrow widths and three simultaneous panes when space permits.
+- Automatically opens the comparison beside the SFF viewer, but respects closing it for the rest of the session.
