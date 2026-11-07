@@ -3,22 +3,22 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.486",
+      "version": "0.79.487",
       "channel": "beta",
-      "publishedAt": "2026-11-07T20:02:08Z",
+      "publishedAt": "2026-11-07T23:53:14Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Section-aware DEF coding assists for screenpacks, select screens, and storyboards",
-        "Improved character and stage switching, detached Visual Browser restoration, and narrow Stage viewer scrolling",
-        "Tested in fresh Windows VS Code profiles"
+        "Screenpack Maker previews motif artwork, menus, character select and match HUD layouts",
+        "Storyboard Maker previews scene artwork and local video while editing and scrubbing",
+        "Verified on Windows with the IKEMEN1 motif and a fresh VS Code profile"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.486/ikemen-zss-tools-0.79.486.vsix",
-        "sha256": "fd38cc615918e2b61425a72335835ea98e206f581996c0de7c6ba71680da736b",
-        "bytes": 24130852
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.487/ikemen-zss-tools-0.79.487.vsix",
+        "sha256": "512edf1900ef1c461f4cd5f199d205db26c247195c095978b50e1e2c13dddf58",
+        "bytes": 24155363
       }
     }
   ]
