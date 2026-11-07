@@ -3,23 +3,22 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.452",
+      "version": "0.79.486",
       "channel": "beta",
-      "publishedAt": "2026-11-01T03:00:55Z",
+      "publishedAt": "2026-11-07T20:02:08Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Focused coding, project, match, stage, UI, and storyboard tools now open as cohesive IKEMaker visual workspaces",
-        "Command & Movelist uses the complete colored universal header and text-editor editing shortcuts",
-        "AIR browser scrolling and exact current-authority SND opening are corrected",
-        "Sixteen focused tests passed and the installed 0.79.452 build was physically verified before publication"
+        "Section-aware DEF coding assists for screenpacks, select screens, and storyboards",
+        "Improved character and stage switching, detached Visual Browser restoration, and narrow Stage viewer scrolling",
+        "Tested in fresh Windows VS Code profiles"
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.452/ikemen-zss-tools-0.79.452.vsix",
-        "sha256": "963f81d1f3251b9e86174f25e013acba446ee38fc6ba41e04549e665646e3f18",
-        "bytes": 24455093
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.486/ikemen-zss-tools-0.79.486.vsix",
+        "sha256": "fd38cc615918e2b61425a72335835ea98e206f581996c0de7c6ba71680da736b",
+        "bytes": 24130852
       }
     }
   ]
