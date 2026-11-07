@@ -203,6 +203,14 @@ observation.
 
 ## Screenpack and fight-UI workspace
 
+### Editing a motif and its scenes
+
+- Open the motif's `system.def` and use **Page** to switch between its screens. Use **+ Page** to add a supported screen or a menu entry. Arcade is a game mode reached through the title menu. A named submenu can lead to Arcade and other modes.
+- On a page with authored artwork, expand **Background planes**, select a plane and drag it or edit its coordinates and drawing layer. Use **Preview tick** to inspect a pose. Apply the reviewed change to save the DEF.
+- Choose **Character Select Layout** to place the grid, portraits and cursors. Roster Manager controls which characters occupy the slots. A missing portrait identifies the character and sprite reference to check in its SFF.
+- Choose **Match HUD** to open the motif's assigned fight definition. Vary preview life, power and time to check the bars and timer at different match values.
+- In Storyboard Maker, select a scene and scrub its timeline to inspect its background and layers. Drag the artwork to review a new placement. For a video scene, scrubbing seeks the local media when its format is supported.
+
 ### Shared canvas
 
 - Uses motif or lifebar `localcoord`, with explicit preview conversion when they differ.

@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),{parseDef,kind}=require('./def_model');
-function matches(filename,type){try{if(path.extname(filename).toLowerCase()!=='.def')return false;const text=fs.readFileSync(filename,'utf8');if(type==='storyboard')return /^\s*\[SceneDef\]/im.test(text);return type==='stage'?kind(parseDef(text,filename))==='stage':['screenpack','lifebar'].includes(kind(parseDef(text,filename)));}catch{return false;}}
+function matches(filename,type){try{if(path.extname(filename).toLowerCase()!=='.def')return false;const text=fs.readFileSync(filename,'utf8');if(type==='storyboard')return require('./storyboard_backgrounds').isStoryboard(text);return type==='stage'?kind(parseDef(text,filename))==='stage':['screenpack','lifebar'].includes(kind(parseDef(text,filename)));}catch{return false;}}
 async function resolveVisualResourceOpen(api,type,uri,services={}){
  if(!['stage','screenpack','storyboard'].includes(type))throw new Error('Unsupported visual resource type');
  const accepts=services.matches||matches,supplied=uri?.fsPath;

@@ -3,13 +3,16 @@ function client(runtime){
  const holdButton=$('storyHold'),playButton=$('storyPlay'),scrub=$('storyTick'),status=$('storyTickStatus');if(!holdButton||!playButton||!scrub)return;
  let clock=runtime.create(model.scenes,selected,0),raf=0,last=0,fraction=0,seenModel=model,seenScene=selected,pending=0,serial=0,prepared=null,warning='';
  const persistPose=()=>vscode.setState({...vscode.getState(),storyboardPreview:{sceneKey:current()?.key,tick:previewTick}});
- function sync(){const state=clock.state(),scene=current(),span=runtime.timing(scene);previewTick=state.tick;previewPlaying=state.mode==='transition';previewEditorialHold=!previewPlaying;
+ const picker=$('storyScenePicker');let pickerScenes;
+ if(picker)picker.onchange=()=>{const button=$('scenes').querySelector('[data-i="'+Number(picker.value)+'"]');if(button)button.click();};
+ function sync(){
+  if(picker){if(pickerScenes!==model.scenes){picker.replaceChildren(...model.scenes.map((scene,index)=>new Option(scene.name,String(index))));pickerScenes=model.scenes;}picker.value=String(selected);picker.disabled=!model.scenes.length;}const state=clock.state(),scene=current(),span=runtime.timing(scene);previewTick=state.tick;previewPlaying=state.mode==='transition';previewEditorialHold=!previewPlaying;
   holdButton.disabled=!scene;playButton.disabled=!scene;holdButton.setAttribute('aria-pressed',String(!previewPlaying));playButton.setAttribute('aria-pressed',String(previewPlaying));
   scrub.max=String(Math.max(0,span.duration-1));scrub.value=String(previewTick);
   const text=warning||state.reason||(pending?'Preparing local transition sprites…':previewPlaying?'Local transition · '+scene.name+' · tick '+previewTick+' · authored end.time '+scene.endTime:'Held local editor · '+(scene?.name||'no scene')+' · tick '+previewTick+' · fades suspended locally; authored timing unchanged.');
   if(status.textContent!==text)status.textContent=text;
  }
- function paint(){sync();if(!current())return;$('canvas').innerHTML=storyboardCanvasMarkup(current());globalThis.ikemenStoryboardDecorateLayers?.();globalThis.ikemenStoryboardRenderOnions?.();}
+ function paint(){sync();if(!current())return;paintStoryboardCanvas(current());globalThis.ikemenStoryboardDecorateLayers?.();globalThis.ikemenStoryboardRenderOnions?.();}
  function notifySelection(){const browser=currentBrowser();if(browser.binding)vscode.postMessage({type:'sceneSelectionChanged',generation:data.generation,binding:browser.binding});}
  function stop(reason='',repaint=true){if(raf)cancelAnimationFrame(raf);raf=0;last=0;fraction=0;pending=0;warning='';clock.hold(reason);if(repaint)paint();else sync();persistPose();}
  function commit(state){if(prepared&&!prepared.includes(state.index)){clock.select(selected,previewTick);stop('Local preview scene limit reached; use saved engine playback for the full storyboard.');return;}const changed=state.index!==selected;selected=state.index;previewTick=state.tick;previewPlaying=state.mode==='transition';previewEditorialHold=!previewPlaying;if(changed){seenScene=selected;render();notifySelection();persistPose()}else paint();}
@@ -19,7 +22,7 @@ function client(runtime){
  holdButton.onclick=()=>stop();playButton.onclick=play;scrub.oninput=()=>{const tick=Number(scrub.value)||0;stop();clock.select(selected,tick);paint();persistPose()};
  const baseRender=render;render=function(){const changed=model!==seenModel||selected!==seenScene;if(changed){if(raf)cancelAnimationFrame(raf);raf=0;pending=0;prepared=null;warning='';clock=runtime.create(model.scenes,selected,model===seenModel?0:previewTick);seenModel=model;seenScene=selected;previewTick=clock.state().tick;previewEditorialHold=true;previewPlaying=false;}const result=baseRender();sync();return result;};
  document.addEventListener('focusin',event=>{if(clock.state().mode==='transition'&&event.target.closest?.('input,select,textarea'))stop('Held locally for editing; authored timing unchanged.');});
- document.addEventListener('pointerdown',event=>{if(clock.state().mode==='transition'&&event.target.closest?.('#canvas .layer,#layers,.right input,.right select')){stop('Held locally for editing; authored timing unchanged.',false);queueMicrotask(paint);}},true);
+ document.addEventListener('pointerdown',event=>{if(clock.state().mode==='transition'&&event.target.closest?.('#canvas .layer,#canvas [data-story-art] image,#layers,.right input,.right select')){stop('Held locally for editing; authored timing unchanged.',false);queueMicrotask(paint);}},true);
  document.addEventListener('visibilitychange',()=>{if(document.hidden)stop('Held while the editor is hidden.');});
  addEventListener('message',event=>{const message=event.data;if(message?.type==='storyboardTransitionAssets'&&message.generation===data.generation&&message.request===pending&&pending){if(message.error){stop(message.error);return;}data.images={...(data.images||{}),...message.assets.images};data.spriteInfo={...(data.spriteInfo||{}),...message.assets.spriteInfo};prepared=message.indexes;start();return;}if(message?.type==='storyboardPreviewIntent'&&message.generation===data.generation&&message.filename===data.filename){intent(message.request);}});
  function intent(request){if(!request)return;const index=request.sceneIndex??selected;if(index<0||index>=model.scenes.length){stop('Requested scene is unavailable.');return;}stop();selected=index;clock=runtime.create(model.scenes,index,request.tick);seenScene=selected;previewTick=clock.state().tick;render();paint();notifySelection();persistPose();}

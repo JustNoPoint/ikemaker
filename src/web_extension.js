@@ -3,7 +3,7 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.486';
+const PACKAGE_VERSION = '0.79.487';
 
 const FALLBACK_COMMANDS = [
   'snd.selectPreviousVisible', 'snd.selectNextVisible', 'ikemen.stage.openCode',

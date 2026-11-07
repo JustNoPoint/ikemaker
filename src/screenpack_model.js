@@ -1,13 +1,25 @@
 'use strict';
 
 const def = require('./def_model');
+const { background } = require('./stage_model');
+
+// Motif BG groups use the same native sprite declarations as stage BGs, but
+// their origin is the horizontal centre of the screen.
+function screenBackgrounds(document, screenName) {
+  const aliases = { 'title info':'title', 'select info':'select', 'vs screen':'versus', 'victory screen':'victory', 'option info':'option', 'replay info':'replay', 'pause menu':'pause', 'training menu':'training', 'continue screen':'continue', 'win screen':'win', 'survival results screen':'survivalresults', 'time attack results screen':'timeattackresults', 'attract mode':'attract', 'challenger info':'challenger', 'hiscore info':'hiscore' };
+  const prefix = aliases[screenName] || screenName.replace(/\s*(?:info|screen|menu)$/, '').replace(/\s/g, '');
+  const heading = prefix + 'bg';
+  const definition = document.sections.find(section => section.normalized === heading + 'def');
+  const properties = def.sectionMap(definition);
+  return { clearColor: def.integerTuple(properties.bgclearcolor || '0,0,0', 3), backgrounds: document.sections.filter(section => section.normalized.startsWith(heading + ' ')).map(background) };
+}
 
 function layoutBase(key) {
   const variant = /^(.*?)\.(active|selected|disabled|done)\.(font(?:\..+)?)$/.exec(key);
   if (variant) { const parsed = layoutBase(variant[1] + '.' + variant[3]); if (parsed) return { base: parsed.base, property: variant[2] + '.' + parsed.property }; }
   const fontProperty = /^(.*)\.font\.(.+)$/.exec(key);
   if (fontProperty) return { base: fontProperty[1], property: 'font.' + fontProperty[2] };
-  const suffixes = ['.offset', '.pos', '.spr', '.anim', '.font', '.scale', '.facing', '.vfacing', '.layerno', '.window', '.angle', '.xshear'];
+  const suffixes = ['.text', '.offset', '.pos', '.spr', '.anim', '.font', '.scale', '.facing', '.vfacing', '.layerno', '.window', '.angle', '.xshear'];
   for (const suffix of suffixes) if (key.endsWith(suffix)) return { base: key.slice(0, -suffix.length), property: suffix.slice(1) };
   if (['pos', 'offset', 'spr', 'anim', 'font', 'scale', 'facing', 'vfacing', 'layerno', 'window', 'angle', 'xshear'].includes(key)) return { base: '', property: key };
   return null;
@@ -47,7 +59,7 @@ function screenpackModel(document) {
     columns: Math.max(1, Math.trunc(def.number(selectMap.columns, 1))),
     position: def.tuple(selectMap.pos || '0,0'),
     cellSize: def.tuple(selectMap['cell.size'] || '27,27'),
-    spacing: def.tuple(selectMap['cell.spacing'] || '0,0'),
+    spacing: def.tuple(selectMap['cell.spacing'] || '0,0',2,def.number(selectMap['cell.spacing'],0)),
     wrapping: Boolean(def.number(selectMap.wrapping, 0)),
     showEmptyBoxes: Boolean(def.number(selectMap.showemptyboxes, 0)),
     moveOverEmptyBoxes: Boolean(def.number(selectMap.moveoveremptyboxes, 0)),
@@ -57,6 +69,7 @@ function screenpackModel(document) {
   const screens = [];
   for (const section of document.sections) {
     if (!section.name || ['info', 'files', 'music'].includes(section.normalized)) continue;
+    if (/bg(?:def|ctrl(?:def)?)(?:\s|$)|bg\s/i.test(section.normalized)) continue;
     const groups = new Map();
     for (const item of section.entries) {
       const parsed = layoutBase(item.normalized);
@@ -72,6 +85,7 @@ function screenpackModel(document) {
       sprite: item.properties.spr ? def.integerTuple(item.properties.spr) : null,
       animation: item.properties.anim ? Math.trunc(def.number(item.properties.anim)) : null,
       font: item.properties.font || item.properties['active.font'] || '',
+      text: Object.prototype.hasOwnProperty.call(item.properties,'text') ? def.unquote(item.properties.text) : null,
       scale: def.tuple(item.properties.scale || item.properties['font.scale'] || '1,1', 2, 1),
       facing: def.number(item.properties.facing, 1),
       verticalFacing: def.number(item.properties.vfacing, 1),
@@ -80,7 +94,7 @@ function screenpackModel(document) {
       angle: def.number(item.properties.angle, 0),
       xShear: def.number(item.properties.xshear, 0)
     }));
-    if (elements.length) screens.push({ name: section.name, normalized: section.normalized, line: section.line, elements });
+    if (elements.length) screens.push({ name: section.name, normalized: section.normalized, line: section.line, elements, ...screenBackgrounds(document, section.normalized), menuGroups: require('./screenpack_page_authoring').menuGroups(section.entries), menuItems: section.entries.filter(entry => /^menu\.itemname\.[^.]+$/.test(entry.normalized)).map(entry => ({ name: entry.normalized.slice(14), text: def.unquote(entry.value), line: entry.line })), menuSpacing: def.tuple(def.sectionMap(section)['menu.item.spacing'] || '0,24'), menuVisibleItems: def.entry(section,'menu.window.visibleitems') ? Math.max(1,Math.trunc(def.number(def.sectionMap(section)['menu.window.visibleitems'],1))) : null });
   }
   return {
     kind: 'screenpack',
@@ -104,4 +118,4 @@ function validateScreenpack(model, archive = null) {
   return issues;
 }
 
-module.exports = { screenpackModel, validateScreenpack, layoutBase, cellOverrides, skippedCells };
+module.exports = { screenpackModel, validateScreenpack, layoutBase, cellOverrides, skippedCells, screenBackgrounds };
