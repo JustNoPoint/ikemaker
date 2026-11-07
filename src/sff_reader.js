@@ -65,7 +65,7 @@ function parseSffV1(buffer, filename, version) {
           colorsRgba.push([buffer[offset], buffer[offset + 1], buffer[offset + 2], color === 0 ? 0 : 255]);
         }
         sprite.paletteIndex = palettes.length;
-        palettes.push({ index: palettes.length, group: 0, number: palettes.length, colors: 256, link: 0, dataOffset: marker + 1, dataSize: 768, colorsRgba, legacy: true });
+        palettes.push({ index: palettes.length, group: 0, number: palettes.length, colors: 256, link: 0, dataOffset: marker + 1, dataSize: 768, colorsRgba, legacy: true, sourceSpriteIndex: sprite.index });
         pixelEnd = marker;
       } else sprite.paletteIndex = previousDataSprite.paletteIndex;
       sprite.dataOffset = pcx + 128;
@@ -79,9 +79,25 @@ function parseSffV1(buffer, filename, version) {
       at = nextOffset;
     }
   }
-  for (const sprite of sprites) if (sprite.dataSize === 0) {
-    const source = sprites[sprite.link];
-    if (source) { sprite.width = source.width; sprite.height = source.height; sprite.paletteIndex = source.paletteIndex; sprite.pcx = source.pcx; }
+  // v1 links inherit both pixels and palette. Resolve through intermediate
+  // links before copying metadata, including links encountered later in the file.
+  const visited = new Set();
+  for (const sprite of sprites) {
+    if (sprite.dataSize || visited.has(sprite.index)) continue;
+    const chain = [];
+    let source = sprite;
+    while (source && !source.pcx && !visited.has(source.index)) {
+      visited.add(source.index);
+      chain.push(source);
+      source = sprites[source.link];
+    }
+    if (!source?.pcx) continue; // Invalid links still report an error when previewed.
+    for (const item of chain) {
+      item.width = source.width;
+      item.height = source.height;
+      item.paletteIndex = source.paletteIndex;
+      item.pcx = source.pcx;
+    }
   }
   header.numberOfPalettes = palettes.length;
   return { filename, buffer, header, palettes, sprites };
@@ -341,10 +357,17 @@ function indexedSourcePng(width, height, pixels, colors) {
   return Buffer.concat([Buffer.from('89504e470d0a1a0a', 'hex'), chunk('IHDR', ihdr), chunk('PLTE', palette), chunk('tRNS', alpha), chunk('IDAT', zlib.deflateSync(scanlines)), chunk('IEND', Buffer.alloc(0))]);
 }
 
-function spritePng(archive, selected, paletteOverride = null, preserveIndices = false) {
+function spritePng(archive, selected, paletteOverride = null, preserveIndices = false, forceOpaque = false) {
   const source = resolvedSprite(archive, selected);
   const paletteIndex = Number.isInteger(paletteOverride) ? paletteOverride : selected.paletteIndex;
-  const paletteColors = Array.isArray(paletteOverride) ? paletteOverride : paletteRgba(archive, paletteIndex);
+  let sourcePalette = Array.isArray(paletteOverride) ? paletteOverride : paletteRgba(archive, paletteIndex);
+  // Classic 2.0.0.0 palettes store RGB plus a reserved byte. Leave the raw
+  // palette table available to editors, but display transparency by index.
+  if (sourcePalette && !Array.isArray(paletteOverride) && archive.header.version?.join('.') === '2.0.0.0') {
+    sourcePalette = sourcePalette.map(([r, g, b], index) => [r, g, b, index === 0 ? 0 : 255]);
+  }
+  const paletteColors = forceOpaque&&sourcePalette?sourcePalette.map(color=>[color[0],color[1],color[2],255]):sourcePalette;
+  if(forceOpaque&&(!source.width||!source.height||source.width*source.height>4000000))throw Error('Opaque Stage sprite exceeds4-million-pixel limit.');
   ensure(archive.buffer, source.dataOffset, source.dataSize, `sprite data ${source.index}`);
   if (source.legacy && source.pcx) {
     if (!paletteColors) throw new Error(`Sprite palette ${paletteIndex} is missing.`);
@@ -358,8 +381,9 @@ function spritePng(archive, selected, paletteOverride = null, preserveIndices = 
   if ([10, 11, 12].includes(source.format)) {
     if (source.dataSize < 4) throw new Error('Embedded PNG sprite is truncated.');
     const png = archive.buffer.subarray(source.dataOffset + 4, source.dataOffset + source.dataSize);
-    if (source.format !== 10) return png;
+    if (source.format !== 10) {if(!forceOpaque)return png;const decoded=require('./png_opaque').decodeOpaqueRgba(png);if(decoded.width!==source.width||decoded.height!==source.height)throw Error('Opaque PNG dimensions differ from SFF header.');return rgbaPng(decoded.width,decoded.height,decoded.rgba);}
     if (!paletteColors) throw new Error(`Sprite palette ${paletteIndex} is missing.`);
+    if(forceOpaque){const decoded=readIndexedPng(png,{...require('./palette_indexed_png').LIMITS,maximumBytes:16*1024*1024,maximumPixels:4000000,maximumInflated:4008192});if(decoded.width!==source.width||decoded.height!==source.height)throw Error('Opaque indexed PNG dimensions differ from SFF header.');}
     return indexedPngWithSffPalette(png, paletteColors);
   }
   const expected = source.width * source.height;
@@ -373,12 +397,14 @@ function spritePng(archive, selected, paletteOverride = null, preserveIndices = 
   }
   const rgba = Buffer.alloc(expected * 4);
   if (source.colorDepth === 5 || source.colorDepth === 8) {
+    if(forceOpaque&&pixels.length<expected)throw Error('Opaque indexed sprite is truncated.');
     if (!paletteColors) throw new Error(`Sprite palette ${paletteIndex} is missing.`);
     if (preserveIndices) return indexedSourcePng(source.width, source.height, pixels, paletteColors);
     for (let i = 0; i < expected; i += 1) { const color = paletteColors[pixels[i]] || [0, 0, 0, 0]; rgba.set(color, i * 4); }
   } else if (source.colorDepth === 24 || source.colorDepth === 32) {
     const stride = source.colorDepth / 8;
-    for (let i = 0; i < expected; i += 1) { rgba[i * 4] = pixels[i * stride]; rgba[i * 4 + 1] = pixels[i * stride + 1]; rgba[i * 4 + 2] = pixels[i * stride + 2]; rgba[i * 4 + 3] = stride === 4 ? pixels[i * stride + 3] : 255; }
+    if(forceOpaque&&pixels.length<expected*stride)throw Error('Opaque RGB sprite is truncated.');
+    for (let i = 0; i < expected; i += 1) { rgba[i * 4] = pixels[i * stride]; rgba[i * 4 + 1] = pixels[i * stride + 1]; rgba[i * 4 + 2] = pixels[i * stride + 2]; rgba[i * 4 + 3] = forceOpaque ? 255 : stride === 4 ? pixels[i * stride + 3] : 255; }
   } else throw new Error(`Unsupported color depth ${source.colorDepth}.`);
   return rgbaPng(source.width, source.height, rgba);
 }
@@ -413,4 +439,6 @@ function spriteIndexPlane(archive, selected) {
 
 function spriteDataUri(archive, sprite, paletteOverride = null) { return `data:image/png;base64,${spritePng(archive, sprite, paletteOverride).toString('base64')}`; }
 
-module.exports = { friendlyVersion, parseSffBuffer, readSff, resolvedPalette, paletteRgba, paletteAct, actRgba, spritePng, spriteIndexPlane, spriteDataUri, rle8, rle5, lz5, pcx8, rgbaPng, indexedPngWithSffPalette, indexedSourcePng };
+function spriteOpaqueDataUri(archive,sprite){return 'data:image/png;base64,'+spritePng(archive,sprite,null,false,true).toString('base64');}
+
+module.exports = { spriteOpaqueDataUri, friendlyVersion, parseSffBuffer, readSff, resolvedPalette, paletteRgba, paletteAct, actRgba, spritePng, spriteIndexPlane, spriteDataUri, rle8, rle5, lz5, pcx8, rgbaPng, indexedPngWithSffPalette, indexedSourcePng };

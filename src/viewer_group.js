@@ -10,6 +10,8 @@ const tracked = new Set();
 const reservations = new Map();
 const relocating = new WeakSet();
 const panelGroups = new WeakMap();
+let ownedColumnPermissions=new WeakMap();
+function permitOwnedViewerColumn(panel,owner,column){if(!panel||!owner||!valid(column))throw Error('Exact viewer and column required.');let entries=ownedColumnPermissions.get(panel);if(!entries){entries=new Map();ownedColumnPermissions.set(panel,entries);}entries.set(owner,column);let disposed=false;return{dispose(){if(disposed)return;disposed=true;entries.delete(owner);}};}
 
 function valid(value) { return Number.isInteger(value) && value > 0; }
 // TabInputWebview exposes VS Code's internal type, while WebviewPanel uses
@@ -87,7 +89,7 @@ function trackViewerPanel(panel) {
 function relocateReservedViewerPanels() {
   const safe=latestAvailablePanel();let moved=0;
   for(const panel of tracked){
-    if(!panel||!panelIsReserved(panel)||typeof panel.reveal!=='function'||relocating.has(panel))continue;
+    if(!panel||[...ownedColumnPermissions.get(panel)?.values()||[]].includes(panel?.viewColumn)||!panelIsReserved(panel)||typeof panel.reveal!=='function'||relocating.has(panel))continue;
     relocating.add(panel);panel.reveal(safe?.viewColumn||-2,true);moved+=1;
   }
   if(moved)column=safe?.viewColumn||0;
@@ -111,12 +113,24 @@ function transitionPanels(origin,group){const panels=panelsInExactGroup(group);i
 function sameMembers(left,right){return left.length===right.length&&left.every(panel=>right.includes(panel));}
 function waitUntilUntracked(panels,timeout=1500){return new Promise(resolve=>{const deadline=Date.now()+timeout,check=()=>{if(panels.every(panel=>!tracked.has(panel)))return resolve(true);if(Date.now()>=deadline)return resolve(false);setTimeout(check,10);};check();});}
 function waitUntilNativeTextOnly(group,admitted,timeout=1500){return new Promise(resolve=>{const deadline=Date.now()+timeout,check=()=>{const groups=topology()?.all||[],current=groups.includes(group)?group:null,ready=!current||(current.tabs||[]).every(tab=>{const filename=tabFilename(tab);return filename&&admitted.has(filename.toLowerCase());});if(ready)return resolve(true);if(Date.now()>=deadline)return resolve(false);setTimeout(check,10);};check();});}
+function waitUntilTabsAbsent(group,tabs,timeout=1500){return new Promise(resolve=>{const deadline=Date.now()+timeout,check=()=>{if(!(group.tabs||[]).some(tab=>tabs.includes(tab)))return resolve(true);if(Date.now()>=deadline)return resolve(false);setTimeout(check,10);};check();});}
 function tabFilename(tab){const input=tab?.input;if(!input||input.viewType||input.modified||input.original||!input.uri?.fsPath)return'';return require('path').resolve(input.uri.fsPath);}
-function exactCandidateTabs(group,candidates){
-  const nonNative=(group?.tabs||[]).filter(tab=>!tabFilename(tab));if(nonNative.length!==candidates.length)return null;
+function exactCandidateTabs(group,candidates,preserveOthers=false){
+  const nonNative=(group?.tabs||[]).filter(tab=>!tabFilename(tab));if(!preserveOthers&&nonNative.length!==candidates.length)return null;
   const matched=[],remaining=[...nonNative];
-  for(const panel of candidates){const panelType=panelViewType(panel?.viewType),matches=remaining.filter(tab=>{const tabType=panelViewType(tab?.input?.viewType);return /^ikemen/i.test(tabType)&&((panelType&&tabType===panelType)||String(tab?.label||'')===String(panel?.title||''));});if(matches.length!==1)return null;const tab=matches[0];matched.push(tab);remaining.splice(remaining.indexOf(tab),1);}
-  return remaining.length?null:matched;
+  for(const panel of candidates){
+    const panelType=panelViewType(panel?.viewType),title=String(panel?.title||'');
+    const eligible=remaining.filter(tab=>/^ikemen/i.test(panelViewType(tab?.input?.viewType)));
+    const typed=panelType?eligible.filter(tab=>panelViewType(tab.input?.viewType)===panelType):[];
+    const exact=(panelType?typed:eligible).filter(tab=>String(tab?.label||'')===title);
+    // A restoring webview may still show VS Code's temporary tab label. A
+    // settled, different filename must never borrow the unique-type fallback.
+    const restoring=typed.length===1&&/^Restoring(?:…|\.\.\.)?$/i.test(String(typed[0].label||'').trim());
+    const tab=exact.length===1?exact[0]:exact.length===0&&panelType&&restoring?typed[0]:null;
+    if(!tab)return null;
+    matched.push(tab);remaining.splice(remaining.indexOf(tab),1);
+  }
+  return !preserveOthers&&remaining.length?null:matched;
 }
 function textTransitionEligible(group,originGroup,candidateTabs,admitted){
   return (group?.tabs||[]).every(tab=>{const filename=tabFilename(tab);if(filename)return admitted.has(filename.toLowerCase());return group===originGroup&&candidateTabs.includes(tab);});
@@ -142,21 +156,22 @@ async function restoreSleepingAssets(origin,group,api){
 }
 async function closeViewerGroupForText(origin,api=require('vscode'),options={}){
   const group=exactViewerGroup(origin);
-  await restoreSleepingAssets(origin,group,api);
-  const candidates=transitionPanels(origin,group);
+  const preserveOthers=options.preserveUnrelatedTabs===true;
+  if(!preserveOthers)await restoreSleepingAssets(origin,group,api);
+  const candidates=preserveOthers?[origin]:transitionPanels(origin,group),originalTabs=[...(group?.tabs||[])];
   if(!group||!candidates.length){void api.window.showInformationMessage('The originating visual workspace could not be matched to one exact editor group. It was kept as-is.');return{accepted:false,closed:false,settled:true};}
   const admitted=new Set((options.admittedFiles||[]).map(filename=>require('path').resolve(filename).toLowerCase()));
   // Existing native buffers are preserved by the text layout, not closed or saved.
   if(admitted.size)for(const tab of group.tabs||[]){const filename=tabFilename(tab);if(filename)admitted.add(filename.toLowerCase());}
-  const candidateTabs=admitted.size?exactCandidateTabs(group,candidates):[];
-  if(admitted.size&&(!candidateTabs||!textTransitionEligible(group,group,candidateTabs,admitted))){void api.window.showInformationMessage('Another editor or viewer shares this visual workspace but is not part of the connected text editor. It was left untouched; move or close that tab before returning to the Text Editor.');return{accepted:false,closed:false,settled:true};}
+  const candidateTabs=admitted.size?exactCandidateTabs(group,candidates,preserveOthers):[];
+  if(admitted.size&&(!candidateTabs||(!preserveOthers&&!textTransitionEligible(group,group,candidateTabs,admitted)))){void api.window.showInformationMessage('Another editor or viewer shares this visual workspace but is not part of the connected text editor. It was left untouched; move or close that tab before returning to the Text Editor.');return{accepted:false,closed:false,settled:true};}
   if(!await require('./viewer_close').prepare(candidates,api))return{accepted:false,closed:false,settled:true};
-  const currentGroup=exactViewerGroup(origin),current=currentGroup===group?transitionPanels(origin,group):[];
-  const currentCandidateTabs=admitted.size?exactCandidateTabs(group,candidates):[];
-  const tabSetChanged=admitted.size&&(!currentCandidateTabs||!sameMembers(candidateTabs,currentCandidateTabs)||!textTransitionEligible(group,group,candidateTabs,admitted));
+  const currentGroup=exactViewerGroup(origin),current=currentGroup===group?(preserveOthers?[origin]:transitionPanels(origin,group)):[];
+  const currentCandidateTabs=admitted.size?exactCandidateTabs(group,candidates,preserveOthers):[];
+  const tabSetChanged=admitted.size&&(!currentCandidateTabs||!sameMembers(candidateTabs,currentCandidateTabs)||(preserveOthers?!sameMembers(originalTabs,group.tabs||[]):!textTransitionEligible(group,group,candidateTabs,admitted)));
   if(currentGroup!==group||!sameMembers(candidates,current)||tabSetChanged){void api.window.showInformationMessage('The visual workspace changed during its close check. Nothing was closed; open the text editor again from the current view.');return{accepted:false,closed:false,settled:true};}
   for(const panel of candidates)panel.dispose?.();
-  const untracked=await waitUntilUntracked(candidates),settled=untracked&&(!admitted.size||await waitUntilNativeTextOnly(group,admitted));
+  const untracked=await waitUntilUntracked(candidates),settled=untracked&&(preserveOthers?await waitUntilTabsAbsent(group,candidateTabs):(!admitted.size||await waitUntilNativeTextOnly(group,admitted)));
   if(!settled)void api.window.showInformationMessage('The visual workspace accepted the close, but VS Code has not finished removing its tabs. The text layout was left unchanged.');
   return{accepted:true,closed:true,settled};
 }
@@ -165,6 +180,6 @@ function revealInViewerGroup(panel, preserveFocus = false, fallback = 1) {
   const target = valid(panel.viewColumn) && !panelIsReserved(panel) ? panel.viewColumn : preferredViewerColumn(fallback);
   panel.reveal(target, preserveFocus);
 }
-function resetViewerGroupForTests() { column = 0; tracked.clear(); reservations.clear(); topologyProvider=null; }
+function resetViewerGroupForTests() { ownedColumnPermissions=new WeakMap();column = 0; tracked.clear(); reservations.clear(); topologyProvider=null; }
 
-module.exports = { trackedPanels:()=>[...tracked], configureViewerTopology, preferredViewerColumn, focusedVisualWorkspaceColumn, trackViewerPanel, revealInViewerGroup, restoredAssetColumn, reserveViewerColumns, releaseViewerColumns, relocateReservedViewerPanels, closeViewerGroupForText, resetViewerGroupForTests };
+module.exports = { permitOwnedViewerColumn,trackedPanels:()=>[...tracked], configureViewerTopology, preferredViewerColumn, focusedVisualWorkspaceColumn, trackViewerPanel, revealInViewerGroup, restoredAssetColumn, reserveViewerColumns, releaseViewerColumns, relocateReservedViewerPanels, closeViewerGroupForText, resetViewerGroupForTests };

@@ -7,13 +7,15 @@ const { transactionalWriteSet, hash } = require('./mutation_safety');
 
 const MAX_OWNER_BYTES = 8 * 1024 * 1024;
 const TARGETS = Object.freeze({
-  opening: Object.freeze({ owner: 'character DEF', section: 'Arcade', key: 'intro.storyboard' }),
-  ending: Object.freeze({ owner: 'character DEF', section: 'Arcade', key: 'ending.storyboard' }),
+  opening: Object.freeze({ owner: 'character DEF', section: 'Arcade', key: 'intro.storyboard', createSection:true }),
+  ending: Object.freeze({ owner: 'character DEF', section: 'Arcade', key: 'ending.storyboard', createSection:true }),
+  defaultending: Object.freeze({ owner: 'system.def', section: 'Default Ending', key: 'storyboard', enable: true }),
   logo: Object.freeze({ owner: 'system.def', section: 'Files', key: 'logo.storyboard' }),
   gameintro: Object.freeze({ owner: 'system.def', section: 'Files', key: 'intro.storyboard' }),
   loading: Object.freeze({ owner: 'system.def', section: 'VS Screen', key: 'loading.storyboard' }),
+  bootloading: Object.freeze({ owner: 'system.def', section: 'Title Info', key: 'loading.storyboard', createSection:true }),
   gameover: Object.freeze({ owner: 'system.def', section: 'Game Over Screen', key: 'storyboard' }),
-  credits: Object.freeze({ owner: 'system.def', section: 'End Credits', key: 'storyboard' })
+  credits: Object.freeze({ owner: 'system.def', section: 'End Credits', key: 'storyboard', enable: true })
 });
 
 function assignmentTarget(type) { return TARGETS[String(type || '').toLowerCase()] || null; }
@@ -28,6 +30,13 @@ function relativeAssignment(ownerFilename, storyboardFilename) {
   if (!relative || path.isAbsolute(relative)) throw new Error('The storyboard assignment path could not be expressed relative to its owner DEF.');
   return relative;
 }
+function setAssignmentEntry(text,filename,sectionLine,key,value){
+  // def_model's synthetic preamble also starts at line 0. Give a first-line
+  // section a temporary blank line so the exact named owner wins lookup.
+  const eol=text.includes('\r\n')?'\r\n':'\n',padded=sectionLine===0?eol+text:text;
+  const next=def.setSectionEntry(def.parseDef(padded,filename),sectionLine===0?1:sectionLine,key,value);
+  return sectionLine===0?next.slice(eol.length):next;
+}
 function createAssignmentPlan(input, io = fs) {
   const target = assignmentTarget(input?.type); if (!target) throw new Error('This storyboard type has no single automatic DEF assignment target.');
   const ownerFilename = exactRegularFile(input.ownerFilename, io), storyboardFilename = path.resolve(input.storyboardFilename);
@@ -35,9 +44,13 @@ function createAssignmentPlan(input, io = fs) {
   const bom = before.length >= 3 && before[0] === 0xef && before[1] === 0xbb && before[2] === 0xbf, text = before.subarray(bom ? 3 : 0).toString('utf8');
   if (Buffer.from(text, 'utf8').length !== before.length - (bom ? 3 : 0)) throw new Error('The assignment DEF is not valid UTF-8 text.');
   const document = def.parseDef(text, ownerFilename), matches = def.sections(document, target.section);
-  if (matches.length !== 1) throw new Error(matches.length ? `The owner contains more than one [${target.section}] section; review it manually before assignment.` : `The owner has no [${target.section}] section required for ${target.key}.`);
-  const value = relativeAssignment(ownerFilename, storyboardFilename), nextText = def.setSectionEntry(document, matches[0].line, target.key, value), payload = Buffer.concat([bom ? Buffer.from([0xef, 0xbb, 0xbf]) : Buffer.alloc(0), Buffer.from(nextText, 'utf8')]);
-  return Object.freeze({ type: String(input.type).toLowerCase(), owner: target.owner, ownerFilename, storyboardFilename, section: target.section, key: target.key, value, beforeHash: hash(before), afterHash: hash(payload), changed: !before.equals(payload), payload });
+  if (matches.length > 1) throw new Error(`The owner contains more than one [${target.section}] section; review it manually before assignment.`);
+  if (!matches.length&&!target.enable&&!target.createSection) throw new Error(`The owner has no [${target.section}] section required for ${target.key}.`);
+  const value = relativeAssignment(ownerFilename, storyboardFilename);let nextText;
+  if(!matches.length){const eol=text.includes('\r\n')?'\r\n':'\n',separator=text.endsWith(eol)?eol:eol+eol;nextText=text+separator+`[${target.section}]${eol}${target.enable?`enabled = 1${eol}`:''}${target.key} = ${value}${eol}`;}
+  else{for(const key of [target.key,...(target.enable?['enabled']:[])])if(matches[0].entries.filter(entry=>entry.normalized===key).length>1)throw new Error(`[${target.section}] ${key} appears more than once. Resolve duplicate keys before assignment.`);nextText = setAssignmentEntry(text,ownerFilename,matches[0].line,target.key,value);if(target.enable)nextText=setAssignmentEntry(nextText,ownerFilename,matches[0].line,'enabled','1');}
+  const payload = Buffer.concat([bom ? Buffer.from([0xef, 0xbb, 0xbf]) : Buffer.alloc(0), Buffer.from(nextText, 'utf8')]);
+  return Object.freeze({ type: String(input.type).toLowerCase(), owner: target.owner, ownerFilename, storyboardFilename, section: target.section, key: target.key, value, enable:target.enable===true, beforeHash: hash(before), afterHash: hash(payload), changed: !before.equals(payload), payload });
 }
 function applyAssignment(plan, options = {}, io = fs) {
   if (!plan?.ownerFilename || !plan?.beforeHash || !Buffer.isBuffer(plan.payload)) throw new Error('Storyboard assignment plan is incomplete.');

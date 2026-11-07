@@ -31,8 +31,11 @@ async function executeSndTransferPackage(prepared, options = {}) {
     if (approved !== true) return Object.freeze({ cancelled: true, adopted: false, candidateHash: verified.byteHash, destinationUnchanged: captureTarget(fs, destination).hash === baseline.hash });
     const durableBackup = preserveTargetBackup(fs, baseline, { journalRoot: path.dirname(destination), label: 'preserve-snd-before-reviewed-transfer' }), adoption = adoptCandidate(fs, { bytes: candidateBytes, hash: hash(candidateBytes) }, baseline, { label: 'adopt-reviewed-snd-transfer', backup: false, journal: true, journalRoot: path.dirname(destination) }), final = captureTarget(fs, destination);
     const receipt = { schema: 'ikemaker.snd-transfer-execution-receipt', version: 1, createdAt: new Date().toISOString(), analysisIdentity: prepared.analysisIdentity, planIdentity: prepared.planIdentity, evidenceFingerprint: prepared.evidenceFingerprint, candidateFingerprint: verified.byteHash, destinationBeforeFingerprint: String(baseline.hash).toUpperCase(), destinationAfterFingerprint: String(final.hash).toUpperCase(), backup: { path: durableBackup.path, fingerprint: String(durableBackup.hash).toUpperCase() }, entries: prepared.entries };
-    const receiptBytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`), receiptPath = path.join(prepared.packageRoot, `snd-transfer-receipt-${sha(receiptBytes).slice(0, 16)}.json`); transactionalWrite(fs, receiptPath, receiptBytes, { label: 'snd-transfer-execution-receipt', allowExisting: false, backup: false, journal: false });
-    return Object.freeze({ cancelled: false, adopted: true, candidateHash: verified.byteHash, destinationFingerprint: String(final.hash).toUpperCase(), durableBackup: Object.freeze(durableBackup), adoption: Object.freeze(adoption), receiptPath });
+    const receiptBytes = Buffer.from(`${JSON.stringify(receipt, null, 2)}\n`), receiptPath = path.join(prepared.packageRoot, `snd-transfer-receipt-${sha(receiptBytes).slice(0, 16)}.json`);
+    let receiptWarning = '';
+    try { transactionalWrite(fs, receiptPath, receiptBytes, { label: 'snd-transfer-execution-receipt', allowExisting: false, backup: false, journal: false }); }
+    catch (error) { receiptWarning = `The SND was adopted and backed up, but its transfer receipt could not be saved: ${error.message}`; }
+    return Object.freeze({ cancelled: false, adopted: true, candidateHash: verified.byteHash, destinationFingerprint: String(final.hash).toUpperCase(), durableBackup: Object.freeze(durableBackup), adoption: Object.freeze(adoption), receiptPath: receiptWarning ? null : receiptPath, receiptWarning });
   });
 }
 

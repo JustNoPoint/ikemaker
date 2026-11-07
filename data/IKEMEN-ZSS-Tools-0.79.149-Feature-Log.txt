@@ -1,7 +1,0 @@
-IKEMaker 0.79.149
-
-- Added an optional custom music track to the shared Quick VS / Training Match Setup and saved it with named presets.
-- Added compact in-place music auditioning with volume, sample-based loop start/end, playhead capture, and loop preview.
-- Added a stable command-line music bridge that tests the chosen track and loop metadata without rewriting stage DEF or select.def files.
-- Kept normal game music unchanged when no custom test track is selected, with a truthful note that Quick VS / Training does not enable opponent select.def music by default.
-- Restricted test music to supported files inside the current IKEMEN game and preserved restart arguments.

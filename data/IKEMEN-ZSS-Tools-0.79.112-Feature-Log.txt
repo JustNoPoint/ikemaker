@@ -1,7 +1,0 @@
-IKEMaker 0.79.112
-
-- Restores Quick Start as the first section in the IKEMaker Tools sidebar.
-- Restores Open Character as the first Quick Start action.
-- Retains the complete canonical Project, Edit, View, asset, stage, screenpack, tool and help catalog immediately below Quick Start.
-- Quick Start routes reuse the same commands and interface-mode safety checks as the complete catalog; no competing character-opening implementation was added.
-- Focused sidebar information-architecture, toolbar-catalog parity and Character Essentials grouped-viewer regressions pass.

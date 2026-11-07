@@ -1,8 +1,0 @@
-IKEMaker 0.79.187
-
-- Keeps the SFF Sprite Controls slider and universal context strip synchronized to one physical archive position.
-- Preserves position-based selection for duplicate group,index sprites.
-- Refreshes a saved character workbench from its current on-disk DEF immediately before closing.
-- Includes newly assigned and shared external SFF/AIR/SND dependencies in the guarded close operation.
-- Prevents a false “Closed” result while a connected shared visual workspace remains open.
-- Retains dirty-editor cancellation and keeps visual workspaces open when native editor closure is cancelled.

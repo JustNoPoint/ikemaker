@@ -1,2 +1,0 @@
-IKEMaker 0.79.289
-Prevent duplicate-tab cleanup racing with asynchronous header placement. Wait for the header tab before cleanup and apply final 28/72 stacked layout after tabs settle. Seven focused tests passed, including delayed header placement.

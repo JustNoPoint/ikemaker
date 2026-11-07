@@ -3,9 +3,9 @@
 // ZSS locals are referenced with $name. This scanner deliberately models only
 // lexical ownership and statement identity; it does not reinterpret expressions
 // or assume that IKEMEN rejects an unused declaration.
-function maskCommentsAndStrings(text) {
-  const source = String(text || ''), output = [...source];
-  let quoted = false, comment = false;
+function maskCommentsAndStrings(text, commentStart = '#') {
+  const source = String(text || ''), output = source.split('');
+  let quoted = false, escaped = false, comment = false;
   for (let index = 0; index < source.length; index += 1) {
     const character = source[index];
     if (comment) {
@@ -14,11 +14,12 @@ function maskCommentsAndStrings(text) {
       continue;
     }
     if (quoted) {
-      if (character === '"' && source[index - 1] !== '\\') quoted = false;
+      if (character === '"' && !escaped) quoted = false;
+      escaped = character === '\\' && !escaped;
       if (character !== '\r' && character !== '\n') output[index] = ' ';
       continue;
     }
-    if (character === '#') { comment = true; output[index] = ' '; continue; }
+    if (character === commentStart) { comment = true; output[index] = ' '; continue; }
     if (character === '"') { quoted = true; output[index] = ' '; }
   }
   return output.join('');

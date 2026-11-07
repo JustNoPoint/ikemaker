@@ -2,6 +2,8 @@
 
 const path=require('path');
 const {hash}=require('./mutation_safety');
+const {transitionConditions}=require('./move_transition_conditions');
+const {commandReferencesInLine}=require('./command_reference_model');
 const {parseStateSource}=require('./state_transfer_model');
 const {MAX_DEF_BYTES}=require('./projectile_air_authority');
 const {exactStateNumber,buildStateDestinationSnapshot,findUniqueStateDestination}=require('./exact_state_destination_authority');
@@ -28,7 +30,7 @@ function buildStateTransitionAuthorities(component,context={}){
  const snapshot=context.stateSnapshot||buildStateDestinationSnapshot(context);if(!snapshot?.sources||!snapshotMatchesContext(snapshot,context))return none('The complete assigned state-source inventory is unavailable, stale, or exceeds its bounded inspection limit.');
  const source=snapshot.sources.find(item=>canonical(item.filename)===canonical(component.filename));if(!source||source.sourceHash!==component.sourceHash||String(context.sourceText??'')!==source.text)return none('The selected StateDef source is no longer one exact assigned state source.');
  const bounds=lineBounds(source.text,component.startLine,component.endLine);if(!bounds||normalizedLines(bounds.text)!==String(component.text||'')||hash(String(component.text||''))!==component.rangeHash)return none('The selected StateDef range no longer matches its parsed source block.');
- const runCapability=component.syntax==='zss'?runStateCapability(context.capabilities):null,parseCapabilities=runCapability?context.capabilities:{enabledCapabilities:[]},parsed=parseStateSource(source.text,source.filename,component.syntax==='cns'?'ikemen-cns':'zss',{capabilities:parseCapabilities}),declaration=parsed.declarations.find(item=>item.line===component.startLine),ownerState=exactStateNumber(declaration?.expression),componentState=exactStateNumber(component.signature);if(!declaration||!ownerState||!componentState||ownerState.number!==declaration.value||componentState.number!==ownerState.number)return none('The selected StateDef declaration is dynamic or no longer agrees with its exact component identity.');
+ const runCapability=component.syntax==='zss'?runStateCapability(context.capabilities):null,parseCapabilities=runCapability?context.capabilities:{enabledCapabilities:[]},parseKey=runCapability?.fingerprint||'',cache=context.previewCache?.stateParses,cached=cache?.get(source);let parsed=cached?.key===parseKey?cached.value:null;if(!parsed){parsed=parseStateSource(source.text,source.filename,component.syntax==='cns'?'ikemen-cns':'zss',{capabilities:parseCapabilities});cache?.set(source,{key:parseKey,value:parsed})}const declaration=parsed.declarations.find(item=>item.line===component.startLine),ownerState=exactStateNumber(declaration?.expression),componentState=exactStateNumber(component.signature);if(!declaration||!ownerState||!componentState||ownerState.number!==declaration.value||componentState.number!==ownerState.number)return none('The selected StateDef declaration is dynamic or no longer agrees with its exact component identity.');
  const transfers=parsed.transfers.filter(item=>(item.kind==='changestate'||item.kind==='runstate'&&runCapability)&&insideComponent(item,bounds,source.text));
  const authorities=new Map(),items=[];
  transfers.forEach(transfer=>{
@@ -44,10 +46,18 @@ function buildStateTransitionAuthorities(component,context={}){
  if(selectedExact)for(const incoming of bucket?.items||[]){
   const transfer=incoming.transfer,origin=incoming.source,occurrence=incoming.occurrence,route=String(context.token?.({state:ownerState.number,occurrence,kind:'incoming'})||'');if(!/^[0-9a-f]{48}$/.test(route))continue;const controllerText=origin.text.slice(transfer.controllerStart,transfer.controllerEnd),controllerLine=origin.text.slice(0,transfer.controllerStart).split(/\r?\n/).length-1;
   const authority=freeze({schema:'ikemaker.incoming-state-route',version:1,route,generation:Number(context.generation),componentIdentity:componentIdentity(component),occurrence,transitionKind:'incoming-changestate',capabilityFingerprint:'',ownerState:ownerState.number,originOwnerState:transfer.owner.value,expression:String(transfer.expression||''),state:ownerState.number,defPath,defHash:hash(defText),inventoryHash:snapshot.inventoryHash,selectedSourcePath:source.filename,selectedSourceHash:source.sourceHash,componentStart:bounds.start,componentEnd:bounds.end,componentRangeHash:hash(bounds.text),controllerStart:transfer.controllerStart,controllerEnd:transfer.controllerEnd,controllerHash:hash(controllerText),valueStart:transfer.start,valueEnd:transfer.end,valueHash:hash(origin.text.slice(transfer.start,transfer.end)),destinationPath:selectedMatch.source.filename,destinationHash:selectedMatch.source.sourceHash,destinationStart:selectedMatch.declaration.start,destinationEnd:selectedMatch.declaration.end,destinationRangeHash:hash(selectedMatch.source.text.slice(selectedMatch.declaration.start,selectedMatch.declaration.end)),targetPath:origin.filename,targetHash:origin.sourceHash,targetSyntax:origin.syntax,targetStart:transfer.controllerStart,targetEnd:transfer.controllerEnd,targetLine:controllerLine,targetRangeHash:hash(controllerText)});
-  authorities.set(route,authority);incomingItems.push(freeze({available:true,occurrence,kind:'incoming-changestate',label:'ChangeState',fromState:transfer.owner.value,state:ownerState.number,file:path.basename(origin.filename),line:controllerLine,route}));
+  const conditions=transitionConditions(origin.text,transfer,origin.syntax),inputFamilies=new Map();
+  for(const expression of conditions.expressions)for(const line of expression.split(/\r?\n/)){
+   for(const reference of commandReferencesInLine(line,{semicolonComments:origin.syntax==='cns'})){
+    if(reference.redirected||reference.trigger!=='command'||inputFamilies.has(reference.name))continue;
+    const family=context.commandSnapshot?.complete&&context.commandSnapshot.families[reference.name];
+    if(family?.length)inputFamilies.set(reference.name,{name:reference.name,motions:[...new Set(family.map(item=>item.motion).filter(Boolean))]});
+   }
+  }
+  authorities.set(route,authority);incomingItems.push(freeze({available:true,occurrence,kind:'incoming-changestate',label:'ChangeState',fromState:transfer.owner.value,state:ownerState.number,file:path.basename(origin.filename),line:controllerLine,route,conditions,inputs:[...inputFamilies.values()]}));
  }
  const incomingReason=selectedExact?'':selected.matches.length?'Incoming uses are unavailable because this StateDef is defined more than once.':'Incoming uses are unavailable because this StateDef is absent from the complete assigned inventory.',omitted=Math.max(0,total-incomingItems.length),publicIncoming=freeze({available:Boolean(selectedExact),reason:incomingReason,items:freeze(incomingItems),total,omitted,incomplete:omitted>0});
- return freeze({publicTransitions:freeze({available:true,reason:'',items:freeze(items)}),publicIncoming,authorities});
+ return freeze({publicTransitions:freeze({available:true,reason:'',items:freeze(items.map((item,index)=>({...item,conditions:transitionConditions(source.text,transfers[index],component.syntax)})))}),publicIncoming,authorities});
 }
 
 function validateStateTransitionAuthority(authority,component,context={}){

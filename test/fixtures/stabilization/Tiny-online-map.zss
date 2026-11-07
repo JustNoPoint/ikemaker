@@ -1,3 +1,0 @@
-# Fixture only: online behavior must use synchronized native state/maps, never match-authoritative Lua.
-[Function Tiny_OnlineOption() int]
-let ret = map(Tiny_OnlineOption);

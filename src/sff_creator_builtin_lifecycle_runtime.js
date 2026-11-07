@@ -10,6 +10,7 @@ const { appendCreatorOperationCheckpoint, createCreatorOperationVault, discoverC
 const { createCreatorProductionReviewHostForVault } = require('./sff_creator_production_review_vault_adapter');
 const { STAGES } = require('./sff_creator_production_review_host');
 const { sealCreatorStateRootFromContext } = require('./sff_creator_state_root');
+const { prepareTemporaryRecovery } = require('./sff_creator_temporary_recovery');
 const { verifySavedCreatorCompletedFromVault } = require('./sff_creator_saved_completed_verifier');
 const { createCreatorTargetProjection } = require('./sff_creator_target_projection');
 const { routeCreatorSffLifecycleOnStartup } = require('./sff_creator_startup_lifecycle_router');
@@ -463,8 +464,9 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
   }
 
   function beginAdoptionReview(input) {
+    if(input?.recoveryPolicy && !['temporary','keep'].includes(input.recoveryPolicy)) fail('recoveryPolicy must be temporary or keep.');
     if (!input || typeof input !== 'object' || !input.continuationLocator || typeof input.backupBasename !== 'string') fail('an exact CandidatePersisted locator and explicit backupBasename are required for AdoptionReview.');
-    const { replay } = inspectCandidatePersisted(input.continuationLocator), snapshot = api.readSnapshot(baseLocator(input.continuationLocator)), plan = createCreatorLifecycleRouteBridgePlan({ routeId: ADOPTION_REVIEW_ROUTE_ID, parentVaultLocator: input.continuationLocator, routeInput: { backupBasename: input.backupBasename } });
+    const { replay } = inspectCandidatePersisted(input.continuationLocator), snapshot = api.readSnapshot(baseLocator(input.continuationLocator)), recovery = input.recoveryPolicy === 'temporary' ? prepareTemporaryRecovery(context.globalStorageUri.fsPath, snapshot.authority.operationId, snapshot.authority.activePath) : null, plan = createCreatorLifecycleRouteBridgePlan({ routeId: ADOPTION_REVIEW_ROUTE_ID, parentVaultLocator: input.continuationLocator, routeInput: { backupBasename: recovery ? 'previous.sff' : input.backupBasename, ...(recovery ? {recovery} : {}) } });
     if (plan.status !== 'append-ready') fail(`AdoptionReview route retention is blocked: ${plan.reason || plan.status}.`);
     const payload = plan.copyAppendPayload(), mutationId = hashCanonical({ domain: 'ikemaker.sff-creator-builtin-runtime-adoption-review-route-mutation', version: 1, operationId: snapshot.authority.operationId, parentHeadRecordHash: snapshot.authority.semanticHeadRecordHash, manifestHash: plan.manifestHash, adoptionPlanHash: plan.adoptionPlan.planHash });
     const receipt = api.appendVault({ vaultRoot: snapshot.authority.vaultRootSeal.path, workspaceRoot: snapshot.authority.workspaceRootSeal.path, workspaceId: snapshot.authority.workspaceId, operationId: snapshot.authority.operationId, targetId: snapshot.authority.targetId, backendId: snapshot.authority.backendId, adapterId: snapshot.authority.adapterId, activePath: snapshot.authority.activePath, candidatePath: snapshot.authority.candidatePath, historyRoot: snapshot.authority.historyRoot, lifecycleState: 'AdoptionReview', terminalHistoryEvidence: null, ...payload, operationDirectory: input.continuationLocator.operationDirectory, expectedPreviousCheckpointHash: snapshot.authority.semanticHeadRecordHash, mutationId });
@@ -573,9 +575,10 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     const receipt = api.commitCompleted({ historyReviewVaultLocator: reviewLocator });
     if (!['completed', 'completed-cleanup-required'].includes(receipt.status)) return freeze({ status: receipt.status, lifecycleState: receipt.completedCheckpointHash ? 'Completed' : 'HistoryReview', operationId: receipt.operationId || reviewLocator.expectedOperationId, continuationLocator: receipt.completedCheckpointHash ? completedContinuation(reviewLocator, receipt.completedCheckpointHash) : { ...reviewLocator }, historyWriterInvoked: Boolean(receipt.historyAppended), historyAppended: Boolean(receipt.historyAppended), resetDraft: false, writesAllowed: false });
     const completed = verifyCompletedContinuation(reviewLocator, receipt, approved);
+    if(completed.verified.temporaryRecovery && receipt.status === 'completed' && receipt.capsuleCleanupCompleted === true) { require('./sff_creator_temporary_recovery').cleanupCompletedTemporaryRecovery(baseLocator(completed.continuationLocator)); completed.verified=api.verifyCompleted(baseLocator(completed.continuationLocator)); }
     const routed = api.routeLifecycleStartup({ lifecycleVaultLocator: completed.continuationLocator, classificationAppendReplayAuthority: null });
     const cleanupConfirmed = receipt.status === 'completed' && receipt.capsuleCleanupCompleted === true && routed.status === 'completed-cleanup-recorded';
-    return freeze({ status: cleanupConfirmed ? 'completed-authoritative' : routed.status === 'completed-cleanup-required' ? routed.status : 'completed-cleanup-required', lifecycleState: 'Completed', operationId: receipt.operationId, continuationLocator: completed.continuationLocator, completedVerificationHash: completed.verified.verificationHash, historyApprovalReceiptHash: completed.verified.historyApprovalReceiptHash, historyRecordHash: completed.verified.historyRecordHash, historyWriterInvoked: true, historyAppended: true, capsuleCleanupCompleted: cleanupConfirmed, resetDraft: cleanupConfirmed, writesAllowed: false });
+    return freeze({ status: cleanupConfirmed ? 'completed-authoritative' : routed.status === 'completed-cleanup-required' ? routed.status : 'completed-cleanup-required', lifecycleState: 'Completed', operationId: receipt.operationId, continuationLocator: completed.continuationLocator, completedVerificationHash: completed.verified.verificationHash, ...(routed.temporaryRecovery ? {temporaryRecovery:routed.temporaryRecovery} : {}), historyApprovalReceiptHash: completed.verified.historyApprovalReceiptHash, historyRecordHash: completed.verified.historyRecordHash, historyWriterInvoked: true, historyAppended: true, capsuleCleanupCompleted: cleanupConfirmed, resetDraft: cleanupConfirmed, writesAllowed: false });
   }
   function resumeCompletedFromReview(rawLocator) {
     let discovered = null;
@@ -588,7 +591,7 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     if (!discovered) return null;
     const routed = api.routeLifecycleStartup({ lifecycleVaultLocator: discovered.continuationLocator, classificationAppendReplayAuthority: null });
     const cleanupConfirmed = routed.status === 'completed-cleanup-recorded';
-    return freeze({ status: cleanupConfirmed ? 'completed-authoritative' : routed.status, lifecycleState: 'Completed', operationId: discovered.verified.operationId, continuationLocator: discovered.continuationLocator, completedVerificationHash: discovered.verified.verificationHash, historyApprovalReceiptHash: discovered.verified.historyApprovalReceiptHash, historyRecordHash: discovered.verified.historyRecordHash, historyWriterInvoked: true, historyAppended: true, capsuleCleanupCompleted: cleanupConfirmed, resetDraft: cleanupConfirmed, writesAllowed: false });
+    return freeze({ status: cleanupConfirmed ? 'completed-authoritative' : routed.status, lifecycleState: 'Completed', operationId: discovered.verified.operationId, continuationLocator: discovered.continuationLocator, completedVerificationHash: discovered.verified.verificationHash, ...(routed.temporaryRecovery ? {temporaryRecovery:routed.temporaryRecovery} : {}), historyApprovalReceiptHash: discovered.verified.historyApprovalReceiptHash, historyRecordHash: discovered.verified.historyRecordHash, historyWriterInvoked: true, historyAppended: true, capsuleCleanupCompleted: cleanupConfirmed, resetDraft: cleanupConfirmed, writesAllowed: false });
   }
   function resumeLifecycle(rawLocator) {
     if (rawLocator?.manifestArtifactName === MANIFEST_NAME) return present(rawLocator);

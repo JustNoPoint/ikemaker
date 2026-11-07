@@ -1,2 +1,0 @@
-IKEMaker 0.79.288
-Repair Text Editor layout after header creation and restoration: Code Navigation above at 28%, focused native source below at 72%, no leftover empty group. Preserve existing native buffers and unsaved edits. Seven focused regression suites passed.

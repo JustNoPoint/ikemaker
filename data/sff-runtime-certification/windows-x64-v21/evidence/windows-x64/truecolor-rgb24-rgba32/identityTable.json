@@ -1,0 +1,211 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "identityTable",
+  "fixtureId": "truecolor-rgb24-rgba32",
+  "fixtureByteHash": "ae6cfa7857e0c3efb3c0bc25b721569d85e671e879e5ece6a8997ad1964d5b3b",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "truecolor-rgb24-rgba32",
+    "sourceSha256": "ae6cfa7857e0c3efb3c0bc25b721569d85e671e879e5ece6a8997ad1964d5b3b",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 50,
+        "number": 0,
+        "width": 2,
+        "height": 2,
+        "axisX": -4,
+        "axisY": 9,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 50,
+        "number": 1,
+        "width": 2,
+        "height": 2,
+        "axisX": 4,
+        "axisY": -9,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 2,
+        "group": 50,
+        "number": 2,
+        "width": 2,
+        "height": 2,
+        "axisX": 11,
+        "axisY": 12,
+        "paletteIndex": 0,
+        "link": 1
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          50,
+          0,
+          2,
+          2,
+          -4,
+          9,
+          0
+        ],
+        "expected": [
+          50,
+          0,
+          2,
+          2,
+          -4,
+          9,
+          null
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          50,
+          1,
+          2,
+          2,
+          4,
+          -9,
+          0
+        ],
+        "expected": [
+          50,
+          1,
+          2,
+          2,
+          4,
+          -9,
+          null
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          50,
+          2,
+          2,
+          2,
+          11,
+          12,
+          0
+        ],
+        "expected": [
+          50,
+          2,
+          2,
+          2,
+          11,
+          12,
+          null
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          50,
+          0,
+          2,
+          2,
+          -4,
+          9,
+          0
+        ],
+        "expected": [
+          50,
+          0,
+          2,
+          2,
+          -4,
+          9,
+          null
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          50,
+          1,
+          2,
+          2,
+          4,
+          -9,
+          0
+        ],
+        "expected": [
+          50,
+          1,
+          2,
+          2,
+          4,
+          -9,
+          null
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          50,
+          2,
+          2,
+          2,
+          11,
+          12,
+          0
+        ],
+        "expected": [
+          50,
+          2,
+          2,
+          2,
+          11,
+          12,
+          null
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [
+      {
+        "physicalIndex": 2,
+        "link": 1
+      }
+    ],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\ttruecolor-rgb24-rgba32\t0",
+    "sprite\ttruecolor-rgb24-rgba32\t0\t50\t0\t2\t2\t-4\t9\t0",
+    "sprite\ttruecolor-rgb24-rgba32\t0\t50\t1\t2\t2\t4\t-9\t0",
+    "sprite\ttruecolor-rgb24-rgba32\t0\t50\t2\t2\t2\t11\t12\t0",
+    "open\ttruecolor-rgb24-rgba32\t1",
+    "sprite\ttruecolor-rgb24-rgba32\t1\t50\t0\t2\t2\t-4\t9\t0",
+    "sprite\ttruecolor-rgb24-rgba32\t1\t50\t1\t2\t2\t4\t-9\t0",
+    "sprite\ttruecolor-rgb24-rgba32\t1\t50\t2\t2\t2\t11\t12\t0"
+  ]
+}

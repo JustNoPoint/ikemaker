@@ -1,5 +1,0 @@
-IKEMaker 0.79.47
-
-- Fixes the SFF comparison browser initialization failure.
-- Groups, Sprites, and Details now use explicit VS Code webview controls.
-- Restores group selection, sprite selection, filtering, tabs, thumbnails, and synchronized navigation.

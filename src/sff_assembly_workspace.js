@@ -20,6 +20,7 @@ const { analyzeSffTransferConflicts } = require('./sff_transfer_conflict_model')
 const { planSffTransferResolution } = require('./sff_transfer_resolution_model');
 const { collectSffTransferDecisions } = require('./sff_transfer_decision_ui');
 const { prepareSffTransferBuild } = require('./sff_transfer_apply');
+const { transferRecoveryMessage } = require('./sff_transfer_recovery_message');
 
 let formDrafts = new FormDrafts();
 const sessions = new Map();
@@ -179,7 +180,7 @@ async function openSffAssembly(uri, options = {}) {
         }).catch(error => vscode.window.showErrorMessage(`SFF assembly failed: ${error.message}`)).finally(() => { owner.pendingDrafts--; owner.busy--; }); return;
       }
       if (message.type === 'discardAssemblyDraft') { if (message.identity !== reference.identity || !validReference(reference)) throw new Error('The recovered plan no longer matches the exact SFF sources.'); await runExclusive('Discard the recovered plan', async () => { const generation = owner.generation; await owner.draftQueue; if (owner.disposed || owner.generation !== generation || !validReference(reference)) return 'The draft discard was superseded.'; await formDrafts.discard(`sff-assembly:${reference.identity}`); if (owner.disposed || owner.generation !== generation) return 'The draft discard was superseded.'; owner.storedRevision = 0; post({ type: 'assemblyDraftDiscarded', identity: reference.identity }); return 'Recovered plan discarded.'; }); return; }
-      if (message.type === 'rejectAssemblyTransferSeed') { await runExclusive('Keep the recovered plan', async () => { const identity = transferIdentity(owner.transferSeed); if (identity !== message.transferIdentity) throw new Error('The reviewed Transfer selection changed.'); owner.transferGeneration++; owner.transferSeed = null; owner.transferAnalysis = null; owner.transferDecisions = null; owner.transferResolution = null; post({ type: 'assemblyTransferRejected', transferIdentity: identity }); return 'Recovered plan kept; Transfer selection closed.'; }); return; }
+      if (message.type === 'rejectAssemblyTransferSeed') { await runExclusive('Keep the recovered plan', async () => { const identity = transferIdentity(owner.transferSeed); if (identity !== message.transferIdentity) throw new Error('The reviewed Transfer selection changed.'); await vscode.commands.executeCommand('sff.transfer.cancelAssemblyHandoff', identity); owner.transferGeneration++; owner.transferSeed = null; owner.transferAnalysis = null; owner.transferDecisions = null; owner.transferResolution = null; post({ type: 'assemblyTransferRejected', transferIdentity: identity }); return 'Recovered plan kept; Transfer selection closed.'; }); return; }
       if (message.type === 'resolveAssemblyTransfer') {
         await runExclusive('Review Transfer decisions', async () => {
           if (!owner.transferSeed) throw new Error('There is no reviewed Transfer selection to resolve.');
@@ -210,13 +211,17 @@ async function openSffAssembly(uri, options = {}) {
           if (action === 'Open manifest') { if (current()) await vscode.window.showTextDocument(vscode.Uri.file(prepared.manifest)); return 'Transfer manifest opened; the active SFF is unchanged.'; }
           if (action !== 'Build candidate and review impact') return 'Transfer candidate retained without changing the active SFF.';
           if (!current()) return 'The reviewed Transfer was superseded before candidate build.';
-          const result = await require('./sff_commands').executeGeneratedBuild(prepared.generated, { confirmAdoption: async ({ impact, validation, candidateHash }) => { if (!current()) return false; const answer = await vscode.window.showWarningMessage(`Adopt the verified SFF Transfer candidate?`, { modal: true, detail: `Target: ${baseFile}\nCandidate: ${candidateHash}\nValidation: ${validation?.strict?.status || validation?.status || 'passed'}\nImpact: ${JSON.stringify(impact)}\nA durable backup is created before replacement. This binary adoption is recovered from backup rather than text Undo.` }, 'Adopt verified candidate'); return answer === 'Adopt verified candidate' && current(); } });
-          if (result.cancelled) { if (!owner.disposed) await vscode.window.showInformationMessage('Verified Transfer candidate retained without changing the active SFF.'); return 'Verified candidate retained without adoption.'; }
+          const execution = await vscode.commands.executeCommand('sff.transfer.beginAssemblyExecution', projected.resolution.requestIdentity);
+          if (!execution?.token) throw new Error('The current Transfer review could not be bound before execution. No candidate was built or adopted.');
+          try {
+          const result = await require('./sff_commands').executeGeneratedBuild(prepared.generated, { confirmAdoption: async ({ impact, validation, candidateHash }) => { if (!current()) return false; const answer = await vscode.window.showWarningMessage(`Adopt the verified SFF Transfer candidate?`, { modal: true, detail: `Target: ${baseFile}\nCandidate: ${candidateHash}\nValidation: ${validation?.strict?.status || validation?.status || 'passed'}\nImpact: ${JSON.stringify(impact)}\nPrivate temporary recovery is retained on failure or interruption and removed after verified completion. No permanent backup is kept automatically; use Make Backup separately if wanted. Binary adoption is not native text Undo.` }, 'Adopt verified candidate'); return answer === 'Adopt verified candidate' && current(); } });
+          if (result.cancelled) { if (!owner.disposed) vscode.window.showInformationMessage('Verified Transfer candidate retained without changing the active SFF.'); return 'Verified candidate retained without adoption.'; }
           const resolution = projected.resolution, validated = projected.validated, details = resolution.items.map(item => item.action === 'skip' ? { id: item.id, status: 'skipped', message: item.reason || 'Skipped by reviewed decision.' } : { id: item.id, status: item.identityAction === 'replace-existing' ? 'replaced' : 'added', destinationId: item.destinationIdentity, message: `Verified ${item.identityAction}.` }), finalArchive = readSff(baseFile), finalRows = require('./sff_view_organization').snapshot(finalArchive).rows, mappings = resolveAppliedPhysicalMappings({ resolution, validated, specification: prepared.generated.specification, finalRows });
-          const recorded = await vscode.commands.executeCommand('sff.transfer.recordAssemblyResult', resolution.requestIdentity, details, mappings); if (!recorded) throw new Error('The verified Transfer result could not be attached to its active session. The SFF was adopted safely; reopen Transfer to continue from the execution receipt.');
+          const recorded = await vscode.commands.executeCommand('sff.transfer.recordAssemblyResult', resolution.requestIdentity, details, mappings, execution.token); if (!recorded) throw new Error('The verified Transfer result could not be attached to its active session. The SFF was adopted safely; reopen Transfer to continue from the execution receipt.');
           owner.transferGeneration++; owner.generation++; owner.transferSeed = null; owner.transferAnalysis = null; owner.transferDecisions = null; owner.transferResolution = null;
-          post({ type: 'assemblyTransferApplied', requiresReopen: true, summary: `Transfer applied with durable backup ${result.durableBackup?.filename || result.durableBackup?.path || 'recorded in the execution receipt'}. Reopen Assembly to review the changed Destination SFF.` });
-          if (!owner.disposed) await vscode.window.showInformationMessage(`SFF Transfer applied and verified. Execution receipt: ${result.executionReceiptPath}`); return 'Transfer applied and verified. Reopen Assembly to review the changed Destination SFF.';
+          post({ type: 'assemblyTransferApplied', requiresReopen: true, summary: `Transfer applied. ${transferRecoveryMessage(result)} Reopen Assembly to review the changed Destination SFF.` });
+          if (!owner.disposed) vscode.window.showInformationMessage(`SFF Transfer applied and verified. Execution receipt: ${result.executionReceiptPath}`); return 'Transfer applied and verified. Reopen Assembly to review the changed Destination SFF.';
+          } finally { await vscode.commands.executeCommand('sff.transfer.endAssemblyExecution', execution.token); }
         }); return;
       }
       if (message.type === 'build') {
@@ -231,7 +236,7 @@ async function openSffAssembly(uri, options = {}) {
       }
     }).catch(error => { if (ASSEMBLY_MESSAGE_TYPES.has(message?.type) && !owner.exclusive) actionState(false, `SFF Assembly could not continue: ${error.message}`); vscode.window.showErrorMessage(`SFF assembly failed: ${error.message}`); });
   });
-  panel.onDidDispose(() => { owner.disposed = true; if (sessions.get(reference.identity) === owner) sessions.delete(reference.identity); });
+  panel.onDidDispose(() => { owner.disposed = true; const handoffIdentity = transferIdentity(owner.transferSeed); if (handoffIdentity) Promise.resolve(vscode.commands.executeCommand('sff.transfer.cancelAssemblyHandoff', handoffIdentity)).catch(() => {}); if (sessions.get(reference.identity) === owner) sessions.delete(reference.identity); });
   return panel;
 }
 function registerSffAssembly(context) { formDrafts = new FormDrafts(context.workspaceState, 'ikemaker.sffAssemblyDrafts.v1'); context.subscriptions.push(vscode.commands.registerCommand('sff.openAssembly', (uri, options) => openSffAssembly(uri, options))); }

@@ -1,0 +1,484 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "linkedData",
+  "fixtureId": "stored-palette-overrides-png",
+  "fixtureByteHash": "a5769e771ff9827431f5d90a5376f65ccff9fafde9204aac8e9f50523ca6d07e",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "stored-palette-overrides-png",
+    "sourceSha256": "a5769e771ff9827431f5d90a5376f65ccff9fafde9204aac8e9f50523ca6d07e",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 12,
+        "number": 34,
+        "width": 3,
+        "height": 2,
+        "axisX": -27,
+        "axisY": 61,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "expected": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "expected": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": "No linked sprite payloads exist in this fixture; zero-link table plus successful load/reopen checked.",
+  "captures": [
+    {
+      "fixtureId": "stored-palette-overrides-png",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/stored-palette-overrides-png-p00000-g00012-i00034.png",
+      "capture": "Ikemen_GO026.png",
+      "sha256": "399d7fc0dce98a61d9e99633fad5c69fd16012f2e8e9e546e0bedd11644e5805",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            130,
+            111,
+            116
+          ],
+          "expected": [
+            130,
+            111,
+            116
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            79,
+            114,
+            107
+          ],
+          "expected": [
+            79,
+            114,
+            107
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            113,
+            110
+          ],
+          "expected": [
+            96,
+            113,
+            110
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            162,
+            79,
+            212
+          ],
+          "expected": [
+            162,
+            79,
+            212
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            142,
+            35,
+            88
+          ],
+          "expected": [
+            142,
+            35,
+            88
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/stored-palette-overrides-png/renderComparison.json"
+    },
+    {
+      "fixtureId": "stored-palette-overrides-png",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/stored-palette-overrides-png-p00000-g00012-i00034.png",
+      "capture": "Ikemen_GO027.png",
+      "sha256": "970009c9ed0714eeca38fc89993519867b50b48a471f38d1de1212023e2b69f5",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            130,
+            111,
+            116
+          ],
+          "expected": [
+            130,
+            111,
+            116
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            79,
+            114,
+            107
+          ],
+          "expected": [
+            79,
+            114,
+            107
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            113,
+            110
+          ],
+          "expected": [
+            96,
+            113,
+            110
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            162,
+            79,
+            212
+          ],
+          "expected": [
+            162,
+            79,
+            212
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            142,
+            35,
+            88
+          ],
+          "expected": [
+            142,
+            35,
+            88
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/stored-palette-overrides-png/renderComparison.json"
+    },
+    {
+      "fixtureId": "stored-palette-overrides-png",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/stored-palette-overrides-png-p00000-g00012-i00034.png",
+      "capture": "Ikemen_GO028.png",
+      "sha256": "399d7fc0dce98a61d9e99633fad5c69fd16012f2e8e9e546e0bedd11644e5805",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            130,
+            111,
+            116
+          ],
+          "expected": [
+            130,
+            111,
+            116
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            79,
+            114,
+            107
+          ],
+          "expected": [
+            79,
+            114,
+            107
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            113,
+            110
+          ],
+          "expected": [
+            96,
+            113,
+            110
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            162,
+            79,
+            212
+          ],
+          "expected": [
+            162,
+            79,
+            212
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            142,
+            35,
+            88
+          ],
+          "expected": [
+            142,
+            35,
+            88
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/stored-palette-overrides-png/renderComparison.json"
+    },
+    {
+      "fixtureId": "stored-palette-overrides-png",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/stored-palette-overrides-png-p00000-g00012-i00034.png",
+      "capture": "Ikemen_GO029.png",
+      "sha256": "970009c9ed0714eeca38fc89993519867b50b48a471f38d1de1212023e2b69f5",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            130,
+            111,
+            116
+          ],
+          "expected": [
+            130,
+            111,
+            116
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            79,
+            114,
+            107
+          ],
+          "expected": [
+            79,
+            114,
+            107
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            113,
+            110
+          ],
+          "expected": [
+            96,
+            113,
+            110
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            162,
+            79,
+            212
+          ],
+          "expected": [
+            162,
+            79,
+            212
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            142,
+            35,
+            88
+          ],
+          "expected": [
+            142,
+            35,
+            88
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/stored-palette-overrides-png/renderComparison.json"
+    }
+  ]
+}

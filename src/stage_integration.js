@@ -16,14 +16,15 @@ function names(pattern, text) {
 
 function blocks(controller, text) {
   const result = [];
-  const pattern = new RegExp(`${controller}\\s*\\{([\\s\\S]*?)\\}`, 'gi');
+  const pattern = new RegExp(`\\b${controller}\\s*\\{([\\s\\S]*?)\\}`, 'gi');
   let match;
   while ((match = pattern.exec(text))) result.push({ body: match[1], index: match.index, line: text.slice(0, match.index).split(/\r?\n/).length });
   return result;
 }
 
 function scanStageIntegration(text, filename = '') {
-  const source = String(text || '');
+  const cns = require('./map_registry_grammar').textGrammar({fileName:filename}) === 'ikemen-cns';
+  const source = require('./unused_let_analysis').maskCommentsAndStrings(text, cns ? ';' : '#');
   const bg = blocks('modifyStageBG', source).map((item) => ({ ...item, target: numbers(/\bID\s*:\s*(-?\d+)/gi, item.body)[0] ?? -1 }));
   const ctrl = blocks('modifyBGCtrl', source).map((item) => ({ ...item, target: numbers(/\b(?:ID|sctrlID)\s*:\s*(-?\d+)/gi, item.body)[0] ?? -1 }));
   const vars = blocks('modifyStageVar', source).map((item) => ({ ...item, parameters: names(/\b([a-z][\w.]+)\s*:/gi, item.body) }));
@@ -43,7 +44,7 @@ function scanStageIntegration(text, filename = '') {
 }
 
 function crossReferenceStage(model, scans) {
-  const issues = [], bgIds = new Set(model.backgrounds.filter((item) => item.id !== null).map((item) => item.id));
+  const issues = [], bgIds = new Set(model.backgrounds.map((item) => item.id ?? 0));
   const ctrlIds = new Set(model.controllers.filter((item) => item.sctrlid !== null).map((item) => item.sctrlid));
   const constants = new Set(Object.keys(model.constants).map((name) => name.toLowerCase()));
   for (const scan of scans) {

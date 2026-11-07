@@ -3,7 +3,7 @@
 const { parseDef, normalize } = require('./def_model');
 
 const CURRENT_SCHEMA = 1;
-const KINDS = Object.freeze(['stage-background', 'storyboard-scene', 'ui-element-group']);
+const KINDS = Object.freeze(['stage-background', 'stage-assembly', 'storyboard-scene', 'ui-element-group']);
 
 function clean(value, fallback = '') { return String(value == null ? '' : value).replace(/[\r\n]/g, ' ').trim() || fallback; }
 function slug(value) { return clean(value, 'component').toLowerCase().replace(/[^a-z0-9_.-]+/g, '-').replace(/^-+|-+$/g, '') || 'component'; }
@@ -11,6 +11,7 @@ function eolOf(text) { return String(text).includes('\r\n') ? '\r\n' : '\n'; }
 function cloneEntries(entries) { return (entries || []).map(item => ({ key: clean(item.key), value: String(item.value == null ? '' : item.value) })).filter(item => item.key); }
 
 function normalizeComponent(raw = {}) {
+  if(raw.kind==='stage-assembly')return require('./stage_assembly_model').normalizeAssembly(raw);
   const kind = KINDS.includes(raw.kind) ? raw.kind : '';
   if (!kind) throw new Error('Choose a Stage, Storyboard, or UI component type.');
   const name = clean(raw.name, 'Reusable component'), entries = cloneEntries(raw.entries);

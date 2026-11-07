@@ -83,9 +83,9 @@ function render(owner) {
   } else owner.contract = null;
   owner.panel.webview.html = renderShaderWorkshopHtml(snapshot, {
     resourceSource: owner.panel.webview.cspSource,
-    toolbarHtml: renderUniversalToolbar(model, { surfaceId: SURFACE, label: 'IKEMaker universal actions' }),
+    toolbarHtml: require('./shared_workspace_header').html('shader', model),
     toolbarStyle: universalToolbarStyle(),
-    toolbarClient: universalToolbarClientScript({ vscodeVariable: 'vscode' }),
+    toolbarClient: require('./shared_workspace_header').clientScript(),
     rendererScript, rendererError
   });
 }
@@ -112,6 +112,7 @@ function createToolbarDispatcher(vscode, owner) {
 
 async function handleMessage(vscode, owner, message) {
   if (message?.type === MESSAGE_TYPE) return owner.toolbar.dispatch(SURFACE, message);
+  if (require('./shared_workspace_header').isSharedMessage(message) && await require('./shared_workspace_header').handle(message, { panel: owner.panel, filename: owner.source?.filename || '', disposed: owner.disposed }, 'shader')) return true;
   if (message?.type === 'request-preview-frame') {
     if (!exactMessage(message, ['type', 'generation', 'frame']) || message.generation !== owner.session.snapshot().generation || !Number.isSafeInteger(message.frame)) return false;
     const packet = previewPacket(owner, message.frame);
@@ -132,6 +133,7 @@ function createOwner(vscode, context) {
     VIEW_TYPE, 'Shader Workshop', preferredViewerColumn(vscode.ViewColumn.Beside),
     { enableScripts: true, retainContextWhenHidden: true, localResourceRoots: [] }
   ));
+  require('./shared_workspace_header').attachObserver(panel, SURFACE);
   const owner = {
     panel, session: createShaderWorkshopSession({ id: 'shader-workshop', name: 'Shader Workshop' }),
     bridge: createShaderPreviewSourceBridge({ getLiveDocument: filename => liveDocument(vscode, filename) }),

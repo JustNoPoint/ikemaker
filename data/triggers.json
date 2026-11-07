@@ -671,12 +671,12 @@
   {
     "name": "HitDefVar",
     "signature": "HitDefVar(param)",
-    "description": "Returns information about the player's currently active HitDef or ReversalDef. The parameter format is the same as in the HitDef state controller. Note: When the player has no active HitDef or ReversalDef, this trigger will return the default values of each parameter. It is generally advised to check if a HitDef or ReversalDef is active first with HitDefAttr or ReversalDefAttr.",
+    "description": "Returns information about the player's currently active HitDef or ReversalDef. The parameter format is the same as in the HitDef state controller. Note: When the player has no active HitDef or ReversalDef, this trigger will return the default values of each parameter. It is generally advised to check if a HitDef or ReversalDef is active first with HitDefAttr or ReversalDefAttr. Fall-velocity parameter names are fall.xvelocity, fall.yvelocity and fall.zvelocity; values are scaled to the caller’s local coordinates.",
     "arguments": "param",
+    "argumentSlots": [{"position": 0, "name": "param", "type": "parameter name", "meaning": "Choose a HitDefVar parameter; other compiler-supported names may be entered manually.", "choices": [{"value":"fall.xvelocity","type":"float","meaning":"Active HitDef fall X velocity, scaled to the caller’s local coordinates."},{"value":"fall.yvelocity","type":"float","meaning":"Active HitDef fall Y velocity, scaled to the caller’s local coordinates."},{"value":"fall.zvelocity","type":"float","meaning":"Active HitDef fall Z velocity, scaled to the caller’s local coordinates."}]}],
     "returnType": "Varies. See details",
     "kind": "trigger",
     "status": "new",
-    "capabilityId": "combat.hitdef-var-trigger",
     "source": "Triggers-(new).md",
     "url": "https://potsmugen.github.io/ikemen-merged-docs/triggers#new_hitdefvar",
     "capabilityAugmentations": [{

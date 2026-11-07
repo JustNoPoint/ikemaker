@@ -65,7 +65,7 @@ function referenceExists(filename,kind,reference) {
     const document=require('vscode').workspace.textDocuments.find(doc=>assetKey(doc.fileName)===assetKey(filename));
     const text=document?document.getText():fs.readFileSync(filename,'utf8');
     const scenes=require('./storyboard_model').storyboardModel(require('./def_model').parseDef(text)).scenes;
-    return Number.isInteger(reference.sceneNumber)&&scenes.filter(scene=>scene.number===reference.sceneNumber).length===1;
+    return typeof reference.sceneKey==='string'?scenes.filter(scene=>scene.key===reference.sceneKey).length===1:Number.isInteger(reference.sceneNumber)&&scenes.filter(scene=>scene.number===reference.sceneNumber).length===1;
   }
   if(!Number.isInteger(reference?.group))return true;
   if(kind==='air'){
@@ -107,7 +107,7 @@ async function openPresetPoint(point, column, onRestored) {
   }
   if (point.reference && !referenceExists(point.filename, point.kind, point.reference)) return false;
   let opened;
-  if (point.kind === 'air') opened = await require('./air_viewer').openAirPreview(vscode.Uri.file(point.filename), {preserveFocus:true,action:point.reference?.group});
+  if (point.kind === 'air') opened = await require('./air_viewer').openAirPreview(vscode.Uri.file(point.filename), {preserveFocus:true,action:point.reference?.group,frameIndex:point.reference?.frameIndex});
   else {
     const command = {workflow:'ikemen.productionWorkflow.open',roster:'ikemen.selectDef.openWorkspace',health:'ikemen.characterHealth.open',connections:'ikemen.characterDependencies.open',tests:'ikemen.testSessions.open',project_manager:'ikemen.projectManager.open',mutation_history:'ikemen.mutations.openHistory',cns_converter:'ikemen.cnsConverter.open',menu_modes:'ikemen.menuModes.openCreator',story_dialogue:'ikemen.storyDialogue.openCreator',palette_index_organizer:'ikemen.paletteOrganizer.open',artist_intake:'ikemen.artistIntake.open',sff_assembly:'sff.openAssembly',move_lab:'ikemen.moveLab.open',spatial_composer:'ikemen.explodComposer.open',helper:'ikemen.helperLab.open',throw_creator:'ikemen.throwCreator.open',hitdef:'ikemen.hitDef.openEditor',palfx_editor:'zss.openPalFxEditor',screenpack:'ikemen.ui.openWorkspace',sff:'sff.openViewer',snd:'snd.openViewer',constants:'ikemen.moveConstants.open',storyboard:'ikemen.storyboard.open',code:'ikemen.codeStructure.openWorkspace',stage:'ikemen.stage.openWorkspace',commands:'ikemen.commandMovelist.openEditor'}[point.kind];
     if (!command) return false;
@@ -135,7 +135,7 @@ async function openHistoryPoint(point) {
     return ok;
   }
   let opened;
-  if(point.kind==='air')opened=await require('./air_viewer').openAirPreview(vscode.Uri.file(point.filename),{preserveFocus:false,action:point.reference?.group});
+  if(point.kind==='air')opened=await require('./air_viewer').openAirPreview(vscode.Uri.file(point.filename),{preserveFocus:false,action:point.reference?.group,frameIndex:point.reference?.frameIndex});
   const command={sff:'sff.openViewer',snd:'snd.openViewer',constants:'ikemen.moveConstants.open',storyboard:'ikemen.storyboard.open',code:'ikemen.codeStructure.openWorkspace',stage:'ikemen.stage.openWorkspace',commands:'ikemen.commandMovelist.openEditor'}[point.kind];
   if(command)opened=await vscode.commands.executeCommand(command,vscode.Uri.file(point.filename),point.kind==='constants'?{history:true}:undefined,point.reference,point.kind==='sff'?{ownerDef:point.archiveContext?.ownerDef}:undefined);
   if(opened){const panel=opened.panel||opened,ok=await panelReady(panel)&&await restorePanel(panel,point);if(ok)await rememberArchive(point.filename,point.archiveContext);return ok;}
@@ -188,15 +188,15 @@ async function openSource(origin,fromPoint) {
       if(attachment?.aborted===true)return false;
       if(attachment?.attached===true){
         const visible=(vscode.window.visibleTextEditors||[]).find(editor=>assetKey(editor.document?.fileName)===assetKey(filename)),editor=visible||((vscode.window.activeTextEditor&&assetKey(vscode.window.activeTextEditor.document?.fileName)===assetKey(filename))?vscode.window.activeTextEditor:null),selection=new vscode.Range(line,character,line,character);
-        if(editor){editor.selection=selection;editor.revealRange?.(selection);await vscode.window.showTextDocument(document,{preview:false,preserveFocus:false,viewColumn:editor.viewColumn,selection});}
-        return true;
+        const nativeColumn=Number.isInteger(attachment.nativeColumn)&&attachment.nativeColumn>0?attachment.nativeColumn:editor?.viewColumn;
+        if(nativeColumn){await require('./native_source_focus').showNativeSource(vscode,document,{preview:false,viewColumn:nativeColumn,selection});return true;}
       }
     }catch(_){/* Older hosts fall through to the native source route. */}
   }
   const visible=(vscode.window.visibleTextEditors||[]).find(editor=>assetKey(editor.document?.fileName)===assetKey(origin.filename));
   const existingGroup=(vscode.window.tabGroups?.all||[]).find(group=>(group.tabs||[]).some(tab=>assetKey((tab.input?.uri||tab.input?.modified||tab.input?.original)?.fsPath)===assetKey(origin.filename)));
   const viewColumn=visible?.viewColumn||existingGroup?.viewColumn||origin.viewColumn||vscode.ViewColumn?.Beside;
-  await vscode.window.showTextDocument(document,{preview:false,preserveFocus:false,viewColumn,selection:new vscode.Range(line,character,line,character)});
+  await require('./native_source_focus').showNativeSource(vscode,document,{preview:false,viewColumn,selection:new vscode.Range(line,character,line,character)});
   return true;
 }
 async function openViewerSource(filename, requestedLine, fromPoint) {
@@ -354,7 +354,7 @@ async function openConnected(seed, target, reference, sourceOrigin, fromPoint, o
     const name = /^const\(\s*([\w.]+)\s*\)$/i.exec(reference.expression)?.[1];
     const document = vscode.workspace.textDocuments.find(doc => path.resolve(doc.fileName).toLowerCase() === path.resolve(assets.constants).toLowerCase());
     const constant = name && require('./move_constants_model').parseConstants(document ? document.getText() : fs.readFileSync(assets.constants, 'utf8')).byName.get(name.toLowerCase());
-    if (constant && target === 'air' && Number.isInteger(constant.value)) reference = {kind:target, group:constant.value};
+    if (constant && target === 'air' && Number.isInteger(constant.value)) reference = {...reference,expression:undefined,kind:target, group:constant.value};
   }
   if (target === 'source') {
     const files = [...new Set([seed, assets.def, ...assets.code].filter(f => f && fs.existsSync(f) && /\.(def|air|cns|st|zss|cmd|jnp|lua|txt)$/i.test(f)))];
@@ -373,12 +373,13 @@ async function openConnected(seed, target, reference, sourceOrigin, fromPoint, o
     const document=await vscode.workspace.openTextDocument(vscode.Uri.file(preferred));
     if(fromPoint?.panel){
       try{
+        require('./air_viewer').captureSourceReturnForPanel?.(fromPoint.panel,preferred);
         const attachment=await vscode.commands.executeCommand('ikemen.textToolbar.resumeFromVisualViewer',{files:ordered,selectedFile:preferred,preserveConnected:true,transitionPanel:fromPoint.panel,context});
         if(attachment?.aborted===true)return false;
         if(attachment?.attached===true){
           const visible=(vscode.window.visibleTextEditors||[]).find(editor=>assetKey(editor.document?.fileName)===assetKey(preferred)),editor=visible||((vscode.window.activeTextEditor&&assetKey(vscode.window.activeTextEditor.document?.fileName)===assetKey(preferred))?vscode.window.activeTextEditor:null);
-          if(editor)return vscode.window.showTextDocument(document,{viewColumn:editor.viewColumn,preview:false,preserveFocus:false});
-          return vscode.window.showTextDocument(document,{viewColumn:vscode.ViewColumn.Active,preview:false,preserveFocus:false});
+          const nativeColumn=Number.isInteger(attachment.nativeColumn)&&attachment.nativeColumn>0?attachment.nativeColumn:editor?.viewColumn||vscode.ViewColumn.Active;
+          return require('./native_source_focus').showNativeSource(vscode,document,{viewColumn:nativeColumn,preview:false});
         }
       }catch(error){
         void vscode.window.showErrorMessage('Could not create the Text Editor header: '+(error?.message||String(error)));
@@ -420,7 +421,7 @@ async function openConnected(seed, target, reference, sourceOrigin, fromPoint, o
   if(origin)rememberSource(filename,origin);
   let opened;
   if(target==='sff'&&reference?.paletteReturnContext)reference={...reference,paletteReturnContext:{...reference.paletteReturnContext,sffPath:path.resolve(filename),sffByteHash:require('./mutation_safety').hash(fs.readFileSync(filename))}};
-  if (target === 'air') opened=await require('./air_viewer').openAirPreview(vscode.Uri.file(filename), { preserveFocus: false, action: reference?.group, viewerColumn, ownerDef:def });
+  if (target === 'air') opened=await require('./air_viewer').openAirPreview(vscode.Uri.file(filename), { preserveFocus: false, action: reference?.group, frameIndex: reference?.frameIndex, viewerColumn, ownerDef:def });
   const command = { sff: 'sff.openViewer', snd: 'snd.openViewer' }[target];
   if (command) {
     // SFF takes session ownership fourth; SND reserves fourth for exact sound authority.

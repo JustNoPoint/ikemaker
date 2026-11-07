@@ -1,7 +1,0 @@
-IKEMaker 0.79.32 — Usable docking-panel evaluation
-
-- Corrects the Docking Prototype container identifier rejected by VS Code.
-- Opens four harmless, independently movable native Views in the bottom Panel.
-- Retains the separate editor probe for testing editor groups and floating VS Code windows.
-- Adds a packaging-level regression check for valid View-container IDs and matching View contributions.
-- The prototype remains non-writing and does not modify project files.

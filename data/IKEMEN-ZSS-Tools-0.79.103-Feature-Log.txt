@@ -1,8 +1,0 @@
-IKEMaker 0.79.103
-
-- Corrects the remaining uneven SFF quick-action button widths.
-- Moves the fixed 28 × 28 sizing rule into the nonce-authorized shared SFF stylesheet.
-- Removes the blocked runtime style insertion that caused SFF to render differently from AIR and SND.
-- Adds a regression check proving the compact sizing rule is present in the generated SFF viewer stylesheet.
-
-Verification: focused SFF layout, viewer, quick-control, and webview-policy tests passed. Full-suite verification completed before packaging.

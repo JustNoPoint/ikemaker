@@ -26,6 +26,16 @@ function parseStateDefaultAnimation(component){
  const action=Number(field.expression);if(!Number.isSafeInteger(action))return unavailable('The authored default anim exceeds the safe integer range.');
  return freeze({available:true,action,expression:field.expression,line:Number(component.startLine)+field.line,start:field.start,fieldStart:field.fieldStart,fieldEnd:field.fieldEnd,valueStart:field.valueStart,valueEnd:field.valueEnd});
 }
+// One decoration pass can inspect hundreds of states in the same AIR file.
+function indexAnimationActions(airText){
+ const actions=new Map();
+ for(const action of parseAir(airText)){
+  const matches=actions.get(action.number);
+  if(matches)matches.push(action);
+  else actions.set(action.number,[action]);
+ }
+ return {text:airText,actions};
+}
 function buildStateAnimationAuthority(component,context={}){
  const parsed=parseStateDefaultAnimation(component),unavailable=reason=>freeze({publicAnimation:freeze({available:false,action:parsed.action??null,reason}),authorities:new Map()});
  if(!parsed.available)return unavailable(parsed.reason);const defText=String(context.defText??''),sourceText=String(context.sourceText??''),airText=String(context.airText??''),defPath=path.resolve(context.defPath||''),airPath=path.resolve(context.airPath||''),assigned=(context.assignedSources||[]).map(canonical);
@@ -34,7 +44,7 @@ function buildStateAnimationAuthority(component,context={}){
  if(!assigned.includes(canonical(component.filename)))return unavailable('The selected StateDef source is no longer assigned by the character DEF.');
  if(!sourceText||Buffer.byteLength(sourceText,'utf8')>MAX_SOURCE_BYTES||hash(sourceText)!==component.sourceHash)return unavailable('The exact StateDef source is stale or exceeds the inspection limit.');
  if(!airPath||!airText||Buffer.byteLength(airText,'utf8')>MAX_AIR_BYTES)return unavailable('The assigned AIR is unavailable or exceeds the exact-navigation limit.');
- const matches=parseAir(airText).filter(item=>item.number===parsed.action);if(matches.length!==1)return unavailable(matches.length?`Assigned AIR has multiple Action ${parsed.action} blocks, so exact navigation is ambiguous.`:`Assigned AIR has no Action ${parsed.action}.`);
+ const index=context.animationIndex?.text===airText?context.animationIndex:indexAnimationActions(airText);const matches=index.actions.get(parsed.action)||[];if(matches.length!==1)return unavailable(matches.length?`Assigned AIR has multiple Action ${parsed.action} blocks, so exact navigation is ambiguous.`:`Assigned AIR has no Action ${parsed.action}.`);
  const action=matches[0],route=String(context.token?.(parsed.action)||'');if(!/^[0-9a-f]{48}$/.test(route))return unavailable('Exact navigation authority could not be issued.');
  const authority=freeze({schema:'ikemaker.state-animation-route',version:1,route,generation:Number(context.generation),componentIdentity:componentIdentity(component),stableId:String(component.stableId||''),syntax:component.syntax,stateSignature:String(component.signature||''),fieldLine:parsed.line,fieldStart:parsed.fieldStart,fieldEnd:parsed.fieldEnd,valueStart:parsed.valueStart,valueEnd:parsed.valueEnd,expression:parsed.expression,action:parsed.action,defPath,defHash:hash(defText),sourcePath:path.resolve(component.filename),sourceHash:component.sourceHash,startLine:component.startLine,endLine:component.endLine,rangeHash:component.rangeHash,airPath,airHash:hash(airText),line:action.line,actionHash:hash(JSON.stringify(action))}),authorities=new Map([[route,authority]]);
  return freeze({publicAnimation:freeze({available:true,action:parsed.action,file:path.basename(airPath),line:action.line,route}),authorities});
@@ -52,4 +62,4 @@ function validateStateAnimationOriginSource(origin,context={}){
  return Boolean(componentIdentity(component)===origin.componentIdentity&&parsed.available&&parsed.action===origin.action&&parsed.expression===origin.expression&&parsed.line===origin.fieldLine&&parsed.start===origin.fieldStart);
 }
 
-module.exports={MAX_DEF_BYTES,MAX_SOURCE_BYTES,MAX_AIR_BYTES,componentIdentity,parseStateDefaultAnimation,buildStateAnimationAuthority,validateStateAnimationAuthority,targetOrigin,validateStateAnimationOriginSource};
+module.exports={indexAnimationActions,MAX_DEF_BYTES,MAX_SOURCE_BYTES,MAX_AIR_BYTES,componentIdentity,parseStateDefaultAnimation,buildStateAnimationAuthority,validateStateAnimationAuthority,targetOrigin,validateStateAnimationOriginSource};

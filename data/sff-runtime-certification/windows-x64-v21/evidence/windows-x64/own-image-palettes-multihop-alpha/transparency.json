@@ -1,0 +1,3747 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "transparency",
+  "fixtureId": "own-image-palettes-multihop-alpha",
+  "fixtureByteHash": "29dc86077605200b7faebe789d78996fbcac5342fa112a13d91f526638bd9eca",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "own-image-palettes-multihop-alpha",
+    "sourceSha256": "29dc86077605200b7faebe789d78996fbcac5342fa112a13d91f526638bd9eca",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 40,
+        "number": 9,
+        "width": 4,
+        "height": 5,
+        "axisX": -15,
+        "axisY": 38,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 3,
+        "number": 700,
+        "width": 4,
+        "height": 5,
+        "axisX": 4,
+        "axisY": -5,
+        "paletteIndex": 1,
+        "link": 0
+      },
+      {
+        "physicalIndex": 2,
+        "group": 60000,
+        "number": 2,
+        "width": 4,
+        "height": 5,
+        "axisX": 99,
+        "axisY": -101,
+        "paletteIndex": 2,
+        "link": 1
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "expected": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "expected": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "expected": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "expected": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "expected": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "expected": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [
+      {
+        "physicalIndex": 1,
+        "link": 0
+      },
+      {
+        "physicalIndex": 2,
+        "link": 1
+      }
+    ],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "captures": [
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00000-g00040-i00009.png",
+      "capture": "Ikemen_GO038.png",
+      "sha256": "9d138d6301e47a0beccf854881da72a76a143ffbc37b1216ccf40b5d7676ce30",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            2,
+            48,
+            1
+          ],
+          "expected": [
+            2,
+            48,
+            1
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            8,
+            95,
+            5
+          ],
+          "expected": [
+            8,
+            95,
+            5
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            19,
+            142,
+            12
+          ],
+          "expected": [
+            19,
+            142,
+            12
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            33,
+            189,
+            21
+          ],
+          "expected": [
+            33,
+            189,
+            21
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            48,
+            220,
+            31
+          ],
+          "expected": [
+            48,
+            220,
+            31
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00000-g00040-i00009.png",
+      "capture": "Ikemen_GO039.png",
+      "sha256": "7bff5a7070a7d0e4ad5f548665d15c710046e10a503e4ae8fe11abc4250b19ee",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            209,
+            255,
+            208
+          ],
+          "expected": [
+            209,
+            255,
+            208
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            167,
+            254,
+            164
+          ],
+          "expected": [
+            167,
+            254,
+            164
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            130,
+            253,
+            123
+          ],
+          "expected": [
+            130,
+            253,
+            123
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            252,
+            84
+          ],
+          "expected": [
+            96,
+            252,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            79,
+            251,
+            62
+          ],
+          "expected": [
+            79,
+            251,
+            62
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 0,
+      "physicalIndex": 1,
+      "bg": 0,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00001-g00003-i00700.png",
+      "capture": "Ikemen_GO040.png",
+      "sha256": "9d138d6301e47a0beccf854881da72a76a143ffbc37b1216ccf40b5d7676ce30",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            2,
+            48,
+            1
+          ],
+          "expected": [
+            2,
+            48,
+            1
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            8,
+            95,
+            5
+          ],
+          "expected": [
+            8,
+            95,
+            5
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            19,
+            142,
+            12
+          ],
+          "expected": [
+            19,
+            142,
+            12
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            33,
+            189,
+            21
+          ],
+          "expected": [
+            33,
+            189,
+            21
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            48,
+            220,
+            31
+          ],
+          "expected": [
+            48,
+            220,
+            31
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 0,
+      "physicalIndex": 1,
+      "bg": 255,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00001-g00003-i00700.png",
+      "capture": "Ikemen_GO041.png",
+      "sha256": "7bff5a7070a7d0e4ad5f548665d15c710046e10a503e4ae8fe11abc4250b19ee",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            209,
+            255,
+            208
+          ],
+          "expected": [
+            209,
+            255,
+            208
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            167,
+            254,
+            164
+          ],
+          "expected": [
+            167,
+            254,
+            164
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            130,
+            253,
+            123
+          ],
+          "expected": [
+            130,
+            253,
+            123
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            252,
+            84
+          ],
+          "expected": [
+            96,
+            252,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            79,
+            251,
+            62
+          ],
+          "expected": [
+            79,
+            251,
+            62
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 0,
+      "physicalIndex": 2,
+      "bg": 0,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00002-g60000-i00002.png",
+      "capture": "Ikemen_GO042.png",
+      "sha256": "9d138d6301e47a0beccf854881da72a76a143ffbc37b1216ccf40b5d7676ce30",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            2,
+            48,
+            1
+          ],
+          "expected": [
+            2,
+            48,
+            1
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            8,
+            95,
+            5
+          ],
+          "expected": [
+            8,
+            95,
+            5
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            19,
+            142,
+            12
+          ],
+          "expected": [
+            19,
+            142,
+            12
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            33,
+            189,
+            21
+          ],
+          "expected": [
+            33,
+            189,
+            21
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            48,
+            220,
+            31
+          ],
+          "expected": [
+            48,
+            220,
+            31
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 0,
+      "physicalIndex": 2,
+      "bg": 255,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00002-g60000-i00002.png",
+      "capture": "Ikemen_GO043.png",
+      "sha256": "7bff5a7070a7d0e4ad5f548665d15c710046e10a503e4ae8fe11abc4250b19ee",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            209,
+            255,
+            208
+          ],
+          "expected": [
+            209,
+            255,
+            208
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            167,
+            254,
+            164
+          ],
+          "expected": [
+            167,
+            254,
+            164
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            130,
+            253,
+            123
+          ],
+          "expected": [
+            130,
+            253,
+            123
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            252,
+            84
+          ],
+          "expected": [
+            96,
+            252,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            79,
+            251,
+            62
+          ],
+          "expected": [
+            79,
+            251,
+            62
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00000-g00040-i00009.png",
+      "capture": "Ikemen_GO044.png",
+      "sha256": "9d138d6301e47a0beccf854881da72a76a143ffbc37b1216ccf40b5d7676ce30",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            2,
+            48,
+            1
+          ],
+          "expected": [
+            2,
+            48,
+            1
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            8,
+            95,
+            5
+          ],
+          "expected": [
+            8,
+            95,
+            5
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            19,
+            142,
+            12
+          ],
+          "expected": [
+            19,
+            142,
+            12
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            33,
+            189,
+            21
+          ],
+          "expected": [
+            33,
+            189,
+            21
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            48,
+            220,
+            31
+          ],
+          "expected": [
+            48,
+            220,
+            31
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00000-g00040-i00009.png",
+      "capture": "Ikemen_GO045.png",
+      "sha256": "7bff5a7070a7d0e4ad5f548665d15c710046e10a503e4ae8fe11abc4250b19ee",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            209,
+            255,
+            208
+          ],
+          "expected": [
+            209,
+            255,
+            208
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            167,
+            254,
+            164
+          ],
+          "expected": [
+            167,
+            254,
+            164
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            130,
+            253,
+            123
+          ],
+          "expected": [
+            130,
+            253,
+            123
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            252,
+            84
+          ],
+          "expected": [
+            96,
+            252,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            79,
+            251,
+            62
+          ],
+          "expected": [
+            79,
+            251,
+            62
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 1,
+      "physicalIndex": 1,
+      "bg": 0,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00001-g00003-i00700.png",
+      "capture": "Ikemen_GO046.png",
+      "sha256": "9d138d6301e47a0beccf854881da72a76a143ffbc37b1216ccf40b5d7676ce30",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            2,
+            48,
+            1
+          ],
+          "expected": [
+            2,
+            48,
+            1
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            8,
+            95,
+            5
+          ],
+          "expected": [
+            8,
+            95,
+            5
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            19,
+            142,
+            12
+          ],
+          "expected": [
+            19,
+            142,
+            12
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            33,
+            189,
+            21
+          ],
+          "expected": [
+            33,
+            189,
+            21
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            48,
+            220,
+            31
+          ],
+          "expected": [
+            48,
+            220,
+            31
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 1,
+      "physicalIndex": 1,
+      "bg": 255,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00001-g00003-i00700.png",
+      "capture": "Ikemen_GO047.png",
+      "sha256": "7bff5a7070a7d0e4ad5f548665d15c710046e10a503e4ae8fe11abc4250b19ee",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            209,
+            255,
+            208
+          ],
+          "expected": [
+            209,
+            255,
+            208
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            167,
+            254,
+            164
+          ],
+          "expected": [
+            167,
+            254,
+            164
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            130,
+            253,
+            123
+          ],
+          "expected": [
+            130,
+            253,
+            123
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            252,
+            84
+          ],
+          "expected": [
+            96,
+            252,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            79,
+            251,
+            62
+          ],
+          "expected": [
+            79,
+            251,
+            62
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 1,
+      "physicalIndex": 2,
+      "bg": 0,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00002-g60000-i00002.png",
+      "capture": "Ikemen_GO048.png",
+      "sha256": "9d138d6301e47a0beccf854881da72a76a143ffbc37b1216ccf40b5d7676ce30",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            2,
+            48,
+            1
+          ],
+          "expected": [
+            2,
+            48,
+            1
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            8,
+            95,
+            5
+          ],
+          "expected": [
+            8,
+            95,
+            5
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            19,
+            142,
+            12
+          ],
+          "expected": [
+            19,
+            142,
+            12
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            33,
+            189,
+            21
+          ],
+          "expected": [
+            33,
+            189,
+            21
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            48,
+            220,
+            31
+          ],
+          "expected": [
+            48,
+            220,
+            31
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    },
+    {
+      "fixtureId": "own-image-palettes-multihop-alpha",
+      "pass": 1,
+      "physicalIndex": 2,
+      "bg": 255,
+      "expectedPng": "expected/own-image-palettes-multihop-alpha-p00002-g60000-i00002.png",
+      "capture": "Ikemen_GO049.png",
+      "sha256": "7bff5a7070a7d0e4ad5f548665d15c710046e10a503e4ae8fe11abc4250b19ee",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            209,
+            255,
+            208
+          ],
+          "expected": [
+            209,
+            255,
+            208
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            167,
+            254,
+            164
+          ],
+          "expected": [
+            167,
+            254,
+            164
+          ]
+        },
+        {
+          "x": 3,
+          "y": 0,
+          "actual": [
+            130,
+            253,
+            123
+          ],
+          "expected": [
+            130,
+            253,
+            123
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            96,
+            252,
+            84
+          ],
+          "expected": [
+            96,
+            252,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            79,
+            251,
+            62
+          ],
+          "expected": [
+            79,
+            251,
+            62
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            66,
+            249,
+            42
+          ],
+          "expected": [
+            66,
+            249,
+            42
+          ]
+        },
+        {
+          "x": 3,
+          "y": 1,
+          "actual": [
+            77,
+            248,
+            49
+          ],
+          "expected": [
+            77,
+            248,
+            49
+          ]
+        },
+        {
+          "x": 0,
+          "y": 2,
+          "actual": [
+            88,
+            247,
+            56
+          ],
+          "expected": [
+            88,
+            247,
+            56
+          ]
+        },
+        {
+          "x": 1,
+          "y": 2,
+          "actual": [
+            99,
+            246,
+            63
+          ],
+          "expected": [
+            99,
+            246,
+            63
+          ]
+        },
+        {
+          "x": 2,
+          "y": 2,
+          "actual": [
+            110,
+            245,
+            70
+          ],
+          "expected": [
+            110,
+            245,
+            70
+          ]
+        },
+        {
+          "x": 3,
+          "y": 2,
+          "actual": [
+            121,
+            244,
+            77
+          ],
+          "expected": [
+            121,
+            244,
+            77
+          ]
+        },
+        {
+          "x": 0,
+          "y": 3,
+          "actual": [
+            132,
+            243,
+            84
+          ],
+          "expected": [
+            132,
+            243,
+            84
+          ]
+        },
+        {
+          "x": 1,
+          "y": 3,
+          "actual": [
+            143,
+            242,
+            91
+          ],
+          "expected": [
+            143,
+            242,
+            91
+          ]
+        },
+        {
+          "x": 2,
+          "y": 3,
+          "actual": [
+            154,
+            241,
+            98
+          ],
+          "expected": [
+            154,
+            241,
+            98
+          ]
+        },
+        {
+          "x": 3,
+          "y": 3,
+          "actual": [
+            165,
+            240,
+            105
+          ],
+          "expected": [
+            165,
+            240,
+            105
+          ]
+        },
+        {
+          "x": 0,
+          "y": 4,
+          "actual": [
+            176,
+            239,
+            112
+          ],
+          "expected": [
+            176,
+            239,
+            112
+          ]
+        },
+        {
+          "x": 1,
+          "y": 4,
+          "actual": [
+            187,
+            238,
+            119
+          ],
+          "expected": [
+            187,
+            238,
+            119
+          ]
+        },
+        {
+          "x": 2,
+          "y": 4,
+          "actual": [
+            198,
+            237,
+            126
+          ],
+          "expected": [
+            198,
+            237,
+            126
+          ]
+        },
+        {
+          "x": 3,
+          "y": 4,
+          "actual": [
+            209,
+            236,
+            133
+          ],
+          "expected": [
+            209,
+            236,
+            133
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json"
+    }
+  ]
+}

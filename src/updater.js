@@ -7,12 +7,11 @@ const knowledgeModel = require('./engine_knowledge_model');
 const engineModel = require('./engine_registry_model');
 const engineUpdateModel = require('./engine_update_model');
 const { notifyEngineCapabilitiesChanged } = require('./engine_capability_events');
-const BUILT_IN_ENGINE_CATALOG = require('../data/engine-capability-catalog.json');
+const { BUILT_IN_ENGINE_CATALOG, ENGINE_CATALOG_KEY, readEngineCatalog } = require('./engine_catalog_access');
 
 const SNAPSHOT_KEY = 'ikemenZss.upstreamSnapshot.v1';
 const REPORT_KEY = 'ikemenZss.upstreamReport.v1';
 const CATALOG_KEY = 'ikemenZss.controllerCatalog.v1';
-const ENGINE_CATALOG_KEY = 'ikemenZss.engineCapabilityCatalog.v1';
 const ENGINE_DECISIONS_KEY = 'ikemenZss.engineUpdateDecisions.v1';
 const SCTRL_URL = 'https://potsmugen.github.io/ikemen-merged-docs/sctrl';
 
@@ -304,8 +303,13 @@ function activeProject(vscode) {
   try {
     const projectContext = require('./project_context_ui'), contextModel = require('./project_context_model');
     const uri = projectContext.activeUri(), root = projectContext.contextRoot(uri) || projectContext.workspaceRoot(uri); if (!root) return null;
-    const loaded = projectContext.readRegistry(root), inferred = uri?.fsPath ? contextModel.contextFor(uri.fsPath, root, loaded.registry) : null;
-    const project = inferred?.project || loaded.registry.projects.find((item) => item.id !== 'universal') || loaded.registry.projects[0];
+    const loaded = projectContext.readRegistry(root);
+    // A synthetic default registry supplies authoring hints for new projects.
+    // Only an explicitly configured project can own a migration decision.
+    if (!loaded.exists || loaded.issues?.some(issue => issue.level === 'error')) return null;
+    const projects = loaded.registry.projects.filter(item => item.engineTarget?.commit);
+    const inferred = uri?.fsPath ? contextModel.contextFor(uri.fsPath, root, loaded.registry)?.project : null;
+    const project = inferred ? projects.find(item => item.id === inferred.id) : projects.length === 1 ? projects[0] : null;
     return project ? { root, loaded, project } : null;
   } catch (_) { return null; }
 }
@@ -354,7 +358,7 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
         const removed = [...changes.flatMap((item) => item.removed || []), ...(registryDiff ? registryDiff.removed : [])];
         const usages = await findWorkspaceUsages(vscode, removed, config.get('maxWorkspaceFiles', 1000), scopeDef);
         const scopeLabel = scopeDef ? vscode.workspace.asRelativePath(scopeDef, false) : '';
-        const currentEngineCatalog = context.globalState.get(ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG);
+        const currentEngineCatalog = readEngineCatalog(context);
         const engineRefresh = knowledgeModel.refreshCatalog(currentEngineCatalog, snapshot);
         let report = `${makeReport(snapshot, changes, registryDiff, usages, scopeLabel)}\n\nENGINE KNOWLEDGE CATALOG\nCatalog revision: ${engineRefresh.catalog.catalogRevision}\nExact/candidate builds known: ${engineRefresh.catalog.builds.length}\nCapabilities observed: ${engineRefresh.catalog.capabilities.length}\nRefresh promoted: ${engineRefresh.promoted ? 'yes' : 'no'}\nMetadata changed: ${engineRefresh.changed ? 'yes' : 'no'}\nValidation issues: ${engineRefresh.issues.length}`;
         const storedSnapshot = JSON.parse(JSON.stringify(snapshot));
@@ -412,5 +416,5 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
 module.exports = {
   SOURCES, BUILD_SOURCES, fetchText, extractFeatures, buildControllerCatalog, compareSnapshots,
   discoverBuilds, discoverCustomCatalogs, buildSnapshot, due, makeReport, parseDefSourcePaths, createUpdateMonitor,
-  ENGINE_CATALOG_KEY, ENGINE_DECISIONS_KEY, BUILT_IN_ENGINE_CATALOG, activeProject, newestNightly, offerProjectEngineDecision
+  ENGINE_CATALOG_KEY, ENGINE_DECISIONS_KEY, BUILT_IN_ENGINE_CATALOG, readEngineCatalog, activeProject, newestNightly, offerProjectEngineDecision
 };

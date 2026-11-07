@@ -1,4 +1,0 @@
-IKEMaker 0.79.148
-
-- Hardened Match Setup path validation so traversal-like paths cannot escape the selected chars or stages folder even when their text begins with the expected folder name.
-- Includes the shared Quick VS / Training Match Setup introduced in 0.79.147.

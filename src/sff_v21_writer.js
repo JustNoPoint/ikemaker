@@ -34,6 +34,7 @@ function assertSpecification(spec) {
   if (String(spec.target?.sffVersion) !== '2.1') fail('only SFF 2.1 is supported.');
   if (String(spec.specificationHash || '').toLowerCase() !== specificationHash(spec)) fail('specification hash is missing or does not match the reviewed content.');
   if (!Array.isArray(spec.sprites) || !Array.isArray(spec.palettes)) fail('reviewed sprite and palette lists are required.');
+  require('./sff_png8_optimization').assertLegacyOptimization(spec);
 }
 
 function preparePalettes(spec) {
@@ -74,7 +75,7 @@ function prepareSprites(spec, options, palettes) {
     if (format === 'png8') {
       let decoded; try { decoded = readIndexedPng8(png, { maxPixels: options.maxPixels }); } catch (error) { fail(`${label} is not accepted PNG8: ${error.message}`); }
       if (decoded.width !== width || decoded.height !== height) fail(`${label} PNG dimensions do not match its review.`);
-      decodedHash = decoded.decodedHash; decodedLength = width * height; png = canonicalizeEmbeddedPng8(png, { maxPixels: options.maxPixels });
+      decodedHash = decoded.decodedHash; decodedLength = width * height; png = canonicalizeEmbeddedPng8(png, { maxPixels: options.maxPixels }); png = require('./sff_png8_optimization').optimizedPng8(png, spec, { maxPixels: options.maxPixels });
     } else {
       let decoded; try { decoded = decodePng(png, { maximumPixels: options.maxPixels || 100000000, maximumDimension: 65535 }); } catch (error) { fail(`${label} is not accepted true-color PNG: ${error.message}`); }
       const expectedType = format === 'png24' ? 2 : 6;

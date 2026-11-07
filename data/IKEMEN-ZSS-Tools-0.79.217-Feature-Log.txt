@@ -1,8 +1,0 @@
-IKEMEN ZSS Tools 0.79.217
-
-Palette Workshop viewer-browser routing
-
-- Palette Workshop's Viewer Browser now opens the palette-focused companion browser instead of falling through to Coding Assistance.
-- The companion opens directly on its Palette Workshop view for the exact active SFF.
-- Its browser action remains an explicit toggle and retains the narrow floating-browser behavior.
-- AIR, SFF, and coding surfaces keep their existing distinct browser routes.

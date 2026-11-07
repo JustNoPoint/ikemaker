@@ -3,7 +3,7 @@
 const { classifyRuntimeValue, classifyArguments, summarizeRuntimeValue, summarizeArguments } = require('./runtime_value_kind');
 const { parseStateSource } = require('./state_transfer_model');
 const { enabledCapabilityIds } = require('./catalog_capability_filter');
-const TRIGGER_CATALOG=require('../data/triggers.json');
+const TRIGGER_CATALOG=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const TRIGGER_BY_NAME=new Map(TRIGGER_CATALOG.map(entry=>[String(entry.name||'').toLowerCase(),entry]).filter(([name])=>name));
 const TRIGGER_NAMES=new Set(TRIGGER_BY_NAME.keys());
 const CONTROLLER_BY_NAME=new Map(require('../data/sctrl.json').map(entry=>[String(entry.name||'').toLowerCase(),entry]).filter(([name])=>name));
@@ -794,14 +794,14 @@ function adjacentDocumentation(lines,line,{parameters=false,commentMarker='#'}={
 
 function adjacentFunctionDocumentation(lines,line){return adjacentDocumentation(lines,line,{parameters:true});}
 
-function collectRecords(text, file = '') {
+function collectRecords(text, file = '', options = {}) {
+  const legacy=options.languageId?options.languageId==='ikemen-cns':/\.(?:cns|cmd|st|inp|jnp)$/i.test(file),ini=options.languageId?options.languageId==='ikemen-def':/\.def$/i.test(file);
   const lines = text.split(/\r?\n/);
-  const functionHeaders = require('./zss_function_syntax').parseFunctionHeaders(text), functionHeadersByLine = new Map(functionHeaders.filter(value => value.valid).map(value => [value.line, value]));
-  const dynamicMapKeysByLine = new Map();for(const value of require('./nightly_string_assistance').dynamicMapKeySites(text)){if(!dynamicMapKeysByLine.has(value.line))dynamicMapKeysByLine.set(value.line,[]);dynamicMapKeysByLine.get(value.line).push(value);}
+  const functionHeaders = legacy||ini?[]:require('./zss_function_syntax').parseFunctionHeaders(text), functionHeadersByLine = new Map(functionHeaders.filter(value => value.valid).map(value => [value.line, value]));
+  const dynamicMapKeysByLine = new Map();for(const value of legacy||ini?[]:require('./nightly_string_assistance').dynamicMapKeySites(text)){if(!dynamicMapKeysByLine.has(value.line))dynamicMapKeysByLine.set(value.line,[]);dynamicMapKeysByLine.get(value.line).push(value);}
   const records = { maps: [], variables: [], locals: [], redirects: [], controllers: [], triggers: [], constants: [], commands: [], functions: [], calls: [], states: [], stateReferences: [], resources: [], functionSyntaxErrors: functionHeaders.flatMap(value => value.errors || []) };
   const add = (bucket, name, line, start, extra = {}) => records[bucket].push({ name, line, start, file, ...extra });
   let owner = null, section = '', sectionLine=-1,scopeParameters=new Set(),scopeLocals=new Set();
-  const legacy=/\.(?:cns|cmd|st)$/i.test(file),ini=/\.def$/i.test(file);
   const stringOperandsByLine=new Map();if(!legacy&&!ini)for(const source of [runtimeStringControllerOperands(lines),expandedStringTriggerOperands(lines)])for(const [line,values] of source)stringOperandsByLine.set(line,[...(stringOperandsByLine.get(line)||[]),...values]);
   const ownerByLine = [];
 
@@ -884,7 +884,7 @@ function collectRecords(text, file = '') {
       while((localMatch=localPattern.exec(line))){const name=localMatch[1],kind=scopeParameters.has(name)?'parameter':'local',rest=line.slice(localMatch.index+localMatch[0].length),write=/^\s*(?::=|=)\s*([^;{}]*)/.exec(rest),access=write?'write':'read',observed=String(write?.[1]||'').trim(),commandOperand=commandOperands.find(value=>value.kind==='local'&&value.name===name&&localMatch.index===value.start),stringOperand=stringOperands.find(value=>value.kind==='local'&&value.name===name&&localMatch.index>=value.start&&localMatch.index<value.start+value.length);add('locals',name,lineNumber,localMatch.index,{access,declaration:false,localKind:kind,sigil:'$',identity:`${owner.ownerKind}:${owner.ownerName}:${owner.ownerLine}:${name}`,metadata:{scope:scopeLabel,kind,declared:String(scopeParameters.has(name)||scopeLocals.has(name)),...(commandOperand?{usage:'dynamic command name','command trigger':commandOperand.trigger,commandVisibilityCapabilityId:'command.nightly-expressions'}:{}),...(stringOperand?.metadata||{})},observedValue:observed,valueKind:observed?classifyRuntimeValue(observed).kind:'unknown',valueSummary:observed?summarizeRuntimeValue(observed):'',...owner});}
     }
     ownerByLine[lineNumber] = owner ? { ...owner } : null;
-    for (const call of callRecords(line)) add('calls', call.name, lineNumber, call.start, { arity: call.arity, args: call.args, argumentKinds:classifyArguments(call.args), argumentSummaries:summarizeArguments(call.args), ...(owner || {}) });
+    for (const call of legacy||ini?[]:callRecords(line)) add('calls', call.name, lineNumber, call.start, { arity: call.arity, args: call.args, argumentKinds:classifyArguments(call.args), argumentSummaries:summarizeArguments(call.args), ...(owner || {}) });
   });
   const uncommentedLines=lines.map(line=>legacy?withoutLegacyComment(line):withoutComment(line)),uncommented=uncommentedLines.join('\n'),resourceStructure=uncommentedLines.map(withoutStrings).join('\n');
   const addResourceMatches=(kind,controller,field,role,access)=>{

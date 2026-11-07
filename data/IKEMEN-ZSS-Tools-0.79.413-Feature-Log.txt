@@ -1,8 +1,0 @@
-IKEMaker 0.79.413 — Safe grouped-swatch selection
-
-- Clicking a color inside a named swatch group now selects or deselects it instead of removing it.
-- Grouped colors use the same selection state as source colors and can drive Darken Unselected, Lighten Unselected, thumbnail filtering, and other palette actions.
-- Selected grouped colors receive a visible focus outline.
-- Each group now has an explicit Remove Selected action.
-- The former ambiguous Remove action is labeled Remove Group.
-- Shift-clicking grouped colors follows the shared range-selection behavior.

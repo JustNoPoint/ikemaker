@@ -4,6 +4,7 @@ const path=require('path');
 const {hash}=require('./mutation_safety');
 const {parseStateSource}=require('./state_transfer_model');
 const {resolveHelperHandoff}=require('./helper_handoff');
+const {inspectSource}=require('./helper_authoring_model');
 const {MAX_DEF_BYTES}=require('./projectile_air_authority');
 const {exactStateNumber,buildStateDestinationSnapshot,findUniqueStateDestination}=require('./exact_state_destination_authority');
 
@@ -27,8 +28,9 @@ function buildHelperStateAuthority(component,context={}){
  const defPath=path.resolve(context.defPath||''),defText=String(context.defText??'');if(!defPath||!defText||Buffer.byteLength(defText,'utf8')>MAX_DEF_BYTES)return none('','The character DEF is unavailable or exceeds the exact-assignment limit.');
  const snapshot=context.stateSnapshot||buildStateDestinationSnapshot(context),sources=snapshot?.sources;if(!sources||!snapshotMatchesContext(snapshot,context))return none('','The complete assigned state-source inventory is unavailable, stale, or exceeds its bounded inspection limit.');
  const source=sources.find(item=>canonical(item.filename)===canonical(component.filename));if(!source||source.sourceHash!==component.sourceHash||String(context.sourceText??'')!==source.text)return none('','The Helper source is no longer one exact assigned state source.');
- const handoff=resolveHelperHandoff(component,{defPath,assignedFiles:context.assignedSources,sourceText:source.text,allowDynamicId:true});if(!handoff)return none('','The exact authored Helper creation controller could not be proven.');
- const parsedSource=parseStateSource(source.text,source.filename,component.syntax==='cns'?'ikemen-cns':'zss'),transfers=parsedSource.transfers.filter(item=>item.kind==='helper'&&String(item.field).toLowerCase()==='stateno'&&sameControllerRange(item,handoff.evidence,source.text));
+ const cache=context.previewCache,inspectionCache=cache?.helperInspections;let inspectedSource=inspectionCache?.get(source);if(inspectionCache&&!inspectedSource){inspectedSource={filename:source.filename,sourceHash:source.sourceHash,value:inspectSource({filename:source.filename,text:source.text})};inspectionCache.set(source,inspectedSource)}
+ const handoff=resolveHelperHandoff(component,{defPath,assignedFiles:context.assignedSources,sourceText:source.text,allowDynamicId:true,inspectedSource});if(!handoff)return none('','The exact authored Helper creation controller could not be proven.');
+ const parsedCache=cache?.helperParses;let parsedSource=parsedCache?.get(source);if(!parsedSource){parsedSource=parseStateSource(source.text,source.filename,component.syntax==='cns'?'ikemen-cns':'zss');parsedCache?.set(source,parsedSource)}const transfers=parsedSource.transfers.filter(item=>item.kind==='helper'&&String(item.field).toLowerCase()==='stateno'&&sameControllerRange(item,handoff.evidence,source.text));
  if(transfers.length!==1)return none('',transfers.length?'The Helper has multiple starting-state fields; resolve them in source first.':'No exact authored Helper starting state was found.');
  const transfer=transfers[0],expression=String(transfer.expression||'');if(transfer.dynamic||transfer.ambiguous||transfer.malformed||transfer.structurallyInvalid||transfer.redirected)return none(expression,'The Helper starting state is dynamic, ambiguous, malformed, or redirected.');
  const state=exactStateNumber(expression);if(!state||transfer.literal!==state.number)return none(expression,'Only an authored nonnegative static safe-integer starting state can be opened exactly.');

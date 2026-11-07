@@ -104,8 +104,12 @@ function controllerEndLine(lines,startLine,syntax,fallback){
  }
  return fallback;
 }
-function exactLineSlice(text,startLine,endLine){
- const starts=[0];for(let at=0;at<text.length;at++)if(text[at]==='\n')starts.push(at+1);
+function lineStarts(text) {
+ const starts = [0];
+ for (let at = text.indexOf('\n'); at !== -1; at = text.indexOf('\n', at + 1)) starts.push(at + 1);
+ return starts;
+}
+function exactLineSlice(text,starts,startLine,endLine){
  const start=starts[startLine]??text.length,next=starts[endLine+1]??text.length;
  let end=next;while(end>start&&(text[end-1]==='\n'||text[end-1]==='\r'))end--;
  return text.slice(start,end);
@@ -114,12 +118,12 @@ function specialistComponentModel(assets,openDocuments=[],diagnostics=[]){
  const components=[],failures=[],wanted={helper:'helper',explod:'explod',projectile:'projectile'};
  for(const filename of (assets.code||[]).filter(file=>file&&fs.existsSync(file))){
   try{
-   const text=readCurrent(filename,openDocuments),sourceHash=hash(text),lines=text.split(/\r?\n/),tree=parseCodeStructure(text,language(filename),filename),syntax=tree.language||language(filename),counts={helper:0,explod:0,projectile:0};
+   const text=readCurrent(filename,openDocuments),sourceHash=hash(text),starts=lineStarts(text),lines=text.split(/\r?\n/),tree=parseCodeStructure(text,language(filename),filename),syntax=tree.language||language(filename),counts={helper:0,explod:0,projectile:0};
    const visit=(node,ancestors=[])=>{
     for(const child of node.children||[]){
      const kind=child.kind==='controller'?wanted[String(child.title||'').trim().toLowerCase()]:null;
      if(kind){
-      const index=counts[kind]++,line=child.startLine,endLine=controllerEndLine(lines,line,syntax,child.endLine),sourceText=exactLineSlice(text,line,endLine),rangeHash=hash(sourceText),stableId=`${canonical(filename)}:${kind}:${line}:${endLine}:${rangeHash}`,owner=ancestors.slice().reverse().find(item=>['state','function'].includes(item.kind)),contextPath=lexicalContextPath(lines,(owner?.startLine??-1)+1,line,syntax),relevant=diagnostics.filter(problem=>canonical(problem.filename||problem.uri?.fsPath)===canonical(filename)&&Number(problem.line??problem.range?.start?.line??-1)>=line&&Number(problem.line??problem.range?.start?.line??-1)<=endLine).map(problem=>({filename:problem.filename||problem.uri?.fsPath,line:problem.line??problem.range?.start?.line??line,character:problem.character??problem.range?.start?.character??0,severity:problem.severity,message:problem.message,source:problem.source||'IKEMEN',code:String(problem.diagnosticCode??problem.code??'')}));
+      const index=counts[kind]++,line=child.startLine,endLine=controllerEndLine(lines,line,syntax,child.endLine),sourceText=exactLineSlice(text,starts,line,endLine),rangeHash=hash(sourceText),stableId=`${canonical(filename)}:${kind}:${line}:${endLine}:${rangeHash}`,owner=ancestors.slice().reverse().find(item=>['state','function'].includes(item.kind)),contextPath=lexicalContextPath(lines,(owner?.startLine??-1)+1,line,syntax),relevant=diagnostics.filter(problem=>canonical(problem.filename||problem.uri?.fsPath)===canonical(filename)&&Number(problem.line??problem.range?.start?.line??-1)>=line&&Number(problem.line??problem.range?.start?.line??-1)<=endLine).map(problem=>({filename:problem.filename||problem.uri?.fsPath,line:problem.line??problem.range?.start?.line??line,character:problem.character??problem.range?.start?.character??0,severity:problem.severity,message:problem.message,source:problem.source||'IKEMEN',code:String(problem.diagnosticCode??problem.code??'')}));
       const contextText=contextPath.map(item=>item.signature||item.title||'').join('\n'),component={kind,id:stableId,stableId,filename,fileLabel:path.basename(filename),index,line,startLine:line,endLine,signature:String(child.signature||child.title||'').trim(),title:`${child.title} creation site ${index+1}`,label:`${child.title} creation site ${index+1}`,syntax,sourceHash,rangeHash,sourceText,text:sourceText,shared:sharedSource(filename,assets),diagnostics:relevant,owner:ownerSummary(owner),contextPath,receiverHints:receiverHints(`${contextText}\n${sourceText}`,syntax),helperMapBindings:kind==='helper'?existingBindings(sourceText,syntax):[]};
       component.reference=componentReference(component,assets.defPath||assets.def);components.push(component);
      }
@@ -135,10 +139,10 @@ function behaviorComponentModel(assets,openDocuments=[],diagnostics=[]){
  const components=[],failures=[];
  for(const filename of (assets.code||[]).filter(file=>file&&fs.existsSync(file))){
   try{
-   const text=readCurrent(filename,openDocuments),sourceHash=hash(text),lines=text.split(/\r?\n/),tree=parseCodeStructure(text,language(filename),filename),nodes=flatten(tree).filter(item=>['state','function'].includes(item.kind));
+   const text=readCurrent(filename,openDocuments),sourceHash=hash(text),starts=lineStarts(text),lines=text.split(/\r?\n/),tree=parseCodeStructure(text,language(filename),filename),nodes=flatten(tree).filter(item=>['state','function'].includes(item.kind));
    const counts={state:0,function:0};
    for(const item of nodes){
-    const kind=item.kind,index=counts[kind]++,line=item.startLine,endLine=item.endLine,sourceText=lines.slice(line,endLine+1).join('\n'),signature=String(item.signature||item.title||'').trim();
+    const kind=item.kind,index=counts[kind]++,line=item.startLine,endLine=item.endLine,sourceText=exactLineSlice(text,starts,line,endLine).split(/\r?\n/).join('\n'),signature=String(item.signature||item.title||'').trim();
     // Draft identity deliberately includes the original range and bytes. Inserting,
     // deleting, or changing another parsed block must orphan a retained draft rather
     // than silently attaching it to the next ordinal component.

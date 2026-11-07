@@ -1,0 +1,514 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "linkedData",
+  "fixtureId": "reserved-group-negative",
+  "fixtureByteHash": "16de0601ab654df366868fbb269b35f34b6f2b1de41538b673e73953b6b3e73a",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "reserved-group-negative",
+    "sourceSha256": "16de0601ab654df366868fbb269b35f34b6f2b1de41538b673e73953b6b3e73a",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 65535,
+        "number": 65535,
+        "width": 3,
+        "height": 2,
+        "axisX": 0,
+        "axisY": 0,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [],
+    "missing": [
+      [
+        "missing",
+        "reserved-group-negative",
+        "0",
+        "65535",
+        "65535"
+      ],
+      [
+        "missing",
+        "reserved-group-negative",
+        "1",
+        "65535",
+        "65535"
+      ]
+    ],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "reserved-group-unaddressable",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank.",
+  "absence": "No linked sprite payloads exist in this fixture; zero-link table plus successful load/reopen checked.",
+  "captures": [
+    {
+      "fixtureId": "reserved-group-negative",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/reserved-group-negative-p00000-g65535-i65535.png",
+      "runtimeExpectation": "reserved-group-unaddressable",
+      "capture": "Ikemen_GO014.png",
+      "sha256": "008339beca378591fb72bb47ffe3772460ef4ea9c4d51999ec43577458f6333b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 160,
+          "y": 160,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 168,
+          "y": 168,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 184,
+          "y": 184,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 200,
+          "y": 184,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 319,
+          "y": 239,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 639,
+          "y": 479,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/reserved-group-negative/renderComparison.json"
+    },
+    {
+      "fixtureId": "reserved-group-negative",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/reserved-group-negative-p00000-g65535-i65535.png",
+      "runtimeExpectation": "reserved-group-unaddressable",
+      "capture": "Ikemen_GO015.png",
+      "sha256": "1720f7d22b285183b609fc116b76607a700bd1b025de343699716349f6c6793b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 160,
+          "y": 160,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 168,
+          "y": 168,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 184,
+          "y": 184,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 200,
+          "y": 184,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 319,
+          "y": 239,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 639,
+          "y": 479,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/reserved-group-negative/renderComparison.json"
+    },
+    {
+      "fixtureId": "reserved-group-negative",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/reserved-group-negative-p00000-g65535-i65535.png",
+      "runtimeExpectation": "reserved-group-unaddressable",
+      "capture": "Ikemen_GO016.png",
+      "sha256": "008339beca378591fb72bb47ffe3772460ef4ea9c4d51999ec43577458f6333b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 160,
+          "y": 160,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 168,
+          "y": 168,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 184,
+          "y": 184,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 200,
+          "y": 184,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 319,
+          "y": 239,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 639,
+          "y": 479,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/reserved-group-negative/renderComparison.json"
+    },
+    {
+      "fixtureId": "reserved-group-negative",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/reserved-group-negative-p00000-g65535-i65535.png",
+      "runtimeExpectation": "reserved-group-unaddressable",
+      "capture": "Ikemen_GO017.png",
+      "sha256": "1720f7d22b285183b609fc116b76607a700bd1b025de343699716349f6c6793b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 160,
+          "y": 160,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 168,
+          "y": 168,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 184,
+          "y": 184,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 200,
+          "y": 184,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 319,
+          "y": 239,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 639,
+          "y": 479,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/reserved-group-negative/renderComparison.json"
+    }
+  ]
+}

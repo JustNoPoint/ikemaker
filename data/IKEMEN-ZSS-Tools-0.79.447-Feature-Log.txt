@@ -1,7 +1,0 @@
-IKEMaker 0.79.447
-
-- Restored ZSS Registry discovery for character/game files opened without a useful VS Code workspace folder.
-- An empty workspace search now falls back to a bounded search rooted at the active project file.
-- Project Data labels the active-project scope instead of presenting a misleading empty workspace-wide inventory.
-- Preserved explicit Refresh, partial-scan, unreadable-file, and discovery-failure guidance.
-- Added regression coverage for workspace failure, partial scans, and active-project fallback discovery.

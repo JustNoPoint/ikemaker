@@ -1,9 +1,0 @@
-IKEMaker 0.79.422
-
-Unified template color drag and drop
-
-- Fixed thumbnail-filter colors failing to drop after the named-group panel had been sorted or rebuilt locally.
-- Source colors, thumbnail-filter colors, and existing named-group colors now use one exact-color drop path.
-- Named-group drop targets are resolved from the current live rows instead of stale row numbers.
-- Dropping a color moves it between groups without clearing the current focus selection or turning off Darken/Lighten.
-- The move remains in the protected local draft until Apply groups & repack is chosen.

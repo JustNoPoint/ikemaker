@@ -1,9 +1,18 @@
 'use strict';
 
 const def = require('./def_model');
+const {controllerTime, controllerIds} = require('./stage_controller_schedule');
+const {stageDepth} = require('./stage_depth');
+const {isAttachedDeclaration} = require('./stage_attached_declarations');
 
 function one(document, name) { return def.sections(document, name)[0] || { entries: [] }; }
 function optionalNumber(section, key) { const found = def.entry(section, key); return found ? def.number(found.value) : null; }
+// Match readI32ForStageMinLength: partial rectangles do not enable clipping.
+function windowRectangle(section, key) {
+  const found = def.entry(section, key);
+  if (!found || String(found.value).split(',').length < 4) return null;
+  return def.integerTuple(found.value, 4);
+}
 
 function background(section, order) {
   const map = def.sectionMap(section);
@@ -26,15 +35,16 @@ function background(section, order) {
     tileSpacing: def.tuple(map.tilespacing),
     scaleStart: def.tuple(map.scalestart || '1,1', 2, 1),
     scaleDelta: def.tuple(map.scaledelta),
-    zoomDelta: def.tuple(map.zoomdelta || '1,1', 2, 1),
+    zoomDelta: def.tuple(map.zoomdelta || '1,1', 2, def.number(map.zoomdelta,1)),
+    zoomDeltaSpecified: Boolean(def.entry(section, 'zoomdelta')),
     zoomScaleDelta: def.tuple(map.zoomscaledelta),
     xscale: def.entry(section, 'xscale') ? def.tuple(map.xscale, 2, 1) : null,
     width: def.entry(section, 'width') ? def.tuple(map.width) : null,
     yScaleStart: def.number(map.yscalestart, 100),
     yScaleDelta: def.number(map.yscaledelta, 0),
-    window: def.entry(section, 'window') ? def.tuple(map.window, 4) : null,
+    window: windowRectangle(section, 'window'),
     windowDelta: def.tuple(map.windowdelta),
-    maskWindow: def.entry(section, 'maskwindow') ? def.tuple(map.maskwindow, 4) : null,
+    maskWindow: windowRectangle(section, 'maskwindow'),
     trans: def.normalize(map.trans || 'none'),
     alpha: def.tuple(map.alpha || '256,0'),
     mask: def.number(map.mask, 0),
@@ -62,15 +72,28 @@ function stageModel(document) {
   const stage = def.sectionMap(stageSection), bound = def.sectionMap(boundSection), bg = def.sectionMap(bgDef);
   const localCoord = def.tuple(stage.localcoord || '320,240', 2, 0);
   const backgrounds = document.sections.filter((section) => /^bg(?:\s+.+)?$/i.test(section.name) && section.normalized !== 'bg').map(background);
-  const controllers = document.sections.filter((section) => /^bgctrl(?:\s+.+)?$/i.test(section.name)).map((section, order) => {
+  let controllerLoop = -1;
+  let groupTargets = [];
+  const targetsFor = ids => backgrounds.filter(bg=>ids.length===1 && ids[0]===-1 || ids.includes(bg.id??0) && (bg.id??0)>=0).map(bg=>bg.order);
+  const controllers = [];
+  for (const section of document.sections) {
+    if (/^bgctrldef(?:\s|$)/i.test(section.name)) {
+      controllerLoop = optionalNumber(section, 'looptime') ?? -1;
+      const ids = controllerIds(def.sectionMap(section).ctrlid);
+      groupTargets = targetsFor(ids.length ? ids : [-1]);
+      continue;
+    }
+    if (!/^bgctrl(?:\s|$)/i.test(section.name)) continue;
+    const order = controllers.length;
     const map = def.sectionMap(section);
-    return { order, name: section.name.replace(/^bgctrl\s*/i, '').trim() || `Controller ${order + 1}`, line: section.line, type: def.normalize(map.type), sctrlid: optionalNumber(section, 'sctrlid'), ctrlid: def.entry(section, 'ctrlid') ? def.integerTuple(map.ctrlid, String(map.ctrlid).split(',').length) : [], time: def.tuple(map.time, 3), value: map.value || '', x: optionalNumber(section, 'x'), y: optionalNumber(section, 'y'), raw: map };
-  });
-  const attachedChars = [];
-  for (let index = 0; index <= 4; index += 1) {
-    const key = index === 0 ? 'attachedchar' : `attachedchar${index}`;
-    if (infoMap[key]) attachedChars.push({ slot: index || 1, path: def.unquote(infoMap[key]) });
+    const ids = controllerIds(map.ctrlid);
+    const affectedBackgrounds = ids.length ? targetsFor(ids) : groupTargets;
+    controllers.push({ order, heading: section.name, affectedBackgrounds, name: section.name.replace(/^bgctrl\s*/i, '').trim() || `Controller ${order + 1}`, line: section.line, type: def.normalize(map.type), sctrlid: optionalNumber(section, 'sctrlid'), ctrlid: def.entry(section, 'ctrlid') ? def.integerTuple(map.ctrlid, String(map.ctrlid).split(',').length) : [], time: controllerTime(map.time, controllerLoop), value: map.value || '', x: optionalNumber(section, 'x'), y: optionalNumber(section, 'y'), raw: map });
   }
+  const attachedChars = [];
+  // Declaration order is useful for source navigation only. The runtime walks
+  // its parsed map and appends successful loads; suffixes do not assign slots.
+  for (const [key,value] of Object.entries(infoMap)) if(isAttachedDeclaration(key)) attachedChars.push({ key, path: def.unquote(value) });
   const roundDefs = Object.entries(infoMap).filter(([key]) => /^round\d+def$/.test(key)).map(([key, path]) => ({ round: Number(key.match(/\d+/)[0]), path: def.unquote(path) }));
   const starts = [];
   for (let index = 1; index <= 8; index += 1) starts.push({
@@ -97,13 +120,15 @@ function stageModel(document) {
       zoom: [def.number(camera.startzoom, 1), def.number(camera.zoomout, 1), def.number(camera.zoomin, 1)],
       autoZoom: def.number(camera.autozoom, 0) !== 0,
       autoCenter: def.number(camera.autocenter, 0) !== 0,
-      zoomAnchor: def.normalize(camera.zoomanchor || 'center'),
+      zoomAnchor: def.normalize(def.unquote(camera.zoomanchor || 'center')),
+      zoomAnchorSpecified: Boolean(def.entry(cameraSection, 'zoomanchor')),
       boundHighZoomDelta: optionalNumber(cameraSection, 'boundhighzoomdelta')
     },
-    stageInfo: { zOffset: def.number(stage.zoffset, localCoord[1] - 20), autoTurn: def.number(stage.autoturn, 1) !== 0, resetBg: def.number(stage.resetbg, 1) !== 0, xScale: def.number(stage.xscale, 1), yScale: def.number(stage.yscale, 1) },
+    stageInfo: { hires: def.number(stage.hires, 0) !== 0, zOffset: def.number(stage.zoffset, localCoord[1] - 20), zOffsetLink: optionalNumber(stageSection, 'zoffsetlink'), autoTurn: def.number(stage.autoturn, 1) !== 0, resetBg: def.number(stage.resetbg, 1) !== 0, xScale: def.number(stage.xscale, 1), yScale: def.number(stage.yscale, 1) },
     movementBounds: [def.number(players.leftbound, -1000), def.number(players.rightbound, 1000)],
     screenBounds: [def.number(bound.screenleft, 15), def.number(bound.screenright, 15)],
     playerStarts: starts,
+    depth: stageDepth(infoMap,players,def.sectionMap(one(document,'Scaling'))),
     backgrounds,
     controllers,
     attachedChars,
@@ -118,7 +143,7 @@ function parallaxDimensions(item, spriteWidth) {
   if (!item || item.type !== 'parallax') return null;
   const source = Math.max(1, Number(spriteWidth) || 1);
   if (item.width) return { top: Math.abs(item.width[0]), bottom: Math.abs(item.width[1]), source, mode: 'width' };
-  if (item.xscale) return { top: source * Math.abs(item.xscale[0]), bottom: source * Math.abs(item.xscale[1]), source, mode: 'xscale' };
+  if (item.xscale) return { top: source, bottom: source, raster: [...item.xscale], source, mode: 'xscale' }; // Native xscale controls raster scroll ratio, not sprite row width.
   return { top: source, bottom: source, source, mode: 'implicit' };
 }
 

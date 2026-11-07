@@ -7,6 +7,6 @@ function findBackground(backgrounds,ref){
 function clientScript(){return `const historyBackground=${findBackground.toString()};
  globalThis.ikemenNavigationSelection=()=>{const item=model.backgrounds[selected];return item?{backgroundName:item.name,backgroundType:item.type}:undefined;};
  globalThis.ikemenCanRestoreNavigation=ref=>!!historyBackground(model.backgrounds,ref);
- globalThis.ikemenRestoreNavigation=ref=>{const item=historyBackground(model.backgrounds,ref);if(!item)throw new Error('Background missing or ambiguous');const index=model.backgrounds.indexOf(item);if(index===selected)return;selected=index;list();inspect();render();};
+ globalThis.ikemenRestoreNavigation=ref=>{const item=historyBackground(model.backgrounds,ref);if(!item)throw new Error('Background missing or ambiguous');const index=model.backgrounds.indexOf(item);if(index===selected)return;finishMove(true);cancelSeamAlignment();cancelFloorAlignment();selected=index;selectedSet=new Set([index]);selectionAnchor=index;post('selectionChanged',{selected:index});list();inspect();render();};
 `;}
 module.exports={findBackground,clientScript};

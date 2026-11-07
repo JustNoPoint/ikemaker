@@ -1,2 +1,0 @@
-IKEMaker 0.79.290
-Fix Code Navigation being incorrectly registered as a visual asset viewer and moved out of its reserved header group after tabs load. Preserve shared coding context without visual-viewer relocation. Eight focused suites passed; regression confirmed to fail against old registration behavior.

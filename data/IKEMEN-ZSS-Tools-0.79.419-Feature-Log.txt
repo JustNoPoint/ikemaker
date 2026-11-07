@@ -1,9 +1,0 @@
-IKEMaker 0.79.419
-
-Palette Workshop template colors
-
-- Added a visible Deselect all colors button beside the selected-color viewing controls.
-- The button reports the current selection count and disables itself when nothing is selected.
-- Renamed Clear focus to Stop darken/lighten so stopping the visual effect is distinct from clearing the selected colors.
-- Deselect all colors uses the existing authoritative clear-selection action and also removes the active darken/lighten preview.
-- Individual selected colors can still be deselected by clicking them again.

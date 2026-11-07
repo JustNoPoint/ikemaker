@@ -564,6 +564,33 @@ function facingCommandTrigger(options = {}) {
   return `(facing = 1 && command = "${right}") || (facing = -1 && command = "${left}")`;
 }
 
+const COMMAND_POSTURES = Object.freeze({
+  grounded: 'StateType != A',
+  standing: 'StateType = S',
+  crouching: 'StateType = C',
+  airborne: 'StateType = A',
+  any: ''
+});
+
+function mirroredAbsoluteMotion(command) {
+  const steps = commandStepLayout(command).steps;
+  const bases = steps.map(step => inputBasis(step.core));
+  if (!bases.includes('Absolute screen direction') || bases.some(basis => ['Facing-relative direction', 'Mixed absolute + facing-relative', 'Custom native input'].includes(basis))) return '';
+  return commandStepLayout(mirrorCommandDirections(command)).steps.map(step => normalizeCommandStepForReview(step.core)).join(',');
+}
+
+function motionCommandTrigger({ posture = 'grounded', name, leftName, rightName }) {
+  if (!Object.hasOwn(COMMAND_POSTURES, posture)) throw new Error('Choose a listed posture.');
+  const paired = leftName !== undefined || rightName !== undefined;
+  const names = paired ? [leftName, rightName] : [name];
+  if (names.some(value => typeof value !== 'string' || !value.trim() || /["\r\n]/.test(value))) {
+    throw new Error('Choose a valid command name for each input.');
+  }
+  const expression = paired ? facingCommandTrigger({ leftName, rightName }) : `command = "${name}"`;
+  const guard = COMMAND_POSTURES[posture];
+  return guard ? `${guard} && ${paired ? '(' + expression + ')' : expression}` : expression;
+}
+
 function aerialTurnPolicy(options = {}) {
   const mode = options.mode === 'distance' ? 'distance' : 'locked', distance = Math.max(0, Math.round(Number(options.distance) || 0));
   if (mode === 'locked') return `; Keep the current facing throughout aerial states.\nassertSpecial{flag: noAutoTurn}`;
@@ -637,5 +664,5 @@ function changeMovelistSnippet(slot) { return `[State Change Movelist]\ntype = C
 module.exports = {
   uncomment, parseCommands, splitSteps, stepModel, diagnosticsFor, commandDocumentTargetDiagnostics, commandBlock, commandBlockText, validateCommandBlockText, replaceCommandBlock, appendCommandBlock, insertCommandBlock, patchCommandBlock,
   parseMovelistAssignments, movelistPreview, changeMovelistSnippet, nativeInputAtoms, isMotion, finalButtons,
-  INSERTABLE_INPUTS, NIGHTLY_STAR_INPUTS, insertableInputs, nightlyCommandExpressionsEnabled, COMMAND_SEQUENCE_RECIPES, inputBasis, convertDirectionBasis, convertCommandDirectionBasis, combineNativeInput, editNativeStepModifier, releaseFinalButtons, mirrorNativeStep, mirrorCommandDirections, commandSyntaxLayout, commandStepLayout, replaceStepCores, editCommandSteps, mergeNormalizedEditorText, normalizeCommandStepForReview, commandConflictMatrix, commandAuthoringMode, commandInsertionReview, facingCommandTrigger, aerialTurnPolicy
+  INSERTABLE_INPUTS, NIGHTLY_STAR_INPUTS, insertableInputs, nightlyCommandExpressionsEnabled, COMMAND_SEQUENCE_RECIPES, inputBasis, convertDirectionBasis, convertCommandDirectionBasis, combineNativeInput, editNativeStepModifier, releaseFinalButtons, mirrorNativeStep, mirrorCommandDirections, commandSyntaxLayout, commandStepLayout, replaceStepCores, editCommandSteps, mergeNormalizedEditorText, normalizeCommandStepForReview, commandConflictMatrix, commandAuthoringMode, commandInsertionReview, facingCommandTrigger, COMMAND_POSTURES, motionCommandTrigger, mirroredAbsoluteMotion, aerialTurnPolicy
 };

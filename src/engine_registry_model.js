@@ -122,7 +122,9 @@ function validateCatalog(raw = {}) {
   return { catalog, issues, valid: !issues.some((item) => item.level === 'error') };
 }
 function capabilityStatus(catalogRaw, targetRaw, capabilityId, projectId = '') {
-  const catalog = normalizeCatalog(catalogRaw), target = normalizeTarget(targetRaw);
+  return capabilityStatusForTarget(normalizeCatalog(catalogRaw), normalizeTarget(targetRaw), capabilityId, projectId);
+}
+function capabilityStatusForTarget(catalog, target, capabilityId, projectId) {
   const capability = catalog.capabilities.find((item) => item.id === clean(capabilityId).toLowerCase());
   if (!capability) return { status: 'unknown', reason: 'No capability evidence is recorded.' };
   if (catalog.conflicts.some((item) => item.capabilityId === capability.id && item.status !== 'resolved')) return { status: 'conflicting', capability };
@@ -144,7 +146,7 @@ function capabilityStatus(catalogRaw, targetRaw, capabilityId, projectId = '') {
     const verifiedFallback = relevant.some((item) => item.status === 'verified' && ['runtime', 'project'].includes(item.domain));
     return { status: conflicting ? 'conflicting' : verifiedFallback ? 'fallback' : 'unverified', capability, inheritedFrom:fallback===target.buildId?null:fallback };
   }
-  return { status: 'unsupported', capability };
+  return { status: ['nightly','custom'].includes(target.channel) ? 'unverified' : 'unsupported', capability };
 }
 function normalizeInstalledRegistry(raw = {}) {
   return { schemaVersion: INSTALLED_SCHEMA, revision: Math.max(1, Number(raw.revision) || 1), builds: (raw.builds || []).map((item) => ({
@@ -186,4 +188,4 @@ function adoptProject(project, review, details = {}) {
 }
 function catalogDigest(catalog) { return crypto.createHash('sha256').update(JSON.stringify(normalizeCatalog(catalog))).digest('hex'); }
 
-module.exports = { TARGET_SCHEMA, CATALOG_SCHEMA, INSTALLED_SCHEMA, STABLE_BUILD_ID, STABLE_TARGET, normalizeBuild, normalizeTarget, targetFromBuild, normalizeCapability, normalizeCatalog, validateCatalog, capabilityStatus, normalizeInstalledRegistry, registerInstalled, adoptionReview, adoptProject, catalogDigest };
+module.exports = { capabilityStatusForTarget, TARGET_SCHEMA, CATALOG_SCHEMA, INSTALLED_SCHEMA, STABLE_BUILD_ID, STABLE_TARGET, normalizeBuild, normalizeTarget, targetFromBuild, normalizeCapability, normalizeCatalog, validateCatalog, capabilityStatus, normalizeInstalledRegistry, registerInstalled, adoptionReview, adoptProject, catalogDigest };

@@ -1,7 +1,0 @@
-IKEMaker 0.79.301
-
-- Palette Workshop's Browser icon now opens a distinct Palette Workshop Browser instead of the generic SFF Browser.
-- The companion browses exact SFF sprites and palettes and publishes the selection to the shared Palette Workshop session.
-- Workshop Tools provides direct routes to Banks & Color Editor, Remappen, Layers, and CS Masks.
-- Bank B, Remappen, layers, and masks retain one authoritative editor owner so drafts cannot diverge between windows.
-- Remappen old/new color assignment and exact-color swatch rendering from 0.79.300 remain covered by focused regression tests.

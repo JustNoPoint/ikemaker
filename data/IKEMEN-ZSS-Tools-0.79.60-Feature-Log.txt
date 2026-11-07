@@ -1,6 +1,0 @@
-IKEMaker 0.79.60
-
-- Palette Workshop controls are now available from the floating SFF workspace and route through the authoritative SFF viewer mutation owner.
-- Palette preview, ACT import/compare/replace/export, audits, master protection, library selection, batch insertion, shifting, variants, linked aliases, transformation slots, and staged review retain their existing confirmations and backups.
-- PalFX now opens in the floating SFF workspace's editor column rather than being routed back to the main window.
-- Existing Review, Display, Layer Preview, and Animations modes remain connected.

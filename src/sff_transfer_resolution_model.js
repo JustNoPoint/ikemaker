@@ -29,6 +29,13 @@ function planSffTransferResolution({ analysis, decisions = {}, destinationArchiv
   if (analysis?.schema !== 'ikemaker.sff-transfer-conflict-analysis' || analysis?.version !== 1) throw new Error('A current SFF Transfer conflict analysis is required.');
   if (!Array.isArray(destinationArchive?.sprites) || !Array.isArray(destinationArchive?.palettes)) throw new TypeError('The exact Destination SFF archive is required.');
   plain(decisions, 'Transfer decisions'); const byId = decisionMap(decisions.items), placement = resolvePlacement(analysis, decisions.placement, destinationArchive), used = new Set(destinationArchive.sprites.map(sprite => key(sprite.group, sprite.number))), destinationPalettes = new Set(destinationArchive.palettes.map(palette => palette.index)), items = [], unresolved = [];
+  // Reserve unconflicted authored IDs before allocating next-free IDs for the rest of the batch.
+  for (const item of analysis.items) {
+    const choice = byId.get(item.id);
+    if (!item.collision.decisionRequired && (!choice?.identity || choice.identity.action === 'preserve-identity') && choice?.link?.action !== 'skip' && choice?.palette?.action !== 'skip') used.add(item.identity);
+  }
+  const importedPalettes = new Map();
+  const replacements = new Set();
   for (const conflict of analysis.items) {
     const choice = byId.get(conflict.id) || {}, identityChoice = choice.identity || null;
     let identityAction = conflict.collision.decisionRequired ? identityChoice?.action : (identityChoice?.action || 'preserve-identity'), destinationIdentity = conflict.identity, destinationPhysicalIndex = null;
@@ -51,6 +58,16 @@ function planSffTransferResolution({ analysis, decisions = {}, destinationArchiv
     else if (paletteAction === 'import-source-palette') { const group = safeInteger(choice.palette?.destinationPaletteGroup, `${conflict.id} imported palette group`), number = safeInteger(choice.palette?.destinationPaletteIndex, `${conflict.id} imported palette index`); destinationPaletteIndex = { group, number }; if ([...destinationArchive.palettes].some(palette => palette.group === group && palette.number === number)) throw new Error(`${conflict.id} imported palette identity ${group},${number} is already occupied.`); }
     else if (!['not-applicable', 'convert-truecolor', 'skip'].includes(paletteAction)) throw new Error(`${conflict.id} uses an unsupported palette decision.`);
     if (paletteAction === 'skip') { items.push({ id: conflict.id, sourcePhysicalIndex: conflict.physicalIndex, action: 'skip', reason: 'palette-decision' }); continue; }
+    if (identityAction === 'replace-existing') {
+      if (replacements.has(destinationPhysicalIndex)) throw new Error(`${conflict.id}: another selected sprite already replaces Destination physical sprite ${destinationPhysicalIndex}. Choose a different destination or skip it.`);
+      replacements.add(destinationPhysicalIndex);
+    }
+    if (paletteAction === 'import-source-palette') {
+      const slot = key(destinationPaletteIndex.group, destinationPaletteIndex.number);
+      const sourcePalette = conflict.palette.sourcePaletteIndex;
+      if (importedPalettes.has(slot) && importedPalettes.get(slot) !== sourcePalette) throw new Error(`${conflict.id}: another source palette already uses Destination palette ${slot} in this transfer. Choose a different palette slot.`);
+      importedPalettes.set(slot, sourcePalette);
+    }
     const axisAction = choice.axis?.action || 'source-axis'; if (!['source-axis', 'preserve-destination'].includes(axisAction) || (axisAction === 'preserve-destination' && identityAction !== 'replace-existing')) throw new Error(`${conflict.id} uses an unsupported axis decision.`);
     items.push({ id: conflict.id, sourcePhysicalIndex: conflict.physicalIndex, action: 'copy', destinationIdentity, destinationPhysicalIndex, identityAction, axisAction, linkAction, linkTargetPhysicalIndex: conflict.link.targetPhysicalIndex, paletteAction, sourcePaletteIndex: conflict.palette.sourcePaletteIndex, destinationPaletteIndex });
   }

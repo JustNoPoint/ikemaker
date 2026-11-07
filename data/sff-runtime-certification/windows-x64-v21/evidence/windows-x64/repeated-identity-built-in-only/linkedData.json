@@ -1,0 +1,215 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "linkedData",
+  "fixtureId": "repeated-identity-built-in-only",
+  "fixtureByteHash": "fc77f06cfd572ea6d64a1468393b78e8918808a8ee8898f6090cf5310d250d3d",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "repeated-identity-built-in-only",
+    "sourceSha256": "fc77f06cfd572ea6d64a1468393b78e8918808a8ee8898f6090cf5310d250d3d",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 3,
+        "number": 7,
+        "width": 1,
+        "height": 1,
+        "axisX": -4,
+        "axisY": 9,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 3,
+        "number": 7,
+        "width": 3,
+        "height": 2,
+        "axisX": 12,
+        "axisY": -6,
+        "paletteIndex": 1,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "expected": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "expected": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": true,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only.",
+  "absence": "No linked sprite payloads exist in this fixture; zero-link table plus successful load/reopen checked.",
+  "captures": [
+    {
+      "fixtureId": "repeated-identity-built-in-only",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/repeated-identity-built-in-only-p00000-g00003-i00007.png",
+      "capture": "Ikemen_GO050.png",
+      "sha256": "008339beca378591fb72bb47ffe3772460ef4ea9c4d51999ec43577458f6333b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/repeated-identity-built-in-only/renderComparison.json"
+    },
+    {
+      "fixtureId": "repeated-identity-built-in-only",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/repeated-identity-built-in-only-p00000-g00003-i00007.png",
+      "capture": "Ikemen_GO051.png",
+      "sha256": "1720f7d22b285183b609fc116b76607a700bd1b025de343699716349f6c6793b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/repeated-identity-built-in-only/renderComparison.json"
+    },
+    {
+      "fixtureId": "repeated-identity-built-in-only",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/repeated-identity-built-in-only-p00000-g00003-i00007.png",
+      "capture": "Ikemen_GO052.png",
+      "sha256": "008339beca378591fb72bb47ffe3772460ef4ea9c4d51999ec43577458f6333b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/repeated-identity-built-in-only/renderComparison.json"
+    },
+    {
+      "fixtureId": "repeated-identity-built-in-only",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/repeated-identity-built-in-only-p00000-g00003-i00007.png",
+      "capture": "Ikemen_GO053.png",
+      "sha256": "1720f7d22b285183b609fc116b76607a700bd1b025de343699716349f6c6793b",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/repeated-identity-built-in-only/renderComparison.json"
+    }
+  ]
+}

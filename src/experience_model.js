@@ -63,7 +63,7 @@ function normalizeProfile(value = {}) {
 
 function summary(profile) {
   const normalized = normalizeProfile(profile);
-  return DOMAINS.map((domain) => `${domain.label}: ${normalized[domain.id] === 'learning' ? 'Learning' : 'Advanced'}`).join(' · ');
+  return DOMAINS.map((domain) => `${domain.label}: ${normalized[domain.id] === 'learning' ? 'Expanded explanations' : 'Compact explanations'}`).join(' · ');
 }
 
 function workspaceExperience(workspace, value) {
@@ -73,7 +73,7 @@ function workspaceExperience(workspace, value) {
   return {
     workspace,
     domain: descriptor.domain,
-    label: `${descriptor.label} · ${mode === 'learning' ? 'Learning' : 'Advanced'}`,
+    label: `${descriptor.label} · ${mode === 'learning' ? 'Expanded explanations' : 'Compact explanations'}`,
     title: descriptor.title,
     mode,
     guidance: descriptor[mode],

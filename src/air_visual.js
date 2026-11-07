@@ -14,7 +14,7 @@ function runtime() {
     if (!match) return normal;
     return { mode: match[1] === 'AS' ? 'add' : match[1] === 'SS' ? 'sub' : 'subadd', src: Math.min(255, Number(match[2])), dst: match[3] === undefined ? (match[1] === 'AS' ? 0 : 255) : Math.min(255, Number(match[3])) };
   }
-  function blendPixels(destination, source, blend) {
+  function blendPixels(destination, source, blend, opacity = 1) {
     let src = Math.max(0, Math.min(255, Math.floor(blend.src))), dst = Math.max(0, Math.min(255, Math.floor(blend.dst)));
     if (src + dst === 256) dst = 255 - src;
     src /= 255; dst /= 255;
@@ -24,9 +24,10 @@ function runtime() {
       const gray = (source[i] + source[i + 1] + source[i + 2]) / 3;
       for (let channel = 0; channel < 3; channel++) {
         const background = destination[i + channel], foreground = source[i + channel] * alpha * src;
-        destination[i + channel] = blend.mode === 'subadd'
+        const blended = blend.mode === 'subadd'
           ? Math.max(0, background - gray * alpha * dst) + foreground
           : background * (1 - alpha * (1 - dst)) + (blend.mode === 'sub' ? -foreground : foreground);
+        destination[i + channel] = background + opacity * (Math.min(255, Math.max(0, blended)) - background);
       }
     }
     return destination;
@@ -74,7 +75,7 @@ function runtime() {
       layer.resetTransform(); layer.clearRect(0, 0, layer.canvas.width, layer.canvas.height); layer.setTransform(matrix);
       layer.transform(...transform(frame)); layer.imageSmoothingEnabled = false; layer.drawImage(image, -sprite.axisX, -sprite.axisY);
       const destination = ctx.getImageData(x, y, right - x, bottom - y), source = layer.getImageData(x, y, right - x, bottom - y);
-      blendPixels(destination.data, source.data, blend); ctx.putImageData(destination, x, y);
+      blendPixels(destination.data, source.data, blend, ctx.globalAlpha); ctx.putImageData(destination, x, y);
       return;
     }
     ctx.save();

@@ -74,7 +74,7 @@ function buildCommandFamilySnapshot(context = {}) {
     if (bucket.length >= MAX_COMMAND_FAMILY_DEFINITIONS) return freeze({ complete: false, commandPath: path.resolve(context.commandPath), commandHash: context.commandHash, commandVersion: context.commandVersion === null || context.commandVersion === undefined ? null : String(context.commandVersion), families: freeze(families), stats: freeze({ definitions: definitionCount, limit: MAX_COMMAND_DEFINITIONS, familyOverflow: command.name }) });
     const start = parsedText.starts[command.startLine], end = lineEnd(context.commandText, parsedText, Math.max(command.startLine, command.endLine - 1));
     if (!Number.isInteger(start) || !Number.isInteger(end) || end < start) return null;
-    bucket.push(freeze({ index, name: command.name, startLine: command.startLine, endLine: command.endLine, start, end, rangeHash: hash(String(context.commandText).slice(start, end)) }));
+    bucket.push(freeze({ index, name: command.name, motion: command.command, startLine: command.startLine, endLine: command.endLine, start, end, rangeHash: hash(String(context.commandText).slice(start, end)) }));
   }
   for (const family of Object.values(families)) freeze(family);
   return freeze({ complete: true, commandPath: path.resolve(context.commandPath), commandHash: context.commandHash, commandVersion: context.commandVersion === null || context.commandVersion === undefined ? null : String(context.commandVersion), families: freeze(families), stats: freeze({ definitions: definitionCount, limit: MAX_COMMAND_DEFINITIONS }) });
@@ -130,7 +130,7 @@ function buildCommandUsageAuthorities(component, context = {}) {
     if (!/^[0-9a-f]{48}$/.test(route)) { items.push(freeze({ available: false, name: use.name, line: use.line, reason: 'Exact command-family authority could not be issued.' })); continue; }
     const authority = freeze({ schema: 'ikemaker.command-usage-route', version: 1, route, generation: Number(context.generation), componentIdentity: componentIdentity(component), defPath: path.resolve(context.defPath), defHash: hash(String(context.defText || '')), commandPath: path.resolve(context.commandPath), commandHash: context.commandHash, commandVersion: context.commandVersion === null || context.commandVersion === undefined ? null : String(context.commandVersion), selectedPath: path.resolve(component.filename), selectedHash: component.sourceHash, selectedStart: selected.start, selectedEnd: selected.end, selectedRangeHash: hash(selected.range), occurrence: use.occurrence, commandName: use.name, trigger: use.trigger, redirected: false, useStart: use.start, useEnd: use.end, useHash: hash(String(context.sourceText).slice(use.start, use.end)), useLine: use.line, familyCount: family.length, familyIdentity: familyIdentity(family) });
     authorities.set(route, authority);
-    items.push(freeze({ available: true, name: use.name, trigger: use.trigger, redirected: false, line: use.line, familyCount: family.length, route }));
+    items.push(freeze({ available: true, name: use.name, trigger: use.trigger, redirected: false, line: use.line, familyCount: family.length, motions: [...new Set(family.map(item => item.motion).filter(Boolean))], route }));
   }
   return freeze({ publicUses: freeze({ available: true, reason: '', items: freeze(items), total: items.length }), authorities });
 }

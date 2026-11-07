@@ -18,10 +18,10 @@ async function applyProfile(values, resource) {
 
 async function configureExperience(resource) {
   const preset = await vscode.window.showQuickPick([
-    { label: 'CNS Veteran / Learning ZSS and Lua', description: 'Advanced CNS and assets; guided ZSS, Lua, stage, and UI authoring.', values: PRESETS.cnsVeteran },
-    { label: 'Learning All Areas', description: 'Show expanded teaching, explanations, and previews throughout.', values: PRESETS.learning },
-    { label: 'Advanced All Areas', description: 'Use compact, faster presentation throughout; explanations remain available.', values: PRESETS.advanced },
-    { label: 'Customize Each Area…', description: 'Choose Learning or Advanced independently for every area.', custom: true }
+    { label: 'CNS Veteran / Expanded ZSS and Lua', description: 'Compact CNS and assets; expanded ZSS, Lua, stage, and UI explanations.', values: PRESETS.cnsVeteran },
+    { label: 'Expanded explanations in all areas', description: 'Show teaching, explanations, and previews throughout.', values: PRESETS.learning },
+    { label: 'Compact explanations in all areas', description: 'Use a denser presentation; explanations remain available.', values: PRESETS.advanced },
+    { label: 'Customize Each Area…', description: 'Choose explanation density independently for every area.', custom: true }
   ], { title: 'Configure IKEMEN authoring experience', placeHolder: summary(profile(resource)) });
   if (!preset) return;
   let values = preset.values;
@@ -30,8 +30,8 @@ async function configureExperience(resource) {
     for (const domain of DOMAINS) {
       const current = mode(domain.id, resource);
       const picked = await vscode.window.showQuickPick([
-        { label: 'Learning', description: 'Expanded explanations, previews, and teaching.', value: 'learning', picked: current === 'learning' },
-        { label: 'Advanced', description: 'Compact, keyboard-friendly, and bulk-oriented.', value: 'advanced', picked: current === 'advanced' }
+        { label: 'Expanded explanations', description: 'More guidance, previews, and teaching.', value: 'learning', picked: current === 'learning' },
+        { label: 'Compact explanations', description: 'Denser, keyboard-friendly presentation.', value: 'advanced', picked: current === 'advanced' }
       ], { title: `${domain.label} experience` });
       if (!picked) return;
       values[domain.id] = picked.value;

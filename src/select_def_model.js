@@ -13,7 +13,8 @@ function splitComma(text) {
 
 function parameter(piece) { const match = /^\s*([\w.]+)\s*=\s*([\s\S]*)$/.exec(piece); return match ? { name: match[1], value: match[2] } : null; }
 function entryKind(section, code) {
-  if (/^slot\s*=\s*\{/i.test(code)) return 'slot-start';
+  if (/^slot\s*(?:=\s*)?\{\s*$/i.test(code)) return 'slot-start';
+  if (/^slot\s*(?:=\s*)?\{.+/i.test(code)) return 'slot-inline';
   if (/^\}$/i.test(code)) return 'slot-end';
   if (section === 'options') return 'option';
   if (section === 'storymode') return /^name\s*=/i.test(code) ? 'story-start' : 'story-field';
@@ -34,17 +35,19 @@ function parseEntry(section, code, line, raw) {
 }
 
 function parseSelectDef(text) {
-  const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/), sections = [], entries = []; let section = null, slotDepth = 0;
+  const lines = String(text || '').replace(/^\uFEFF/, '').split(/\r?\n/), sections = [], entries = [], warnings = []; let section = null, slotDepth = 0;
   for (let line = 0; line < lines.length; line += 1) {
     const raw = lines[line], header = /^\s*\[\s*([^\]]+)\s*\]\s*(?:;.*)?$/.exec(raw);
     if (header) { section = header[1].trim().toLowerCase(); sections.push({ name: section, title: header[1].trim(), line, endLine: lines.length - 1 }); if (sections.length > 1) sections[sections.length - 2].endLine = line - 1; slotDepth = 0; continue; }
     const code = raw.replace(/;.*$/, '').trim(); if (!section || !code) continue;
     const entry = parseEntry(section, code, line, raw); entry.inSlot = slotDepth > 0;
-    if (entry.kind === 'slot-start') slotDepth += 1; else if (entry.kind === 'slot-end') slotDepth = Math.max(0, slotDepth - 1);
+    if (entry.kind === 'slot-inline') { warnings.push({ line, message: 'Inline slot content is kept in source but needs text review; this visual roster edits standalone slot lines.' }); if (!/}\s*$/.test(code)) slotDepth += 1; }
+    else if (slotDepth > 0 && ['character', 'stage'].includes(entry.kind) && /}\s*$/.test(code)) { entry.kind = 'slot-inline-end'; warnings.push({ line, message: 'Inline slot closing content is kept in source but needs text review.' }); slotDepth -= 1; }
+    else if (entry.kind === 'slot-start') slotDepth += 1; else if (entry.kind === 'slot-end') slotDepth = Math.max(0, slotDepth - 1);
     entries.push(entry);
   }
   const known = new Set(['characters', 'extrastages', 'options', 'storymode']);
-  return { lines, sections, entries, characters: entries.filter((x) => x.section === 'characters' && x.kind === 'character'), stages: entries.filter((x) => x.section === 'extrastages' && x.kind === 'stage'), options: entries.filter((x) => x.section === 'options' && x.kind === 'option'), story: entries.filter((x) => x.section === 'storymode'), other: entries.filter((x) => !known.has(x.section)), unknownSections: sections.filter((x) => !known.has(x.name)) };
+  return { lines, sections, entries, warnings, characters: entries.filter((x) => x.section === 'characters' && x.kind === 'character'), stages: entries.filter((x) => x.section === 'extrastages' && x.kind === 'stage'), options: entries.filter((x) => x.section === 'options' && x.kind === 'option'), story: entries.filter((x) => x.section === 'storymode'), other: entries.filter((x) => !known.has(x.section)), unknownSections: sections.filter((x) => !known.has(x.name)) };
 }
 
 function insertionLine(model, sectionName) {

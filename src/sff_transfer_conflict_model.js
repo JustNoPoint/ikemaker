@@ -37,9 +37,18 @@ function analyzeSffTransferConflicts({ seed, sourceArchive, destinationArchive }
   if (!Array.isArray(sourceArchive?.sprites) || !Array.isArray(destinationArchive?.sprites)) throw new TypeError('Both exact SFF archives are required.');
   const selected = new Set(seed.sourceSelection.physicalIndices), destinationMatches = destinationPaletteMatches(destinationArchive), destinationIdentities = new Map();
   for (const sprite of destinationArchive.sprites) { const key = identity(sprite); if (!destinationIdentities.has(key)) destinationIdentities.set(key, []); destinationIdentities.get(key).push(sprite.index); }
+  const selectedIdentities = new Set();
   const items = seed.sourceSelection.items.map(reference => {
     const sprite = sourceArchive.sprites[reference.physicalIndex]; if (!sprite || identity(sprite) !== reference.identity) throw new Error('The validated Transfer selection is no longer present in the Source archive.');
-    const occupied = destinationIdentities.get(reference.identity) || [], collision = { status: occupied.length ? 'occupied' : 'clear', destinationPhysicalIndices: occupied, decisionRequired: occupied.length > 0, choices: occupied.length ? ['add-next-free', 'replace-existing', 'skip', 'manual-identity'] : ['preserve-identity', 'manual-identity'] };
+    const occupied = destinationIdentities.get(reference.identity) || [];
+    const repeatedSource = selectedIdentities.has(reference.identity);
+    selectedIdentities.add(reference.identity);
+    const collision = {
+      status: occupied.length ? 'occupied' : repeatedSource ? 'source-duplicate' : 'clear',
+      destinationPhysicalIndices: occupied, decisionRequired: occupied.length > 0 || repeatedSource,
+      choices: occupied.length ? ['add-next-free', 'replace-existing', 'skip', 'manual-identity']
+        : repeatedSource ? ['add-next-free', 'skip', 'manual-identity'] : ['preserve-identity', 'manual-identity']
+    };
     const link = linkProjection(sourceArchive, sprite, selected), palette = paletteProjection(sourceArchive, destinationMatches, sprite);
     return { id: reference.id, physicalIndex: reference.physicalIndex, identity: reference.identity, collision, link, palette, unresolved: [...(collision.decisionRequired ? ['identity'] : []), ...(link.decisionRequired ? ['link'] : []), ...(palette.decisionRequired ? ['palette'] : [])] };
   });

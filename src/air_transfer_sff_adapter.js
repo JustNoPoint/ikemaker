@@ -2,7 +2,7 @@
 
 const crypto = require('crypto');
 const { types: utilTypes } = require('util');
-const { requestStillCurrent } = require('./asset_transfer_session');
+const { requestStillCurrent, validateTransferMappingEvidence } = require('./asset_transfer_session');
 
 const CONTINUATION_SCHEMA = 'ikemaker.air-transfer-sff-continuation';
 const RECEIPT_SCHEMA = 'ikemaker.air-transfer-sff-receipt';
@@ -124,9 +124,7 @@ function acceptFinalizedSffTransfer(input) {
     if (mapping.sourceEndpointIdentity !== continuation.sourceEndpoint.identity || fingerprint(mapping.sourceEndpointFingerprint, 'SFF mapping Source endpoint fingerprint') !== continuation.sourceEndpoint.fingerprint || mapping.destinationEndpointIdentity !== destination.identity || fingerprint(mapping.destinationEndpointFingerprint, 'SFF mapping Destination endpoint fingerprint') !== destination.fingerprint) throw new Error('A finalized SFF mapping does not match the exact reviewed endpoints.');
     const outcome = details.get(mapping.sourceId);
     if (!outcome || !['added', 'replaced'].includes(outcome.status) || outcome.destinationId !== mapping.destinationId) throw new Error(`Finalized SFF mapping ${mapping.sourceId} does not match one successful exact result item.`);
-    const evidence = { sourceId: mapping.sourceId, sourceContentFingerprint: mapping.sourceContentFingerprint, destinationId: mapping.destinationId, destinationContentFingerprint: mapping.destinationContentFingerprint, sourceEndpointIdentity: mapping.sourceEndpointIdentity, sourceEndpointFingerprint: mapping.sourceEndpointFingerprint, destinationEndpointIdentity: mapping.destinationEndpointIdentity, destinationEndpointFingerprint: mapping.destinationEndpointFingerprint };
-    if (mapping.paletteFingerprint !== undefined) evidence.paletteFingerprint = mapping.paletteFingerprint;
-    if (fingerprint(mapping.evidenceFingerprint, `SFF mapping ${mapping.sourceId} evidence fingerprint`) !== sha(canonical(evidence))) throw new Error(`Finalized SFF mapping ${mapping.sourceId} has inconsistent content evidence.`);
+    validateTransferMappingEvidence(mapping,session);
     bySource.set(mapping.sourceId, mapping);
   }
   const spriteMappings = [];

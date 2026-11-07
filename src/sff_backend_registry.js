@@ -62,7 +62,7 @@ const SFF_BACKENDS = deepFreeze([
     adoptionSupported: false,
     writerProfile: 'sff-v2.1-mixed-png',
     strictValidator: { id: 'ikemaker-sff-v21-mixed-png-strict', version: 1, profile: 'sff-v2.1-png8-png24-png32-strict-v1' },
-    certificationManifestHashes: ['16c5198039798c7dd655171d92b6cfe722277e3367741ae8c961277efe93b1a4'],
+    certificationManifestHashes: ['16c5198039798c7dd655171d92b6cfe722277e3367741ae8c961277efe93b1a4', '2fb44def90d514de20cdc8df641f262e71c105f980d344e7b9cb0b9743969db0'],
     capabilities: { ...INDEXED_BASE, 'sprite.truecolor24': 'supported', 'sprite.alpha32': 'supported', 'palette.links': 'supported', 'palette.mode.embedded': 'supported', 'palette.mode.true-color': 'supported', 'compression.png8': 'supported', 'compression.png24': 'supported', 'compression.png32': 'supported' }
   },
   {

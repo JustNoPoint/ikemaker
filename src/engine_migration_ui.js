@@ -15,7 +15,7 @@ const contextModel = require('./project_context_model');
 const characterContext = require('./character_context');
 const engineRuntime = require('./engine_runtime');
 const mutationSafety = require('./mutation_safety');
-const { ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG } = require('./updater');
+const { ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG, readEngineCatalog } = require('./updater');
 // The only raw writes here create notified OS-temp staging after the user has
 // approved this one migration. Durable writes are delegated to reviewed paths.
 const WRITE_AUTHORITY = 'explicit-engine-migration-approval';
@@ -41,12 +41,14 @@ function affectedProjects(registry, registryFile, engineRoot, currentTarget) {
 async function chooseBackupRoot(root) {
   const suggested = path.join(path.dirname(root), 'IKEMaker Engine Backups');
   const picked = await vscode.window.showOpenDialog({ title: 'Choose the folder that will hold the full 1.0 engine backup and recovery journal', defaultUri: vscode.Uri.file(suggested), canSelectFiles: false, canSelectFolders: true, canSelectMany: false, openLabel: 'Use Backup Folder' });
-  return picked?.[0]?.fsPath || '';
+  const backup = picked?.[0]?.fsPath || '';
+  if (backup) migration.validateBackupRoot(root, backup);
+  return backup;
 }
 function candidateTarget(build, installed) { return engineModel.targetFromBuild(build, installed); }
 function detailText(project, current, candidate, risk, affected) {
   return [`Project: ${project.name}`, `Current: ${current.version} · ${current.channel} · ${(current.commit || 'unknown').slice(0, 12)}`, `Candidate: ${candidate.channel || 'custom'} · ${candidate.commit.slice(0, 12)} · release ${candidate.releaseId || 'not declared'} · asset ${candidate.assetId || candidate.workflowArtifactId || 'local'}`, `Risk: ${risk.summary}`, `Shared-root projects affected: ${affected.length || 1}`,
-    '', 'Approval covers this one migration only:', '• temporary download/extraction in the OS temporary folder', '• full engine-distribution + active config/registry backup outside the game', '• an external write-ahead journal and migration lock', '• format-aware config additions/renames with unknown keys preserved', '• replacement only of allowlisted engine-owned files', '• exact local hashes, project target update, and rollback if any step fails', '', 'Characters, stages, sounds, saves (except config), motifs, palettes, and unrelated files are excluded from replacement.'].join('\n');
+    '', 'Approval covers this one migration only:', '• temporary download/extraction in the OS temporary folder', '• full engine-distribution + active config/registry backup outside the game', '• an external write-ahead journal and migration lock', '• format-aware config additions/renames with unknown keys preserved', '• replacement of reviewed allowlisted engine files, including data/ motif DEF, SFF, and palette files', '• exact local hashes, project target update, and rollback if any step fails', '', 'Characters, stages, sounds, saves (except config), and unrelated files are excluded. Locally changed managed files are preserved or shown as conflicts before replacement.'].join('\n');
 }
 function retainedDetail(review) {
   const basis = review.reviewedBinding
@@ -55,11 +57,25 @@ function retainedDetail(review) {
   return [`Retained exact IKEMEN build · ${(review.candidate.commit || '').slice(0, 12)}`, `ZIP SHA-256: ${review.artifactSha256}`, `File: ${review.zipPath}`, basis,
     '', 'This is a pinned local artifact, not the newest Nightly. The rolling Nightly may now be different.', 'Runtime, gameplay, online, and rollback behavior remain unknown until tested. Future automatic upgrades are not enabled.'].join('\n');
 }
+function eligibleRecoveryRoots(savedRoots, activeRoot, pendingForRoot = migration.pendingMigrations) {
+  const eligible = [];
+  for (const backupRoot of savedRoots) {
+    const pendingItems = pendingForRoot(backupRoot);
+    try {
+      if (activeRoot) migration.validateBackupRoot(activeRoot, backupRoot);
+      for (const pending of pendingItems) migration.validateBackupRoot(pending.root, backupRoot);
+    } catch (_) { continue; }
+    eligible.push({ backupRoot, pendingItems });
+  }
+  return eligible;
+}
 
 function registerEngineMigration(context) {
   async function checkInterrupted() {
-    for (const backupRoot of context.globalState.get(BACKUP_ROOTS_KEY, [])) {
-      for (const pending of migration.pendingMigrations(backupRoot)) {
+    const savedRoots = context.globalState.get(BACKUP_ROOTS_KEY, []), activeRoot = selectedContext()?.root;
+    const eligible = eligibleRecoveryRoots(savedRoots, activeRoot);
+    for (const { backupRoot, pendingItems } of eligible) {
+      for (const pending of pendingItems) {
         const journalFile = path.join(backupRoot, '.migration-state', `${pending.migrationId}.json`);
         const action = await vscode.window.showWarningMessage(`An interrupted IKEMEN engine migration was detected (${pending.state}). The live engine will not be changed automatically.`, { modal: true, detail: `Engine: ${pending.root}\nJournal: ${journalFile}\nBackup: ${pending.backup || 'not completed'}\n\nRecovery hash-checks every installed file and stops rather than erasing later user changes.` }, 'Recover previous engine', 'Open recovery folder');
         if (action === 'Open recovery folder') await vscode.env.openExternal(vscode.Uri.file(path.dirname(journalFile)));
@@ -73,12 +89,16 @@ function registerEngineMigration(context) {
         }
       }
     }
+    if (eligible.length !== savedRoots.length) await context.globalState.update(BACKUP_ROOTS_KEY, eligible.map(item => item.backupRoot));
   }
   async function reviewAndInstall(payload = {}) {
     const selected = selectedContext(payload); if (!selected?.project) return vscode.window.showWarningMessage('Open or select a game project before reviewing an engine migration.');
     if (!selected.loaded.exists) return vscode.window.showWarningMessage('Create and save a game project profile before migrating its engine. Opening or reviewing a project never creates metadata automatically.');
+    if (!fs.existsSync(path.join(selected.root, 'Ikemen_GO.exe'))) return vscode.window.showWarningMessage('This game root has no Ikemen_GO.exe. Choose an existing IKEMEN GO 1.0.0 installation for in-place migration.');
     const retainedReview = payload.retainedReview || null;
-    const current = engineModel.normalizeTarget(selected.project.engineTarget), candidate = retainedReview?.candidate || payload.candidate || await migration.resolveExactNightly();
+    const current = engineModel.normalizeTarget(selected.project.engineTarget);
+    if (current.channel !== 'stable' || current.version !== '1.0.0') return vscode.window.showWarningMessage('Safe in-place replacement requires a pinned IKEMEN GO 1.0.0 source. Use a side-by-side engine for other targets. No build was downloaded.');
+    const candidate = retainedReview?.candidate || payload.candidate || await migration.resolveExactNightly();
     if (!retainedReview) {
       const fresh = await migration.resolveExactNightly();
       if (!migration.sameCandidate(candidate, fresh)) return vscode.window.showWarningMessage(`The Nightly moved to ${fresh.commit.slice(0, 12)}. No files were written. Run the review again for the new exact build.`);
@@ -92,7 +112,10 @@ function registerEngineMigration(context) {
     }
     const approved = await vscode.window.showWarningMessage(retainedReview ? 'Review retained exact IKEMEN build migration' : 'Review exact IKEMEN Nightly migration', { modal: true, detail: `${retainedReview ? `${retainedDetail(retainedReview)}\n\n` : ''}${detailText(selected.project, current, candidate, risk, affected)}` }, 'Approve this backup and migration');
     if (approved !== 'Approve this backup and migration') return;
-    const backupRoot = await chooseBackupRoot(selected.root); if (!backupRoot) return;
+    let backupRoot;
+    try { backupRoot = await chooseBackupRoot(selected.root); }
+    catch (error) { return vscode.window.showWarningMessage(error.message); }
+    if (!backupRoot) return;
     const knownBackupRoots = [...new Set([...context.globalState.get(BACKUP_ROOTS_KEY, []), backupRoot])]; await context.globalState.update(BACKUP_ROOTS_KEY, knownBackupRoots);
     if (affected.length > 1) {
       const shared = await vscode.window.showWarningMessage(`This engine root is shared by ${affected.length} project profiles: ${affected.map((item) => item.name).join(', ')}. They must move together or use a side-by-side engine.`, { modal: true }, 'Move all listed profiles', 'Cancel');
@@ -103,7 +126,7 @@ function registerEngineMigration(context) {
     let applied = null;
     try {
       const downloaded = await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: retainedReview ? 'Copying and re-verifying retained exact IKEMEN build' : 'Downloading and verifying exact IKEMEN Nightly', cancellable: false }, () => migration.acquireCandidate(candidate, staging, retainedReview));
-      const existingCatalog = engineModel.normalizeCatalog(context.globalState.get(ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG));
+      const existingCatalog = engineModel.normalizeCatalog(readEngineCatalog(context));
       const existingIdentity = existingCatalog.builds.find((item) => item.id === downloaded.id);
       if (existingIdentity) {
         const incomingRepository = String(downloaded.provenance?.repository || '').toLowerCase(), existingRepository = String(existingIdentity.provenance?.repository || '').toLowerCase();
@@ -112,7 +135,6 @@ function registerEngineMigration(context) {
       const entries = migration.inspectZip(downloaded.zipPath), stripRoot = migration.commonArchiveRoot(entries), checked = updateModel.validateArchiveEntries(entries, { stripRoot });
       if (!checked.valid) throw new Error(`Archive validation failed:\n${checked.issues.slice(0, 10).join('\n')}`);
       const extracted = path.join(staging, 'extracted'); migration.extractZip(downloaded.zipPath, extracted); const stagedRoot = stripRoot ? path.join(extracted, stripRoot) : extracted;
-      if (current.channel !== 'stable' || current.version !== '1.0.0') throw new Error('Safe in-place replacement currently requires the authenticated 1.0.0 baseline. Install other Nightly-to-Nightly moves side-by-side until their original package is retained.');
       const baselineCandidate = await migration.resolveExactRelease('v1.0.0'), baselineDownload = await migration.downloadCandidate(baselineCandidate, path.join(staging, 'baseline-package'), migration.requestBuffer, () => migration.resolveExactRelease('v1.0.0'));
       const baselineEntries = migration.inspectZip(baselineDownload.zipPath), baselineStrip = migration.commonArchiveRoot(baselineEntries), baselineChecked = updateModel.validateArchiveEntries(baselineEntries, { stripRoot: baselineStrip });
       if (!baselineChecked.valid) throw new Error(`Stable baseline archive validation failed:\n${baselineChecked.issues.slice(0, 10).join('\n')}`);
@@ -133,7 +155,8 @@ function registerEngineMigration(context) {
         const merged = migration.applyConfigMappings(fs.readFileSync(oldConfig, 'utf8'), configPlan); fs.writeFileSync(newConfig, merged);
         checked.accepted.push({ path: `${stripRoot ? `${stripRoot}/` : ''}save/config.ini`, relative: 'save/config.ini', type: 'file', length: Buffer.byteLength(merged), liveHash: migration.sha256File(oldConfig), candidateHash: migration.sha256File(newConfig) });
       }
-      const finalReview = await vscode.window.showWarningMessage(`Validated ${checked.accepted.length} engine/config file(s). ${obsolete.safeRemove.length} unmodified obsolete engine file(s) will be removed after backup. ${checked.protectedEntries.length} protected content file(s) will not be installed. ${preservedOverrides.length} local override(s) will be preserved and recorded. Config plan: ${configPlan.changes.length} rename(s), ${configPlan.additions.length} new default(s), ${configPlan.conflicts.length} conflict(s).`, { modal: true, detail: `Selected build artifact SHA-256: ${downloaded.artifactSha256}\nStable baseline SHA-256: ${baselineDownload.artifactSha256}\nBackup: ${backupRoot}\nProject registry: ${selected.loaded.filename}\nObsolete files to remove: ${obsolete.safeRemove.map((item) => item.relative).join(', ') || 'none'}\nPreserved overrides: ${preservedOverrides.map((item) => item.relative).join(', ') || 'none'}\n\nThis is the final approval before the live engine folder is changed.` }, 'Apply validated migration');
+      const space = migration.preflight(selected.root, stagedRoot, checked.accepted, backupRoot, selected.loaded.filename);
+      const finalReview = await vscode.window.showWarningMessage(`Validated ${checked.accepted.length} engine/config file(s). ${obsolete.safeRemove.length} unmodified obsolete engine file(s) will be removed after backup. ${checked.protectedEntries.length} protected content file(s) will not be installed. ${preservedOverrides.length} local override(s) will be preserved and recorded. Config plan: ${configPlan.changes.length} rename(s), ${configPlan.additions.length} new default(s), ${configPlan.conflicts.length} conflict(s).`, { modal: true, detail: `Selected build artifact SHA-256: ${downloaded.artifactSha256}\nStable baseline SHA-256: ${baselineDownload.artifactSha256}\nBackup: ${backupRoot}\nBackup free space: ${space.availableBytes} bytes available; ${space.requiredBytes} bytes needed (snapshot ${space.snapshotBytes} bytes).${space.sameVolume ? '\nThe backup is on the same volume as the game, so it does not protect against a whole-drive failure.' : ''}\nProject registry: ${selected.loaded.filename}\nManaged files to replace (including motif files where listed): ${checked.accepted.map(item => item.relative).join(', ') || 'none'}\nObsolete files to remove: ${obsolete.safeRemove.map((item) => item.relative).join(', ') || 'none'}\nPreserved overrides: ${preservedOverrides.map((item) => item.relative).join(', ') || 'none'}\n\nThis is the final approval before the live engine folder is changed.` }, 'Apply validated migration');
       if (finalReview !== 'Apply validated migration') return;
       if (!fs.existsSync(selected.loaded.filename) || mutationSafety.hash(fs.readFileSync(selected.loaded.filename)) !== selected.registryHash) throw new Error('The project registry changed after review. No engine file was changed; reopen the migration review.');
       const oldInstalledRegistry = context.globalState.get(engineRuntime.INSTALLED_ENGINE_KEY, {}), oldCatalog = context.globalState.get(ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG);
@@ -147,7 +170,7 @@ function registerEngineMigration(context) {
       let installedRegistry = engineModel.registerInstalled(oldInstalledRegistry, { buildId: engineModel.STABLE_BUILD_ID, executable: path.join(applied.backup, 'Ikemen_GO.exe'), root: applied.backup, executableSha256: migration.sha256File(path.join(applied.backup, 'Ikemen_GO.exe')), artifactSha256: baselineDownload.artifactSha256, identityStatus: 'verified', registeredAt: new Date().toISOString(), verifiedAt: new Date().toISOString() });
       installedRegistry = engineModel.registerInstalled(installedRegistry, { buildId: build.id, executable, root: selected.root, executableSha256, artifactSha256: downloaded.artifactSha256, identityStatus, registeredAt: new Date().toISOString(), verifiedAt: identityStatus === 'verified' ? new Date().toISOString() : null });
       const local = installedRegistry.builds.find((item) => item.buildId === build.id && item.executableSha256 === executableSha256);
-      const catalog = engineModel.normalizeCatalog(context.globalState.get(ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG)); catalog.builds = catalog.builds.filter((item) => item.id !== build.id); catalog.builds.push(build); catalog.catalogRevision += 1; catalog.generatedAt = new Date().toISOString();
+      const catalog = engineModel.normalizeCatalog(readEngineCatalog(context)); catalog.builds = catalog.builds.filter((item) => item.id !== build.id); catalog.builds.push(build); catalog.catalogRevision += 1; catalog.generatedAt = new Date().toISOString();
       let nextRegistry = selected.loaded.registry;
       for (const project of affected.length ? affected : [selected.project]) {
         let review = engineModel.adoptionReview(project, candidateTarget(build, local), catalog, installedRegistry, { allowUserAsserted: identityStatus !== 'verified' }); if (review.blockers.length) throw new Error(review.blockers.join(' '));
@@ -183,4 +206,4 @@ function registerEngineMigration(context) {
   setTimeout(() => checkInterrupted().catch((error) => vscode.window.showErrorMessage(`IKEMaker could not check interrupted engine migrations: ${error.message}`)), 3500);
 }
 
-module.exports = { WRITE_AUTHORITY, BACKUP_ROOTS_KEY, fingerprint, affectedProjects, detailText, retainedDetail, registerEngineMigration };
+module.exports = { WRITE_AUTHORITY, BACKUP_ROOTS_KEY, fingerprint, affectedProjects, detailText, retainedDetail, eligibleRecoveryRoots, registerEngineMigration };

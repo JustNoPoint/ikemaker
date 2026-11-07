@@ -5,14 +5,15 @@ const crypto = require('crypto');
 const { parseCodeStructure } = require('./code_structure_model');
 const { buildAdaptationReview } = require('./similar_code_adaptation');
 const intentSearch = require('./intent_search');
+const {textGrammar}=require('./map_registry_grammar');
 
 const DEFAULT_LIMITS = Object.freeze({ files:256, sourceBytes:4*1024*1024, totalBytes:16*1024*1024, candidates:4096, results:48 });
 const COMPARABLE_KINDS = new Set(['state','function','controller','condition','loop']);
 const STOP_WORDS = new Set(['a','an','and','as','at','by','else','false','for','from','if','in','is','not','of','on','or','the','then','to','true','while','with']);
 
-function language(filename) {
-  const extension=path.extname(filename).toLowerCase();
-  return extension==='.lua'?'lua':extension==='.cns'||extension==='.st'?'cns':'zss';
+function language(filename,languageId) {
+  const grammar=languageId||textGrammar({fileName:filename});
+  return path.extname(filename).toLowerCase()==='.lua'||grammar==='lua'?'lua':grammar==='ikemen-cns'?'cns':'zss';
 }
 function digest(value){return crypto.createHash('sha256').update(String(value||'')).digest('hex');}
 function canonical(value){return path.resolve(String(value||''));}
@@ -60,11 +61,11 @@ function similarity(left,right){
   return Math.min(1,0.67*token+0.18*shape+0.15*length+title);
 }
 function collectCandidates(document,limits){
-  const filename=canonical(document.filename), text=String(document.text||''), lines=text.split(/\r?\n/), root=parseCodeStructure(text,language(filename),filename), result=[];
+  const filename=canonical(document.filename), text=String(document.text||''), lines=text.split(/\r?\n/), root=parseCodeStructure(text,language(filename,document.languageId),filename), result=[];
   function visit(node,trail=[]){
     if(COMPARABLE_KINDS.has(node.kind)&&result.length<limits.candidates){
       const excerpt=sourceText(lines,node), lineCount=Math.max(1,node.endLine-node.startLine+1);
-      result.push({id:digest(JSON.stringify([filename,node.kind,node.startLine,node.endLine,trail])).slice(0,32),filename,language:language(filename),kind:node.kind,title:String(node.title||node.signature||node.kind),startLine:Math.max(0,node.startLine||0),endLine:Math.max(node.startLine||0,node.endLine||0),lineCount,text:excerpt,tokens:nodeTokens(node,excerpt),shape:nodeShape(node),dependencies:dependencySummary(excerpt),fingerprint:digest(text)});
+      result.push({id:digest(JSON.stringify([filename,node.kind,node.startLine,node.endLine,trail])).slice(0,32),filename,language:language(filename,document.languageId),kind:node.kind,title:String(node.title||node.signature||node.kind),startLine:Math.max(0,node.startLine||0),endLine:Math.max(node.startLine||0,node.endLine||0),lineCount,text:excerpt,tokens:nodeTokens(node,excerpt),shape:nodeShape(node),dependencies:dependencySummary(excerpt),fingerprint:digest(text)});
     }
     for(let index=0;index<(node.children||[]).length;index+=1)visit(node.children[index],[...trail,index]);
   }
@@ -118,7 +119,7 @@ function buildSimilarCodeProjection(input={},options={}){
   const limits={...DEFAULT_LIMITS,...options}, documents=[], seen=new Set();let totalBytes=0,truncated=false;
   for(const value of (Array.isArray(input.documents)?input.documents:[]).slice(0,limits.files)){
     if(!value||typeof value.filename!=='string'||typeof value.text!=='string')continue;const filename=canonical(value.filename),key=filename.toLowerCase(),bytes=Buffer.byteLength(value.text,'utf8');
-    if(seen.has(key)||bytes>limits.sourceBytes||totalBytes+bytes>limits.totalBytes){truncated=true;continue;}seen.add(key);totalBytes+=bytes;documents.push({filename,text:value.text});
+    if(seen.has(key)||bytes>limits.sourceBytes||totalBytes+bytes>limits.totalBytes){truncated=true;continue;}seen.add(key);totalBytes+=bytes;documents.push({filename,text:value.text,languageId:value.languageId});
   }
   const candidates=[];for(const document of documents){if(candidates.length>=limits.candidates){truncated=true;break;}candidates.push(...collectCandidates(document,{...limits,candidates:limits.candidates-candidates.length}));}
   const seed=seedFor(candidates,input.activeSource);

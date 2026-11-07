@@ -1,6 +1,6 @@
 'use strict';
 
-const triggerCatalog=require('../data/triggers.json');
+const triggerCatalog=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const controllerCatalog=require('../data/sctrl.json');
 const {entryAvailable,filterAvailable}=require('./catalog_capability_filter');
 const {argumentSlots}=require('./trigger_argument_model');

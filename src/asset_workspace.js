@@ -1,6 +1,8 @@
 'use strict';
 let vscode, sequence=0, current, switching=Promise.resolve();
-const panels=new Map(), pending=new Map(), snapshots=new Map();
+const panels=new Map(), pending=new Map(), snapshots=new Map(), pinnedTransfers=new WeakMap();
+function assertTransferSession(sessionId){if(typeof sessionId!=='string'||!sessionId.trim()||sessionId.length>256)throw new Error('Pinned asset Transfer requires its exact host-owned session.');}
+function pinTransfer(panel,sessionId){assertTransferSession(sessionId);if(!panel)throw new Error('Pinned asset Transfer requires its exact panel.');const existing=pinnedTransfers.get(panel);if(existing&&existing!==sessionId)throw new Error('An asset panel cannot change pinned Transfer ownership.');if(!existing&&panels.has(panel))throw new Error('Pin the Transfer endpoint before attaching its asset workspace.');pinnedTransfers.set(panel,sessionId);return true;}
 const key=file=>String(file||'').replace(/\\/g,'/').toLowerCase();
 function configure(api){vscode=api;}
 function compact(){const mode=vscode?.workspace.getConfiguration('ikemenZss').get('interfaceMode');return mode?mode!=='workspace':!vscode||vscode.workspace.getConfiguration('ikemenZss').get('simpleAssetInterface',true);}
@@ -14,20 +16,21 @@ async function capture(panel){
   Promise.resolve(panel.webview.postMessage({type:'assetWorkspaceCapture',id})).then(sent=>{if(sent===false)pending.get(id)?.finish(false);}).catch(()=>pending.get(id)?.finish(false));
  });
 }
-async function beforeOpen(file){
+async function beforeOpen(file,options={}){
+ if(options.transferSessionId!==undefined){assertTransferSession(options.transferSessionId);return true;}
  if(multiple())return true;
- for(const [panel,entry] of panels){if(key(file)===key(entry.file))continue;if(!await capture(panel)){vscode.window.showInformationMessage('Finish or revert the current sprite/animation edits before switching. You can also enable multiple asset workspaces in Settings.');panel.reveal(panel.viewColumn,false);return false;}}
+ for(const [panel,entry] of panels){if(pinnedTransfers.has(panel))continue;if(key(file)===key(entry.file))continue;if(!await capture(panel)){vscode.window.showInformationMessage('Finish or revert the current sprite/animation edits before switching. You can also enable multiple asset workspaces in Settings.');panel.reveal(panel.viewColumn,false);return false;}}
  return true;
 }
 function decorate(panel,file,kind,page,explicitSelection=false){
  require('./viewer_group').trackViewerPanel(panel);
  const firstAttachment=!panels.has(panel);
  if(firstAttachment){
-  panels.set(panel,{file,kind});panel.onDidDispose(()=>{panels.delete(panel);if(current===panel)current=undefined;for(const request of [...pending.values()])if(request.panel===panel)request.finish(false);});
+  panels.set(panel,{file,kind});panel.onDidDispose(()=>{panels.delete(panel);pinnedTransfers.delete(panel);if(current===panel)current=undefined;for(const request of [...pending.values()])if(request.panel===panel)request.finish(false);});
   panel.onDidChangeViewState?.(event=>{if(event.webviewPanel.active)current=panel;});
  }
- let cached=firstAttachment?snapshots.get(key(file)):undefined;
- if(firstAttachment)snapshots.delete(key(file));
+ let cached=firstAttachment&&!pinnedTransfers.has(panel)?snapshots.get(key(file)):undefined;
+ if(firstAttachment&&!pinnedTransfers.has(panel))snapshots.delete(key(file));
  if(cached&&(explicitSelection||panel.pendingReference))cached={...cached,reference:undefined};
  if(cached){const data=JSON.stringify(cached).replace(/</g,'\\u003c');page=page.replace('acquireVsCodeApi()',`(()=>{const api=acquireVsCodeApi();globalThis.ikemenResumeAsset=${data};return {getState:()=>api.getState()||globalThis.ikemenResumeAsset.state,setState:value=>api.setState(value),postMessage:message=>api.postMessage(message)}})()`);}
  if(compact())page=page.replace(/(<details\b[^>]*?)\sopen(?=[\s>])/g,'$1').replace('<body>','<body data-simple-assets="true">');
@@ -44,9 +47,9 @@ async function handle(message,panel){
  switching=switching.catch(()=>{}).then(()=>activate(panel));await switching;return true;
 }
 async function activate(panel){
- if(!panels.has(panel))return true;
+ if(!panels.has(panel)||pinnedTransfers.has(panel))return true;
  if(!multiple())for(const old of [...panels.keys()]){
-  if(old===panel)continue;
+  if(old===panel||pinnedTransfers.has(old))continue;
   if(!await capture(old)){const replacementClean=await capture(panel);if(replacementClean)panel.dispose();old.reveal(old.viewColumn,false);vscode.window.showInformationMessage(replacementClean?'The previous asset workspace has unfinished edits or is not responding. It was kept open.':'Both asset workspaces were kept open because edits or pending work could not be safely discarded. Save or revert before switching.');return true;}
   if(panels.has(panel)){panel.reveal(old.viewColumn,false);old.dispose();}
  }
@@ -79,4 +82,4 @@ function client(){
  vscode.postMessage({type:'assetWorkspaceReady'});
  });
 }
-module.exports={configure,register,compact,multiple,beforeOpen,decorate,handle,clientScript:()=>`(${client.toString()})();`};
+module.exports={configure,register,compact,multiple,beforeOpen,pinTransfer,decorate,handle,clientScript:()=>`(${client.toString()})();`};

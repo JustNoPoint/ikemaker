@@ -1,0 +1,935 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "linkedData",
+  "fixtureId": "signed-boundaries",
+  "fixtureByteHash": "7d4b44102ea3462613a6f30f071fb23e4cc4aabf394ace7f90d13bdd9a0374c7",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "signed-boundaries",
+    "sourceSha256": "7d4b44102ea3462613a6f30f071fb23e4cc4aabf394ace7f90d13bdd9a0374c7",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 65534,
+        "number": 65535,
+        "width": 3,
+        "height": 2,
+        "axisX": -32768,
+        "axisY": 32767,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 0,
+        "number": 65000,
+        "width": 3,
+        "height": 2,
+        "axisX": 32767,
+        "axisY": -32768,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "expected": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "expected": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "expected": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "expected": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": "No linked sprite payloads exist in this fixture; zero-link table plus successful load/reopen checked.",
+  "captures": [
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/signed-boundaries-p00000-g65534-i65535.png",
+      "capture": "Ikemen_GO006.png",
+      "sha256": "96265caf7c705bbf5e006ceca23e63c7208079214561a38b2bd842a714159366",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/signed-boundaries-p00000-g65534-i65535.png",
+      "capture": "Ikemen_GO007.png",
+      "sha256": "5d27ce3daf225ed5a021735064023985bd1671b894a5d51a7cd3ff0de2665a84",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 0,
+      "physicalIndex": 1,
+      "bg": 0,
+      "expectedPng": "expected/signed-boundaries-p00001-g00000-i65000.png",
+      "capture": "Ikemen_GO008.png",
+      "sha256": "96265caf7c705bbf5e006ceca23e63c7208079214561a38b2bd842a714159366",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 0,
+      "physicalIndex": 1,
+      "bg": 255,
+      "expectedPng": "expected/signed-boundaries-p00001-g00000-i65000.png",
+      "capture": "Ikemen_GO009.png",
+      "sha256": "5d27ce3daf225ed5a021735064023985bd1671b894a5d51a7cd3ff0de2665a84",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/signed-boundaries-p00000-g65534-i65535.png",
+      "capture": "Ikemen_GO010.png",
+      "sha256": "96265caf7c705bbf5e006ceca23e63c7208079214561a38b2bd842a714159366",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/signed-boundaries-p00000-g65534-i65535.png",
+      "capture": "Ikemen_GO011.png",
+      "sha256": "5d27ce3daf225ed5a021735064023985bd1671b894a5d51a7cd3ff0de2665a84",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 1,
+      "physicalIndex": 1,
+      "bg": 0,
+      "expectedPng": "expected/signed-boundaries-p00001-g00000-i65000.png",
+      "capture": "Ikemen_GO012.png",
+      "sha256": "96265caf7c705bbf5e006ceca23e63c7208079214561a38b2bd842a714159366",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    },
+    {
+      "fixtureId": "signed-boundaries",
+      "pass": 1,
+      "physicalIndex": 1,
+      "bg": 255,
+      "expectedPng": "expected/signed-boundaries-p00001-g00000-i65000.png",
+      "capture": "Ikemen_GO013.png",
+      "sha256": "5d27ce3daf225ed5a021735064023985bd1671b894a5d51a7cd3ff0de2665a84",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/signed-boundaries/renderComparison.json"
+    }
+  ]
+}

@@ -1,8 +1,0 @@
-IKEMaker 0.79.44 — Final AIR Actions Browser transition
-
-- Finalizes the approved AIR Actions Browser as the single visible action-navigation and action-management surface.
-- Removes the embedded action rail from the main AIR layout while retaining the main canvas, timeline, playback, frame editing, collision tools, and inspectors.
-- Automatically opens and floats the Actions Browser when an AIR viewer opens.
-- Requests VS Code's native always-on-top mode for the floating Actions Browser.
-- Keeps Return to Main Window, native docking/tab placement, serialization, and restore support.
-- Reuses VS Code's remembered auxiliary-window bounds; the approved compact window becomes the practical restored size without applying Windows-only coordinate manipulation.

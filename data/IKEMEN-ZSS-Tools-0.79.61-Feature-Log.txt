@@ -1,7 +1,0 @@
-IKEMaker 0.79.61
-
-- Embedded the complete PalFX Presets and True-Color FX Composer directly beneath the floating SFF workspace mode row.
-- PalFX no longer creates another VS Code editor tab or window.
-- PalFX preset/profile persistence, draft recovery, copy, insert, generated code, and composer actions continue using their established workspace services.
-- Restored the Palette Workshop color grid, selected-index controls, RGB/color editing, save/reset, assignment, export formats, audits, master tools, and library/staging operations.
-- Restored complete Display controls including naming guidance, camera offsets, axis layering, and full onion-skin navigation.

@@ -1,7 +1,0 @@
-IKEMaker 0.79.428
-
-Palette Template completion review contrast
-
-- The completion dialog now has an explicit theme-aware background and readable foreground text.
-- Primary and Cancel actions have distinct enabled, hover, keyboard-focus, and disabled appearances.
-- Checkbox and explanatory text colors remain visible even when native dialog defaults do not inherit the webview theme.

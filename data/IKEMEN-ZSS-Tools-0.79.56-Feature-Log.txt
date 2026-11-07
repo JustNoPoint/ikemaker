@@ -1,7 +1,0 @@
-IKEMaker 0.79.56
-
-- Removes the duplicate Groups and Sprites rails from the main SFF viewer.
-- Removes the duplicate Sprite details tab from the main SFF inspector.
-- Adds Sprite, Palettes, Review, Display, Layer Preview, and Animations destinations to the floating SFF Browser.
-- Adds direct Open PalFX Editor buttons to both the main SFF toolbar and floating browser.
-- Keeps the underlying SFF tools intact while moving navigation into the floating workspace.

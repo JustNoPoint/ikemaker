@@ -7,11 +7,13 @@ const REQUIRED_PLATFORMS = Object.freeze(['windows-x64', 'linux-x64']);
 const OPTIONAL_PLATFORMS = Object.freeze(['macos-arm64', 'macos-x64']);
 const REQUIRED_CHECKS = Object.freeze(['load', 'reopen', 'identityTable', 'renderComparison', 'transparency', 'linkedData']);
 const PLATFORM_ARCHITECTURES = Object.freeze({ 'windows-x64': 'x64', 'linux-x64': 'x64', 'macos-arm64': 'arm64', 'macos-x64': 'x64' });
+const WINDOWS_SCOPE = 'windows-x64', CROSS_PLATFORM_SCOPE = 'cross-platform';
+function authoringValidationScope() { return process.platform === 'win32' && process.arch === 'x64' ? WINDOWS_SCOPE : CROSS_PLATFORM_SCOPE; }
 
 const sha256 = value => crypto.createHash('sha256').update(value).digest('hex');
 
 function assertManifest(manifest) {
-  if (!manifest || manifest.kind !== 'ikemaker-sff-runtime-certification-fixtures' || ![2, 3, 4].includes(manifest.version)) throw new Error('This is not a supported IKEMaker SFF runtime-certification manifest.');
+  if (!manifest || manifest.kind !== 'ikemaker-sff-runtime-certification-fixtures' || ![2, 3, 4, 5].includes(manifest.version)) throw new Error('This is not a supported IKEMaker SFF runtime-certification manifest.');
   if (manifest.adoptionAllowed !== false) throw new Error('Runtime-certification fixtures must explicitly forbid adoption.');
   if (!Array.isArray(manifest.fixtures) || !manifest.fixtures.length) throw new Error('The certification manifest has no fixtures.');
   if (manifest.version >= 4) {
@@ -22,6 +24,8 @@ function assertManifest(manifest) {
   for (const fixture of manifest.fixtures) {
     if (!fixture?.id || ids.has(fixture.id) || !/^[a-z0-9][a-z0-9-]{0,80}$/.test(fixture.id)) throw new Error('Certification fixture IDs must be unique stable names.');
     ids.add(fixture.id);
+    if (fixture.runtimeExpectation !== undefined && (manifest.version !== 5 || fixture.id !== 'reserved-group-negative' || fixture.runtimeExpectation !== 'reserved-group-unaddressable' || fixture.sprites?.length !== 1 || fixture.sprites[0].group !== 65535)) throw new Error('Unknown or malformed certification runtime-negative expectation.');
+    if (manifest.version === 5 && fixture.id === 'reserved-group-negative' && fixture.runtimeExpectation !== 'reserved-group-unaddressable') throw new Error('The reserved group negative fixture must retain its explicit runtime expectation.');
     if (!/^[a-f0-9]{64}$/.test(String(fixture.byteHash || ''))) throw new Error(`Certification fixture ${fixture.id} has no sealed archive hash.`);
     for (const [label, artifact] of [['specification', fixture.specification], ['strict validation report', fixture.strictValidation]]) if (!artifact?.filename || !/^[a-f0-9]{64}$/.test(String(artifact.byteHash || ''))) throw new Error(`Certification fixture ${fixture.id} has no sealed ${label}.`);
     if (manifest.version >= 3) for (const [index, sprite] of (fixture.sprites || []).entries()) {
@@ -59,8 +63,10 @@ function createCertificationLedger(manifest, manifestBytes) {
   };
 }
 
-function validateCertificationLedger(manifest, manifestBytes, ledger) {
+function validateCertificationLedger(manifest, manifestBytes, ledger, options = {}) {
   assertManifest(manifest);
+  const validationScope = options.validationScope || CROSS_PLATFORM_SCOPE;
+  if (![WINDOWS_SCOPE, CROSS_PLATFORM_SCOPE].includes(validationScope)) throw new Error('Unknown SFF certification validation scope.');
   const issues = [], expectedManifestHash = sha256(manifestBytes), fixtureMap = new Map(manifest.fixtures.map(item => [item.id, item]));
   if (!Buffer.isBuffer(manifestBytes)) throw new Error('Validate the certification ledger against the exact manifest bytes.');
   if (!ledger || ledger.kind !== 'ikemaker-sff-runtime-certification-results' || ledger.version !== 2) issues.push('Unsupported certification result schema.');
@@ -106,8 +112,10 @@ function validateCertificationLedger(manifest, manifestBytes, ledger) {
   }
   for (const platformId of REQUIRED_PLATFORMS) if (!seenPlatforms.has(platformId)) issues.push(`Missing required physical platform ${platformId}.`);
   const requiredRows = REQUIRED_PLATFORMS.map(id => rows.find(row => row.platformId === id));
-  const physicalGateSatisfied = !issues.length && requiredRows.every(row => row && row.fixtures.length === manifest.fixtures.length && row.fixtures.every(result => REQUIRED_CHECKS.every(name => result.checks[name] === 'pass' && result.checkEvidence[name].length > 0)));
-  return { valid: issues.length === 0, issues, physicalGateSatisfied, adoptionAllowed: false, status: physicalGateSatisfied ? 'physical-evidence-complete-review-required' : 'physical-evidence-incomplete' };
+  const complete = row => row && row.fixtures.length === manifest.fixtures.length && row.fixtures.every(result => REQUIRED_CHECKS.every(name => result.checks[name] === 'pass' && result.checkEvidence[name].length > 0));
+  const crossPlatformGateSatisfied = !issues.length && requiredRows.every(complete), scopedRows = validationScope === WINDOWS_SCOPE ? requiredRows.filter(row => row?.platformId === WINDOWS_SCOPE) : requiredRows;
+  const physicalGateSatisfied = !issues.length && scopedRows.length > 0 && scopedRows.every(complete), unverifiedPlatforms = REQUIRED_PLATFORMS.filter(id => !complete(rows.find(row => row.platformId === id)));
+  return { valid: issues.length === 0, issues, validationScope, physicalGateSatisfied, crossPlatformGateSatisfied, unverifiedPlatforms, adoptionAllowed: false, status: physicalGateSatisfied ? 'physical-evidence-complete-review-required' : 'physical-evidence-incomplete' };
 }
 
 function strictJson(text, label) {
@@ -118,6 +126,8 @@ function strictJson(text, label) {
 
 function validateCertificationEvidence(backend, targetId, evidence = {}) {
   try {
+    const hostScope = authoringValidationScope(), validationScope = evidence.validationScope || hostScope;
+    if (![WINDOWS_SCOPE, CROSS_PLATFORM_SCOPE].includes(validationScope) || validationScope === WINDOWS_SCOPE && hostScope !== WINDOWS_SCOPE) throw new Error('Windows-scoped certification cannot authorize this host. Complete its required platform evidence.');
     const manifestBytes = Buffer.from(evidence.manifestText || '', 'utf8'), ledgerBytes = Buffer.from(evidence.ledgerText || '', 'utf8');
     const manifest = strictJson(evidence.manifestText, 'Certification manifest'), ledger = strictJson(evidence.ledgerText, 'Certification ledger');
     assertManifest(manifest);
@@ -125,7 +135,7 @@ function validateCertificationEvidence(backend, targetId, evidence = {}) {
     if (!approved.includes(manifestHash)) throw new Error('Certification manifest hash is not pinned for this backend.');
     if (manifest.targetId !== targetId || manifest.backendId !== backend.id || manifest.adapter?.id !== backend.adapter.id || Number(manifest.adapter?.version) !== Number(backend.adapter.version)) throw new Error('Certification manifest target/backend/adapter identity does not match the selected backend.');
     if (manifest.strictValidator?.id !== backend.strictValidator?.id || Number(manifest.strictValidator?.version) !== Number(backend.strictValidator?.version) || manifest.strictValidator?.profile !== backend.strictValidator?.profile || manifest.writerProfile !== backend.writerProfile) throw new Error('Certification manifest validator or writer profile is not approved for this backend.');
-    const validation = validateCertificationLedger(manifest, manifestBytes, ledger);
+    const validation = validateCertificationLedger(manifest, manifestBytes, ledger, { validationScope });
     if (!validation.valid || !validation.physicalGateSatisfied || validation.adoptionAllowed !== false || validation.status !== 'physical-evidence-complete-review-required') throw new Error('Certification ledger does not contain complete valid physical evidence.');
     const artifacts = evidence.evidenceArtifacts;
     if (!artifacts || typeof artifacts !== 'object' || Array.isArray(artifacts)) throw new Error('Exact certification evidence artifacts are required.');
@@ -139,8 +149,8 @@ function validateCertificationEvidence(backend, targetId, evidence = {}) {
       if (bytes.toString('base64').replace(/=+$/,'') !== encoded.replace(/=+$/,'') || sha256(bytes) !== item.sha256) throw new Error(`Certification evidence artifact ${item.id} does not match its ledger hash.`);
     }
     if (Object.keys(artifacts).some(id => !requiredIds.has(id))) throw new Error('Certification evidence includes unreviewed extra artifacts.');
-    return { valid: true, manifestHash, ledgerHash: sha256(ledgerBytes), validation, evidenceArtifactCount: requiredIds.size, adoptionAllowed: false };
+    return { valid: true, validationScope, manifestHash, ledgerHash: sha256(ledgerBytes), validation, evidenceArtifactCount: requiredIds.size, adoptionAllowed: false };
   } catch (error) { return { valid: false, error: error.message, adoptionAllowed: false }; }
 }
 
-module.exports = { RESULT_STATES, REQUIRED_PLATFORMS, OPTIONAL_PLATFORMS, REQUIRED_CHECKS, PLATFORM_ARCHITECTURES, createCertificationLedger, validateCertificationLedger, validateCertificationEvidence };
+module.exports = { RESULT_STATES, REQUIRED_PLATFORMS, OPTIONAL_PLATFORMS, REQUIRED_CHECKS, PLATFORM_ARCHITECTURES, WINDOWS_SCOPE, CROSS_PLATFORM_SCOPE, authoringValidationScope, createCertificationLedger, validateCertificationLedger, validateCertificationEvidence };

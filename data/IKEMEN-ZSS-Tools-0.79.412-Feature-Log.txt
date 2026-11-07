@@ -1,8 +1,0 @@
-IKEMaker 0.79.412 — Edge-reaching template separators
-
-- The palette-template separator tool now has a visible drawing gutter outside the working canvas.
-- A separator chain may begin outside the canvas and finish by double-clicking outside it.
-- Outside endpoints do not enlarge the editable or exported canvas.
-- When the template is finalized, marked outside endpoints extend to the finished image edge, including the fresh 10-pixel background margin.
-- Connected interior turns retain their exact authored positions.
-- Added regression coverage for horizontal and diagonal edge intersections, fixed canvas sizing, and the outside-canvas gestures.

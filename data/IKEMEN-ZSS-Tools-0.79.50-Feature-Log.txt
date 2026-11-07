@@ -1,5 +1,0 @@
-IKEMaker 0.79.50
-
-- Makes Groups, Sprites, and Details real SFF Browser view switches at every window width.
-- Adds an explicit Combined view for the three-pane layout.
-- Remembers the selected browser view.

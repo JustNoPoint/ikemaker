@@ -17,6 +17,12 @@ function integerField(row, names, label) {
   return value;
 }
 
+function optionalAxis(row, names) {
+  const key=names.find(name=>Object.prototype.hasOwnProperty.call(row||{},name)&&row[name]!==null&&row[name]!==undefined&&String(row[name]).trim()!=='');
+  if(!key||!['string','number'].includes(typeof row[key]))return null;
+  const value=Number(row[key]);return Number.isSafeInteger(value)?value:null;
+}
+
 function createManifestIndex(rows = []) {
   const result = new Map();
   for (const [ordinal, row] of rows.entries()) {
@@ -26,8 +32,8 @@ function createManifestIndex(rows = []) {
       ordinal, source: String(source),
       group: integerField(row, ['ComputedGroup', 'SFFGroup', 'Group', 'BaseGroup'], 'group'),
       number: integerField(row, ['ImageIndex', 'SFFIndex', 'Index', 'SourceImageIndex'], 'index'),
-      axisX: Number.isSafeInteger(Number(row.AxisX ?? row.X)) ? Number(row.AxisX ?? row.X) : null,
-      axisY: Number.isSafeInteger(Number(row.AxisY ?? row.Y)) ? Number(row.AxisY ?? row.Y) : null
+      axisX: optionalAxis(row, ['AxisX', 'X']),
+      axisY: optionalAxis(row, ['AxisY', 'Y'])
     };
     if (mapping.group < 0 || mapping.group > 65535) throw new Error(`PSD reconstruction manifest ${mapping.source} uses a group outside 0–65535.`);
     if (mapping.number < 0 || mapping.number > 65535) throw new Error(`PSD reconstruction manifest ${mapping.source} uses an index outside 0–65535.`);

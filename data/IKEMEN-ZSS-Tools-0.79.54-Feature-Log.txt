@@ -1,5 +1,0 @@
-IKEMaker 0.79.54
-
-- Fixes the SFF auto-float focus race introduced in 0.79.53.
-- Moves the SFF Browser immediately while its tab is active instead of moving the main SFF viewer.
-- Prevents the delayed move from targeting an existing AIR auxiliary window.

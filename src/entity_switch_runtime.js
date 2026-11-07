@@ -5,7 +5,7 @@ const path = require('path');
 const crypto = require('crypto');
 const { createEntitySwitchCoordinator } = require('./entity_switch_coordinator');
 const { createEntitySwitchHost } = require('./entity_switch_host');
-const { PREVIOUS_MESSAGE } = require('./entity_header');
+const { PREVIOUS_MESSAGE, READY_MESSAGE, STATE_MESSAGE } = require('./entity_header');
 
 const STATE_KEY = 'ikemaker.entitySwitchRuntime.v1';
 const STATE_VERSION = 1;
@@ -66,7 +66,7 @@ function descriptorForEntry(entry,vscode,evidence=evidenceFor([entry],vscode)){
 class EntitySwitchRuntime{
   constructor(vscode,context,services={}){
     this.vscode=vscode;this.context=context;this.services=services;this.coordinator=services.coordinator||createEntitySwitchCoordinator();this.attachments=new Map();this.canonical=new Map();this.closedResources=new Map();this.disposed=false;this.suppressPersist=false;
-    this.host=services.host||createEntitySwitchHost({coordinator:this.coordinator,openEntity:request=>this.openEntity(request),closeEntity:request=>this.closeEntity(request),restoreEntity:request=>this.restoreEntity(request)});
+    this.host=services.host||createEntitySwitchHost({coordinator:this.coordinator,openEntity:request=>this.openEntity(request),focusEntity:request=>require('./entity_viewer_focus').focusEntityViewer(this,request),closeEntity:request=>this.closeEntity(request),restoreEntity:request=>this.restoreEntity(request)});
     this.registry=services.registry||require('./authoring_context_registry');
     this.restore();this.lastEntries=[];
     this.registrySubscription=this.registry.subscribeRegistry?.(snapshot=>{this.lastEntries=snapshot;this.observe(snapshot);});
@@ -106,13 +106,24 @@ class EntitySwitchRuntime{
 
   detach(panel){
     const record=this.attachments.get(panel);if(!record||record.disposed)return false;
-    record.disposed=true;record.header?.dispose?.();record.adapter?.dispose?.();record.panelDisposal?.dispose?.();this.attachments.delete(panel);
+    record.disposed=true;record.header?.dispose?.();record.excludedHeader?.dispose?.();record.adapter?.dispose?.();record.panelDisposal?.dispose?.();this.attachments.delete(panel);
     if(this.canonical.get(record.options.surfaceId)===record){this.canonical.delete(record.options.surfaceId);const replacement=[...this.attachments.values()].find(item=>!item.disposed&&item.options.surfaceId===record.options.surfaceId&&item.options.transferPinned!==true);if(replacement){replacement.header?.dispose?.();replacement.header=null;this._promote(replacement);}}
     this.updateCommandContext();return true;
   }
 
-  _exclude(record){record.excluded=true;}
-  _promote(record){const adapter=record.options.createAdapter();if(!adapter||adapter.surfaceId!==record.options.surfaceId)throw new Error(`The ${record.options.surfaceId} adapter does not match its surface.`);const lease=this.host.registerAdapter(adapter);try{record.header=this.host.registerHeader(record.panel,{surfaceId:record.options.surfaceId,adapterId:adapter.id});record.adapter=lease;this.canonical.set(record.options.surfaceId,record);record.excluded=false;}catch(error){lease.dispose();throw error;}}
+  _exclude(record){
+    record.excluded=true;
+    const publish=()=>{
+      if(record.disposed||!record.excluded)return;
+      const reason=record.options.transferPinned===true?'Pinned Transfer pane. Use the main viewer header to switch entities.':'Independent viewer pane. Use the main viewer header to switch entities.';
+      // Empty disabled state conveys no global active entity and grants no
+      // switch/open/restore authority to this intentionally independent pane.
+      record.panel.webview.postMessage({type:STATE_MESSAGE,revision:this.coordinator.snapshot().revision,activeIdentity:'',previousIdentity:'',canOpen:false,entities:[],closedEntities:[],openUnavailableReason:reason,status:reason});
+    };
+    record.excludedHeader=record.panel.webview.onDidReceiveMessage?.(message=>{if(message?.type===READY_MESSAGE&&Object.keys(message).length===1)publish();});
+    publish();
+  }
+  _promote(record){record.excludedHeader?.dispose?.();record.excludedHeader=null;const adapter=record.options.createAdapter();if(!adapter||adapter.surfaceId!==record.options.surfaceId)throw new Error(`The ${record.options.surfaceId} adapter does not match its surface.`);const lease=this.host.registerAdapter(adapter);try{record.header=this.host.registerHeader(record.panel,{surfaceId:record.options.surfaceId,adapterId:adapter.id});record.adapter=lease;this.canonical.set(record.options.surfaceId,record);record.excluded=false;}catch(error){lease.dispose();throw error;}}
 
   async openEntity(){
     const picked=await this.vscode.window.showOpenDialog?.({title:'Open IKEMaker entity definition',canSelectMany:false,filters:{'IKEMEN definitions':['def']}});if(!picked?.[0])return{status:'cancelled'};
@@ -129,13 +140,22 @@ class EntitySwitchRuntime{
     return[...new Set([owner,...(entry?.files||[])].filter(filename=>typeof filename==='string'&&path.isAbsolute(filename)).map(filename=>path.resolve(filename)))].slice(0,512);
   }
 
-  async closeEntity({identity}={}){
+  async closeEntity({identity,panel}={}){
     const snapshot=this.coordinator.snapshot(),entity=snapshot.entities.find(item=>item.identity===identity);
     if(!entity)return{status:'unchanged',reason:'That entity is not currently loaded.'};
-    if(identity===snapshot.activeIdentity)return{status:'unavailable',reason:'The active entity cannot be closed. Switch to another entity first.'};
+    const dirty=()=>{const current=this.coordinator.snapshot().entities.find(item=>item.identity===identity),resources=this.resourcesFor(identity).map(key);return current?.dirty||(this.vscode.workspace.textDocuments||[]).some(doc=>doc.isDirty&&resources.includes(key(doc.fileName)));};
+    if(dirty())return{status:'unavailable',reason:'Save or revert this entity’s text edits and retained preview draft before unloading it. No files were changed.'};
+    if(snapshot.pending)return{status:'unavailable',reason:'Wait for the current entity switch before unloading this tab.'};
+    if(identity===snapshot.activeIdentity){
+      const next=snapshot.entities.find(item=>item.identity!==identity&&item.supported!==false&&!item.dirty);
+      if(!next||!panel||!this.host.ready())return{status:'unavailable',reason:'Open another safely synchronized entity before unloading the last active entity. Its files and preview remain open.'};
+      const switched=await this.host.handleMessage(panel,{type:require('./entity_header').SWITCH_MESSAGE,identity:next.identity,revision:snapshot.revision});
+      if(switched.status!=='committed')return{status:switched.status,reason:switched.reason||'The active entity could not be safely left; it remains loaded.'};
+      const after=this.coordinator.snapshot();if(after.activeIdentity!==next.identity||after.pending||dirty())return{status:'unavailable',reason:'The entity context changed while closing. The requested entity remains loaded.'};
+    }
+    const current=this.coordinator.snapshot().entities.find(item=>item.identity===identity);if(!current)return{status:'unchanged'};
     const resources=this.resourcesFor(identity);this.closedResources.set(identity,resources);
-    this.coordinator.retain(identity,navigationState(entity.retainedState));
-    this.coordinator.close(identity);
+    this.coordinator.retain(identity,navigationState(current.retainedState));this.coordinator.close(identity);
     return{status:'closed',identity};
   }
 

@@ -1,0 +1,92 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "identityTable",
+  "fixtureId": "minimal",
+  "fixtureByteHash": "0643145947012f06831da46e9c6353c542536b6e9ebfd72c40c3637876f562a3",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "minimal",
+    "sourceSha256": "0643145947012f06831da46e9c6353c542536b6e9ebfd72c40c3637876f562a3",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 0,
+        "number": 0,
+        "width": 1,
+        "height": 1,
+        "axisX": 0,
+        "axisY": 0,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "expected": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "expected": [
+          0,
+          0,
+          1,
+          1,
+          0,
+          0,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\tminimal\t0",
+    "sprite\tminimal\t0\t0\t0\t1\t1\t0\t0\t0",
+    "open\tminimal\t1",
+    "sprite\tminimal\t1\t0\t0\t1\t1\t0\t0\t0"
+  ]
+}

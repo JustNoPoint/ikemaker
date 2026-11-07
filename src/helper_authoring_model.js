@@ -227,18 +227,24 @@ function stateRanges(text) {
 function paramsFrom(body) {
   const output = {}; for (const match of body.matchAll(/\b([A-Za-z][\w.]*)\s*[:=]\s*("[^"]*"|[^;\r\n}]+)/g)) output[match[1].toLowerCase()] = clean(match[2]).replace(/^"|"$/g, ''); return output;
 }
-function helperBlocks(text) {
-  const blocks = [], zss = /\bhelper\s*\{([^}]*)\}/ig, cns = /\[\s*State\b[^\]]*\][\s\S]*?\btype\s*=\s*helper\b([\s\S]*?)(?=\n\s*\[|$)/ig; let match;
-  while ((match = zss.exec(text))) blocks.push({ index: match.index, endIndex: zss.lastIndex, body: match[1], syntax: 'zss' });
-  while ((match = cns.exec(text))) blocks.push({ index: match.index, endIndex: cns.lastIndex, body: match[1], syntax: 'cns' });
-  return blocks.sort((a, b) => a.index - b.index);
+function helperStructureMask(text,syntax){
+ const chars=String(text).split('');let quote='',escaped=false;
+ for(let at=0;at<chars.length;at++){const char=text[at],next=text[at+1];if(quote){chars[at]=' ';if(escaped)escaped=false;else if(char==='\\')escaped=true;else if(char===quote)quote='';continue;}if(char==='"'||char==="'"){quote=char;chars[at]=' ';continue;}if(syntax==='cns'&&char===';'||syntax==='zss'&&(char==='#'||char==='/'&&next==='/')){for(;at<chars.length&&text[at]!=='\n'&&text[at]!=='\r';at++)chars[at]=' ';at--;}}
+ return chars.join('');
+}
+function helperBlocks(text,syntax) {
+ const blocks=[],masked=helperStructureMask(text,'zss'),zss=/\bhelper\s*\{/ig;let match;
+ while(syntax!=='cns'&&(match=zss.exec(masked))){const open=masked.indexOf('{',match.index);let depth=1,at=open+1;for(;at<masked.length&&depth;at++){if(masked[at]==='{')depth++;else if(masked[at]==='}')depth--;}if(depth)continue;blocks.push({index:match.index,endIndex:at,body:text.slice(open+1,at-1),syntax:'zss'});zss.lastIndex=at;}
+ const cns=/^[ \t]*\[\s*State\b[^\]\r\n]*\](?:(?!\r?\n[ \t]*\[)[\s\S])*?^[ \t]*type[ \t]*=[ \t]*helper\b([\s\S]*?)(?=\r?\n[ \t]*\[|(?![\s\S]))/igm,cnsMasked=helperStructureMask(text,'cns');
+ while(syntax!=='zss'&&(match=cns.exec(cnsMasked)))blocks.push({index:match.index,endIndex:cns.lastIndex,body:text.slice(cns.lastIndex-match[1].length,cns.lastIndex),syntax:'cns'});
+ return blocks.sort((a,b)=>a.index-b.index);
 }
 function inspectSource(source) {
   const text = String(source.text || ''), ranges = stateRanges(text), spawns = [], flows = [], reads = [], cleanup = [];
-  for (const block of helperBlocks(text)) {
+  for (const block of helperBlocks(text,/\.zss$/i.test(source.filename||'')?'zss':/\.(?:cns|st|cmd)$/i.test(source.filename||'')?'cns':null)) {
     const p = paramsFrom(block.body), owner = [...ranges].reverse().find((range) => range.index <= block.index && block.index < range.end);
     const idExpression = clean(p.id), staticId = /^\d+$/.test(idExpression) ? int(idExpression) : null;
-    spawns.push({ uid: uid(`${source.filename}:${block.index}`), filename: source.filename, line: text.slice(0, block.index).split(/\r?\n/).length, syntax: block.syntax, startIndex: block.index, endIndex: block.endIndex, ownerState: owner?.state ?? null, id: staticId ?? idExpression, dynamicId: staticId === null && Boolean(idExpression), stateNo: int(p.stateno), name: p.name || `Helper ${p.id || '?'}`, params: p, maps: Object.entries(p).filter(([name]) => name.startsWith('map.')).map(([name, value]) => ({ name: name.slice(4), value })), extendsMap: int(p.extendsmap) === 1 });
+    spawns.push({ uid: uid(`${source.filename}:${block.index}`), filename: source.filename, line: text.slice(0, block.index).split(/\r?\n/).length, syntax: block.syntax, startIndex: block.index, endIndex: block.endIndex, ownerState: owner?.state ?? null, sourceHash: crypto.createHash('sha256').update(text).digest('hex'), controllerHash: crypto.createHash('sha256').update(text.slice(block.index,block.endIndex)).digest('hex'), id: staticId ?? idExpression, dynamicId: staticId === null && Boolean(idExpression), dynamicState: !/^\d+$/.test(String(p.stateno||'')) || !Number.isSafeInteger(Number(p.stateno)), stateNo: /^\d+$/.test(String(p.stateno||''))&&Number.isSafeInteger(Number(p.stateno))?Number(p.stateno):null, name: p.name || `Helper ${p.id || '?'}`, params: p, maps: Object.entries(p).filter(([name]) => name.startsWith('map.')).map(([name, value]) => ({ name: name.slice(4), value })), extendsMap: int(p.extendsmap) === 1 });
   }
   const flowRe = /\b(parent|root|team)?map(set|add)\s*\{([^}]*)\}|\b(parent|root|helper\s*\([^)]*\)|playerid\s*\([^)]*\))\s*,\s*map\s*\(([^)]+)\)\s*(:=|\+=)|\bmap\s*\(([^)]+)\)\s*(:=|\+=)/ig; let flow;
   while ((flow = flowRe.exec(text))) { const params = paramsFrom(flow[3] || ''), rawScope = clean(flow[1] || flow[4] || 'self').toLowerCase(), scope = rawScope.startsWith('helper') ? 'helper' : rawScope.startsWith('playerid') ? 'playerid' : rawScope; flows.push({ filename: source.filename, index: flow.index, line: text.slice(0, flow.index).split(/\r?\n/).length, scope, operation: String(flow[2] || flow[6] || flow[8]).toLowerCase().includes('add') || flow[6] === '+=' || flow[8] === '+=' ? 'add' : 'set', map: clean(params.map || flow[5] || flow[7]).replace(/^"|"$/g, '') }); }
@@ -256,6 +262,7 @@ function csvPair(value, fallback = [0, 0]) { const parts = String(value ?? '').s
 function csvInts(value, fallback = [0]) { const parts = String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean); return parts.length ? parts.map((item) => int(item)) : fallback.slice(); }
 function planFromSpawn(spawn = {}) {
   const p = spawn.params || {};
+  if(spawn.dynamicId||!Number.isSafeInteger(spawn.id)||spawn.id<0||!/^\d+$/.test(String(p.stateno??spawn.stateNo??''))||!Number.isSafeInteger(Number(p.stateno??spawn.stateNo)))throw new Error('Dynamic, omitted, or ambiguous Helper ID/starting state is read-only. Inspect its exact source expressions.');
   return newHelper({
     name: p.name || spawn.name || 'Existing Helper', language: spawn.syntax === 'cns' ? 'cns' : 'zss', id: Number.isInteger(spawn.id) ? spawn.id : 0,
     stateNo: int(p.stateno, spawn.stateNo), position: csvPair(p.pos), postype: p.postype || 'p1', facing: num(p.facing, 1), keyCtrl: csvInts(p.keyctrl),
@@ -276,6 +283,7 @@ function buildHelperGraph(sources = []) {
     const owner = parent ? byUid.get(parent.uid) : byUid.get('root'); owner.children.push(node.uid); node.parentUid = owner.uid;
     if (!node.id) node.issues.push({ level: 'warning', message: 'No explicit helper ID was found.' });
     if (node.dynamicId) node.issues.push({ level: 'suggestion', message: `Computed helper ID ${node.id} cannot be reduced to one family during static review; verify its runtime range.` });
+    if (node.dynamicState) node.issues.push({level:'warning',message:'Dynamic or omitted starting StateDef is read-only; no state 0 is inferred.'});
     if (!node.stateNo) node.issues.push({ level: 'warning', message: 'No explicit starting state was found.' });
     if (node.ownerState === node.stateNo) node.issues.push({ level: 'warning', message: `State ${node.stateNo} creates a helper that starts in the same state. Guard against unintended recursive spawning.` });
     const stateDefinitions = inspected.flatMap((source) => source.states.map((state) => ({ ...state, filename: source.filename }))).filter((state) => state.state === node.stateNo);

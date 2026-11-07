@@ -1,8 +1,0 @@
-IKEMaker 0.79.410
-
-Clear inverse labels for color focus
-
-- When Darken unselected colors is active, its button becomes Remove darken.
-- When Lighten unselected colors is active, its button becomes Remove lighten.
-- Clicking either inverse action immediately restores the normal display and retains the other display mode as a separate choice.
-- Updates accessible button labels together with the visible text.

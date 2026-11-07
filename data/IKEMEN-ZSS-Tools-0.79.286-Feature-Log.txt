@@ -1,5 +1,0 @@
-IKEMaker 0.79.286
-- Text Editor: restore inactive AIR/SFF/SND tabs before checking whether the visual workspace can close safely.
-- Preserve existing native text buffers, including shared templates, when switching to the focused text workspace with Code Navigation above.
-- Keep unsaved-edit and busy-viewer protections. No automatic side-by-side fallback.
-Validation: seven focused navigation, lifecycle, and layout suites passed. Installed-window verification remains manual.

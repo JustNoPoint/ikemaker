@@ -8,7 +8,9 @@ const authoringCatalog = require('./authoring_catalog');
 const intentSearch = require('./intent_search');
 const { buildSimilarCodeProjection } = require('./similar_code_model');
 const { BROWSER_BOUNDS } = require('./authoring_browser_bounds');
-const triggerCatalog=require('../data/triggers.json');
+const sourceAdmission=require('./coding_source_admission');
+const {textGrammar}=require('./map_registry_grammar');
+const triggerCatalog=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const {argumentSummary}=require('./trigger_argument_model');
 const {entryAvailable,filterAvailable,enabledCapabilityIds}=require('./catalog_capability_filter');
 const {buildResourceLifecycleProjection}=require('./resource_lifecycle_projection');
@@ -27,9 +29,9 @@ function within(root, filename) {
   const relative = path.relative(root, filename);
   return relative === '' || relative !== '..' && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);
 }
-function language(filename) {
-  const extension = path.extname(filename).toLowerCase();
-  return extension === '.lua' ? 'lua' : extension === '.cns' || extension === '.st' ? 'cns' : 'zss';
+function language(filename,languageId) {
+  const grammar=languageId||textGrammar({fileName:filename});
+  return path.extname(filename).toLowerCase()==='.lua'||grammar==='lua'?'lua':grammar==='ikemen-cns'?'cns':'zss';
 }
 function opaque(parts) { return crypto.createHash('sha256').update(JSON.stringify(parts)).digest('hex').slice(0, 32); }
 function source(filename, line, endLine = line, fingerprint = '') { return Object.freeze({ filename, line:Math.max(0, Number(line)||0), endLine:Math.max(Number(line)||0, Number(endLine)||0), fingerprint:text(fingerprint,128) }); }
@@ -48,7 +50,7 @@ function codeProjection(files, root) {
   };
   const items = [];
   for (const file of files) {
-    const parsed = parseCodeStructure(file.text, language(file.filename), file.filename);
+    const parsed = parseCodeStructure(file.text, language(file.filename,file.languageId), file.filename);
     const children = [];
     for (let index=0; index<(parsed.children||[]).length && count<LIMITS.nodes; index+=1) {
       const child=project(parsed.children[index],file.filename,1,String(index),file.fingerprint); if(child)children.push(child);
@@ -185,14 +187,23 @@ function applyAliasDiscovery(items, aliases) {
 }
 
 function flattenItems(items, output=[]) { for(const item of items||[]){output.push(item);flattenItems(item.children,output);}return output; }
-function buildAuthoringBrowserModel(input={}) {
-  const root=canonical(input.root||'.'), seen=new Set(), files=[];
+function reviewedFiles(input, root) {
+  const seen=new Set(), files=[],admissionChecks=new Map();
   for(const value of Array.isArray(input.documents)?input.documents.slice(0,LIMITS.files):[]) {
     if(!value||typeof value.filename!=='string'||typeof value.text!=='string'||Buffer.byteLength(value.text,'utf8')>LIMITS.sourceBytes)continue;
-    const filename=canonical(value.filename), key=filename.toLowerCase(); if(seen.has(key)||!within(root,filename))continue;
-    seen.add(key); files.push({filename,text:value.text,fingerprint:crypto.createHash('sha256').update(value.text).digest('hex')});
+    const filename=canonical(value.filename), key=filename.toLowerCase(),admitted=sourceAdmission.hasCodingSourceAdmission(value),current=admitted&&sourceAdmission.codingSourceAdmissionCurrent(value,admissionChecks); if(seen.has(key)||admitted&&!current||!within(root,filename)&&!current)continue;
+    seen.add(key); files.push({filename,text:value.text,languageId:value.languageId||textGrammar({fileName:filename}),fingerprint:crypto.createHash('sha256').update(value.text).digest('hex')});
   }
-  const contextIdentity=opaque(['authoring-context',String(input.contextIdentity||root)]),code=codeProjection(files,root), projectData=projectDataProjection(files,input.assignedFiles||files.map(file=>file.filename),{nightlyStringsEnabled:input.nightlyStringsEnabled,capabilities:input.capabilities,glossaryMetadata:input.glossaryMetadata,contextIdentity,ownerDef:input.ownerDef}), recipes=recipeProjection({nightlyStringsEnabled:input.nightlyStringsEnabled,capabilities:input.capabilities}), capabilityIds=[...(input.capabilities?.enabledCapabilities||[])].map(String).sort(),catalogFingerprint=crypto.createHash('sha256').update(JSON.stringify(files.map(file=>[file.filename.toLowerCase(),file.fingerprint]))).digest('hex'), similarCode=buildSimilarCodeProjection({documents:files,activeSource:input.activeSource,aliases:input.aliases,personalExamples:input.personalExamples,target:{channel:input.capabilities?.target?.channel||(input.nightlyStringsEnabled?'nightly':'stable'),version:input.capabilities?.target?.version||(input.nightlyStringsEnabled?'':'1.0'),capabilityFingerprint:crypto.createHash('sha256').update(JSON.stringify(capabilityIds)).digest('hex'),catalogFingerprint,contextFingerprint:contextIdentity}});
+  return files;
+}
+function fingerprintFiles(files) {
+  const identities = files.map(file => [file.filename.toLowerCase(), file.fingerprint, file.languageId]);
+  return crypto.createHash('sha256').update(JSON.stringify(identities)).digest('hex');
+}
+function buildAuthoringBrowserModel(input={}) {
+  const root=canonical(input.root||'.'), files=reviewedFiles(input, root);
+  const contextIdentity=opaque(['authoring-context',String(input.contextIdentity||root)]),code=codeProjection(files,root), projectData=projectDataProjection(files.filter(file=>file.languageId!=='lua'),input.assignedFiles||files.map(file=>file.filename),{nightlyStringsEnabled:input.nightlyStringsEnabled,capabilities:input.capabilities,glossaryMetadata:input.glossaryMetadata,contextIdentity,ownerDef:input.ownerDef}), recipes=recipeProjection({nightlyStringsEnabled:input.nightlyStringsEnabled,capabilities:input.capabilities}), capabilityIds=[...(input.capabilities?.enabledCapabilities||[])].map(String).sort(),catalogFingerprint=fingerprintFiles(files), similarCode=buildSimilarCodeProjection({documents:files,activeSource:input.activeSource,aliases:input.aliases,personalExamples:input.personalExamples,target:{channel:input.capabilities?.target?.channel||(input.nightlyStringsEnabled?'nightly':'stable'),version:input.capabilities?.target?.version||(input.nightlyStringsEnabled?'':'1.0'),capabilityFingerprint:crypto.createHash('sha256').update(JSON.stringify(capabilityIds)).digest('hex'),catalogFingerprint,contextFingerprint:contextIdentity}});
+  code.failures=Array.isArray(input.sourceRefusals)?input.sourceRefusals.slice(0,LIMITS.files):[];
   const all=[...flattenItems(code.items),...flattenItems(projectData.items),...recipes.items], aliases=aliasProjection(input.aliases,all,{nightlyStringsEnabled:input.nightlyStringsEnabled});
   code.items=applyAliasDiscovery(code.items,aliases.aliases);projectData.items=applyAliasDiscovery(projectData.items,aliases.aliases);recipes.items=applyAliasDiscovery(recipes.items,aliases.aliases);
   code.aliasCollisions=aliases.collisions;projectData.aliasCollisions=aliases.collisions;recipes.aliasCollisions=aliases.collisions;
@@ -202,4 +213,4 @@ function buildAuthoringBrowserModel(input={}) {
   return Object.freeze(model);
 }
 
-module.exports={LIMITS,NIGHTLY_STRING_PATTERN,TRIGGER_FAMILIES,buildAuthoringBrowserModel,codeProjection,projectDataProjection,recipeProjection,triggerFamily,triggerProjection,aliasProjection,applyAliasDiscovery,flattenItems,within,opaque};
+module.exports={reviewedFiles,fingerprintFiles,LIMITS,NIGHTLY_STRING_PATTERN,TRIGGER_FAMILIES,buildAuthoringBrowserModel,codeProjection,projectDataProjection,recipeProjection,triggerFamily,triggerProjection,aliasProjection,applyAliasDiscovery,flattenItems,within,opaque};

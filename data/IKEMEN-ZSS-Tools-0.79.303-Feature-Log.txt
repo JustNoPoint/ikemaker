@@ -1,7 +1,0 @@
-IKEMaker 0.79.303
-
-- Palette Workshop Browser now shows the real image-tool controls in Workshop Tools.
-- Banks, Remappen, Layers, CS Masks, and exact image tools focus directly in the existing authoritative workshop panel.
-- Workshop Browser controls no longer reopen a duplicate workshop or fail silently.
-- Clone unique A indices → Remappen now stores independent index and RGBA snapshots.
-- Changing Bank A after cloning no longer changes the cloned Remappen swatch colors.

@@ -11,7 +11,11 @@ const placementDraft = require('./palette_template_placement_draft');
 
 function clone(value) { return value == null ? value : JSON.parse(JSON.stringify(value)); }
 function freeze(value) { if (!value || typeof value !== 'object' || Object.isFrozen(value)) return value; for (const item of Object.values(value)) freeze(item); return Object.freeze(value); }
-function integer(value) { const number = Number(value); return Number.isInteger(number) && number >= 0 ? number : null; }
+function integer(value) {
+  if (typeof value !== 'number' && !(typeof value === 'string' && /^\d+$/.test(value))) return null;
+  const number = Number(value);
+  return Number.isSafeInteger(number) && number >= 0 ? number : null;
+}
 function paletteSelection(value = {}) { return { physicalIndex: integer(value.physicalIndex), group: integer(value.group), number: integer(value.number) }; }
 function spriteSelection(value = {}) { return { physicalIndex: integer(value.physicalIndex), group: integer(value.group), number: integer(value.number) }; }
 function facts(value = {}) { return { preview: String(value.preview || 'none'), staged: String(value.staged || 'none'), embedded: String(value.embedded || 'saved'), activeTarget: String(value.activeTarget || 'reviewed'), builtOutput: String(value.builtOutput || 'none'), adoption: String(value.adoption || 'none') }; }
@@ -56,7 +60,7 @@ function createPaletteWorkspaceSession(input = {}) {
   const retainedDraft = Boolean(retainedPreview || restored.candidate?.baseline || restored.selectiveTransfer || (restored.organizer?.semanticEntries || []).length || restored.organizer?.construction || restored.migration?.operationId || restored.family?.assignment || restored.family?.template?.placementDraft || restored.family?.template?.authority || restored.family?.output?.manifest || restored.reduction?.operationId || restored.bulk?.operationId || (restored.interaction?.checkpoints || []).length);
   return freeze({
     schema: 'ikemaker.palette-workspace-session', version: 2, sessionId: String(input.sessionId), revision: Number(restored.revision) || 0,
-    context: { kind: collectiveContext ? 'collective-source' : sourceContext ? 'source' : 'existing-sff', mode: String(input.mode || restored.context?.mode || 'workspace'), origin: clone(input.origin || (restored.context?.needsPaletteHandoff ? { surface: 'palette-workspace' } : restored.context?.origin) || null), returnContext: clone(input.returnContext || (restored.context?.needsPaletteHandoff ? null : restored.context?.returnContext) || null), needsPaletteHandoff: null, section: String(input.section || restored.context?.section || (sourceContext ? 'sources-preflight' : 'live-edit')) },
+    context: { kind: collectiveContext ? 'collective-source' : sourceContext ? 'source' : 'existing-sff', mode: String(input.mode || restored.context?.mode || 'workspace'), origin: clone(input.origin || (restored.context?.needsPaletteHandoff ? { surface: 'palette-workspace' } : restored.context?.origin) || null), returnContext: clone(input.returnContext || (restored.context?.needsPaletteHandoff ? null : restored.context?.returnContext) || null), needsPaletteHandoff: null, paletteSpriteMode: restored.context?.paletteSpriteMode==='preview-current'?'preview-current':'associated', palettePreviewSprite: clone(restored.context?.palettePreviewSprite||null), section: String(input.section || restored.context?.section || (sourceContext ? 'sources-preflight' : 'live-edit')) },
     target: sourceContext ? null : clone(retainedPreview && restored.target ? restored.target : input.target), plan: sourceContext ? null : clone(retainedPreview && restored.plan ? restored.plan : input.plan), sources: sourceContext ? clone(retainedDraft && restored.sources?.length ? restored.sources : inputSources) : clone(restored.sources || []),
     selection: { sprite: spriteSelection(restored.selection?.sprite), palette: paletteSelection(restored.selection?.palette) },
     preview: retainedPreview ? { ...clone(retainedPreview), stale: !sameTarget || Boolean(retainedPreview.stale) } : { dirty: false, stale: false, colors: null, source: null, actOrder: null, label: '' },

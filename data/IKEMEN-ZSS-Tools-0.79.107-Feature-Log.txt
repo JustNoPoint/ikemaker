@@ -1,6 +1,0 @@
-IKEMaker 0.79.107
-
-- Adds Switch to IkeMiner to the shared Tools dropdown.
-- Adds a compact IkeMiner companion icon to shared viewer quick actions.
-- Missing or disabled IkeMiner installations produce a clear informational message and leave IKEMaker open.
-- Keeps IkeMiner separate from IKEMaker packaging and release scope.

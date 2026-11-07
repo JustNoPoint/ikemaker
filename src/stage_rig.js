@@ -1,4 +1,5 @@
 'use strict';
+const { DEFAULT_CYCLE_LENGTH, isCycleLength } = require('./stage_cycle');
 
 const vscode = require('vscode');
 const fs = require('fs');
@@ -176,10 +177,11 @@ function rigAir() {
 `;
 }
 
-function stageReadout(model, stageLabel) {
+function stageReadout(model, stageLabel, cycleLength = DEFAULT_CYCLE_LENGTH) {
+  if (!isCycleLength(cycleLength)) throw new Error('Cycle length must be a positive 32-bit integer.');
   const p1 = model.playerStarts[0], p2 = model.playerStarts[1];
   const camera = model.camera, stage = model.stageInfo;
-  return `IKEMAKER STAGE RIG — ${quoted(stageLabel)}\\nP1 world (%v, %v) screen (%v, %v) stage edges B/F (%v, %v)\\nP2 world (%v, %v) screen (%v, %v) stage edges B/F (%v, %v)\\nModes lock %v (0 off/1 X/2 Y/3 both)  sweep %v (0 off/1 X/2 Y/3 both)  preset %v  markers %v\\nStarts P1 ${compact(p1.x)},${compact(p1.y)}  P2 ${compact(p2.x)},${compact(p2.y)}  |  Stage X ${compact(model.movementBounds[0])}..${compact(model.movementBounds[1])}\\nCamera X ${compact(camera.bounds[0])}..${compact(camera.bounds[1])}  Y ${compact(camera.bounds[2])}..${compact(camera.bounds[3])}  |  Screen padding L/R ${compact(model.screenBounds[0])}/${compact(model.screenBounds[1])}\\nZoom ${compact(camera.zoom[1])}..${compact(camera.zoom[2])} (start ${compact(camera.zoom[0])})  |  tension ${compact(camera.tension)}  vertical ${compact(camera.verticalFollow)}  floor ${compact(camera.floorTension)}  zoffset ${compact(stage.zOffset)}`;
+  return `IKEMAKER STAGE RIG — ${quoted(stageLabel)}\\nStageTime %v   Cycle tick %v / ${cycleLength}\\nP1 world (%v, %v) screen (%v, %v) stage edges B/F (%v, %v)\\nP2 world (%v, %v) screen (%v, %v) stage edges B/F (%v, %v)\\nModes lock %v (0 off/1 X/2 Y/3 both)  sweep %v (0 off/1 X/2 Y/3 both)  preset %v  markers %v\\nStarts P1 ${compact(p1.x)},${compact(p1.y)}  P2 ${compact(p2.x)},${compact(p2.y)}  |  Stage X ${compact(model.movementBounds[0])}..${compact(model.movementBounds[1])}\\nCamera X ${compact(camera.bounds[0])}..${compact(camera.bounds[1])}  Y ${compact(camera.bounds[2])}..${compact(camera.bounds[3])}  |  Screen padding L/R ${compact(model.screenBounds[0])}/${compact(model.screenBounds[1])}\\nZoom ${compact(camera.zoom[1])}..${compact(camera.zoom[2])} (start ${compact(camera.zoom[0])})  |  tension ${compact(camera.tension)}  vertical ${compact(camera.verticalFollow)}  floor ${compact(camera.floorTension)}  zoffset ${compact(stage.zOffset)}`;
 }
 
 function stageFooter() {
@@ -205,7 +207,8 @@ function rigStates(model, options = {}) {
   const speed = Math.max(0.1, numeric(options.speed, 2));
   const fineSpeed = Math.max(0.05, numeric(options.fineSpeed, speed / 4));
   const fastSpeed = Math.max(speed, numeric(options.fastSpeed, speed * 4));
-  const readout = stageReadout(model, options.stageLabel || model.name || 'Stage');
+  const cycleLength = options.cycleLength ?? DEFAULT_CYCLE_LENGTH;
+  const readout = stageReadout(model, options.stageLabel || model.name || 'Stage', cycleLength);
   const footer = stageFooter();
   const p1 = model.playerStarts[0], p2 = model.playerStarts[1];
   const left = model.movementBounds[0], right = model.movementBounds[1];
@@ -348,7 +351,7 @@ if playerNo = 1 && !map(IKEMaker_Rig_HideInfo) {
 		layerNo: 2;
 		localCoord: screenWidth, screenHeight;
 		text: "${readout}";
-		params: pos x, pos y, screenPos x, screenPos y, stageBackEdgeDist, stageFrontEdgeDist,
+		params: stageTime, stageTime % ${cycleLength}, pos x, pos y, screenPos x, screenPos y, stageBackEdgeDist, stageFrontEdgeDist,
 			player(2), pos x, player(2), pos y, player(2), screenPos x, player(2), screenPos y,
 			player(2), stageBackEdgeDist, player(2), stageFrontEdgeDist,
 			map(IKEMaker_Rig_LockMode), map(IKEMaker_Rig_SweepMode), map(IKEMaker_Rig_Preset), map(IKEMaker_Rig_Markers);
@@ -423,6 +426,7 @@ Controls
 - A+C: toggle P1/P2 screen markers.
 - IKEMEN's native Pause key pauses/resumes; Scroll Lock advances one frame while paused.
 
+StageTime counts stage ticks. Cycle tick wraps to zero at the chosen cycle length.
 The in-game overlay reports runtime positions and modes, stage-edge distances, authored camera values,
 and an estimated BGCtrl schedule. The Stage Workspace remains authoritative for the complete timeline.
 
@@ -442,7 +446,7 @@ function buildStageRigPlan(root, model, stageFilename, options = {}) {
       [`${stem}.const`, rigConstants()],
       [`${stem}.cmd`, rigCommands()],
       [`${stem}.air`, rigAir()],
-      [`${stem}.zss`, rigStates(model, { speed: options.speed, fineSpeed: options.fineSpeed, fastSpeed: options.fastSpeed, stageLabel })],
+      [`${stem}.zss`, rigStates(model, { ...options, stageLabel })],
       [`${stem}.sff`, blankSff()],
       [`${stem}.snd`, blankSnd()],
       [path.join(directory, 'README.txt'), rigReadme(model)]
@@ -501,7 +505,7 @@ async function launchStageRig(stageUri, options = {}) {
     const speed = numeric(options.speed, config.get('stageRigMoveSpeed', 2));
     const fineSpeed = numeric(options.fineSpeed, config.get('stageRigFineMoveSpeed', Math.max(0.05, speed / 4)));
     const fastSpeed = numeric(options.fastSpeed, config.get('stageRigFastMoveSpeed', speed * 4));
-    const plan = installStageRig(root, model, filename, { speed, fineSpeed, fastSpeed });
+    const plan = installStageRig(root, model, filename, { speed, fineSpeed, fastSpeed, cycleLength: options.cycleLength });
     const configured = vscode.workspace.getConfiguration('ikemenZss', vscode.Uri.file(filename)).get('ikemenPath', '');
     const executable = require('./engine_runtime').resolve(root, configured, filename);
     if (!fs.existsSync(executable)) throw new Error(`IKEMEN executable was not found: ${executable}`);

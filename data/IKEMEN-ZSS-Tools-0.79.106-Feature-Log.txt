@@ -1,9 +1,0 @@
-IKEMaker 0.79.106
-
-- Shared viewer dropdowns now escape compact headers instead of being clipped by the preview area.
-- Quick action icons wrap into additional rows and no longer require their own horizontal scrollbar.
-- Visible generic zoom sliders/readouts are retired; Fit, 100%, and mouse-wheel zoom remain available.
-- Move Lab's Throw Creator, profile-use search, Constants text, and AIR text actions now live in the shared Tools dropdown instead of a standalone Advanced Tools control.
-- Stage Workspace adds compact left-side quick actions, previous/next background controls, a background selection slider, selection status, and collapsed camera/comparison controls.
-- Screenpack Workspace adds compact left-side quick actions, screen and element previous/next controls, two selection sliders, selection status, and collapsed screen/display controls.
-- All 409 automated test files pass.

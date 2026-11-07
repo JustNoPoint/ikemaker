@@ -7,11 +7,11 @@ const MAX_LAYER_INDEX = 999999;
 
 function exactScene(document, line) {
   const section = document.sections.find(item => item.line === Number(line));
-  if (!section || !/^scene\s+\d+$/i.test(section.name)) throw new Error('The selected storyboard scene no longer exists.');
+  if (!section || !/^scene(?:\s+.+)?$/i.test(section.name)) throw new Error('The selected storyboard scene no longer exists.');
   return section;
 }
 function familyIndex(entry) {
-  const match = /^layer(\d+)\.(.+)$/i.exec(entry.normalized);
+  const match = /^layer_?(\d+)\.(.+)$/i.exec(entry.normalized);
   if (!match || !match[2]) return null;
   const index = Number(match[1]);
   return Number.isSafeInteger(index) && index >= 0 && index <= MAX_LAYER_INDEX ? index : null;
@@ -33,7 +33,7 @@ function moveStable(order, selected, target, placement) {
 function replaceLayerIndex(raw, from, to) {
   const equals = raw.indexOf('=');
   if (equals < 0) throw new Error('A parsed layer property no longer has an equals sign.');
-  const left = raw.slice(0, equals), match = /^(\s*layer)(\d+)(\.)/i.exec(left);
+  const left = raw.slice(0, equals), match = /^(\s*layer_?)(\d+)(\.)/i.exec(left);
   if (!match || Number(match[2]) !== from) throw new Error('A layer property cannot be renamed without changing its raw formatting.');
   const digits = String(to).padStart(match[2].length, '0');
   return `${left.slice(0, match.index + match[1].length)}${digits}${left.slice(match.index + match[1].length + match[2].length)}${raw.slice(equals)}`;
@@ -42,6 +42,7 @@ function reorderLayerFamilies(text, sceneLine, sourceIndices, targetIndex, place
   if (!Array.isArray(sourceIndices) || !sourceIndices.length || sourceIndices.length > MAX_FAMILIES || new Set(sourceIndices).size !== sourceIndices.length || !sourceIndices.every(index => Number.isSafeInteger(index) && index >= 0 && index <= MAX_LAYER_INDEX)) throw new Error('Choose between 1 and 512 distinct current layer families.');
   if (!Number.isSafeInteger(targetIndex) || targetIndex < 0 || targetIndex > MAX_LAYER_INDEX || !['before','after'].includes(placement)) throw new Error('Choose a current layer and a before/after drop position.');
   const document = parseDef(text), section = exactScene(document, sceneLine), order = layerFamilyIndices(text, sceneLine), available = new Set(order);
+  const spellings=new Map();for(const entry of section.entries){const match=/^(layer_?)(\d+)\./i.exec(entry.normalized);if(!match)continue;const index=Number(match[2]);if(spellings.has(index)&&spellings.get(index)!==match[1])throw new Error(`Layer ${index} has both layer${index} and layer_${index} families. Resolve them in text before reordering.`);spellings.set(index,match[1]);}
   if (sourceIndices.some(index => !available.has(index)) || !available.has(targetIndex)) throw new Error('One or more layer families changed before the reorder.');
   const desired = moveStable(order, sourceIndices, targetIndex, placement);
   if (desired.every((index, ordinal) => index === order[ordinal])) return { text: String(text), changed: false, order, desired, mapping: Object.freeze({}) };

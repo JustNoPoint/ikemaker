@@ -1,5 +1,0 @@
-IKEMaker 0.79.53
-
-- Makes SFF Browser auto-float independent of stale restored window state.
-- Waits for the browser editor to become active before moving it to its own window.
-- Preserves automatic always-on-top behavior after the move.

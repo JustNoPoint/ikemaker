@@ -1,8 +1,0 @@
-IKEMaker 0.79.391
-
-Palette Workshop disclosure click correction
-
-- Replaced reliance on the webview's native details toggle for every top-level Palette Workshop section.
-- Clicking any section heading now explicitly opens or closes that exact section.
-- The explicit controller records the resulting state without moving focus or scrolling.
-- Retained the 0.79.390 state-refresh and prevent-scroll protections.

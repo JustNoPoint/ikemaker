@@ -9,6 +9,28 @@ const { createSffTransferMode } = require('./sff_transfer_mode');
 
 let host = null;
 
+const LOADED_ENTITY_PREFIX='coordinator-entity-json:';
+function transferRequestIdentity(value){
+  if(typeof value!=='string'||!/^[a-fA-F0-9]{64}$/.test(value))throw new Error('The Transfer request identity must be an exact SHA256 hexadecimal digest.');
+  // Asset session digests are uppercase; validated Assembly seed digests are
+  // lowercase. This canonicalization applies ONLY to this digest domain.
+  return value.toUpperCase();
+}
+function loadedEntityTransferIdentity(descriptor){
+  const normalized=require('./entity_switch_coordinator').normalizeDescriptor({kind:descriptor.kind,projectId:descriptor.projectId,ownerFile:descriptor.ownerFile});
+  const raw=descriptor.identity||descriptor.id;
+  if(raw!==normalized.identity)throw new Error('The loaded entity identity no longer matches its exact project and owner.');
+  const encoded=LOADED_ENTITY_PREFIX+JSON.stringify(raw);
+  if(Buffer.byteLength(encoded,'utf8')>4096)throw new Error('The loaded entity identity exceeds the Transfer identity size limit.');
+  return encoded;
+}
+function viewerEntityIdentity(identity){
+  if(!identity.startsWith(LOADED_ENTITY_PREFIX))return identity;
+  const raw=JSON.parse(identity.slice(LOADED_ENTITY_PREFIX.length));
+  if(typeof raw!=='string'||LOADED_ENTITY_PREFIX+JSON.stringify(raw)!==identity)throw new Error('The encoded loaded entity identity is invalid.');
+  return raw;
+}
+
 function canonical(filename) { const resolved=path.resolve(filename);return process.platform==='win32'?resolved.toLocaleLowerCase('en-US'):resolved; }
 function endpointForFile(filename, entityIdentity, label) {
   const exact=path.resolve(filename),bytes=fs.readFileSync(exact);
@@ -70,11 +92,11 @@ class SffTransferHost {
   async resolveEndpoint(candidate){
     if(candidate?.kind==='sff'&&candidate.fileIdentity)return endpointForFile(candidate.fileIdentity,candidate.entityIdentity,candidate.label);
     const prepared=this.preparedEntity(candidate);if(!prepared)throw new Error('That exact character no longer has a readable assigned SFF.');
-    return endpointForFile(prepared.filename,candidate.identity||candidate.id,candidate.label||path.basename(prepared.filename));
+    return endpointForFile(prepared.filename,loadedEntityTransferIdentity(candidate),candidate.label||path.basename(prepared.filename));
   }
   async openPinnedEndpoint(endpoint,options){
     let handleId='';const callbacks={...options.callbacks,closed:id=>{const exact=id||handleId;if(exact)this.handles.delete(exact);require('./sff_browser').closeTransferSession(options.sessionId);return options.callbacks.closed(exact)}};
-    const viewer=require('./sff_viewer'),panel=await viewer.openSffViewer(vscode.Uri.file(endpoint.fileIdentity),options.role==='source'?vscode.ViewColumn.One:vscode.ViewColumn.Beside,undefined,{transferPinned:true,transferRole:options.role,transferSessionId:options.sessionId,transferCallbacks:callbacks,entityIdentity:endpoint.entityIdentity});
+    const viewer=require('./sff_viewer'),panel=await viewer.openSffViewer(vscode.Uri.file(endpoint.fileIdentity),options.role==='source'?vscode.ViewColumn.One:vscode.ViewColumn.Beside,undefined,{transferPinned:true,transferRole:options.role,transferSessionId:options.sessionId,transferCallbacks:callbacks,entityIdentity:viewerEntityIdentity(endpoint.entityIdentity)});
     if(!panel)throw new Error(`The ${options.role} SFF viewer did not open.`);
     const id=`${options.sessionId}:${options.role}:${crypto.randomBytes(8).toString('hex')}`,handle={id,endpointIdentity:endpoint.identity,role:options.role,panel,filename:endpoint.fileIdentity,sessionId:options.sessionId,transferCallbacks:callbacks,entityIdentity:endpoint.entityIdentity};
     handleId=id;viewer.bindSffTransferHandle(panel,id);this.handles.set(id,handle);return {id,endpointIdentity:endpoint.identity,role:options.role};
@@ -100,12 +122,17 @@ class SffTransferHost {
     return{status:panel?'opened-advanced':'unavailable',requestIdentity:transferSeed.authority.requestIdentity}
   }
   async continueInAssembly(){try{return await this.mode.continueInAssembly()}catch(error){await vscode.window.showErrorMessage(`Could not continue SFF Transfer: ${error.message}`);return null}}
-  async recordAssemblyResult(requestIdentity,details,mappings){
+  async beginAssemblyExecution(requestIdentity){return this.mode.beginAssemblyExecution(transferRequestIdentity(requestIdentity),crypto.randomBytes(24).toString('hex'))}
+  endAssemblyExecution(token){return this.mode.endAssemblyExecution(token)}
+  cancelAssemblyHandoff(requestIdentity){return this.mode.cancelAssemblyHandoff(transferRequestIdentity(requestIdentity))}
+  async recordAssemblyResult(requestIdentity,details,mappings,executionToken){
     let snapshot,handle,result;
-    try{snapshot=this.mode.snapshot();const reference=snapshot.handles?.destination;handle=reference&&this.handles.get(reference.id);if(!snapshot.active||!handle)throw new Error('The pinned Destination endpoint is no longer open.');const destination=endpointForFile(handle.filename,handle.entityIdentity,path.basename(handle.filename));result=this.mode.finalizeAssemblyResult(requestIdentity,details,destination,mappings)}
+    try{requestIdentity=transferRequestIdentity(requestIdentity)}catch(error){await vscode.window.showErrorMessage(`Could not record SFF Transfer result: ${error.message}`);return null}
+    try{snapshot=this.mode.snapshot();const reference=snapshot.handles?.destination;handle=reference&&this.handles.get(reference.id);if(!snapshot.active||!handle)throw new Error('The pinned Destination endpoint is no longer open.');const destination=endpointForFile(handle.filename,handle.entityIdentity,path.basename(handle.filename));result=executionToken?this.mode.finalizeAssemblyExecution(executionToken,requestIdentity,details,destination,mappings):this.mode.finalizeAssemblyResult(requestIdentity,details,destination,mappings)}
     catch(error){await vscode.window.showErrorMessage(`Could not record SFF Transfer result: ${error.message}`);return null}
     require('./sff_browser').closeTransferSession(snapshot.session.sessionId);
-    try{await require('./sff_viewer').populateSffPanel(handle.panel,handle.filename,{transferPinned:true,transferRole:'destination',transferSessionId:snapshot.session.sessionId,transferCallbacks:handle.transferCallbacks,entityIdentity:handle.entityIdentity});return result}
+    if(result.requiresReopen){await vscode.window.showWarningMessage('SFF Transfer was applied and recorded against its executed review. The selection changed during the build; exit and reopen Transfer to use the changed Destination. The newer selection was not approved or applied.');return result}
+    try{await require('./sff_viewer').populateSffPanel(handle.panel,handle.filename,{transferPinned:true,transferRole:'destination',transferSessionId:snapshot.session.sessionId,transferCallbacks:handle.transferCallbacks,entityIdentity:viewerEntityIdentity(handle.entityIdentity)});return result}
     catch(error){await vscode.window.showWarningMessage(`SFF Transfer was applied and recorded, but the pinned Destination viewer could not refresh: ${error.message}. Reopen the Destination viewer; the verified result remains attached.`);return{...result,viewerRefresh:'failed',viewerRefreshMessage:String(error.message||error)}}
   }
   roleForUri(uri){const filename=uri?.fsPath,snapshot=this.mode.snapshot();if(!filename||!snapshot.active)return'';for(const role of ['source','destination']){const ref=snapshot.handles[role],handle=ref&&this.handles.get(ref.id);if(handle&&sameFile(handle.filename,filename))return role}return''}
@@ -122,9 +149,12 @@ function registerSffTransferHost(context){
     vscode.commands.registerCommand('sff.transfer.openBrowser',uri=>host.openBrowser(uri)),
     vscode.commands.registerCommand('sff.transfer.exit',()=>host.exit()),
     vscode.commands.registerCommand('sff.transfer.continueAssembly',()=>host.continueInAssembly()),
-    vscode.commands.registerCommand('sff.transfer.recordAssemblyResult',(requestIdentity,details,mappings)=>host.recordAssemblyResult(requestIdentity,details,mappings))
+    vscode.commands.registerCommand('sff.transfer.beginAssemblyExecution',requestIdentity=>host.beginAssemblyExecution(requestIdentity)),
+    vscode.commands.registerCommand('sff.transfer.endAssemblyExecution',token=>host.endAssemblyExecution(token)),
+    vscode.commands.registerCommand('sff.transfer.cancelAssemblyHandoff',requestIdentity=>host.cancelAssemblyHandoff(requestIdentity)),
+    vscode.commands.registerCommand('sff.transfer.recordAssemblyResult',(requestIdentity,details,mappings,token)=>host.recordAssemblyResult(requestIdentity,details,mappings,token))
   );return host;
 }
 function currentSffTransferHost(){return host;}
 
-module.exports={SffTransferHost,registerSffTransferHost,currentSffTransferHost,endpointForFile,sameFile,exactDragAuthority,exactDestinationBoundary};
+module.exports={SffTransferHost,registerSffTransferHost,currentSffTransferHost,endpointForFile,sameFile,exactDragAuthority,exactDestinationBoundary,loadedEntityTransferIdentity,viewerEntityIdentity,transferRequestIdentity};

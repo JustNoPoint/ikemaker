@@ -1,6 +1,0 @@
-IKEMaker 0.79.42 — Connected AIR Actions Browser
-
-- Connects action selections in the experimental list and thumbnail panel directly to the original AIR viewer.
-- Synchronizes action changes made in the original AIR viewer back to the experimental panel.
-- Covers list, thumbnail, combined-view, and original AIR previous/next action navigation.
-- Keeps the floating panel as a second control surface for the same AIR asset rather than an independent browser.

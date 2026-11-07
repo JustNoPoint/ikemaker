@@ -1,9 +1,0 @@
-IKEMaker 0.79.151
-
-Text header restoration repair
-
-- Activates IKEMaker specifically when VS Code restores the Code Navigation header webview.
-- Detects the failed-restoration layout where the same native source occupies both stacked editor groups.
-- Reclaims the compact top group for Code Navigation and retains native source tabs in the lower group.
-- Removes redundant native source tabs from the header group after the webview is attached.
-- Preserves the shared compact SFF-style menu and icon contract introduced in 0.79.150.

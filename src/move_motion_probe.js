@@ -1,0 +1,13 @@
+'use strict';
+
+// Deliberately tiny, side-effect-free spacing probe. No game trigger or controller is executed.
+function evaluateProbeExpression(expression,p2){
+ if(typeof expression!=='string'||expression.length>1024||!Array.isArray(p2)||p2.length!==2||p2.some(n=>!Number.isFinite(n)||Math.abs(n)>1000))return{available:false,reason:'Unsupported manual probe input.'};
+ const pattern=/\s*(P2Dist\s*[XY]\b|Cond\b|(?:\d+(?:\.\d*)?|\.\d+)|<=|>=|!=|&&|\|\||[()+\-*/,<>=])/ig,tokens=[];let offset=0,match;
+ while(offset<expression.length){pattern.lastIndex=offset;match=pattern.exec(expression);if(!match||match.index!==offset)return{available:false,reason:'Expression needs runtime values or unsupported syntax.'};tokens.push(match[1]);offset=pattern.lastIndex;if(tokens.length>160)return{available:false,reason:'Expression exceeds the bounded probe limit.'};}
+ let at=0,depth=0;const precedence={'||':1,'&&':2,'=':3,'!=':3,'<':3,'>':3,'<=':3,'>=':3,'+':4,'-':4,'*':5,'/':5};
+ function primary(){if(++depth>24)throw Error('nested');let token=tokens[at++],value;if(token==='+'||token==='-'){value=primary();if(token==='-')value=-value;}else if(token==='('){value=binary(0);if(tokens[at++]!==')')throw Error('close');}else if(/^cond$/i.test(token||'')){if(tokens[at++]!=='(')throw Error('open');const condition=binary(0);if(tokens[at++]!==',')throw Error('comma');const yes=binary(0);if(tokens[at++]!==',')throw Error('comma');const no=binary(0);if(tokens[at++]!==')')throw Error('close');value=condition?yes:no;}else if(/^p2dist\s*[xy]$/i.test(token||''))value=p2[/x$/i.test(token)?0:1];else if(/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(token||''))value=Number(token);else throw Error('value');depth--;return value;}
+ function binary(minimum){let left=primary();while(at<tokens.length&&precedence[tokens[at]]>=minimum){const operation=tokens[at++],right=binary(precedence[operation]+1);left=operation==='+'?left+right:operation==='-'?left-right:operation==='*'?left*right:operation==='/'?left/right:operation==='<'?Number(left<right):operation==='>'?Number(left>right):operation==='<='?Number(left<=right):operation==='>='?Number(left>=right):operation==='='?Number(left===right):operation==='!='?Number(left!==right):operation==='&&'?Number(Boolean(left&&right)):Number(Boolean(left||right));if(!Number.isFinite(left)||Math.abs(left)>1e6)throw Error('bound');}return left;}
+ try{const value=binary(0);if(at!==tokens.length||!Number.isFinite(value)||Math.abs(value)>1e6)throw Error('remaining');return{available:true,value,reason:'Hypothetical numeric evaluation using only manual P2Dist X/Y; controller triggers remain unevaluated.'};}catch(_){return{available:false,reason:'Expression needs runtime values or unsupported syntax.'};}
+}
+module.exports={evaluateProbeExpression};

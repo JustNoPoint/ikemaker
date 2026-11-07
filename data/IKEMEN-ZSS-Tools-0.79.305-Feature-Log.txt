@@ -1,8 +1,0 @@
-IKEMaker 0.79.305
-
-- Replaced the Palette Workshop Browser's focus-only section shortcuts with synchronized Banks & Color Editor, Remappen, Layers, and CS Masks panes below the image-tool rail.
-- Companion controls mirror and operate the one authoritative Palette Workshop draft, including inputs, selectors, color canvases, and palette drag-and-drop.
-- Kept browser-side image tools usable while the main sprite viewer is expanded without collapsing that viewer.
-- Made Pixel Grid visibly activate; at low zoom it now moves directly to the minimum useful 400% scale.
-- Added focused companion-bridge and Pixel Grid regression coverage.
-- New Dev reviewed the bridge architecture and found no remaining static or generated-markup blocker.

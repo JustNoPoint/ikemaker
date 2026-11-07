@@ -1,8 +1,0 @@
-IKEMaker 0.79.265
-
-SFF save-control cleanup
-
-- Removed the obsolete "Save pending SFF axis changes" icon from the SFF quick-control strip.
-- Removed the duplicate SFF-save shortcut from the retired Palette Workshop layout helper.
-- The remaining quick controls move up immediately; no empty toolbar slot is retained.
-- SFF axis changes continue to use the shared Auto Save policy. The universal Save control remains the manual commit path when Auto Save is off.

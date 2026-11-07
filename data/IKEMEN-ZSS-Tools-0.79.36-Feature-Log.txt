@@ -1,8 +1,0 @@
-IKEMaker 0.79.36 — Selective AIR portable-panel comparison
-
-- Replaces the oversized experimental AIR duplicate with one focused Actions Browser.
-- Provides List, Thumbnails, and Combined modes with filtering and source navigation.
-- Resolves the active IKEMaker character/asset context before falling back to browsing.
-- Can focus the selected action in the unchanged original AIR viewer.
-- Refreshes from unsaved native AIR document changes and remains strictly read-only.
-- Defers the SFF experiment until the reviewed portable-panel manifests are implemented.

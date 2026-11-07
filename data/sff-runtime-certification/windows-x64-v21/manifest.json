@@ -1,0 +1,650 @@
+{
+  "kind": "ikemaker-sff-runtime-certification-fixtures",
+  "version": 5,
+  "targetId": "sff-v2.1",
+  "backendId": "ikemaker-builtin-sff-v21-png8-prerelease",
+  "adapter": {
+    "id": "builtin-v21-png8",
+    "version": 1
+  },
+  "strictValidator": {
+    "id": "ikemaker-sff-v21-mixed-png-strict",
+    "version": 1,
+    "profile": "sff-v2.1-png8-png24-png32-strict-v1"
+  },
+  "writerProfile": "sff-v2.1-mixed-png",
+  "adoptionAllowed": false,
+  "manualChecks": [
+    "Record exact IKEMEN build, operating system and architecture.",
+    "Open each archive and verify every listed physical sprite identity, axis, dimensions and applicable palette assignment.",
+    "Render every sprite over a contrasting background and compare it to its sealed expectedPng; verify RGB24, RGBA32 alpha, transparency and linked-payload entries.",
+    "Where tooling permits, compare decoded true-color pixels or indexed palette indexes and RGBA palette bytes to their sealed hashes.",
+    "Close and reopen the archive before recording the result.",
+    "Do not enable built-in adoption from these fixtures alone; complete the documented platform matrix."
+  ],
+  "fixtures": [
+    {
+      "id": "empty-built-in-only",
+      "filename": "empty-built-in-only.sff",
+      "purpose": "Deterministic header-only SFF v2.1 archive; built-in-only until an empty SprMake2 parity route is proven.",
+      "builtInOnly": true,
+      "byteHash": "4da36f8b28a3993e7d74073fad61eaf0880db1b4b174922f78663afcb82e95ac",
+      "byteLength": 64,
+      "specificationHash": "ebde739f38bf5022eaef21cb41757f2b4cfddc2ea00258bea48bfefbad498005",
+      "specification": {
+        "filename": "specifications/empty-built-in-only.specification.json",
+        "byteHash": "5222172158d362d6cff83c3c5e63a399d7d1197abd6c27c083690f55cdcd5d0a"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/empty-built-in-only.strict-validation.json",
+        "byteHash": "8c1dc333dc3888ab7ec16be25d0a8cc9336318d92b04db204d0cb350ea6bc29a"
+      },
+      "sprites": [],
+      "palettes": []
+    },
+    {
+      "id": "minimal",
+      "filename": "minimal.sff",
+      "purpose": "Smallest supported PNG8 archive.",
+      "builtInOnly": false,
+      "byteHash": "0643145947012f06831da46e9c6353c542536b6e9ebfd72c40c3637876f562a3",
+      "byteLength": 1996,
+      "specificationHash": "664c0e2862c13900871ba005a03ffcb0dd129ff5976df24019aeca61cc8c7d17",
+      "specification": {
+        "filename": "specifications/minimal.specification.json",
+        "byteHash": "77578bea18a736a80d02c108e563059b62e042a3c96d8d62e6a5337ca210a199"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/minimal.strict-validation.json",
+        "byteHash": "55fc24c0c2689fb6e42f82dffa518b300415bd330baad4fdc8ce2bac45dac0fb"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 0,
+          "number": 0,
+          "axisX": 0,
+          "axisY": 0,
+          "width": 1,
+          "height": 1,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/minimal-p00000-g00000-i00000.png",
+          "expectedPngByteHash": "1e95d1f6696e8ad50e29592ddcacde261dec78d5df3d776f2cbdb07a6bab190e",
+          "sourcePngByteHash": "1e95d1f6696e8ad50e29592ddcacde261dec78d5df3d776f2cbdb07a6bab190e",
+          "expectedDecodedIndexHash": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "expectedPaletteRgbaHash": "d5342061593b4b4d2e8de88b1eeff810b1e09e3bd2eb7dcdd4bed11a420784a4"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 1,
+          "number": 1,
+          "link": null,
+          "expectedRgbaHash": "d5342061593b4b4d2e8de88b1eeff810b1e09e3bd2eb7dcdd4bed11a420784a4"
+        }
+      ]
+    },
+    {
+      "id": "signed-boundaries",
+      "filename": "signed-boundaries.sff",
+      "purpose": "Maximum runtime-addressable group 65534, index 65535 and signed axis limits.",
+      "builtInOnly": false,
+      "byteHash": "7d4b44102ea3462613a6f30f071fb23e4cc4aabf394ace7f90d13bdd9a0374c7",
+      "byteLength": 2900,
+      "specificationHash": "7c5649f6d276dd0ae14706df7fadc361cb84e4804270301ae23d5c72fe0b1ccf",
+      "specification": {
+        "filename": "specifications/signed-boundaries.specification.json",
+        "byteHash": "ad47a2d42cd1612e5b99974109b2be34915a332a10df78f46ea4245be702c37b"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/signed-boundaries.strict-validation.json",
+        "byteHash": "1787b44cc977fba1cd4aab19b1276a0de51cb1e9e3163b346b4e7d085dd04164"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 65534,
+          "number": 65535,
+          "axisX": -32768,
+          "axisY": 32767,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/signed-boundaries-p00000-g65534-i65535.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 0,
+          "number": 65000,
+          "axisX": 32767,
+          "axisY": -32768,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/signed-boundaries-p00001-g00000-i65000.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 65535,
+          "number": 65535,
+          "link": null,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ]
+    },
+    {
+      "id": "reserved-group-negative",
+      "filename": "reserved-group-negative.sff",
+      "purpose": "Storage preserves group 65535, but official GetSprite deliberately returns nil: lookup and render must remain absent.",
+      "builtInOnly": true,
+      "runtimeExpectation": "reserved-group-unaddressable",
+      "byteHash": "16de0601ab654df366868fbb269b35f34b6f2b1de41538b673e73953b6b3e73a",
+      "byteLength": 2002,
+      "specificationHash": "0d5fb82d26e84a18d7b57ddcc6e4f776b0efbdca0bafa50d7856c14ef781dea6",
+      "specification": {
+        "filename": "specifications/reserved-group-negative.specification.json",
+        "byteHash": "245f9a639f71a9bc833920adb48b280fc21297e1af95b3bf119ca3f94b37a397"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/reserved-group-negative.strict-validation.json",
+        "byteHash": "39d9c9e3e31655418f4c7a88073154153f92dc291133c1eacc34edea3aab3665"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 65535,
+          "number": 65535,
+          "axisX": 0,
+          "axisY": 0,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/reserved-group-negative-p00000-g65535-i65535.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 1,
+          "number": 1,
+          "link": null,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ]
+    },
+    {
+      "id": "prepared-before-axis",
+      "filename": "prepared-before-axis.sff",
+      "purpose": "A sealed final PNG8 snapshot reviewed as crop-before-axis.",
+      "builtInOnly": false,
+      "byteHash": "55e91e04ce78593c179a1173c613203e02dce2e3571f2ef2e0452b6aef63c663",
+      "byteLength": 2002,
+      "specificationHash": "eaf71580dca698f671476465ad5989d3cab403fa4f0852df9d7039af7981fe8f",
+      "specification": {
+        "filename": "specifications/prepared-before-axis.specification.json",
+        "byteHash": "51ec39ac93c0f2d5b4ac63cb2352849b8e53b9a44cb9c1e9d5e3d647fa9d6a71"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/prepared-before-axis.strict-validation.json",
+        "byteHash": "08b2431fcb5a2bad5cbd6755a37d7e52d778a628f42d4fdc7f4d3ed386b38634"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 20,
+          "number": 4,
+          "axisX": 1,
+          "axisY": 1,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/prepared-before-axis-p00000-g00020-i00004.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 1,
+          "number": 1,
+          "link": null,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ]
+    },
+    {
+      "id": "prepared-after-axis",
+      "filename": "prepared-after-axis.sff",
+      "purpose": "A sealed final PNG8 snapshot with an original-canvas axis and exact crop-origin delta.",
+      "builtInOnly": false,
+      "byteHash": "c185d18e2287e518c1578761f235ec5d4b3f189d5e9583f4ff7b909f1f781bdc",
+      "byteLength": 2002,
+      "specificationHash": "6d18904a565546174b1c3d29f5d9f9749e73bfebe049f1259fc88194607f2467",
+      "specification": {
+        "filename": "specifications/prepared-after-axis.specification.json",
+        "byteHash": "b29335fbac468363d65a4751a14b6a9a552377ed421432c8d48d161b55af0664"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/prepared-after-axis.strict-validation.json",
+        "byteHash": "3f78c90730d2e94ed45bb391d8dd18f9b59671d8e9ce3fec293cea853fe2770f"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 21,
+          "number": 5,
+          "axisX": 100,
+          "axisY": -100,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/prepared-after-axis-p00000-g00021-i00005.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 1,
+          "number": 1,
+          "link": null,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ]
+    },
+    {
+      "id": "stored-palette-overrides-png",
+      "filename": "stored-palette-overrides-png.sff",
+      "purpose": "Indexed PNG pixels interpreted through an explicit stored palette whose colors differ from the PNG PLTE; physical SprMake2 parity is golden-certified.",
+      "builtInOnly": false,
+      "byteHash": "a5769e771ff9827431f5d90a5376f65ccff9fafde9204aac8e9f50523ca6d07e",
+      "byteLength": 2002,
+      "specificationHash": "9a7ee3b4852034e5400a5399b1147ba14c55ee6e3258b05804298c185e7b49fe",
+      "specification": {
+        "filename": "specifications/stored-palette-overrides-png.specification.json",
+        "byteHash": "a89c17a19205ea99315eb6e91ad22503e0e5f24c9050d082b3947c5568eb89bc"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/stored-palette-overrides-png.strict-validation.json",
+        "byteHash": "b01ab0e12b879ce73e9d9752ed626acd277ab191496a53bc4582f267db4de9f8"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 12,
+          "number": 34,
+          "axisX": -27,
+          "axisY": 61,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/stored-palette-overrides-png-p00000-g00012-i00034.png",
+          "expectedPngByteHash": "14e91598f91f075a908f8eee55d2d8ffda5ec5aa7c36380fb5c54bc53e4d5ee6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "39d9f9054c0909ba79691046f80ddcc0b837158edf87b783e5fb982e64ac8a7b"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 9,
+          "number": 9,
+          "link": null,
+          "expectedRgbaHash": "39d9f9054c0909ba79691046f80ddcc0b837158edf87b783e5fb982e64ac8a7b"
+        }
+      ]
+    },
+    {
+      "id": "linked-data",
+      "filename": "linked-data.sff",
+      "purpose": "Backward sprite and palette links with independent axes.",
+      "builtInOnly": false,
+      "byteHash": "a0a6adcd73987ef450ab793db91d239de90a8da44264bb130bf117561a41a0b9",
+      "byteLength": 2046,
+      "specificationHash": "f90d851ce497f479d504f855df2f3277d54ccee0e574bc4d7fd6100016aa0317",
+      "specification": {
+        "filename": "specifications/linked-data.specification.json",
+        "byteHash": "ff4d22516a4a5395efc4a3792d7eccba044170a437340b40d94f7dfb6b5df858"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/linked-data.strict-validation.json",
+        "byteHash": "e7e2665a8e2080c41418aee6f5c8eefcfb3af13640ce5984f92f745370cf645e"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 30,
+          "number": 0,
+          "axisX": -12,
+          "axisY": 44,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/linked-data-p00000-g00030-i00000.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 30,
+          "number": 1,
+          "axisX": 5,
+          "axisY": -6,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 1,
+          "link": 0,
+          "expectedPng": "expected/linked-data-p00001-g00030-i00001.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 1,
+          "number": 1,
+          "link": null,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 1,
+          "number": 2,
+          "link": 0,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ]
+    },
+    {
+      "id": "own-image-palettes-multihop-alpha",
+      "filename": "own-image-palettes-multihop-alpha.sff",
+      "purpose": "Creator own-image palette identities, non-sorted multihop links, filters 0–4, split IDAT chunks and partial tRNS alpha; built-in-only because SprMake2 cannot preserve partial palette alpha.",
+      "builtInOnly": true,
+      "byteHash": "29dc86077605200b7faebe789d78996fbcac5342fa112a13d91f526638bd9eca",
+      "byteLength": 2161,
+      "specificationHash": "9ca21f0e34ae831fe0d7dc92f0af6b4738648a98811a53d88d12b79cfe4f8e4a",
+      "specification": {
+        "filename": "specifications/own-image-palettes-multihop-alpha.specification.json",
+        "byteHash": "03d04e3c76888d4e3dff77c3c6a0fbb0401c2403f56d1a4ff9d44ce7e37911b5"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/own-image-palettes-multihop-alpha.strict-validation.json",
+        "byteHash": "a0217a0c9632fdcab8d924c51599e90c7249a13a47621b9c15ed526d572e18b3"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 40,
+          "number": 9,
+          "axisX": -15,
+          "axisY": 38,
+          "width": 4,
+          "height": 5,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/own-image-palettes-multihop-alpha-p00000-g00040-i00009.png",
+          "expectedPngByteHash": "6fc1a248d467c8c0ebd0a66d75c591c5d619de3521f9f6b4a21f31f49715c9d4",
+          "sourcePngByteHash": "3aa39cac81e5eeaf637506bf4142b551acdf43235764a99e29926a2d513dc923",
+          "expectedDecodedIndexHash": "e7aebf577f60412f0312d442c70a1fa6148c090bf5bab404caec29482ae779e8",
+          "expectedPaletteRgbaHash": "538e292fb77c7798c3ed1574687aa8bbd5fd1820e5195a4da31e087981e887e2"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 3,
+          "number": 700,
+          "axisX": 4,
+          "axisY": -5,
+          "width": 4,
+          "height": 5,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 1,
+          "link": 0,
+          "expectedPng": "expected/own-image-palettes-multihop-alpha-p00001-g00003-i00700.png",
+          "expectedPngByteHash": "6fc1a248d467c8c0ebd0a66d75c591c5d619de3521f9f6b4a21f31f49715c9d4",
+          "sourcePngByteHash": "3aa39cac81e5eeaf637506bf4142b551acdf43235764a99e29926a2d513dc923",
+          "expectedDecodedIndexHash": "e7aebf577f60412f0312d442c70a1fa6148c090bf5bab404caec29482ae779e8",
+          "expectedPaletteRgbaHash": "538e292fb77c7798c3ed1574687aa8bbd5fd1820e5195a4da31e087981e887e2"
+        },
+        {
+          "physicalIndex": 2,
+          "group": 60000,
+          "number": 2,
+          "axisX": 99,
+          "axisY": -101,
+          "width": 4,
+          "height": 5,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 2,
+          "link": 1,
+          "expectedPng": "expected/own-image-palettes-multihop-alpha-p00002-g60000-i00002.png",
+          "expectedPngByteHash": "6fc1a248d467c8c0ebd0a66d75c591c5d619de3521f9f6b4a21f31f49715c9d4",
+          "sourcePngByteHash": "3aa39cac81e5eeaf637506bf4142b551acdf43235764a99e29926a2d513dc923",
+          "expectedDecodedIndexHash": "e7aebf577f60412f0312d442c70a1fa6148c090bf5bab404caec29482ae779e8",
+          "expectedPaletteRgbaHash": "538e292fb77c7798c3ed1574687aa8bbd5fd1820e5195a4da31e087981e887e2"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 40,
+          "number": 9,
+          "link": null,
+          "expectedRgbaHash": "538e292fb77c7798c3ed1574687aa8bbd5fd1820e5195a4da31e087981e887e2"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 3,
+          "number": 700,
+          "link": 0,
+          "expectedRgbaHash": "538e292fb77c7798c3ed1574687aa8bbd5fd1820e5195a4da31e087981e887e2"
+        },
+        {
+          "physicalIndex": 2,
+          "group": 60000,
+          "number": 2,
+          "link": 1,
+          "expectedRgbaHash": "538e292fb77c7798c3ed1574687aa8bbd5fd1820e5195a4da31e087981e887e2"
+        }
+      ]
+    },
+    {
+      "id": "repeated-identity-built-in-only",
+      "filename": "repeated-identity-built-in-only.sff",
+      "purpose": "Distinct physical entries sharing group/index; no bundled-SprMake2 parity claim.",
+      "builtInOnly": true,
+      "byteHash": "fc77f06cfd572ea6d64a1468393b78e8918808a8ee8898f6090cf5310d250d3d",
+      "byteLength": 3934,
+      "specificationHash": "b7b3c8279bd44ecce437f823c6e1af73e91f40f38cf3707ed452b1fc4e1f7c66",
+      "specification": {
+        "filename": "specifications/repeated-identity-built-in-only.specification.json",
+        "byteHash": "0fc8920ba96c804f0c2394ee2c34ceee6b8cdff8f86c3999e339cdc2857d7a61"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/repeated-identity-built-in-only.strict-validation.json",
+        "byteHash": "3c186ff71cb345d51fd6ad2a717f15624cb955c6b8f9690ea244d1d50f4b355f"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 3,
+          "number": 7,
+          "axisX": -4,
+          "axisY": 9,
+          "width": 1,
+          "height": 1,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 0,
+          "link": null,
+          "expectedPng": "expected/repeated-identity-built-in-only-p00000-g00003-i00007.png",
+          "expectedPngByteHash": "1e95d1f6696e8ad50e29592ddcacde261dec78d5df3d776f2cbdb07a6bab190e",
+          "sourcePngByteHash": "1e95d1f6696e8ad50e29592ddcacde261dec78d5df3d776f2cbdb07a6bab190e",
+          "expectedDecodedIndexHash": "6e340b9cffb37a989ca544e6bb780a2c78901d3fb33738768511a30617afa01d",
+          "expectedPaletteRgbaHash": "d5342061593b4b4d2e8de88b1eeff810b1e09e3bd2eb7dcdd4bed11a420784a4"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 3,
+          "number": 7,
+          "axisX": 12,
+          "axisY": -6,
+          "width": 3,
+          "height": 2,
+          "format": "png8",
+          "colorDepth": 8,
+          "paletteIndex": 1,
+          "link": null,
+          "expectedPng": "expected/repeated-identity-built-in-only-p00001-g00003-i00007.png",
+          "expectedPngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "sourcePngByteHash": "c379970caee0753b7591d53b9a3dff20437cdc91c313297e17ad30449401c3c6",
+          "expectedDecodedIndexHash": "9861d5a58b6c5064d5c8e35191f717b37f8bc59de0a711df4e6eeeb02ce2f3c8",
+          "expectedPaletteRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ],
+      "palettes": [
+        {
+          "physicalIndex": 0,
+          "group": 1,
+          "number": 1,
+          "link": null,
+          "expectedRgbaHash": "d5342061593b4b4d2e8de88b1eeff810b1e09e3bd2eb7dcdd4bed11a420784a4"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 1,
+          "number": 2,
+          "link": null,
+          "expectedRgbaHash": "579faec4211b6f4bf527dd30002d2c38c5ff2be0144f29fe8c6c868de23d96ad"
+        }
+      ]
+    },
+    {
+      "id": "truecolor-rgb24-rgba32",
+      "filename": "truecolor-rgb24-rgba32.sff",
+      "purpose": "Exact RGB24 and RGBA32 payloads, alpha, and a backward RGBA32 data link.",
+      "builtInOnly": true,
+      "byteHash": "ae6cfa7857e0c3efb3c0bc25b721569d85e671e879e5ece6a8997ad1964d5b3b",
+      "byteLength": 314,
+      "specificationHash": "b478b4def89200e0b589e48261608653a9986801142a4e681c30357cb4c4ad8c",
+      "specification": {
+        "filename": "specifications/truecolor-rgb24-rgba32.specification.json",
+        "byteHash": "b61d904786d622c27de876c24eab626ac88dd7249891efad46489defd4bda4bf"
+      },
+      "strictValidation": {
+        "filename": "strict-validation/truecolor-rgb24-rgba32.strict-validation.json",
+        "byteHash": "d9c08cf01e7f56ca2fe0db2c2649c7b597da15dab09b2ea5d51999bd75dce3b8"
+      },
+      "sprites": [
+        {
+          "physicalIndex": 0,
+          "group": 50,
+          "number": 0,
+          "axisX": -4,
+          "axisY": 9,
+          "width": 2,
+          "height": 2,
+          "format": "png24",
+          "colorDepth": 24,
+          "paletteIndex": null,
+          "link": null,
+          "expectedPng": "expected/truecolor-rgb24-rgba32-p00000-g00050-i00000.png",
+          "expectedPngByteHash": "cce444d738108a321385129864698188192caa711bfa0b6e0fd28ad53214c0a4",
+          "sourcePngByteHash": "cce444d738108a321385129864698188192caa711bfa0b6e0fd28ad53214c0a4",
+          "expectedDecodedHash": "cab650c3390aa4a94ce3e31aaee86653e6857dd9d17772ea06348af821f4b8c3"
+        },
+        {
+          "physicalIndex": 1,
+          "group": 50,
+          "number": 1,
+          "axisX": 4,
+          "axisY": -9,
+          "width": 2,
+          "height": 2,
+          "format": "png32",
+          "colorDepth": 32,
+          "paletteIndex": null,
+          "link": null,
+          "expectedPng": "expected/truecolor-rgb24-rgba32-p00001-g00050-i00001.png",
+          "expectedPngByteHash": "9125569e066d098476c8472a36b45b279a8342e1840e09a1b3cac44f528bd91f",
+          "sourcePngByteHash": "9125569e066d098476c8472a36b45b279a8342e1840e09a1b3cac44f528bd91f",
+          "expectedDecodedHash": "5cfe6f1d1925872a6fe2f49afb4f340ed17f42fd1849562021ce685d01c982c0"
+        },
+        {
+          "physicalIndex": 2,
+          "group": 50,
+          "number": 2,
+          "axisX": 11,
+          "axisY": 12,
+          "width": 2,
+          "height": 2,
+          "format": "png32",
+          "colorDepth": 32,
+          "paletteIndex": null,
+          "link": 1,
+          "expectedPng": "expected/truecolor-rgb24-rgba32-p00002-g00050-i00002.png",
+          "expectedPngByteHash": "9125569e066d098476c8472a36b45b279a8342e1840e09a1b3cac44f528bd91f",
+          "sourcePngByteHash": "9125569e066d098476c8472a36b45b279a8342e1840e09a1b3cac44f528bd91f",
+          "expectedDecodedHash": "5cfe6f1d1925872a6fe2f49afb4f340ed17f42fd1849562021ce685d01c982c0"
+        }
+      ],
+      "palettes": []
+    }
+  ]
+}

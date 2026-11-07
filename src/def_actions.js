@@ -9,6 +9,7 @@ function embeddedActions(text) {
     if (heading) { action = Number(heading[1]); if (!result[action]) result[action] = { frames: [], line }; continue; }
     if (action === null) continue;
     const code = raw.replace(/;.*$/, '').trim();
+    if (/^LoopStart$/i.test(code)) { result[action].loopStart = result[action].frames.length; continue; }
     const frame = /^(-?\d+)\s*,\s*(-?\d+)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+)/.exec(code);
     if (frame) {
       const item = { sprite: [Number(frame[1]), Number(frame[2])], offset: [Number(frame[3]), Number(frame[4])], time: Number(frame[5]) };

@@ -1,7 +1,0 @@
-IKEMaker 0.79.31 — Explicit docking-panel route
-
-- Opens the exact IKEMaker Docking Prototype panel container instead of the generic last-used VS Code panel.
-- Focuses Project Knowledge only after the prototype container is visible.
-- Separates the IKEMaker Tools entries into Docking Panel Prototype and Docking Floating-Window Probe.
-- Keeps both prototype routes read-only and non-writing.
-

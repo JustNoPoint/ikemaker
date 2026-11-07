@@ -1,8 +1,0 @@
-IKEMaker 0.79.416 — Collapsible template thumbnail color filtering
-
-- Added a collapsed “Filter thumbnails by color” section above the template thumbnail pages.
-- The section reuses the authoritative exact-RGBA color inventory created during image intake; it does not rescan images or maintain a duplicate filter state.
-- Swatches filter the thumbnails to matching sprites using the existing latest-choice request protection and cached color membership.
-- Existing greatest/least pixel-use ordering, Darken/Lighten preview, right-click color options, and Show All controls remain available inside the section.
-- The collapsed/open state is retained while the Palette Workshop rerenders during the active session.
-- The active RGBA is shown in the section summary when a thumbnail filter is applied.

@@ -1,9 +1,0 @@
-IKEMaker 0.79.244
-
-- AIR collision overlays have an exact percentage opacity control with a matching slider and numeric field.
-- Clsn1, Clsn1Default, Clsn2, Clsn2Default, and Push/Size each have an independent preview color.
-- Collision line width is adjustable from 1 through 8 and can remain a fixed readable screen width or scale with sprite zoom.
-- Existing attack-box, hurt-box, push-box, and translucent-fill visibility controls remain independent.
-- The collision legend follows the selected colors, Reset restores the established IKEMaker scheme, and appearance preferences return with the AIR viewer.
-- Appearance controls affect preview rendering only and never rewrite AIR source.
-- Focused generated-client, AIR viewer, transformed-sprite, Auto Save, and shared-canvas tests pass.

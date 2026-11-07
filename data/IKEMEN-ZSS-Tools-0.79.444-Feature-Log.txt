@@ -1,9 +1,0 @@
-IKEMaker 0.79.444
-
-- SFF Delete Marked and Delete Group now remove complete physical sprite entries directly from the active SFF instead of opening Advanced Creator.
-- Direct SFF deletion compacts unique embedded image payloads, preserves shared payloads still used by survivors, and refreshes the SFF viewer/browser in place.
-- Direct SFF group renumbering now refreshes the current viewer/browser in place.
-- SFF structural delete and group renumber participate in the viewer Undo/Redo history.
-- SND quick deletion now removes complete sound entries and WAV payloads directly from the current SND, refreshes its viewer/browser, and participates in viewer history.
-- AIR deletion remains a direct, undoable text-editor mutation and stays in the AIR viewer.
-- Direct quick edits do not create automatic backups; the existing Make Backup action remains authoritative.

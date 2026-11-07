@@ -36,10 +36,11 @@ function resolveCharacterStateFiles(definition, text, routing = {}, open = new M
   const characterDirectory = path.dirname(definition), root = routing.root || '', motifDirectory = routing.motif ? path.dirname(routing.motif) : '';
   const stateDirectories = [characterDirectory, root, motifDirectory, root && path.join(root, 'data')].filter(Boolean);
   const commandDirectories = [characterDirectory, root, root && path.join(root, 'data')].filter(Boolean);
-  const ordered = [], missing = [], candidates = [], limitations = [], add = (filename, role, directories) => {
+  const ordered = [], assignments = [], missing = [], candidates = [], limitations = [], add = (filename, role, directories) => {
     if (!filename) { limitations.push(`The ${role} state assignment could not be resolved.`); return; }
     const result = resolveEngineState(unquote(filename), directories, open); candidates.push(...result.candidates);
     if (!result.filename) { missing.push(...result.candidates); limitations.push(`The assigned ${role} state file is missing: ${filename}`); return; }
+    assignments.push({ filename: result.filename, role });
     if (!ordered.some(item => normalized(item.filename) === normalized(result.filename))) ordered.push({ filename: result.filename, role });
   };
   const natural = (left, right) => String(left.key).localeCompare(String(right.key), undefined, { numeric: true, sensitivity: 'base' });
@@ -48,7 +49,7 @@ function resolveCharacterStateFiles(definition, text, routing = {}, open = new M
   if (command) add(command, 'cmd', commandDirectories);
   const commonEntry = (files.entries || []).find(entry => /^stcommon$/i.test(entry.key || ''));
   if (commonEntry) add(commonEntry.value, 'stcommon', stateDirectories);
-  return { files: ordered, missing, candidates, limitations };
+  return { files: ordered, assignments, missing, candidates, limitations };
 }
 
 function splitIniValues(input) {
@@ -64,29 +65,35 @@ function resolveEngineState(filename, searchDirectories, open = new Map()) {
   return { filename: candidates.find(candidate => open.has(normalized(candidate)) || fs.existsSync(candidate)) || '', candidates };
 }
 
-function commonEntries(text, filename) {
+function commonEntries(text, filename, category = 'states') {
   const result = new Map();
   for (const common of sections(parseDef(text, filename), 'common')) for (const entry of common.entries || []) {
-    if (/^states\d*$/i.test(entry.key || '') && !result.has(entry.normalized)) result.set(entry.normalized, { ...entry });
+    if (new RegExp('^' + category + '\\d*$', 'i').test(entry.key || '') && !result.has(entry.normalized)) result.set(entry.normalized, { ...entry });
   }
   return result;
 }
 
-function resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userText, searchDirectories, open = new Map()) {
-  const merged = commonEntries(defaultText, defaultConfig);
-  for (const [key, entry] of commonEntries(userText, userConfig)) merged.set(key, entry);
-  const files = [], missing = [], candidates = [], limitations = [];
+function resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userText, searchDirectories, open = new Map(), category = 'states') {
+  const merged = commonEntries(defaultText, defaultConfig, category);
+  for (const [key, entry] of commonEntries(userText, userConfig, category)) merged.set(key, entry);
+  const files = [], assignments = [], missing = [], candidates = [], limitations = [];
   const ordered = [...merged.values()].sort((left, right) => String(left.key).localeCompare(String(right.key), undefined, { numeric: true, sensitivity: 'base' }));
+  const numericKeys = new Map();
   for (const entry of ordered) {
-    if (!/^states/i.test(entry.key || '')) continue;
+    const suffix = entry.key.slice(category.length).replace(/^0+/, '') || '0';
+    if (numericKeys.has(suffix)) limitations.push(`Common.${category} keys ${numericKeys.get(suffix)} and ${entry.key} have equivalent numeric suffixes; native SortedKeys tie order is not proven. Use distinct suffixes before composing hooks.`);
+    else numericKeys.set(suffix, entry.key);
+  }
+  for (const entry of ordered) {
     for (const assigned of splitIniValues(entry.value)) {
-      const resolved = resolveEngineState(assigned, searchDirectories, open), filename = resolved.filename;
+      // Common.Const uses LoadFile with no extension fallback (char.go).
+      const resolved = category === 'const' ? (() => { const candidates = path.isAbsolute(assigned) ? [assigned] : searchDirectories.map(directory => path.resolve(directory, assigned)); return { candidates, filename: firstExisting(candidates, open) }; })() : resolveEngineState(assigned, searchDirectories, open), filename = resolved.filename;
       candidates.push(...resolved.candidates);
-      if (!filename) { missing.push(...resolved.candidates); limitations.push(`The runtime common-state assignment is missing: ${assigned}`); }
-      else if (!files.some(item => normalized(item.filename) === normalized(filename))) files.push({ filename, role: `config:${entry.key}` });
+      if (!filename) { missing.push(...resolved.candidates); limitations.push((category === 'states' ? `The runtime common-state assignment is missing: ${assigned}` : `The runtime Common.Const assignment is missing: ${assigned}`)); }
+      else { assignments.push({filename,role:`config:${entry.key}`});if (!files.some(item => normalized(item.filename) === normalized(filename))) files.push({ filename, role: `config:${entry.key}` }); }
     }
   }
-  return { files, missing: [...new Set(missing.map(item => path.resolve(item)))], candidates: [...new Set(candidates.map(item => path.resolve(item)))], limitations };
+  return { files, assignments, missing: [...new Set(missing.map(item => path.resolve(item)))], candidates: [...new Set(candidates.map(item => path.resolve(item)))], limitations };
 }
 
 function configValue(defaultText, defaultFile, userText, userFile, sectionName, key) {
@@ -130,7 +137,7 @@ async function buildStateTransferCatalog(vscode, seed, service = require('./map_
   try { owner = await readSource(vscode, base.owner, open); }
   catch (_) { limitations.push('The owning character DEF could not be read for state load order.'); }
   if (owner?.snapshot.dirty) limitations.push('The owning character DEF has unsaved state assignments.');
-  let ordered = [], runtimeOrdered = [], missingWatchTargets = [], resolutionCandidates = [];
+  let ordered = [], runtimeOrdered = [], compileAssignments = [], constantInputs = [], constantAssignments = [], constantLimitations = [], missingWatchTargets = [], resolutionCandidates = [];
   const root = gameRoot(base.owner), userConfig = root ? path.resolve(root, 'save', 'config.ini') : '';
   if (!root) limitations.push('The selected character game root is unknown; runtime common-state authority cannot be proven.');
   let defaultConfig = '', defaultText = '', userText = '', runtimeCandidates = resolutionCandidates, motif = '', fight = '';
@@ -156,13 +163,25 @@ async function buildStateTransferCatalog(vscode, seed, service = require('./map_
       if (motif && fight) {
         const searchDirectories = [path.dirname(base.owner), path.dirname(motif), path.dirname(fight), root, path.join(root, 'data')];
         const common = resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userText, searchDirectories, open);
-        runtimeOrdered.push(...common.files); missingWatchTargets.push(...common.missing); runtimeCandidates.push(...common.candidates); limitations.push(...common.limitations);
+        runtimeOrdered.push(...common.files); compileAssignments.push(...common.assignments); missingWatchTargets.push(...common.missing); runtimeCandidates.push(...common.candidates); limitations.push(...common.limitations);
+        const constants = resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userText, searchDirectories, open, 'const');
+        constantAssignments = constants.assignments;
+        missingWatchTargets.push(...constants.missing); runtimeCandidates.push(...constants.candidates); constantLimitations.push(...constants.limitations);
+        if (constantAssignments.length > limits.files) constantLimitations.push('The Common.Const file bound was exceeded.');
+        let constantBytes = 0;
+        for (const assignment of constantAssignments.slice(0, limits.files)) try {
+          const loaded = await readSource(vscode, assignment.filename, open);
+          snapshots.push(loaded.snapshot); constantBytes += loaded.snapshot.bytes;
+          if (loaded.snapshot.bytes > limits.fileBytes || constantBytes > limits.totalBytes) { constantLimitations.push('The Common.Const source byte bound was exceeded.'); break; }
+          constantInputs.push({ ...assignment, text: loaded.text });
+          if (loaded.snapshot.dirty) constantLimitations.push('The effective Common.Const input has unsaved changes: ' + assignment.filename);
+        } catch (_) { constantLimitations.push('The effective Common.Const input could not be read: ' + assignment.filename); }
       }
     }
   }
   if (owner) {
     const character = resolveCharacterStateFiles(base.owner, owner.text, { root, motif }, open);
-    ordered.push(...character.files); missingWatchTargets.push(...character.missing); resolutionCandidates.push(...character.candidates); runtimeCandidates.push(...character.candidates); limitations.push(...character.limitations);
+    ordered.push(...character.files); compileAssignments.unshift(...character.assignments); missingWatchTargets.push(...character.missing); resolutionCandidates.push(...character.candidates); runtimeCandidates.push(...character.candidates); limitations.push(...character.limitations);
   }
   ordered.push(...runtimeOrdered);
   ordered = ordered.filter((item, index, values) => values.findIndex(value => normalized(value.filename) === normalized(item.filename)) === index);
@@ -204,7 +223,7 @@ async function buildStateTransferCatalog(vscode, seed, service = require('./map_
     provenance: STATE_TRANSFER_PROVENANCE,
     authority: { functionCatalog: base, target: path.resolve(target), root: root || '', defaultConfig, userConfig,
       defaultConfigProvenance: defaultConfig ? { filename: defaultConfig, hash: snapshots.find(item => normalized(item.filename) === normalized(defaultConfig))?.hash || '', kind: normalized(defaultConfig) === normalized(path.join(root || '.', 'resources', 'defaultConfig.ini')) ? 'runtime-resource' : 'certified-selected-artifact' } : null,
-      dependencies: snapshots, limits, totalBytes, recordCount, ordered: ordered.map(item => ({ filename: normalized(item.filename), role: item.role })) },
+      dependencies: snapshots, compileAssignments, constantInputs, constantAssignments, constantLimitations, constantsComplete: Boolean(defaultText && motif && fight) && constantLimitations.length === 0, limits, totalBytes, recordCount, ordered: ordered.map(item => ({ filename: normalized(item.filename), role: item.role })) },
     detail: limitations.length ? limitations.join(' ') : `${definitions.length} StateDef declaration(s) indexed in exact runtime compile order.`
   };
 }

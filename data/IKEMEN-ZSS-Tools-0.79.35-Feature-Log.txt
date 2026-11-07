@@ -1,8 +1,0 @@
-IKEMaker 0.79.35 — Parallel AIR docking workspace experiment
-
-- Adds a separate Open AIR Docking Workspace (Experimental) route.
-- Leaves the original AIR viewer, auto-open, editing, autosave, and mutation paths unchanged.
-- Provides read-only Animations, Canvas, Inspector, and Timeline panels that can
-  be docked and tabbed internally in either a normal editor tab or floating window.
-- Includes Recommended and optional Bottom Tools layouts, Return to Main Window,
-  native source reveal, narrow-window stacking, and workspace layout saving.

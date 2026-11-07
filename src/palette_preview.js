@@ -67,9 +67,9 @@ function idToIndex(archive, value, fallback) {
 
 function previewPreferences(archive, sffPath, screen, knownDef) {
   const assigned = assignedDefault(archive, sffPath, knownDef), location = storage(sffPath, knownDef), data = readStore(location), record = data.archives[location.key] || {}, screens = record.screens || {}, groups = record.groups || {};
-  const screenIndex = idToIndex(archive, screens[screen], assigned.index), groupIndices = {};
-  for (const [group, value] of Object.entries(groups)) groupIndices[group] = idToIndex(archive, value, screenIndex);
-  return { assignedDefault: assigned, screen, screenPaletteIndex: screenIndex, groupPaletteIndices: groupIndices, file: location.filename };
+  const explicitScreenIndex = idToIndex(archive, screens[screen], null), screenIndex = idToIndex(archive, screens[screen], assigned.index), groupIndices = {}, explicitGroupIndices = {};
+  for (const [group, value] of Object.entries(groups)) { groupIndices[group] = idToIndex(archive, value, screenIndex); const explicit = idToIndex(archive, value, null); if (Number.isInteger(explicit)) explicitGroupIndices[group] = explicit; }
+  return { assignedDefault: assigned, screen, screenPaletteIndex: screenIndex, screenPaletteExplicit: Number.isInteger(explicitScreenIndex), groupPaletteIndices: groupIndices, explicitGroupPaletteIndices: explicitGroupIndices, file: location.filename };
 }
 
 function savePreviewPreference(archive, sffPath, screen, scope, paletteIndex, spriteGroup, knownDef) {
@@ -87,9 +87,18 @@ function savePreviewPreference(archive, sffPath, screen, scope, paletteIndex, sp
 
 function clearGroupPreviewPreference(archive, sffPath, screen, spriteGroup, knownDef) {
   const location = storage(sffPath, knownDef), data = readStore(location), record = data.archives[location.key];
+  if (!record?.groups || !Object.hasOwn(record.groups, String(Number(spriteGroup)))) return previewPreferences(archive, sffPath, screen, knownDef);
   if (record && record.groups) delete record.groups[String(Number(spriteGroup))];
   transactionalWrite(fs, location.filename, `${JSON.stringify(data, null, 2)}\n`, { label: 'palette-preview-preference' });
   return previewPreferences(archive, sffPath, screen, knownDef);
 }
 
-module.exports = { characterDefForSff, paletteIndexById, assignedDefault, previewPreferences, savePreviewPreference, clearGroupPreviewPreference };
+function clearScreenPreviewPreference(archive, sffPath, screen, knownDef) {
+  const location = storage(sffPath, knownDef), data = readStore(location), record = data.archives[location.key];
+  if (!record?.screens || !Object.hasOwn(record.screens, screen)) return previewPreferences(archive, sffPath, screen, knownDef);
+  delete record.screens[screen];
+  transactionalWrite(fs, location.filename, `${JSON.stringify(data, null, 2)}\n`, { label: 'palette-preview-preference' });
+  return previewPreferences(archive, sffPath, screen, knownDef);
+}
+
+module.exports = { characterDefForSff, paletteIndexById, assignedDefault, previewPreferences, savePreviewPreference, clearGroupPreviewPreference, clearScreenPreviewPreference };

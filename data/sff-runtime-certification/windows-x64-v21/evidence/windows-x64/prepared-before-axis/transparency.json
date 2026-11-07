@@ -1,0 +1,484 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "transparency",
+  "fixtureId": "prepared-before-axis",
+  "fixtureByteHash": "55e91e04ce78593c179a1173c613203e02dce2e3571f2ef2e0452b6aef63c663",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "prepared-before-axis",
+    "sourceSha256": "55e91e04ce78593c179a1173c613203e02dce2e3571f2ef2e0452b6aef63c663",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 20,
+        "number": 4,
+        "width": 3,
+        "height": 2,
+        "axisX": 1,
+        "axisY": 1,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "expected": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "expected": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "captures": [
+    {
+      "fixtureId": "prepared-before-axis",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/prepared-before-axis-p00000-g00020-i00004.png",
+      "capture": "Ikemen_GO018.png",
+      "sha256": "96265caf7c705bbf5e006ceca23e63c7208079214561a38b2bd842a714159366",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/prepared-before-axis/renderComparison.json"
+    },
+    {
+      "fixtureId": "prepared-before-axis",
+      "pass": 0,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/prepared-before-axis-p00000-g00020-i00004.png",
+      "capture": "Ikemen_GO019.png",
+      "sha256": "5d27ce3daf225ed5a021735064023985bd1671b894a5d51a7cd3ff0de2665a84",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/prepared-before-axis/renderComparison.json"
+    },
+    {
+      "fixtureId": "prepared-before-axis",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 0,
+      "expectedPng": "expected/prepared-before-axis-p00000-g00020-i00004.png",
+      "capture": "Ikemen_GO020.png",
+      "sha256": "96265caf7c705bbf5e006ceca23e63c7208079214561a38b2bd842a714159366",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            0,
+            0,
+            0
+          ],
+          "expected": [
+            0,
+            0,
+            0
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/prepared-before-axis/renderComparison.json"
+    },
+    {
+      "fixtureId": "prepared-before-axis",
+      "pass": 1,
+      "physicalIndex": 0,
+      "bg": 255,
+      "expectedPng": "expected/prepared-before-axis-p00000-g00020-i00004.png",
+      "capture": "Ikemen_GO021.png",
+      "sha256": "5d27ce3daf225ed5a021735064023985bd1671b894a5d51a7cd3ff0de2665a84",
+      "captureHashMatches": true,
+      "maximumResidual": 0,
+      "matched": true,
+      "checks": [
+        {
+          "x": 0,
+          "y": 0,
+          "actual": [
+            255,
+            255,
+            255
+          ],
+          "expected": [
+            255,
+            255,
+            255
+          ]
+        },
+        {
+          "x": 1,
+          "y": 0,
+          "actual": [
+            46,
+            27,
+            32
+          ],
+          "expected": [
+            46,
+            27,
+            32
+          ]
+        },
+        {
+          "x": 2,
+          "y": 0,
+          "actual": [
+            251,
+            30,
+            23
+          ],
+          "expected": [
+            251,
+            30,
+            23
+          ]
+        },
+        {
+          "x": 0,
+          "y": 1,
+          "actual": [
+            12,
+            29,
+            26
+          ],
+          "expected": [
+            12,
+            29,
+            26
+          ]
+        },
+        {
+          "x": 1,
+          "y": 1,
+          "actual": [
+            78,
+            251,
+            128
+          ],
+          "expected": [
+            78,
+            251,
+            128
+          ]
+        },
+        {
+          "x": 2,
+          "y": 1,
+          "actual": [
+            58,
+            207,
+            4
+          ],
+          "expected": [
+            58,
+            207,
+            4
+          ]
+        }
+      ],
+      "renderEvidenceId": "windows-x64/prepared-before-axis/renderComparison.json"
+    }
+  ]
+}

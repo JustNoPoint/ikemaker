@@ -15,9 +15,18 @@ function exactOpenRequest(value) {
 function createVisualAuthoringBrowserHost(api, context, options = {}) {
   if (!api?.window?.createWebviewPanel || !api?.commands?.registerCommand || !api?.window?.registerWebviewPanelSerializer) throw new Error('Visual browser host requires the VS Code panel, command, and serializer APIs.');
   const trackViewerPanel=options.trackViewerPanel||require('./viewer_group').trackViewerPanel,protect=options.protectHtml||require('./webview_policy').protect,resizeNative=options.resizeNative||require('./windows_auxiliary_window').resizeActiveAuxiliaryWindowBy;
-  const createPanel=specification=>trackViewerPanel(api.window.createWebviewPanel(specification.viewType,specification.title,options.viewColumn??api.ViewColumn.Active,{enableScripts:true,retainContextWhenHidden:true}));
+  const createPanel=specification=>{
+    const viewColumn=specification.dockBeside?(api.ViewColumn.Beside??-2):(options.viewColumn??api.ViewColumn.Active);
+    const placement=specification.preserveFocus?{viewColumn,preserveFocus:true}:viewColumn;
+    return trackViewerPanel(api.window.createWebviewPanel(specification.viewType,specification.title,placement,{enableScripts:true,retainContextWhenHidden:true}));
+  };
   const companion=createVisualAuthoringBrowserCompanion({
     createPanel,commands:api.commands,storage:context.workspaceState,api,resizeNative,
+    restoreStageOwner:async filename=>{
+      if(!require('path').isAbsolute(filename)||!/\.def$/i.test(filename)||!require('fs').existsSync(filename))return false;
+      await api.commands.executeCommand('ikemen.stage.openWorkspace',api.Uri.file(filename),{restoreBrowserOwner:true});
+      return true;
+    },
     protectHtml:(html,webview)=>protect(html,webview?.cspSource||''),
     waitForRestoreSettled:options.waitForRestoreSettled,
     readinessFactory:options.readinessFactory,
@@ -26,13 +35,18 @@ function createVisualAuthoringBrowserHost(api, context, options = {}) {
   const open=request=>{const clean=exactOpenRequest(request);if(!clean)return api.window.showInformationMessage?.('Open a Stage, Screenpack/UI, or Storyboard visual editor before opening its browser.');return companion.openOrFocus(clean.surface,clean.ownerKey);};
   // Keep the contributed identifier literal here so the release command-contract audit can
   // prove that package.json and the production registration cannot drift apart.
-  const command=api.commands.registerCommand('ikemen.visualBrowser.open',open),serializer=api.window.registerWebviewPanelSerializer(VIEW_TYPE,{async deserializeWebviewPanel(panel,state){trackViewerPanel(panel);try{return await companion.restore(state,panel);}catch(error){panel.dispose?.();api.window.showWarningMessage?.(`The visual browser could not be restored: ${error?.message||error}`);return false;}}});
+  const command=api.commands.registerCommand('ikemen.visualBrowser.open',open),serializer=api.window.registerWebviewPanelSerializer(VIEW_TYPE,{async deserializeWebviewPanel(panel,state){trackViewerPanel(panel);
+    // Owner recovery and floating placement can wait on the restored iframe.
+    // Release the serializer so VS Code can mount it.
+    void companion.restore(state,panel).catch(error=>{panel.dispose?.();api.window.showWarningMessage?.(`The visual browser could not be restored: ${error?.message||error}`);});}});
   const host=Object.freeze({
     command:COMMAND,viewType:VIEW_TYPE,
     registerOwner:owner=>companion.registerOwner(owner),
     detachOwner:(surface,ownerKey)=>companion.detachOwner(surface,ownerKey),
     publish:(surface,ownerKey)=>companion.publish(ownerKey,surface),
     open:(surface,ownerKey)=>open({surface,ownerKey}),
+    openDefault:(surface,ownerKey)=>companion.openDefault(surface,ownerKey),
+    toggle:(surface,ownerKey,ownerPanel)=>companion.toggle(surface,ownerKey,ownerPanel),
     snapshot:(surface,ownerKey)=>companion.snapshot(surface,ownerKey),
     dispose(){command?.dispose?.();serializer?.dispose?.();companion.dispose();if(activeHost===host)activeHost=null;}
   });
@@ -51,5 +65,6 @@ function registerOwner(owner) { return current().registerOwner(owner); }
 function detachOwner(surface,ownerKey) { return current().detachOwner(surface,ownerKey); }
 function publish(surface,ownerKey) { return current().publish(surface,ownerKey); }
 function open(surface,ownerKey) { return current().open(surface,ownerKey); }
+function openDefault(surface,ownerKey) { return current().openDefault(surface,ownerKey); }
 
-module.exports={COMMAND,VIEW_TYPE,exactOpenRequest,createVisualAuthoringBrowserHost,register,current,tryCurrent,registerOwner,detachOwner,publish,open};
+module.exports={COMMAND,VIEW_TYPE,exactOpenRequest,createVisualAuthoringBrowserHost,register,current,tryCurrent,registerOwner,detachOwner,publish,open,openDefault};

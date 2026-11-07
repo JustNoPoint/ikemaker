@@ -1,7 +1,7 @@
 'use strict';
 
 const { hash } = require('./zss_function_catalog');
-const { parseStateSource } = require('./state_transfer_model');
+const { parseStateSource, usesCharacterCatalog } = require('./state_transfer_model');
 const { stateCatalogStillCurrent, stateTransferFindings } = require('./state_transfer_catalog');
 
 const MAX_STATE_DIAGNOSTICS = 500;
@@ -26,6 +26,12 @@ function registerStateTransferDiagnostics(vscode, context, getCatalog, options =
     const key = keyFor(document), generation = scheduledGeneration === undefined ? (generations.get(key) || 0) + 1 : scheduledGeneration;
     if (scheduledGeneration === undefined) generations.set(key, generation);
     const version = document.version, text = document.getText(), textHash = hash(text), parsed = parseStateSource(text, document.fileName, document.languageId, { capabilities: options.getCapabilities?.(document.uri) });
+    const publish = catalog => {
+      const diagnostics = stateTransferFindings(catalog, parsed).slice(0, MAX_STATE_DIAGNOSTICS).map(finding => diagnosticFor(vscode, document, finding));
+      collection.set(document.uri, diagnostics);
+      return diagnostics;
+    };
+    if (!parsed.transfers.some(record => !record.dynamic && Number.isInteger(record.literal) && record.literal >= 0 && usesCharacterCatalog(record))) return publish(null);
     let catalog; try { catalog = await getCatalog(document); } catch (_) { catalog = null; }
     if (!current(document, key, generation, version, textHash)) return [];
     if (typeof options.ensureAuthorityWatchers === 'function') {
@@ -42,8 +48,7 @@ function registerStateTransferDiagnostics(vscode, context, getCatalog, options =
     }
     let authoritative = false; try { authoritative = Boolean(catalog?.complete && await validateCatalog(catalog, document)); } catch (_) {}
     if (!current(document, key, generation, version, textHash)) return [];
-    const findings = stateTransferFindings(authoritative ? catalog : null, parsed), diagnostics = findings.slice(0, MAX_STATE_DIAGNOSTICS).map(finding => diagnosticFor(vscode, document, finding));
-    collection.set(document.uri, diagnostics); return diagnostics;
+    return publish(authoritative ? catalog : null);
   };
   const schedule = document => {
     if (!supported(document) || disposed) return;
@@ -54,7 +59,7 @@ function registerStateTransferDiagnostics(vscode, context, getCatalog, options =
   const refreshOpen = excluded => { for (const document of vscode.workspace.textDocuments || []) if (supported(document) && (!excluded || document.uri.toString() !== excluded.toString())) schedule(document); };
   const retireOpen = excluded => { for (const document of vscode.workspace.textDocuments || []) if (supported(document) && (!excluded || document.uri.toString() !== excluded.toString())) collection.delete(document.uri); };
   const dependency = options.isDependency || (document => supported(document) || /\.(?:def|ini|cns|cmd|st|zss)$/i.test(document?.fileName || ''));
-  const disposables = [collection,
+  const disposables = [
     vscode.workspace.onDidOpenTextDocument(document => { if (dependency(document)) refreshOpen(); else schedule(document); }),
     vscode.workspace.onDidChangeTextDocument(event => {
       if (!dependency(event.document)) return;
@@ -72,7 +77,14 @@ function registerStateTransferDiagnostics(vscode, context, getCatalog, options =
   ];
   if (vscode.workspace.onDidChangeConfiguration) disposables.push(vscode.workspace.onDidChangeConfiguration(event => { if (!event?.affectsConfiguration || event.affectsConfiguration('ikemenZss')) refreshOpen(); }));
   if (typeof options.onDidInvalidate === 'function') disposables.push(options.onDidInvalidate(refreshOpen));
-  const lifecycle = { dispose() { disposed = true; for (const timer of timers.values()) clearTimeout(timer); timers.clear(); generations.clear(); collection.clear?.(); } };
+  const lifecycle = { dispose() {
+    if (disposed) return;
+    disposed = true;
+    for (const timer of timers.values()) clearTimeout(timer);
+    timers.clear();
+    generations.clear();
+    collection.dispose();
+  } };
   disposables.push(lifecycle); context.subscriptions.push(...disposables);
   for (const document of vscode.workspace.textDocuments || []) schedule(document);
   return { collection, update, schedule, refreshOpen, dispose: () => lifecycle.dispose() };

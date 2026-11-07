@@ -1,9 +1,0 @@
-IKEMEN ZSS Tools 0.79.268
-
-SFF Canvas Movement and Edge Display
-
-- Normal left-button dragging now pans the SFF canvas instead of moving a sprite axis accidentally.
-- Hold X while dragging a sprite, onion skin, or selected layer to move its saved SFF axis.
-- Added a persistent Show sprite/layer edge outlines checkbox to the canvas right-click menu.
-- Updated the right-click shortcut guide to explain X-drag movement, normal canvas panning, target cycling, keyboard nudging, and drag cancellation.
-- Preserved multi-target layer/onion movement, automatic axis saving, and Escape cancellation.

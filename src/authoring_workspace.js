@@ -72,16 +72,20 @@ function serializedAssistanceState(value={}) {
   const root=typeof value.root==='string'&&path.isAbsolute(value.root)?path.resolve(value.root):'';
   const candidateOwner=realFile(value.ownerDef),ownerDef=candidateOwner&&path.extname(candidateOwner).toLowerCase()==='.def'&&files.some(file=>key(file)===key(candidateOwner))?candidateOwner:'';
   const context={type:String(value.type||value.kind||'project').slice(0,64),key:String(value.key||value.identity||value.id||root||path.dirname(files[0])).slice(0,8192),label:String(value.label||path.basename(root||path.dirname(files[0]))).slice(0,256),root,ownerDef,files};
+  const selected=value.selection;
+  if(selected&&files.some(file=>key(file)===key(selected.filename||''))&&Number.isSafeInteger(selected.line)&&selected.line>=0)context.source={filename:path.resolve(selected.filename),line:selected.line};
   const state={schema:ASSISTANCE_RESTORE_SCHEMA,version:ASSISTANCE_RESTORE_VERSION,context};
   return Buffer.byteLength(JSON.stringify(state),'utf8')<=MAX_ASSISTANCE_RESTORE_BYTES?Object.freeze(state):null;
 }
 function parseAssistanceState(value) {
   if(!plainExact(value,['schema','version','context'])||value.schema!==ASSISTANCE_RESTORE_SCHEMA||value.version!==ASSISTANCE_RESTORE_VERSION||Buffer.byteLength(JSON.stringify(value),'utf8')>MAX_ASSISTANCE_RESTORE_BYTES)return null;
-  const context=value.context,legacy=plainExact(context,['type','key','label','root','files']),current=plainExact(context,['type','key','label','root','ownerDef','files']);if((!legacy&&!current)||!boundedString(context.type,64)||!boundedString(context.key,8192)||!boundedString(context.label,256,true)||!boundedString(context.root,8192,true)||!Array.isArray(context.files)||!context.files.length||context.files.length>256||(context.root&&!path.isAbsolute(context.root)))return null;
+  const context=value.context,legacy=plainExact(context,['type','key','label','root','files']),current=plainExact(context,['type','key','label','root','ownerDef','files'])||plainExact(context,['type','key','label','root','ownerDef','files','source']);if((!legacy&&!current)||!boundedString(context.type,64)||!boundedString(context.key,8192)||!boundedString(context.label,256,true)||!boundedString(context.root,8192,true)||!Array.isArray(context.files)||!context.files.length||context.files.length>256||(context.root&&!path.isAbsolute(context.root)))return null;
   let root='';if(context.root){try{const lexical=path.resolve(context.root),real=fs.realpathSync.native?fs.realpathSync.native(lexical):fs.realpathSync(lexical);if(key(lexical)!==key(real)||!fs.statSync(real).isDirectory())return null;root=real;}catch(_){return null;}}
   const files=[],seen=new Set();for(const candidate of context.files){const file=realFile(candidate);if(!file||seen.has(key(file)))return null;seen.add(key(file));files.push(file);}
   let ownerDef='';if(current&&context.ownerDef){ownerDef=realFile(context.ownerDef);if(!ownerDef||path.extname(ownerDef).toLowerCase()!=='.def'||!seen.has(key(ownerDef)))return null;}
-  return Object.freeze({schema:value.schema,version:value.version,context:Object.freeze({type:context.type,key:context.key,label:context.label,root,ownerDef,files:Object.freeze(files),connectedFiles:Object.freeze([...files]),activeSurfaceId:'code.authoring-browser'})});
+  let selection;
+  if(context.source){if(!plainExact(context.source,['filename','line'])||typeof context.source.filename!=='string'||!seen.has(key(context.source.filename))||!Number.isSafeInteger(context.source.line)||context.source.line<0)return null;selection={filename:path.resolve(context.source.filename),line:context.source.line};}
+  return Object.freeze({schema:value.schema,version:value.version,context:Object.freeze({...(selection?{selection,sourceBinding:ownerDef?'assigned-resource':'standalone-source'}:{}),type:context.type,key:context.key,label:context.label,root,ownerDef,files:Object.freeze(files),connectedFiles:Object.freeze([...files]),activeSurfaceId:'code.authoring-browser'})});
 }
 function realFile(filename) {
   if (!boundedString(filename, 4096) || !path.isAbsolute(filename)) return null;
@@ -124,7 +128,17 @@ function preferenceStorage() {
     get(name, fallback) { const configured = explicitPreference(); if (configured !== undefined) return configured; const legacy = extensionContext.globalState.get(name); return legacy === undefined ? fallback : legacy; },
     async update(_name, value) {
       const configured = api.workspace.getConfiguration('ikemenZss');
-      await configured.update('authoring.presentation', value === undefined ? ASK : value, api.ConfigurationTarget?.Global ?? true);
+      // The former Settings property is absent in current packages. Keep remembered
+      // explicit coding choices in the existing preference store instead of asking
+      // VS Code to update an unregistered configuration key.
+      if(!configured.inspect?.('authoring.presentation')){await extensionContext.globalState.update('ikemaker.authoringPresentationPreference',value===undefined?ASK:value);return;}
+      try{await configured.update('authoring.presentation', value === undefined ? ASK : value, api.ConfigurationTarget?.Global ?? true);}
+      catch(error){
+        // Some VS Code hosts return an inspect object even for an unregistered key.
+        const configuration=require('../package.json').contributes?.configuration,sections=Array.isArray(configuration)?configuration:[configuration];
+        if(sections.some(section=>Object.prototype.hasOwnProperty.call(section?.properties||{},'ikemenZss.authoring.presentation')))throw error;
+        await extensionContext.globalState.update('ikemaker.authoringPresentationPreference',value===undefined?ASK:value);return;
+      }
       await extensionContext.globalState.update('ikemaker.authoringPresentationPreference', undefined);
     }
   };
@@ -217,7 +231,7 @@ function toolbarModel(seed='') {
     'universal.connected-resources': { enabled: true, dispatch: 'internal:connected-resources', routeKind: 'connected-resources' },
     'universal.backup': command('ikemen.mutations.openHistory'), 'universal.recovery': command('ikemen.mutations.openHistory'), 'universal.run': command('ikemen.launchGame'), 'universal.versus': command('ikemen.launchMirrorCurrent'), 'universal.training': command('ikemen.launchTrainingCurrent'),
     'universal.project': command('ikemen.projectManager.open'), 'universal.stage': command('ikemen.stage.openWorkspace'), 'universal.sprites': command('sff.openViewer'), 'universal.animations': command('air.openAnimationPreview'), 'universal.commands': command('ikemen.commandMovelist.openEditor'), 'universal.states': command('zss.openControllers'), 'universal.sounds': command('snd.openViewer'), 'universal.palettes': command('ikemen.palette.openWorkspace'), 'universal.code-structure': command('ikemen.codeStructure.openWorkspace'), 'universal.viewer-browser': { enabled: true, dispatch: 'internal:open-browser' },
-    'universal.actions-search': command('ikemen.textActions.open'), 'universal.suite-switch': command('ikemen.switchToIkeMiner'), 'universal.help': command('ikemen.help.open'), 'universal.settings': command('ikemen.openExtensionSettings')
+    'universal.actions-search': command('ikemen.textActions.open'), 'universal.suite-switch': command('ikemen.switchSuite'), 'universal.help': command('ikemen.help.open'), 'universal.settings': command('ikemen.openExtensionSettings')
   };
   let textAutoSave=false;try{textAutoSave=require('./save_controls').textEnabled(seed);}catch(_){ }
   return adapt('code.authoring-workspace', capabilities, { resolverIds: ['authoring-workspace.exact-source'],autoSaveEnabled:textAutoSave,seed });
@@ -333,6 +347,7 @@ async function attachPanel(panel, uri, restored = false, options = {}) {
   else for (const file of files) panels.set(key(file), panelRecord);
   let contextDescriptor = normalizedCodingContext(options.context, files) || { type: classification.role || 'project', key: directory, label: path.basename(directory), root: directory, files, activeSurfaceId: 'code.authoring-workspace' };
   const legacyContext = contextRegistry.registerAuthoringPanel(panel, contextDescriptor);
+  require('./shared_workspace_header').attachObserver(panel,'code.authoring-workspace');
   const context = contextRegistry.getContextModel(legacyContext);
   if (!viewStates.has(context.identity, 'code.authoring-workspace')) {
     viewStates.set(context.identity, 'code.authoring-workspace', { mode:'source', focusedPane:'source' });
@@ -632,12 +647,13 @@ async function attachPanel(panel, uri, restored = false, options = {}) {
     commands: commandHandler('ikemen.commandMovelist.openEditor'), states: commandHandler('zss.openControllers'), sounds: commandHandler('snd.openViewer'),
     palettes: commandHandler('ikemen.palette.openWorkspace'), 'code-structure': commandHandler('ikemen.codeStructure.openWorkspace'),
     'viewer-browser': async () => openAuthoringBrowser(context.snapshot()), 'actions-search': commandHandler('ikemen.textActions.open'),
-    'suite-switch': commandHandler('ikemen.switchToIkeMiner'), help: commandHandler('ikemen.help.open'), settings: commandHandler('ikemen.openExtensionSettings')
+    'suite-switch': commandHandler('ikemen.switchSuite'), help: commandHandler('ikemen.help.open'), settings: commandHandler('ikemen.openExtensionSettings')
   };
   const toolbarDispatcher = createUniversalToolbarDispatcher({ handlersBySurface: { 'code.authoring-workspace': toolbarHandlers }, getToolbar: async () => toolbarModel(filename) });
   const handleMessage = async (message) => {
     if (!message || typeof message.type !== 'string') return;
     if (message.type === MESSAGE_TYPE) { if (groupedIdentity && !ownerSnapshot()) return; try { await toolbarDispatcher.dispatch('code.authoring-workspace', message); } catch (_) {} return; }
+    if(require('./shared_workspace_header').isSharedMessage(message))return require('./shared_workspace_header').handle(message,{panel,filename,disposed},'code');
     if (await viewerToolbar.handleCommand(message, filename, panel)) return;
     if (await viewerToolbar.handle(message, panel)) return;
     const intent = validatedAuthoringShellMessage(message);
@@ -729,35 +745,37 @@ async function openPublicCodingViewer(uri) {
   return openCodingViewer(uri, { forceIntegrated:true });
 }
 
-async function openBrowserCodingSource(source, browserContext = {}, browserAuthority = {}) {
+async function openBrowserCodingSource(source, browserContext = {}, browserAuthority = {}, services = {}) {
+  const hostApi=services.api||api,getWorkspace=()=>services.workspace||browserWorkspace,registry=services.sourceRegistry||sourceRegistry,readDocument=services.sourceDocument||sourceDocument,nativeOpen=services.openNative||openNative;
   if(!source||typeof source.filename!=='string'||!path.isAbsolute(source.filename)||typeof source.fingerprint!=='string'||!/^[a-f0-9]{64}$/i.test(source.fingerprint))return false;
   const filename=path.resolve(source.filename), allowed=new Set((browserContext.files||browserContext.connectedFiles||[]).filter(value=>typeof value==='string'&&path.isAbsolute(value)).map(value=>key(path.resolve(value))));
   if(!allowed.has(key(filename)))return false;
+  const admission=require('./coding_source_admission').codingSourceDispatchGuard(hostApi,browserContext,filename,{extensionContext:services.extensionContext||extensionContext});let refused=false;const admitted=()=>{if(admission())return true;if(!refused){refused=true;hostApi.window.showInformationMessage('This Coding Assistance source is no longer assigned to its current owner. Refresh the browser before opening it.');}return false;};if(!admitted())return false;
   let current;
-  try { current=await sourceDocument(api.Uri.file(filename)); } catch (_) { return false; }
+  try { current=await readDocument(hostApi.Uri.file(filename)); } catch (_) { return false; }
   const currentFingerprint=crypto.createHash('sha256').update(current.getText()).digest('hex');
-  if(currentFingerprint!==source.fingerprint){api.window.showInformationMessage('This Authoring Browser result is stale because its source changed. Refreshing without moving the Coding Viewer.');await browserWorkspace?.refresh?.();return false;}
+  if(currentFingerprint!==source.fingerprint){hostApi.window.showInformationMessage('This Authoring Browser result is stale because its source changed. Refreshing without moving the Coding Viewer.');await getWorkspace()?.refresh?.();return false;}
   const lineCount=Number.isInteger(current.lineCount)?current.lineCount:current.getText().split(/\r?\n/).length;
   const line=Number.isInteger(source.line)&&source.line>=0&&source.line<lineCount?source.line:undefined;
-  if(Number.isInteger(source.line)&&line===undefined){await browserWorkspace?.refresh?.();return false;}
-  const captured={workspace:browserWorkspace,contextEpoch:browserAuthority.contextEpoch,document:current,version:current.version,fingerprint:currentFingerprint};
+  if(Number.isInteger(source.line)&&line===undefined){await getWorkspace()?.refresh?.();return false;}
+  const captured={workspace:getWorkspace(),contextEpoch:browserAuthority.contextEpoch,document:current,version:current.version,fingerprint:currentFingerprint};
   const stillAuthorized=()=>{
-    if(browserWorkspace!==captured.workspace||browserWorkspace?.snapshot?.().contextEpoch!==captured.contextEpoch)return false;
-    const live=(api.workspace.textDocuments||[]).find(item=>key(item.fileName)===key(filename));
+    if(!admitted()||getWorkspace()!==captured.workspace||getWorkspace()?.snapshot?.().contextEpoch!==captured.contextEpoch)return false;
+    const live=(hostApi.workspace.textDocuments||[]).find(item=>key(item.fileName)===key(filename));
     return live===captured.document&&live.version===captured.version&&crypto.createHash('sha256').update(live.getText()).digest('hex')===captured.fingerprint;
   };
   if(!stillAuthorized())return false;
-  const route=await sourceRegistry.resolve('authoring-browser.exact-source',{filename,line,fingerprint:source.fingerprint,contextId:String(browserContext.identity||browserContext.id||''),selectionRevision:Number(browserContext.selectionRevision||0)});
+  const route=await registry.resolve('authoring-browser.exact-source',{filename,line,fingerprint:source.fingerprint,contextId:String(browserContext.identity||browserContext.id||''),selectionRevision:Number(browserContext.selectionRevision||0)});
   if(!route.available||key(route.filename)!==key(filename)||!stillAuthorized())return false;
   const all=[...(groupedFileOwners.get(key(filename))||[])], live=all.filter(record=>record.isLive?.());
   for(const stale of all.filter(record=>!live.includes(record)))unmapGroupedRecord(stale);
   const owners=live.filter(record=>record.canReuse?.(filename));
   if(owners.length===1){if(!await owners[0].selectFile(filename,line,stillAuthorized)||!stillAuthorized())return false;owners[0].panel.reveal();return owners[0].panel;}
   if(live.length===1){if(await live[0].reclaimFile?.(filename,line,stillAuthorized)&&stillAuthorized())return live[0].panel;return false;}
-  if(live.length>1){api.window.showWarningMessage('This source belongs to more than one Character Coding Viewer. Activate the intended character viewer first.');return false;}
+  if(live.length>1){hostApi.window.showWarningMessage('This source belongs to more than one Character Coding Viewer. Activate the intended character viewer first.');return false;}
   const found=panels.get(key(filename));
   if(found?.panel){if(!await found.selectFile?.(filename,line,stillAuthorized)||!stillAuthorized())return false;found.panel.reveal();return found.panel;}
-  const editor=await openNative(current,line,stillAuthorized);return editor&&stillAuthorized()?editor:false;
+  const editor=await nativeOpen(current,line,stillAuthorized);return editor&&stillAuthorized()?editor:false;
 }
 
 async function openCodingSet(descriptor, behavior = {}) {
@@ -844,24 +862,8 @@ async function settledCodeNavigationColumn(preferredColumn) {
 }
 function treeProvider(reader, options={}) { return { async refresh(context) { if (!reader) throw new Error('This provider is unavailable in the current host.'); const data=await reader(context);if(options.semanticAliases!==true||!data||!Array.isArray(data.items))return data;const projection=aliasProjection(configuredIntentAliases(),flattenItems(data.items));return {...data,items:applyAliasDiscovery(data.items,projection.aliases),aliasCollisions:projection.collisions}; } }; }
 const canonicalBrowserBatches=new WeakMap();
-function liveBrowserDocuments(context) {
-  const root = typeof context?.root === 'string' && path.isAbsolute(context.root) ? path.resolve(context.root) : '';
-  const allowed = new Set(['.zss','.cns','.st','.lua']), result=[], seen=new Set();
-  for (const candidate of (context?.files || context?.connectedFiles || []).slice(0,256)) {
-    if (typeof candidate !== 'string' || !path.isAbsolute(candidate)) continue;
-    const filename=path.resolve(candidate), identity=key(filename);
-    if (seen.has(identity)) continue;
-    seen.add(identity);
-    if (root) { const relative=path.relative(root,filename); if(relative==='..'||relative.startsWith(`..${path.sep}`)||path.isAbsolute(relative))continue; }
-    if (!allowed.has(path.extname(filename).toLowerCase())) continue;
-    const open = (api.workspace.textDocuments || []).find((item) => key(item.fileName) === key(filename));
-    if(open){ result.push({filename,text:open.getText()}); continue; }
-    try { if(fs.statSync(filename).isFile())result.push({ filename, text:fs.readFileSync(filename,'utf8') }); } catch (_) {}
-  }
-  const editor=api.window.activeTextEditor, activeFilename=editor?.document?.fileName;
-  const activeSource=typeof activeFilename==='string'&&result.some(item=>key(item.filename)===key(activeFilename))
-    ? {filename:path.resolve(activeFilename),line:Math.max(0,Number(editor.selection?.active?.line)||0)} : null;
-  return { root, documents:result, activeSource };
+function liveBrowserDocuments(context,hostApi=api,hostContext=extensionContext) {
+  return require('./coding_source_admission').admitCodingAssistanceSources(hostApi,context,{extensionContext:hostContext});
 }
 function browserPersonalExamples(context){
   const candidates=(context?.files||context?.connectedFiles||[]).filter(value=>typeof value==='string'&&path.isAbsolute(value)).slice(0,256),owner=typeof context?.ownerDef==='string'&&path.isAbsolute(context.ownerDef)&&path.extname(context.ownerDef).toLowerCase()==='.def'?path.resolve(context.ownerDef):'';if(!owner||!candidates.some(value=>key(value)===key(owner))||!extensionContext?.workspaceState)return[];
@@ -899,8 +901,9 @@ function canonicalBrowserProvider(providerId) {
   } };
 }
 function browserAuthorityFingerprints(context,capability){
+  const { reviewedFiles, fingerprintFiles } = require('./authoring_browser_model');
   const live=liveBrowserDocuments(context),capabilityIds=[...(capability?.enabledCapabilities||[])].map(String).sort(),contextIdentity=[context?.type||context?.kind||'project',context?.identity||context?.id||context?.key||context?.root||''].join('\0');
-  return{live,capabilityFingerprint:crypto.createHash('sha256').update(JSON.stringify(capabilityIds)).digest('hex'),catalogFingerprint:crypto.createHash('sha256').update(JSON.stringify(live.documents.map(document=>[path.resolve(document.filename).toLowerCase(),crypto.createHash('sha256').update(document.text).digest('hex')]))).digest('hex'),contextFingerprint:opaque(['authoring-context',contextIdentity])};
+  return{live,capabilityFingerprint:crypto.createHash('sha256').update(JSON.stringify(capabilityIds)).digest('hex'),catalogFingerprint:fingerprintFiles(reviewedFiles(live, path.resolve(context.root || '.'))),contextFingerprint:opaque(['authoring-context',contextIdentity])};
 }
 async function adaptationSelections(review,authority){
   const selections={};
@@ -986,6 +989,20 @@ async function handleAssistantAction(intent,authority){
 async function refreshCurrentBlockExplanation(){
   if(!browserWorkspace?.blockExplanation||!browserPanel)return false;const authority={context:browserBoundContext,contextEpoch:browserWorkspace.contextEpoch,generation:browserWorkspace.generation};return explainCurrentBlock(authority);
 }
+// Bind the actual caller document before consulting ambient panel selection.
+async function browserContextForSource(uri, hostApi=api) {
+  if(!uri)return null;
+  const document=await hostApi.workspace.openTextDocument(uri);
+  if(document.isClosed||!path.isAbsolute(document.fileName))return null;
+  const toolbar=require('./text_editor_toolbar'),classification=toolbar.classify(document,hostApi.workspace.getConfiguration('ikemenZss',document.uri));
+  if(!classification.supported)return null;
+  const descriptor=toolbar.contextDescriptor(document,classification);
+  const files=[...new Set([document.fileName,...(descriptor.files||[])])];
+  if(descriptor.ownerDef)try{for(const file of require('./related_work').resolveAssigned(descriptor.ownerDef).code||[])if(!files.includes(file))files.push(file);}catch{}
+  const editor=hostApi.window.activeTextEditor,line=editor?.document===document?Math.max(0,Number(editor.selection?.active?.line)||0):0;
+  return {...descriptor,root:descriptor.root||path.dirname(document.fileName),files,sourceUri:document.uri.toString(),sourceBinding:descriptor.ownerDef?'assigned-resource':'standalone-source',selection:{uri:document.uri.toString(),filename:document.fileName,line}};
+}
+
 async function openAuthoringBrowser(context = {}, restoredPanel = null, companionColumn = undefined, targetColumn = undefined) {
   browserRefreshEpoch+=1;browserRefreshProviders.clear();if(browserRefreshTimer){clearTimeout(browserRefreshTimer);browserRefreshTimer=null;}
   const capability=await browserCapability(context);
@@ -1029,7 +1046,7 @@ async function openAuthoringBrowser(context = {}, restoredPanel = null, companio
   if (!restoredPanel) browserPanel.reveal(assistanceColumn);
   if (context?.identity || context?.id || context?.key) contextRegistry.registerAuthoringPanel(browserPanel, { type: context.type || context.kind || 'project', key: context.key || context.root, label: context.label, root: context.root, ownerDef: context.ownerDef || '', files: context.files || context.connectedFiles, activeSurfaceId: 'code.authoring-browser' });
   browserPanel.onDidDispose(() => { browserRefreshEpoch+=1;browserRefreshProviders.clear();if(browserRefreshTimer){clearTimeout(browserRefreshTimer);browserRefreshTimer=null;}browserPanel = null; browserWorkspace=null; browserBoundContext=null; browserMinimumWidth=null; workspace.close(); });
-  browserPanel.webview.onDidReceiveMessage(async message => { if(message?.type==='companionBrowserViewport')return browserMinimumWidth?.handle(message);return workspace.handleMessage(message); });
+  browserPanel.webview.onDidReceiveMessage(async message => { if(message?.type==='ikemenBrowserShortcut')return require('./viewer_browser_shortcut').handleCompanion(message,'code','',browserPanel,{api,lookup:()=>browserPanel?{panel:browserPanel}:null});if(message?.type==='companionBrowserViewport')return browserMinimumWidth?.handle(message);return workspace.handleMessage(message); });
   await workspace.open(context);refreshResumeContext(context,workspace); return browserPanel;
 }
 function glossaryContextKey(value){return JSON.stringify([value?.type||value?.kind||'',value?.identity||value?.id||'',value?.key||'',value?.root||'']);}
@@ -1067,9 +1084,13 @@ function registerAuthoringWorkspace(vscode, context, browserProviders = {}) {
   const unregisterBrowserSource = sourceRegistry.register({ id:'authoring-browser.exact-source', capabilityId:'implemented.authoring-browser-source', surfaceId:'code.authoring-browser', resolve:(request)=>({filename:request.filename,line:request.line,fingerprint:request.fingerprint,identity:'exact-document',access:'read-only',mutationOwner:'grouped-coding-viewer',contextId:request.contextId,selectionRevision:request.selectionRevision}) });
   context.subscriptions.push(
     vscode.commands.registerCommand('ikemen.authoringWorkspace.open', (uri) => openPublicCodingViewer(uri)),
+    vscode.commands.registerCommand('ikemen.authoringWorkspace.resolvePresentation',(request)=>preference.resolve({requestedPresentation:NATIVE,taskId:'stage-code',sessionId:String(request?.sessionId||'')})),
     vscode.commands.registerCommand('ikemen.authoringWorkspace.choosePresentation', choosePresentation),
-    vscode.commands.registerCommand('ikemen.authoringBrowser.open', () => {
+    vscode.commands.registerCommand('ikemen.authoringBrowser.open', async (uri) => {
       const current = contextRegistry.currentContext(), model = contextRegistry.getContextModel(current);
+      const source=uri||(!model?api.window.activeTextEditor?.document?.uri:null);
+      const exact=source?await browserContextForSource(source):null;
+      if(exact)return openAuthoringBrowser(exact);
       const attachedColumn=current&&contextRegistry.matchingPanels(current).map(entry=>entry.panel?.assetViewColumn).find(value=>Number.isInteger(value)&&value>0);
       return openAuthoringBrowser(model?{...model.snapshot(),ownerDef:current?.ownerDef||''}:{},null,undefined,attachedColumn);
     }),
@@ -1111,4 +1132,4 @@ function registerAuthoringWorkspace(vscode, context, browserProviders = {}) {
   );
 }
 
-module.exports = { VIEW_TYPE, SERIALIZED_STATE_SCHEMA, SERIALIZED_STATE_VERSION, ASSISTANCE_RESTORE_SCHEMA, ASSISTANCE_RESTORE_VERSION, registerAuthoringWorkspace, openCodingViewer, openCharacterCodingSet, openAuthoringBrowser, choosePresentation, toolbarModel, navigationFor, canonicalRegularFiles, normalizedCodingContext, validateCharacterCodingDescriptor, serializedPanelState, parseSerializedPanelState, serializedAssistanceState, parseAssistanceState, recoveryEntries, boundedPersonalDiscoveryPin, attachedLayoutShape };
+module.exports = { browserContextForSource, openBrowserCodingSource, liveBrowserDocuments, VIEW_TYPE, SERIALIZED_STATE_SCHEMA, SERIALIZED_STATE_VERSION, ASSISTANCE_RESTORE_SCHEMA, ASSISTANCE_RESTORE_VERSION, registerAuthoringWorkspace, openCodingViewer, openCharacterCodingSet, openAuthoringBrowser, choosePresentation, toolbarModel, navigationFor, canonicalRegularFiles, normalizedCodingContext, validateCharacterCodingDescriptor, serializedPanelState, parseSerializedPanelState, serializedAssistanceState, parseAssistanceState, recoveryEntries, boundedPersonalDiscoveryPin, attachedLayoutShape, browserSnapshot:()=>browserPanel?{panel:browserPanel}:null };

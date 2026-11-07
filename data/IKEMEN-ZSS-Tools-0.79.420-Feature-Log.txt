@@ -1,9 +1,0 @@
-IKEMaker 0.79.420
-
-Palette template active-draft protection
-
-- Sorting, selecting, naming, or arranging template colors now marks the swatch editor as an active local draft.
-- Background canvas and layout updates no longer replace an active swatch panel or discard its unsaved work.
-- Dragging a palette-table color now reorders the local draft immediately instead of forcing a host round trip and full panel refresh.
-- Dragging a color into a manually chosen position changes that destination group to Manual ordering so the chosen position remains visible.
-- Apply groups & repack remains the explicit point that commits the current arrangement to the template layout.

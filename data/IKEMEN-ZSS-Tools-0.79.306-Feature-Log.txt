@@ -1,7 +1,0 @@
-IKEMaker 0.79.306
-
-- Moved Darken unselected sprite colors beside Review Sprite Replacement.
-- Added a live, zoom-correct brush footprint for Pen, Eraser, and Remappen.
-- Added an exact N × N px tool-size readout beside the size controls.
-- Changed Remappen into a direct pencil tool: it replaces only pixels matching the active old/source index with the active new/replacement index.
-- Removed canvas-click pair sampling from Remappen so painting cannot unexpectedly redefine old or new.

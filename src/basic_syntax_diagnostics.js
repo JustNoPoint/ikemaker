@@ -1,7 +1,7 @@
 'use strict';
 
 const controllers = require('../data/sctrl.json');
-const triggers = require('../data/triggers.json');
+const triggers = require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const { zssControllerName } = require('./sctrl');
 
 const CONTROLLERS = new Set(controllers.flatMap(entry => [entry.name, zssControllerName(entry.name)]).map(value => value.toLowerCase()));

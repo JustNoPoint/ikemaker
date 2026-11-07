@@ -111,6 +111,7 @@ function normalizeEncoding(value, backendId) {
   });
   if (active.some((key) => key !== backendId)) throw new Error('Only the explicitly selected backend may have active backend options.');
   if (encoding.reviewedConversions !== undefined && !Array.isArray(encoding.reviewedConversions)) throw new Error('encodingIntent.reviewedConversions must be an array.');
+  require('./sff_png8_optimization').validateBackendOptimization(encoding, backendId);
   return { compression: encoding.compression || {}, crop: encoding.crop || {}, storage: encoding.storage || {}, paletteMode: encoding.paletteMode || null, backendOptions: bags, reviewedConversions: encoding.reviewedConversions || [] };
 }
 function hashSpecification(specification) { const copy = { ...specification }; delete copy.specificationHash; return hashCanonical(copy); }
@@ -126,6 +127,7 @@ function createSffBuildSpecificationV2(input = {}) {
   const logical = { sourceRoot: portable(input.logical?.sourceRoot, 'logical.sourceRoot'), sprites, palettes, provenance: json(input.logical?.provenance, 'logical.provenance') };
   const archive = { identity: portable(input.archive?.identity ?? input.logical?.archiveIdentity, 'archive.identity'), fingerprint: optionalHash(input.archive?.fingerprint ?? input.logical?.archiveFingerprint, 'archive.fingerprint') };
   const encodingIntent = normalizeEncoding(input.encodingIntent, backend.id);
+  if (require('./sff_png8_optimization').validateBackendOptimization(encodingIntent, backend.id) !== 'none' && !sprites.some(sprite => sprite.pixels.kind === 'indexed8')) throw new Error('PNG8 optimization requires at least one indexed sprite; true-color PNGs are unchanged.');
   const requiredFeatures = [...new Set([...derivedFeatures(sprites, palettes), ...derivedEncodingFeatures(encodingIntent), ...((input.capabilityRequest?.requiredFeatures || []).map((item) => text(item, 'capability feature')))])].sort();
   const conversions = encodingIntent.reviewedConversions.map((item) => json(item, 'reviewed conversion'));
   const capabilityAssessment = createSffCapabilityReport({ targetId: target.id, backendId: backend.id, requiredFeatures, conversions, evidence: input.capabilityRequest?.evidence || {} });

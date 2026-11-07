@@ -1,0 +1,33 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "load",
+  "fixtureId": "empty-built-in-only",
+  "fixtureByteHash": "4da36f8b28a3993e7d74073fad61eaf0880db1b4b174922f78663afcb82e95ac",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "empty-built-in-only",
+    "sourceSha256": "4da36f8b28a3993e7d74073fad61eaf0880db1b4b174922f78663afcb82e95ac",
+    "sourceHashMatches": true,
+    "physicalEntries": [],
+    "openedTwice": true,
+    "metadata": [],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": "Empty fixture: zeroentries and actual blank rendered captures.",
+  "trace": [
+    "open\tempty-built-in-only\t0",
+    "open\tempty-built-in-only\t1"
+  ]
+}

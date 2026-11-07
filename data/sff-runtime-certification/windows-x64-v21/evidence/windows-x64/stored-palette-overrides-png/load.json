@@ -1,0 +1,92 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "load",
+  "fixtureId": "stored-palette-overrides-png",
+  "fixtureByteHash": "a5769e771ff9827431f5d90a5376f65ccff9fafde9204aac8e9f50523ca6d07e",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "stored-palette-overrides-png",
+    "sourceSha256": "a5769e771ff9827431f5d90a5376f65ccff9fafde9204aac8e9f50523ca6d07e",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 12,
+        "number": 34,
+        "width": 3,
+        "height": 2,
+        "axisX": -27,
+        "axisY": 61,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "expected": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "expected": [
+          12,
+          34,
+          3,
+          2,
+          -27,
+          61,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\tstored-palette-overrides-png\t0",
+    "sprite\tstored-palette-overrides-png\t0\t12\t34\t3\t2\t-27\t61\t0",
+    "open\tstored-palette-overrides-png\t1",
+    "sprite\tstored-palette-overrides-png\t1\t12\t34\t3\t2\t-27\t61\t0"
+  ]
+}

@@ -1,5 +1,0 @@
-IKEMaker 0.79.414 — Clear template setup loading
-
-- Renamed the compact palette action from “Load setup…” to “Load IKEMaker template setup…”.
-- Added a tooltip explaining that it restores named swatch groups, color order, layer placement, separator lines, and template display settings from an IKEMaker .ikemaker.json sidecar.
-- The action remains separate from image intake and palette-file loading.

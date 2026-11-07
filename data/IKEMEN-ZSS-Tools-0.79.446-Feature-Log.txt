@@ -1,9 +1,0 @@
-IKEMaker 0.79.446
-
-- Completes the unified AIR, SFF, SND, Palette Workshop, and code-authoring release pass.
-- Direct SFF Delete, Delete Group, Rename Group, and Duplicate operate in the current viewer and retain Undo/Redo recovery instead of opening the advanced build workflow.
-- Adds true-color IKEMaker SFF v2.1 intake/writing, reviewed compact sprite intake, live group/index guidance, and direct current-archive build routes.
-- Expands Palette Workshop with standalone and SFF-backed image-template creation, indexed and true-color intake, cleanup, paged thumbnails, cached image sessions, named swatch groups, palette organization, PSD continuation, and reviewed sprite/SFF outputs.
-- Expands AIR collision editing with selection, dragging, side/corner resizing, clipboard operations, push-box guidance, and persistent colors, opacity, and line thickness.
-- Aligns AIR/SFF/SND browsers, history, direct actions, navigation, filters, layer/onion controls, and archive metadata behavior.
-- Completes the bounded all-screen route inventory at 65 registered surfaces and 3,614 currently discovered controls with zero pending candidates; runtime, screen-reader, external-tool, and large private-archive physical QA remain separate limits.

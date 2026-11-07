@@ -1,6 +1,0 @@
-IKEMaker 0.79.39 — Context-sensitive floating-window control
-
-- Shows Float Window while the Actions Browser is in the main VS Code window.
-- Changes the same control to Return to Main Window after it is detached.
-- Uses VS Code's native Move Editor into New Window and Restore Editors into
-  Main Window commands without disposing or recreating the browser.

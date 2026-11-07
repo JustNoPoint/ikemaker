@@ -1,5 +1,0 @@
-IKEMaker 0.79.48
-
-- Stops the SFF comparison browser's empty-thumbnail message loop.
-- Restores responsive Groups, Sprites, Details, filters, and sprite selection after thumbnails load.
-- Retains the explicit webview-control fix introduced in 0.79.47.

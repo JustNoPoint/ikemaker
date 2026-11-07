@@ -49,7 +49,7 @@ function remapFrames(block, mappings) {
     if (/^(?:\r\n|\r|\n)$/.test(part)) return part;
     const semicolon = part.indexOf(';'), code = semicolon >= 0 ? part.slice(0, semicolon) : part, comment = semicolon >= 0 ? part.slice(semicolon) : '';
     const match = /^(\s*)(-?\d+)(\s*,\s*)(-?\d+)(\s*,\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+.*)$/.exec(code);
-    if (!match) return part;
+    if (!match || Number(match[2]) === -1 || Number(match[4]) === -1) return part;
     const mapped = mappings.get(`${Number(match[2])},${Number(match[4])}`);
     return mapped ? `${match[1]}${mapped.group}${match[3]}${mapped.index}${match[5]}${comment}` : part;
   }).join('');

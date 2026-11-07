@@ -88,7 +88,7 @@ function newPlan(name = 'New Throw', template = 'stationary') {
     p1State: 800, p2State: 801, handoffState: 5100, p1Type: airborne ? 'A' : 'S', p1Physics: 'N', p2Type: airborne ? 'A' : 'S', p2Physics: 'N', timingMode: 'independent',
     startTick: 0, endTick: 1, holdLastP2: true, loopStart: 0, loopEnd: 1,
     p1Facing: 1, p2Facing: -1, notes: '',
-    events: source.events.map((event, index) => ({ id: `event-${index + 1}`, x: 35, y: 0, value: 0, note: '', ...event })),
+    events: source.events.map((event, index) => ({ id: `event-${index + 1}`, x: 35, y: 0, value: ['damage','throw-hit'].includes(event.type) ? 100 : 0, note: '', ...event, ...(['target-state','handoff'].includes(event.type)?{usePlanState:true}:{}) })),
     parts: [], sourceHashes: {}
   };
 }
@@ -98,7 +98,7 @@ function normalizedPlan(input = {}) {
   plan.version = VERSION; plan.id = slug(plan.id || plan.name); plan.timingMode = TIMING_MODES.includes(plan.timingMode) ? plan.timingMode : 'independent';
   plan.p1Type = ['S', 'C', 'A'].includes(plan.p1Type) ? plan.p1Type : 'S'; plan.p2Type = ['S', 'C', 'A'].includes(plan.p2Type) ? plan.p2Type : 'S';
   plan.p1Physics = ['S', 'C', 'A', 'N'].includes(plan.p1Physics) ? plan.p1Physics : 'N'; plan.p2Physics = ['S', 'C', 'A', 'N'].includes(plan.p2Physics) ? plan.p2Physics : 'N';
-  plan.events = (plan.events || []).map((event, index) => ({ id: event.id || `event-${index + 1}`, type: EVENT_TYPES.includes(event.type) ? event.type : 'note', tick: Math.max(0, Math.round(number(event.tick))), x: number(event.x, 35), y: number(event.y), value: number(event.value), note: String(event.note || '') })).sort((a, b) => a.tick - b.tick);
+  plan.events = (plan.events || []).map((event, index) => ({ id: event.id || `event-${index + 1}`, type: EVENT_TYPES.includes(event.type) ? event.type : 'note', tick: Math.max(0, Math.round(number(event.tick))), x: number(event.x, 35), y: number(event.y), value: number(event.value), note: String(event.note || ''), ...(['target-state','handoff'].includes(event.type)?{usePlanState:typeof event.usePlanState==='boolean'?event.usePlanState:Number(event.value||0)===0}:{}) })).sort((a, b) => a.tick - b.tick);
   plan.parts = (plan.parts || []).map((part, index) => ({ id: part.id || `part-${index + 1}`, name: String(part.name || `Part ${index + 1}`), owner: ['P1', 'P2', 'helper', 'projectile', 'manual'].includes(part.owner) ? part.owner : 'manual', lane: LANES.includes(part.lane) ? part.lane : 'Between Players', bank: Math.max(1, Math.min(4, Math.round(number(part.bank, 1)))), anim: Math.round(number(part.anim)), explodId: Math.round(number(part.explodId, 8900 + index)), sprPriority: Math.round(number(part.sprPriority)), layerNo: Math.round(number(part.layerNo)), syncId: Math.round(number(part.syncId)), syncLayer: part.syncLayer !== false, createTick: Math.max(0, Math.round(number(part.createTick))), removeTick: Math.max(-1, Math.round(number(part.removeTick, -1))) }));
   return plan;
 }
@@ -124,31 +124,45 @@ function validatePlan(input, tracks) {
   if (firstBind && release && release.tick < firstBind.tick) issues.push({ level: 'error', code: 'release-before-bind', message: 'Bind release occurs before bind start.' });
   if (p2 && p1 && !plan.holdLastP2 && p2.totalTicks < (handoff?.tick ?? release?.tick ?? p1.totalTicks)) issues.push({ level: 'warning', code: 'p2-ends-early', message: 'P2 ends before release/handoff and Hold last P2 pose is disabled.' });
   for (const part of plan.parts) {
+    if (part.owner !== 'P1') issues.push({level:'warning',code:'part-preview-only-owner',message:`${part.name}: ${part.owner} ownership is preview-only; the starter exports only P1-owned Explods. Author other runtime ownership explicitly.`});
     if (part.owner === 'manual') issues.push({ level: 'warning', code: 'part-owner-review', message: `${part.name} still requires a reviewed runtime owner.` });
     if (part.removeTick < 0) issues.push({ level: 'warning', code: 'part-cleanup', message: `${part.name} has no removal tick.` });
     if (!actions.has(part.anim)) issues.push({ level: 'error', code: 'missing-part-action', message: `${part.name} references missing AIR action ${part.anim}.` });
   }
+  for (const [type,label] of [['grab','capture'],['target-state','target-entry'],['handoff','target release']]) {
+    const markers=plan.events.filter(event=>event.type===type);
+    if(markers.length!==1)issues.push({level:'error',code:'starter-'+type+'-count',message:`The starter scaffold needs one ${label} marker. Keep multi-capture/custom sequencing in authored source.`});
+  }
+  const entry=plan.events.find(event=>event.type==='target-state'),capture=plan.events.find(event=>event.type==='grab'),exit=plan.events.find(event=>event.type==='handoff'),cleanup=plan.events.filter(event=>event.type==='cleanup').at(-1);
+  if(entry&&entry.usePlanState===false&&entry.value!==plan.p2State)issues.push({level:'error',code:'starter-target-override',message:'The starter capture uses the P2 custom state field. Match the target-entry override to it or use plan state.'});
+  if(entry&&capture&&entry.tick!==capture.tick)issues.push({level:'error',code:'starter-entry-time',message:'Align the starter capture and target-entry ticks. Deferred/custom capture timing stays source-owned.'});
+  if(entry&&exit&&exit.tick<entry.tick)issues.push({level:'error',code:'starter-exit-time',message:'Target release cannot precede target entry.'});
+  if(cleanup&&exit&&cleanup.tick<exit.tick)issues.push({level:'error',code:'starter-cleanup-time',message:'Final cleanup must follow the target release.'});
+  for(const bind of plan.events.filter(event=>event.type==='bind'))if(!plan.events.some(event=>['bind-release','cleanup','handoff'].includes(event.type)&&event.tick>bind.tick))issues.push({level:'error',code:'unbounded-bind',message:'Every bind keyframe needs a later release, handoff, or cleanup marker.'});
   const duplicateIds = plan.parts.map(part => part.explodId).filter((id, index, all) => id && all.indexOf(id) !== index);
   if (duplicateIds.length) issues.push({ level: 'error', code: 'duplicate-explod', message: `Duplicate Explod ID: ${duplicateIds[0]}.` });
   return { plan, p1, p2, issues, valid: !issues.some(issue => issue.level === 'error') };
 }
 
+function bindAt(plan,tick){const bind=(plan.events||[]).filter(event=>event.type==='bind'&&event.tick<=tick).sort((a,b)=>a.tick-b.tick).at(-1);return bind&&!(plan.events||[]).some(event=>['bind-release','handoff','cleanup'].includes(event.type)&&event.tick>=bind.tick&&event.tick<=tick)?bind:null;}
+function bindWindow(event,plan){const end=plan.events.filter(item=>['bind','bind-release','cleanup','handoff'].includes(item.type)&&item.tick>event.tick).reduce((value,item)=>Math.min(value,item.tick),Infinity);return {start:event.tick,end};}
 function controllerFor(event, plan) {
   const trigger = `if time = ${event.tick}`;
   const pos = `${Math.round(event.x)}, ${Math.round(event.y)}`;
   switch (event.type) {
-    case 'target-state': return `${trigger} { targetState{value: ${Math.round(event.value || plan.p2State)}} }`;
+    case 'target-state': return `# Expected target entry at tick ${event.tick}; starter HitDef sends the captured target to StateDef ${plan.p2State}. Actual contact time is runtime-dependent.`;
     case 'change-anim2': return `# Tick ${event.tick}: ChangeAnim2 ${plan.p2Action} begins in custom StateDef ${plan.p2State}.`;
-    case 'bind': return `${trigger} { targetBind{time: 1; pos: ${pos}} }`;
+    case 'bind': {const window=bindWindow(event,plan);return `if time >= ${window.start} && time < ${window.end} { targetBind{time: ${window.end} - time; pos: ${pos}} }`;}
     case 'bind-release': return `${trigger} { targetBind{time: 0} }`;
     case 'facing': return `${trigger} { targetFacing{value: ${Math.round(event.value || -1)}} }`;
-    case 'damage': case 'throw-hit': return `${trigger} { targetLifeAdd{value: -${Math.abs(Math.round(event.value || 100))}; kill: 1} }`;
-    case 'handoff': return `${trigger} { targetState{value: ${Math.round(event.value || plan.handoffState)}} }`;
+    case 'damage': case 'throw-hit': return `${trigger} { targetLifeAdd{value: ${-Math.abs(Math.round(event.value))}; kill: 1} }`;
+    case 'handoff': return `# Tick ${event.tick}: target-owned SelfState release below is the only handoff. No competing attacker TargetState is generated.`;
     case 'sound': return `${trigger} { playSnd{value: S${Math.round(event.value)}, 0} }`;
     case 'pause': return `${trigger} { pause{time: ${Math.max(1, Math.round(event.value || 1))}} }`;
     case 'screen-shake': return `${trigger} { envShake{time: ${Math.max(1, Math.round(event.value || 8))}; ampl: -4} }`;
     case 'priority': return `${trigger} { sprPriority{value: ${Math.round(event.value)}} }`;
-    case 'cleanup': return `${trigger} { targetBind{time: 0} } # Review every exit path and remove owned parts.`;
+    case 'cleanup': return `${trigger} { targetBind{time: 0} } # Finite binds also expire if P1 is interrupted.`;
+    case 'grab': return `${trigger} {\n hitDef{\n  attr: ${plan.p1Type}, NT;\n  hitflag: MAF;\n  priority: 1, Miss;\n  damage: 0;\n  sparkno: -1;\n  guard.dist: 0;\n  p2stateno: ${plan.p2State};\n  p2getp1state: 1;\n  fall: 1;\n  fall.recover: 0;\n }\n} # Starter collision capture; replace/review for this character, not an import of its authored HitDef.`;
     default: return `# Tick ${event.tick}: ${event.type}${event.note ? ` — ${event.note}` : ''}`;
   }
 }
@@ -156,24 +170,28 @@ function controllerFor(event, plan) {
 function generateZss(input, tracks) {
   const checked = validatePlan(input, tracks), plan = checked.plan;
   if (!checked.valid) throw new Error(checked.issues.filter(issue => issue.level === 'error').map(issue => issue.message).join(' '));
+  const targetEntry=plan.events.find(event=>event.type==='target-state'),handoff=plan.events.find(event=>event.type==='handoff'),finalCleanup=Math.max(...plan.events.filter(event=>event.type==='cleanup').map(event=>event.tick));
   const lines = [
     `# IKEMEN Tools Throw Creator plan: ${plan.name}`,
-    '# REVIEW REQUIRED: This scaffold never replaces authored states automatically.',
+    '# REVIEW REQUIRED: Starter capture + finite bind intervals + one target-owned release. Not an imported/authored throw.',
+    '# Contact, pause/hitpause, interruption and custom ownership require in-game review. This file never replaces authored states automatically.',
     `# P1 action ${plan.p1Action}; P2 ChangeAnim2 action ${plan.p2Action}; timing ${plan.timingMode}.`,
     `# Source AIR SHA-256: ${plan.sourceHashes.air || 'not recorded'}`,
     '', `[StateDef ${plan.p1State};`, `\ttype: ${plan.p1Type};`, '\tmovetype: A;', `\tphysics: ${plan.p1Physics};`, `\tanim: ${plan.p1Action};`, '\tctrl: 0;]', '',
     ...plan.events.map(event => controllerFor(event, plan)), ''
   ];
   for (const part of plan.parts) {
+    if(part.owner!=='P1'){lines.push(`# PREVIEW ONLY: ${part.name}, owner ${part.owner}, action ${part.anim}; author its runtime ownership explicitly. No P1 Explod is substituted.`);continue;}
     lines.push(`# ${part.name}: owner ${part.owner}; lane ${part.lane}; SFF part bank ${part.bank}.`);
-    lines.push(`if time = ${part.createTick} { explod{id: ${part.explodId}; anim: ${part.anim}; postype: p1; sprpriority: ${part.sprPriority}; layerno: ${part.layerNo}; syncid: ${part.syncId}; synclayer: ${part.syncLayer ? 1 : 0}; removetime: -1} }`);
+    lines.push(`if time = ${part.createTick} { explod{id: ${part.explodId}; anim: ${part.anim}; postype: p1; sprpriority: ${part.sprPriority}; layerno: ${part.layerNo}; syncid: ${part.syncId}; synclayer: ${part.syncLayer ? 1 : 0}; removetime: -1; removeongethit: 1} }`);
     if (part.removeTick >= 0) lines.push(`if time = ${part.removeTick} { removeExplod{id: ${part.explodId}} }`);
   }
+  lines.push(`if time >= ${finalCleanup} { ctrlSet{value: 1} changeState{value: ${plan.p1Type==='A'?50:0}} } # Starter miss/success return; review conventional StateDef ${plan.p1Type==='A'?50:0}.`);
   lines.push(
-    '', `# P2 custom state ${plan.p2State} is entered through TargetState above.`,
+    '', `# P2 custom state ${plan.p2State} is entered through the starter HitDef above.`,
     `[StateDef ${plan.p2State};`, `\ttype: ${plan.p2Type};`, '\tmovetype: H;', `\tphysics: ${plan.p2Physics};`, '\tctrl: 0;]', '',
     `if time = 0 { changeAnim2{value: ${plan.p2Action}} }`,
-    `if animTime = 0 { selfState{value: ${plan.handoffState}} }`,
+    `if time >= ${handoff.tick-targetEntry.tick} { selfState{value: ${Math.round(handoff.usePlanState?plan.handoffState:handoff.value)}} } # Target-owned release; target time starts on capture, not attacker time.`,
     '# Review fall/launch physics, facing, death, Tag, interruption cleanup, and every SelfState destination.', ''
   );
   return lines.join('\n');
@@ -181,4 +199,4 @@ function generateZss(input, tracks) {
 
 function planFilename(folder, plan) { return path.join(folder, '.ikemen-tools', 'throw-plans', `${slug(plan.id || plan.name)}.json`); }
 
-module.exports = { VERSION, TIMING_MODES, EVENT_TYPES, LANES, TEMPLATES, hash, slug, timeline, actionTracks, timingProposal, replaceActionDurations, newPlan, normalizedPlan, validatePlan, generateZss, planFilename };
+module.exports = { VERSION, TIMING_MODES, EVENT_TYPES, LANES, TEMPLATES, hash, slug, timeline, actionTracks, timingProposal, replaceActionDurations, newPlan, normalizedPlan, validatePlan, bindAt, bindWindow, generateZss, planFilename };

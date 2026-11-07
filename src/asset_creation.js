@@ -45,10 +45,11 @@ const SOURCE_FILE_TYPES = Object.freeze([
 const SOURCE_PICKER_SECTIONS = Object.freeze([
   Object.freeze({ label: 'Code and data files', items: SOURCE_FILE_TYPES }),
   Object.freeze({ label: 'Stage', items: Object.freeze([
-    Object.freeze({ label: 'Stage workspace', description: 'Create a stage DEF and its connected SFF, then open the visual Stage workspace.', command: 'ikemen.stage.createNew' })
+    Object.freeze({ label: 'Stage workspace', description: 'Create a stage DEF and its connected SFF, then open the visual Stage workspace.', command: 'ikemen.stage.createNew' }),
+    Object.freeze({ label: 'Stage from ordered PNG layers…', description: 'Preview and reorder PNG art, choose fighter depth, then create connected Stage DEF/SFF.', command: 'ikemen.stage.createFromPngLayers' })
   ]) }),
   Object.freeze({ label: 'UI / Screenpack', items: Object.freeze([
-    Object.freeze({ label: 'Screenpack / Fight UI workspace', description: 'Create the connected system and fight DEF/SFF files, then open the visual UI workspace.', command: 'ikemen.ui.createNew' }),
+    Object.freeze({ label: 'Screenpack / Fight UI workspace', description: 'Create motif, fight UI, and a roster when needed, then open the visual UI workspace.', command: 'ikemen.ui.createNew' }),
     Object.freeze({ label: 'Storyboard', description: 'Create an opening, ending, credits, logo, loading, or story scene with its connected SFF.', command: 'ikemen.storyboard.create' })
   ]) })
 ]);
@@ -158,7 +159,7 @@ async function chooseAuthoringCoordinates(label) {
 }
 
 async function approveCreationPlan(plan) {
-  const folder = path.dirname(plan.target), detail = [`Canvas: ${plan.localCoord[0]} × ${plan.localCoord[1]}`, '', 'Connected files:', ...plan.files.map(file => `• ${file.role}: ${path.relative(folder, file.filename) || path.basename(file.filename)}`), '', 'All files are created together; if any write fails, the set is rolled back.'].join('\n');
+  const folder = path.dirname(plan.target), detail = [`Canvas: ${plan.localCoord[0]} × ${plan.localCoord[1]}`, '', 'New files:', ...plan.files.map(file => `• ${file.role}: ${path.relative(folder, file.filename) || path.basename(file.filename)}`), ...(plan.existing?.length ? ['', 'Assigned without changes:', ...plan.existing.map(file => `• ${file.role}: ${file.filename}`)] : []), '', 'New files are created together; if any write fails, the set is rolled back.'].join('\n');
   return await vscode.window.showInformationMessage(`Create ${plan.summary}?`, { modal: true, detail }, 'Create Workspace') === 'Create Workspace';
 }
 
@@ -200,8 +201,21 @@ async function createUi() {
   if (!target) return { created: false, cancelled: true, step: 'destination' };
   const localCoord = await chooseAuthoringCoordinates('Screenpack / Fight UI');
   if (!localCoord) return { created: false, cancelled: true, step: 'canvas' };
-  const plan = creationPlan('screenpack', target.fsPath, { localCoord, author: authorFor(target) });
+  const rosterPath = path.join(path.dirname(target.fsPath), 'select.def');
+  let reuseSelect = false;
+  try { reuseSelect = fs.existsSync(rosterPath) && fs.statSync(rosterPath).isFile(); }
+  catch (error) { vscode.window.showErrorMessage(`Could not inspect roster ${rosterPath}: ${error.message}`); return { created: false, cancelled: false, filename: target.fsPath, error: error.message }; }
+  const plan = creationPlan('screenpack', target.fsPath, { localCoord, author: authorFor(target), reuseSelect });
   if (!await approveCreationPlan(plan)) return { created: false, cancelled: true, step: 'review' };
+  if (reuseSelect) {
+    let available = false;
+    try { available = fs.statSync(rosterPath).isFile(); } catch (_) { /* A removed roster invalidates the reviewed assignment. */ }
+    if (!available) {
+      const message = `The reviewed existing roster is no longer available: ${rosterPath}`;
+      vscode.window.showErrorMessage(message);
+      return { created: false, cancelled: false, filename: target.fsPath, error: message };
+    }
+  }
   try { writeCreationPlan(plan, 'create-ui-workspace'); }
   catch (error) {
     vscode.window.showErrorMessage(`Could not create Screenpack / Fight UI workspace at ${target.fsPath}: ${error.message}`);
@@ -211,15 +225,15 @@ async function createUi() {
   try {
     const panel = await openUiWorkspace(target);
     if (!panel) {
-      vscode.window.showWarningMessage(`Screenpack / Fight UI workspace files were created, but the visual workspace did not open. Open ${target.fsPath} to continue. Created files: ${files.join(', ')}.`);
+      vscode.window.showWarningMessage(`Screenpack / Fight UI workspace files were created, but the visual workspace did not open. Open ${target.fsPath} to continue. Created files: ${files.join(', ')}. Assigned roster: ${rosterPath}.`);
       return { created: true, opened: false, filename: target.fsPath, files };
     }
   }
   catch (error) {
-    vscode.window.showWarningMessage(`Screenpack / Fight UI workspace files were created, but IKEMaker could not open the visual workspace. Open ${target.fsPath} to continue. Created files: ${files.join(', ')}. ${error.message}`);
+    vscode.window.showWarningMessage(`Screenpack / Fight UI workspace files were created, but IKEMaker could not open the visual workspace. Open ${target.fsPath} to continue. Created files: ${files.join(', ')}. Assigned roster: ${rosterPath}. ${error.message}`);
     return { created: true, opened: false, filename: target.fsPath, files };
   }
-  vscode.window.showInformationMessage(`Screenpack / Fight UI workspace was created and opened from ${target.fsPath}. Created connected files: ${files.join(', ')}.`);
+  vscode.window.showInformationMessage(`Screenpack / Fight UI workspace was created and opened from ${target.fsPath}. New files: ${files.join(', ')}. Assigned roster: ${rosterPath}${reuseSelect ? ' (existing; unchanged)' : ' (new; add characters and stages in Roster Manager)'}. The sprite archives contain no art; menu font 0 depends on the engine's default font resource. No game motif selection was changed. Review the active motif before launching.`);
   return { created: true, opened: true, filename: target.fsPath, files };
 }
 
@@ -267,7 +281,7 @@ async function assignCreatedStoryboard(storyboardFilename, type) {
   let plan;
   try { plan = storyboardAssignment.createAssignmentPlan({ ownerFilename, storyboardFilename, type }); }
   catch (error) { await vscode.window.showErrorMessage(`Storyboard assignment was not prepared: ${error.message}`); return { assigned: false, cancelled: false, error: error.message }; }
-  const detail = [`Owner: ${plan.ownerFilename}`, `Section: [${plan.section}]`, `Assignment: ${plan.key} = ${plan.value}`, '', plan.changed ? 'The exact owner file is rechecked before a transactional write. A failed commit rolls back; no separate persistent backup is created.' : 'This exact assignment is already present; no file needs to change.'].join('\n');
+  const detail = [`Owner: ${plan.ownerFilename}`, `Section: [${plan.section}]`, `Assignment: ${plan.key} = ${plan.value}`, ...(plan.enable?['Enable section: enabled = 1']:[]), '', plan.changed ? 'The exact owner file is rechecked before a transactional write. A failed commit rolls back; no separate persistent backup is created.' : 'This exact assignment is already present; no file needs to change.'].join('\n');
   const approved = await vscode.window.showWarningMessage(`${plan.changed ? 'Apply' : 'Keep'} this storyboard assignment?`, { modal: true, detail }, plan.changed ? 'Assign Storyboard' : 'Keep Existing Assignment');
   if (!approved) return { assigned: false, cancelled: true, step: 'review' };
   if (dirtyOwner()) { const message = 'The assignment DEF gained unsaved changes during review. Save or revert it, then review the assignment again.'; await vscode.window.showErrorMessage(message); return { assigned: false, cancelled: false, error: message }; }
@@ -344,7 +358,7 @@ async function createCharacter() {
   const styles = scaffoldChoices(experience).map((choice) => ({ ...choice, label: `${choice.label}${choice.recommended ? ' (Recommended for current experience)' : ''}` }));
   const selectedStyle = await vscode.window.showQuickPick(styles, {
     title: 'Choose the character scaffold',
-    placeHolder: 'This explicit choice controls generated content; changing Learning / Advanced mode alone never does.'
+    placeHolder: 'This explicit choice controls generated content; changing explanation detail alone never does.'
   });
   if (!selectedStyle) return;
   const author = vscode.workspace.getConfiguration('ikemenZss', target).get('authorName', '');
@@ -369,10 +383,11 @@ async function createCharacter() {
       await fileConfig.update('associations', { ...associations, [`*.${plan.inputExtension}`]: 'ikemen-cns' }, vscode.ConfigurationTarget.Workspace);
     }
     await vscode.commands.executeCommand('ikemen.workbench.registerDef', vscode.Uri.file(plan.defPath));
-    const next = await vscode.window.showInformationMessage(`${plan.stem} was created at ${plan.directory}. ${plan.files.size} new character files were written; no existing character, stage, screenpack, or project files were changed. Start with the dependency checklist before gameplay work.`, 'Open Checklist', 'Open DEF');
+    const next = await vscode.window.showInformationMessage(`${plan.stem} was created at ${plan.directory}. ${plan.files.size} new character files were written; no existing character, stage, screenpack, or project files were changed. Start with the dependency checklist before gameplay work.`, 'First playable attack', 'Open Checklist', 'Open DEF');
+    if (next === 'First playable attack') await vscode.commands.executeCommand('ikemen.character.firstPlayableAttack', vscode.Uri.file(plan.defPath));
     if (next === 'Open Checklist') await vscode.window.showTextDocument(vscode.Uri.file(path.join(plan.directory, 'README.md')), { preview: false });
     if (next === 'Open DEF') await vscode.window.showTextDocument(vscode.Uri.file(plan.defPath), { preview: false });
-    return { created: true, registered: true, filename: plan.defPath, opened: next === 'Open Checklist' || next === 'Open DEF' };
+    return { created: true, registered: true, filename: plan.defPath, opened: next === 'First playable attack' || next === 'Open Checklist' || next === 'Open DEF' };
   } catch (error) {
     await vscode.window.showWarningMessage(`${plan.stem} was created at ${plan.directory}, but IKEMaker could not finish registering or opening it: ${error.message}. Use Open Character and choose ${plan.defPath}; the generated files were kept.`);
     return { created: true, registered: false, filename: plan.defPath, opened: false };
@@ -381,11 +396,13 @@ async function createCharacter() {
 
 function registerAssetCreation(context) {
   context.subscriptions.push(
+    vscode.commands.registerCommand('ikemen.character.firstPlayableAttack', seed => require('./first_playable_attack').firstPlayableAttack(context, seed)),
     vscode.commands.registerCommand('ikemen.character.createNew', createCharacter),
     vscode.commands.registerCommand('sff.createNew', createSff),
     vscode.commands.registerCommand('air.createNew', createAir),
     vscode.commands.registerCommand('snd.createNew', createSnd),
     vscode.commands.registerCommand('ikemen.stage.createNew', createStage),
+    vscode.commands.registerCommand('ikemen.stage.createFromPngLayers', () => require('./stage_png_workspace').openPngStage(vscode)),
     vscode.commands.registerCommand('ikemen.ui.createNew', createUi),
     vscode.commands.registerCommand('ikemen.storyboard.create', createStoryboard),
     vscode.commands.registerCommand('ikemen.storyboard.createOpening', () => createStoryboard('opening')),

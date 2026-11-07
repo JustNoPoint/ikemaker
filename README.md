@@ -1,5 +1,26 @@
 # IKEMaker
 
+## Preview and edit
+
+- **Hold a screen for editing.** In Screenpack Flow, select a timed screen such as Versus or Victory. In Storyboard, select the scene. Choose **Preview & hold** to keep the artwork visible while editing, then **Play transition** to check its authored timing.
+- **Inspect a running move.** In an eligible local Test Session, choose **Inspect paused match…**. Click a fighter or Helper in the frozen image, or choose an instance from the keyboard list. If objects overlap, select the one you want. Open the available state or animation editor, then return to Test Session to resume a pause started by the inspector.
+- **Build a stage from PNGs.** Choose **Create Stage from Ordered PNG Layers…**, arrange the images from back to front, and choose which draw in front of the fighters. Review the composite and camera coverage, then pick the destination. IKEMaker opens the new Stage DEF and writes its sprite archive and layer receipt alongside it.
+- **Check stage synchronization.** Set the cycle length beside **Preview tick**. Scrub to inspect the offline phase. An eligible Stage Live session displays the sampled engine StageTime and its phase. For a stage with an attached character, launch the ordinary Stage Rig and watch the counter in the game overlay.
+- **Convert palette precision.** In Palette Workshop’s live editing controls, choose the scope and an RGB precision under **Compare as**. Choose **Review conversion**, check the change count, then press **Enter** on **Convert**. Undo is available in the draft. Use the normal save workflow to write it.
+
+## Character authoring
+
+- **Make a variant.** Select the original StateDef in Move Lab and choose **Create move variant**. Review the new state and animation IDs, which Helper states to copy, and which files will change. Command Maker can then prepare the command for the new state. Sprites and sounds stay shared.
+- **Diagnose an input.** Open diagnosis for the selected move to inspect its authored commands, state-entry conditions and attack code. Follow a source link to the exact condition. **Test my input** watches an attempt in stock IKEMEN. A command match and a state entry are separate observations.
+- **Repeat a move test.** Choose **Test this change again** to save the opponent, stage, distance, facing and expected spawn. Rerun the setup after editing. This test enters the state directly, so use the input test when diagnosing a command.
+- **Build a first attack.** Choose **First playable attack** from Project or after character creation. The guide opens the appropriate sprite, AIR, collision and command editors for the selected character. Use **Back to First playable attack** to resume and record the in-game hit check.
+
+**IKEMaker 0.79.486** adds section-aware DEF coding examples for screenpacks, select screens, and storyboards in the State Controllers sidebar. On narrow windows the Stage workspace wraps its header and scrolls to the bottom of the preview.
+
+Open **Tools → Open IKeMeter** or choose IKeMeter from **Switch Suite**. IKeMeter opens a local Windows debugging session for your selected runtime. Monitoring and native controls are available only for eligible sessions.
+
+Meter opens disconnected; Connect remains explicit. See [IKeMeter integration](data/IKeMeter-Integration.md) for runtime selection, portable fallback and cleanup.
+
 - **0.79.452** restores cohesive focused visual workspaces for Command & Movelist, Match Setup, Project & Team Manager, Stage, Screenpack/UI, and Storyboard tools. These screens now open as focused IKEMaker views with the shared menu/header order, complete semantic icon colors, exact connected-resource ownership, and guarded return paths. AIR browser scrolling and stale SND opening are also corrected.
 - **0.79.447** restores Project Data discovery when VS Code has no useful workspace folder. An empty workspace-wide ZSS search now falls back to the active file's character/game project root, reports that scope clearly, and keeps Refresh, partial-scan, and failure guidance intact.
 - **0.79.446** completes the unified AIR/SFF/Palette Workshop authoring pass. Direct SFF Delete, Delete Group, Rename Group, and Duplicate actions now operate immediately in the current viewer, retain Undo/Redo recovery, and no longer divert into the advanced build workflow. Palette Workshop includes standalone and SFF-backed template creation, true-color intake, indexed palette organization, session/PSD continuation, and direct reviewed outputs. AIR collision boxes support selection, dragging, resizing, clipboard operations, persistent appearance controls, and push-box guidance.
@@ -619,11 +640,7 @@ learned. Learning and Advanced modes use the same underlying tools and files;
 they change presentation, not project behavior. Explanations remain available
 on demand in Advanced mode.
 
-The domain-by-domain implementation status and acceptance rules are maintained
-in `data/Experience-Coverage-Audit.md`. In particular, Advanced mode never
-weakens validation, backups, stale-file checks, or online-safety guidance.
-The executable equivalence gate and its proof scope are documented in
-`data/Experience-Semantic-Equivalence.md`.
+Advanced mode preserves validation, backups, stale-file checks, and online-safety guidance.
 
 SFF, AIR, SND, stage, screenpack/fight UI, and command/movelist workspaces now
 show their active experience. Learning opens a nearby `What am I editing?`

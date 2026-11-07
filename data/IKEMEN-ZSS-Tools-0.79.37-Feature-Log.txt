@@ -1,6 +1,0 @@
-IKEMaker 0.79.37 — AIR Actions Browser mode clarity
-
-- Gives List, Thumbnails, and Combined buttons a persistent active state.
-- Makes Combined a true split view with a compact action list beside the
-  thumbnail grid instead of repeating the thumbnail presentation.
-- Synchronizes selection highlighting across both halves of Combined mode.

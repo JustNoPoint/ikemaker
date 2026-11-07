@@ -15,8 +15,8 @@ async function collectSffTransferDecisions(vscode, analysis, destinationArchive)
     const decision = { id: item.id };
     if (item.collision.decisionRequired) {
       const chosen = await pick(vscode, [
-        { label: 'Add at next free index', value: 'add-next-free' }, { label: 'Replace existing sprite', value: 'replace-existing' }, { label: 'Choose another group,index', value: 'manual-identity' }, { label: 'Skip this sprite', value: 'skip' }
-      ], { title: `Identity conflict — ${item.id}`, placeHolder: `${item.identity} already exists in Destination.` }); if (!chosen) return null;
+        { label: 'Add at next free index', value: 'add-next-free' }, ...(item.collision.destinationPhysicalIndices.length ? [{ label: 'Replace existing sprite', value: 'replace-existing' }] : []), { label: 'Choose another group,index', value: 'manual-identity' }, { label: 'Skip this sprite', value: 'skip' }
+      ], { title: `Identity conflict — ${item.id}`, placeHolder: item.collision.status === 'source-duplicate' ? `Two selected Source sprites use ${item.identity}. Choose where this one goes.` : `${item.identity} already exists in Destination.` }); if (!chosen) return null;
       decision.identity = { action: chosen.value };
       if (chosen.value === 'replace-existing' && item.collision.destinationPhysicalIndices.length > 1) { const occurrence = await pick(vscode, item.collision.destinationPhysicalIndices.map(index => ({ label: `${item.identity} · physical ${index}`, value: index })), { title: `Choose exact Destination occurrence — ${item.id}` }); if (!occurrence) return null; decision.identity.destinationPhysicalIndex = occurrence.value; }
       if (chosen.value === 'manual-identity') { const value = await groupIndex(vscode, `New Destination identity — ${item.id}`, item.identity); if (!value) return null; Object.assign(decision.identity, value); }

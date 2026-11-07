@@ -1,6 +1,0 @@
-IKEMaker 0.79.441
-
-- SFF Sprite Controls now keep group, index, name/comment, X axis, and Y axis synchronized with every exact sprite selection, including slider, arrow, browser, and restored navigation.
-- Onion-skin controls now show the selected reference sprite's group, index, name/comment, and axes. Onion identity is read-only; only its X/Y axes can be edited and those edits use the normal saved SFF undo/redo history.
-- The optional JNP fighter numbering profile is no longer enabled universally. Projects must explicitly select it before inferred labels such as Standing or Crouching appear; custom names and native validation remain available without it.
-- SFF Browser sprite ranges now expose Select All Visible and Delete Marked actions. Shift-click keeps the whole range visibly marked, Ctrl+A selects the filtered list, and Delete stages the exact marked physical sprites as one reviewed batch.

@@ -1,6 +1,0 @@
-IKEMaker 0.79.38 — Narrow combined AIR browser
-
-- Keeps the action list and thumbnail pane side by side as Combined narrows.
-- Reduces thumbnail minimum width so the thumbnail side can reach one column.
-- Removes the premature responsive rule that placed thumbnails below the list.
-- Uses horizontal overflow only below the minimum usable two-pane width.

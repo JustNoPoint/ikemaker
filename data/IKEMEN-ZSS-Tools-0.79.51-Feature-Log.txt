@@ -1,6 +1,0 @@
-IKEMaker 0.79.51
-
-- Makes Groups + Sprites the default SFF Browser working view.
-- Keeps Details as a secondary focused view.
-- Renames the complete three-pane layout to All 3.
-- Removes unnecessary separate Groups-only and Sprites-only modes.

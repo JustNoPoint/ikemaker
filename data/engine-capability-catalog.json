@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "catalogRevision": 15,
-  "generatedAt": "2026-10-24T00:00:00.000Z",
+  "catalogRevision": 18,
+  "generatedAt": "2026-11-06T03:00:28.080Z",
   "sources": [
     {
       "id": "ikemen-go-github",
@@ -175,6 +175,74 @@
         "rollback": "unknown",
         "project": "unknown"
       }
+    },
+    {
+      "id": "ikemen-go-nightly-6e564af055bb-windows-x64",
+      "engine": "IKEMEN GO",
+      "channel": "nightly",
+      "version": "nightly-2026-11-03",
+      "commit": "6e564af055bb1341b787990f971828ff930935b4",
+      "platform": "windows-x64",
+      "publishedAt": "2026-11-03T15:30:18Z",
+      "artifactSha256": "3ced9a282d20e0d6a07a6cf7a2abd5db882d30d7e0f05ff0eeaf315b3a3cc90e",
+      "executableSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+      "releaseId": 432879623,
+      "releaseTag": "nightly",
+      "assetId": 706096270,
+      "artifactName": "Ikemen_GO-dev-windows.zip",
+      "artifactUrl": "https://github.com/ikemen-engine/Ikemen-GO/releases/download/nightly/Ikemen_GO-dev-windows.zip",
+      "artifactSize": 57213296,
+      "publishedArtifactSha256": "3ced9a282d20e0d6a07a6cf7a2abd5db882d30d7e0f05ff0eeaf315b3a3cc90e",
+      "monitorOnly": false,
+      "source": {
+        "sourceId": "ikemen-go-github",
+        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/6e564af055bb1341b787990f971828ff930935b4",
+        "revision": "6e564af055bb1341b787990f971828ff930935b4",
+        "observedAt": "2026-11-04T15:40:50.159Z",
+        "futureAutomaticUpgradeAuthorized": false
+      },
+      "verification": {
+        "source": "verified",
+        "artifact": "verified",
+        "parser": "unknown",
+        "runtime": "limited",
+        "rollback": "unknown",
+        "project": "unknown"
+      }
+    },
+    {
+      "id": "ikemen-go-nightly-fb269c975745-windows-x64",
+      "engine": "IKEMEN GO",
+      "channel": "nightly",
+      "version": "nightly-2026-11-05",
+      "commit": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+      "platform": "windows-x64",
+      "publishedAt": "2026-11-05T02:15:34Z",
+      "artifactSha256": "e5c51fd4aeac38dac083d331d6d21886874702a9b30df532a868a9d32f5e81f1",
+      "executableSha256": "77db97013e9ec1d6b87498de5facdd7a38643ea7522422c0381a13ea8adfa1ca",
+      "releaseId": 434689136,
+      "releaseTag": "nightly",
+      "assetId": 711726713,
+      "artifactName": "Ikemen_GO-dev-windows.zip",
+      "artifactUrl": "https://github.com/ikemen-engine/Ikemen-GO/releases/download/nightly/Ikemen_GO-dev-windows.zip",
+      "artifactSize": 57212991,
+      "publishedArtifactSha256": "e5c51fd4aeac38dac083d331d6d21886874702a9b30df532a868a9d32f5e81f1",
+      "monitorOnly": false,
+      "source": {
+        "sourceId": "ikemen-go-github",
+        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/fb269c975745d3effc447af4c6d74dd2988fc9ba",
+        "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+        "observedAt": "2026-11-05T11:54:06.595Z",
+        "futureAutomaticUpgradeAuthorized": false
+      },
+      "verification": {
+        "source": "verified",
+        "artifact": "verified",
+        "parser": "unknown",
+        "runtime": "limited",
+        "rollback": "unknown",
+        "project": "unknown"
+      }
     }
   ],
   "capabilities": [
@@ -184,7 +252,8 @@
       "changeKind": "introduced",
       "buildIds": [
         "ikemen-go-nightly-b464672651c8-windows-x64",
-        "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
       ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
@@ -204,7 +273,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds arbitrary string expressions and string-valued trigger output.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -216,7 +288,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds strings in ZSS local variables and function inputs and outputs.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -228,7 +303,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds auto-typed integer, float, and string map values; string MapAdd remains unsupported.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -240,7 +318,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source lets bare flag triggers return their current values as strings while explicit comparisons retain boolean behavior.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -252,7 +333,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source makes character and stage custom constants auto-typed and string-capable.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -264,7 +348,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source lets animation and sound archive prefixes be evaluated from string expressions at runtime.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -276,9 +363,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source lets Helper names accept runtime string expressions, including scoped local variables.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture runtime-strings. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "browser-discovery"
@@ -287,10 +389,19 @@
       "id": "zss.expanded-string-expressions",
       "name": "Expanded runtime string expressions in controller fields, attributes, flags, waveform, and map names",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-4d007d6e1b72-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "trigger-catalog", "authoring-browser", "language-providers", "diagnostics"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "trigger-catalog",
+        "authoring-browser",
+        "language-providers",
+        "diagnostics"
+      ],
       "migration": "Expose these newly dynamic string positions only for an exact descendant target carrying the source changes. Older Nightlies and IKEMEN GO 1.0 retain their literal or legacy field contracts.",
       "evidence": [
         {
@@ -301,7 +412,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official registered syntax accepts string expressions in Dialogue, LifebarAction, MapReset, MatchRestart, ModifyPlayer, PlayBgm, RemapSprite, Save/LoadFile, Storyboard, AssertCommand, ShaderSet, and shader-name fields. Dormant unregistered CreatePlatform compiler code is intentionally not advertised.",
-          "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-4d007d6e1b72-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -313,7 +426,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source accepts string expressions for HitBy/NotHitBy, HitDef, ReversalDef, ModifyReversalDef, HitOverride, and GetHitVarSet attribute fields.",
-          "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-4d007d6e1b72-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -325,7 +440,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source accepts string expressions for hitflag and guardflag fields.",
-          "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-4d007d6e1b72-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -337,7 +454,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source accepts a string expression for ForceFeedback waveform and validates its runtime value.",
-          "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-4d007d6e1b72-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -349,9 +468,23 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source accepts runtime string expressions as MapSet and MapAdd map-name parameters.",
-          "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-4d007d6e1b72-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture expanded-string-expressions. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "catalog-discovery"
@@ -360,33 +493,66 @@
       "id": "zss.dynamic-map-keys",
       "name": "Runtime string expressions as map keys",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-ee4791bcd5e2-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["maps-registry", "authoring-browser", "language-providers", "navigation", "diagnostics"],
+      "affectedConsumers": [
+        "maps-registry",
+        "authoring-browser",
+        "language-providers",
+        "navigation",
+        "diagnostics"
+      ],
       "migration": "Treat literal map keys as exact identities, but keep dynamic map-key expressions unresolved unless a finite constant result is proven. Do not fabricate navigation targets from runtime expressions.",
-      "evidence": [{
-        "sourceId": "ikemen-go-github",
-        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/028ac60f7baf2d53ae6305162bcb5da5b80196ae",
-        "revision": "028ac60f7baf2d53ae6305162bcb5da5b80196ae",
-        "observedAt": "2026-10-24T00:00:00.000Z",
-        "domain": "parser",
-        "status": "verified",
-        "note": "Official source accepts runtime string expressions, including locals and ifelse expressions, as map keys while preserving legacy bare literal keys.",
-        "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
-        "fallbackBuildIds": [],
-        "projectIds": []
-      }],
+      "evidence": [
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/028ac60f7baf2d53ae6305162bcb5da5b80196ae",
+          "revision": "028ac60f7baf2d53ae6305162bcb5da5b80196ae",
+          "observedAt": "2026-10-24T00:00:00.000Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Official source accepts runtime string expressions, including locals and ifelse expressions, as map keys while preserving legacy bare literal keys.",
+          "buildIds": [
+            "ikemen-go-nightly-ee4791bcd5e2-windows-x64"
+          ],
+          "fallbackBuildIds": [],
+          "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture dynamic-map-keys. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
+        }
+      ],
       "ikemakerSupport": "diagnostics-and-navigation"
     },
     {
       "id": "zss.dynamic-state-types",
       "name": "Runtime string expressions for StateDef and StateTypeSet type fields",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-ee4791bcd5e2-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "authoring-browser", "language-providers", "diagnostics"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "authoring-browser",
+        "language-providers",
+        "diagnostics"
+      ],
       "migration": "Offer state type, movetype, and physics value guidance for dynamic expressions only on this exact descendant. Preserve conventional literal syntax and include the U state type where the supporting source accepts it.",
       "evidence": [
         {
@@ -397,7 +563,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source accepts string expressions for StateDef type, movetype, and physics fields and adds U support.",
-          "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-ee4791bcd5e2-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -409,9 +577,23 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source accepts string expressions for StateTypeSet type, movetype, and physics parameters.",
-          "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-ee4791bcd5e2-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "catalog-discovery"
@@ -420,10 +602,18 @@
       "id": "zss.animation-prefix-query",
       "name": "Animation-prefix trigger and object animation-prefix queries",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-ee4791bcd5e2-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["trigger-catalog", "asset-navigation", "authoring-browser", "language-providers"],
+      "affectedConsumers": [
+        "trigger-catalog",
+        "asset-navigation",
+        "authoring-browser",
+        "language-providers"
+      ],
       "migration": "Expose AnimPrefix and ExplodVar/ProjVar(animPrefix) only for the exact supporting build. Resolve resource targets only when the prefix expression has a finite proven value set.",
       "evidence": [
         {
@@ -434,7 +624,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the AnimPrefix trigger.",
-          "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-ee4791bcd5e2-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -446,9 +638,23 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds ExplodVar and ProjVar animPrefix queries.",
-          "buildIds": ["ikemen-go-nightly-ee4791bcd5e2-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-ee4791bcd5e2-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture animation-prefix-query. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "catalog-discovery"
@@ -457,79 +663,176 @@
       "id": "command.redirected-expression-fix",
       "name": "Correct redirected Command and SelfCommand evaluation",
       "changeKind": "fixed",
-      "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-4d007d6e1b72-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["command-editor", "language-providers", "diagnostics"],
+      "affectedConsumers": [
+        "command-editor",
+        "language-providers",
+        "diagnostics"
+      ],
       "migration": "Warn only when a target already supports the affected Nightly command-expression implementation but lacks this exact redirect fix. Stable 1.0 is outside the affected capability path.",
-      "evidence": [{
-        "sourceId": "ikemen-go-github",
-        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/408558735d475149eaf702ceffd41218e1556073",
-        "revision": "408558735d475149eaf702ceffd41218e1556073",
-        "observedAt": "2026-10-14T17:00:00.000Z",
-        "domain": "parser",
-        "status": "verified",
-        "note": "Official source keeps redirected command-name evaluation on the caller while preserving the redirect for the Command/SelfCommand opcode.",
-        "buildIds": ["ikemen-go-nightly-4d007d6e1b72-windows-x64"],
-        "fallbackBuildIds": [],
-        "projectIds": []
-      }],
+      "evidence": [
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/408558735d475149eaf702ceffd41218e1556073",
+          "revision": "408558735d475149eaf702ceffd41218e1556073",
+          "observedAt": "2026-10-14T17:00:00.000Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Official source keeps redirected command-name evaluation on the caller while preserving the redirect for the Command/SelfCommand opcode.",
+          "buildIds": [
+            "ikemen-go-nightly-4d007d6e1b72-windows-x64"
+          ],
+          "fallbackBuildIds": [],
+          "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T03:00:28.080Z",
+          "domain": "runtime",
+          "status": "verified",
+          "note": "Exact November 5 executable measured ten calibrated P2-to-P1 frames: dynamic Command and SelfCommand names from caller maps and locals preserve the recipient command selection. Static own/recipient true/false and dynamic positive/negative controls passed. P1 observations are retained but not used because P2 assertions execute later in the tick. Source and raw readback: data/qa/redirected-command-runtime-2026-11-05.json. No foreign-state, helper, or netplay behavior claim.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
+        }
+      ],
       "ikemakerSupport": "diagnostic"
     },
     {
       "id": "animation.loop-count-trigger",
       "name": "AnimLoopCount trigger",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["trigger-catalog", "authoring-browser", "language-providers", "diagnostics"],
+      "affectedConsumers": [
+        "trigger-catalog",
+        "authoring-browser",
+        "language-providers",
+        "diagnostics"
+      ],
       "migration": "Expose AnimLoopCount only for exact targets descended from its verified source introduction. IKEMEN GO 1.0 does not recognize this trigger.",
-      "evidence": [{
-        "sourceId": "ikemen-go-github",
-        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/7ad6cc982ef7bb38bfab87b5c8502c467801feac",
-        "revision": "7ad6cc982ef7bb38bfab87b5c8502c467801feac",
-        "observedAt": "2026-10-14T18:00:00.000Z",
-        "domain": "parser",
-        "status": "verified",
-        "note": "Official source introduces the AnimLoopCount trigger after the 1.0 release source.",
-        "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
-        "fallbackBuildIds": [],
-        "projectIds": []
-      }],
+      "evidence": [
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/7ad6cc982ef7bb38bfab87b5c8502c467801feac",
+          "revision": "7ad6cc982ef7bb38bfab87b5c8502c467801feac",
+          "observedAt": "2026-10-14T18:00:00.000Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Official source introduces the AnimLoopCount trigger after the 1.0 release source.",
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
+          "fallbackBuildIds": [],
+          "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
+        }
+      ],
       "ikemakerSupport": "catalog-discovery"
     },
     {
       "id": "combat.hitdef-var-trigger",
       "name": "HitDefVar trigger",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64",
+        "ikemen-go-1.0.0-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["trigger-catalog", "authoring-browser", "language-providers", "diagnostics"],
+      "affectedConsumers": [
+        "trigger-catalog",
+        "authoring-browser",
+        "language-providers",
+        "diagnostics"
+      ],
       "migration": "Expose HitDefVar only for exact targets descended from its verified parser registration. IKEMEN GO 1.0 does not recognize this trigger.",
-      "evidence": [{
-        "sourceId": "ikemen-go-github",
-        "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/c339b00cc92b58f82b259cbbbe79ace9fd9903a2",
-        "revision": "c339b00cc92b58f82b259cbbbe79ace9fd9903a2",
-        "observedAt": "2026-10-14T18:00:00.000Z",
-        "domain": "parser",
-        "status": "verified",
-        "note": "Official source registers HitDefVar after the 1.0 release source and implements its parameter parsing.",
-        "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
-        "fallbackBuildIds": [],
-        "projectIds": []
-      }],
+      "evidence": [
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/commit/c339b00cc92b58f82b259cbbbe79ace9fd9903a2",
+          "revision": "c339b00cc92b58f82b259cbbbe79ace9fd9903a2",
+          "observedAt": "2026-10-14T18:00:00.000Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "This revision also registers HitDefVar and implements its parameter parsing. Correction: base HitDefVar already exists in the 1.0 release; newer return and argument variants are gated separately.",
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
+          "fallbackBuildIds": [],
+          "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/v1.0.0/src/compiler.go#L2848",
+          "revision": "81c6da71d689625e20db79586815b695da00dd6d",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Corrected baseline classification: exact stable executable c869a7fb accepted HitDefVar(fall.xvelocity), HitDefVar(fall.yvelocity), and HitDefVar(fall.zvelocity) in the isolated baseline-hitdefvar compiler fixture. Runtime string return/comparison capabilities remain separate. See data/qa/engine-coding-compiler-fixtures-2026-11-05.json.",
+          "buildIds": [
+            "ikemen-go-1.0.0-windows-x64"
+          ]
+        }
+      ],
       "ikemakerSupport": "catalog-discovery"
     },
     {
       "id": "zss.run-state",
       "name": "RunState controller and InRunState trigger",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "trigger-catalog", "authoring-browser", "language-providers"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "trigger-catalog",
+        "authoring-browser",
+        "language-providers"
+      ],
       "migration": "Expose RunState and InRunState only when the project pins a verified supporting Nightly. IKEMEN GO 1.0 projects must not receive this syntax.",
       "evidence": [
         {
@@ -540,7 +843,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the RunState state controller with value, playerno, and redirectid parameters.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -552,9 +858,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the InRunState trigger.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "catalog-discovery"
@@ -563,10 +884,18 @@
       "id": "command.nightly-expressions",
       "name": "Star direction commands and string command expressions",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["command-editor", "command-movelist", "language-providers"],
+      "affectedConsumers": [
+        "command-editor",
+        "command-movelist",
+        "language-providers"
+      ],
       "migration": "Gate star-direction authoring and command expressions backed by string maps or locals to exact supporting Nightly targets.",
       "evidence": [
         {
@@ -577,7 +906,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the star symbol in commands.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -589,9 +921,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source lets command triggers accept string maps and local variables.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/input.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture redirected-command. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -600,10 +947,18 @@
       "id": "collision.indexed-controls",
       "name": "Collision group/index controls",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "collision-editor", "language-providers"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "collision-editor",
+        "language-providers"
+      ],
       "migration": "Keep clsn.group, clsn.index, and TransformClsn index options hidden for 1.0 targets.",
       "evidence": [
         {
@@ -614,7 +969,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds clsn.group and clsn.index to HitBy and NotHitBy.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -626,9 +984,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the TransformClsn index parameter.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -637,10 +1010,19 @@
       "id": "collision.dummy-group",
       "name": "Dummy collision group",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["collision-editor", "air-viewer", "air-references", "language-providers"],
+      "affectedConsumers": [
+        "collision-editor",
+        "air-viewer",
+        "air-references",
+        "language-providers"
+      ],
       "migration": "Expose Dummy collision authoring and query choices only for exact verified supporting builds; Stable 1.0 must not receive them.",
       "evidence": [
         {
@@ -651,9 +1033,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the Dummy collision group. ClsnVar accepts Dummy while overlap APIs retain their own argument-specific group restrictions.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture dummy-group. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -662,10 +1059,17 @@
       "id": "collision.air-index-allocation",
       "name": "AIR collision authored-index slot allocation",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["air-viewer", "air-collision-inspector"],
+      "affectedConsumers": [
+        "air-viewer",
+        "air-collision-inspector"
+      ],
       "migration": "Use authored in-range unique ClsnN[index] labels only for exact verified supporting builds. Stable 1.0 allocates collision slots in source order; unknown targets must show both candidates.",
       "evidence": [
         {
@@ -676,9 +1080,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source changes AIR collision parsing from source-order allocation to honoring unique in-range authored indexes with first-free fallback.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/anim.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -687,10 +1106,19 @@
       "id": "audio.sample-rate-query",
       "name": "BGMVar and SoundVar sampleRate query",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["trigger-catalog", "authoring-browser", "language-providers", "sound-workspace"],
+      "affectedConsumers": [
+        "trigger-catalog",
+        "authoring-browser",
+        "language-providers",
+        "sound-workspace"
+      ],
       "migration": "Keep the existing BGMVar and SoundVar triggers available on older targets, but mention and suggest the sampleRate parameter only for supporting Nightlies.",
       "evidence": [
         {
@@ -701,9 +1129,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds sampleRate to BGMVar and SoundVar.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture sample-rate. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "catalog-discovery"
@@ -712,10 +1155,18 @@
       "id": "stage.depth-camera",
       "name": "Z-depth camera controls and DepthBound controller",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "stage-workspace", "spatial-composer"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "stage-workspace",
+        "spatial-composer"
+      ],
       "migration": "Treat z camera fields and DepthBound as Nightly-only until runtime certification is complete.",
       "evidence": [
         {
@@ -726,7 +1177,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds the DepthBound state controller; companion commits add z camera bounds and tension fields.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -738,7 +1192,10 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds camera.zboundtop, camera.zboundbot, and camera.ztension to StageVar and ModifyStageVar.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -750,9 +1207,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds camera.ztensionvel and camera.zautocenter to StageVar and ModifyStageVar.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Changed parser units reviewed against the previous exact source; the pinned November 5 executable accepted fixture depth-camera. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -761,10 +1233,18 @@
       "id": "storyboard.runtime-controls",
       "name": "Runtime storyboard parameters, modification, and removal",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "storyboard-workspace", "language-providers"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "storyboard-workspace",
+        "language-providers"
+      ],
       "migration": "Expose ModifyStoryboard, RemoveStoryboard, and expanded Storyboard parameters only for supporting Nightly targets.",
       "evidence": [
         {
@@ -775,9 +1255,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds storyboard parameters plus ModifyStoryboard and RemoveStoryboard controllers.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -786,10 +1281,18 @@
       "id": "render.expanded-shaders",
       "name": "Expanded custom shader surfaces",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["stage-workspace", "screenpack-workspace", "controller-catalog", "visual-previews"],
+      "affectedConsumers": [
+        "stage-workspace",
+        "screenpack-workspace",
+        "controller-catalog",
+        "visual-previews"
+      ],
       "migration": "Do not offer stage, font, shadow, reflection, afterimage, ExplodVar, or ProjVar shader fields on older targets.",
       "evidence": [
         {
@@ -800,7 +1303,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source starts the October 13 expanded shader series for stages and related render surfaces.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -812,7 +1317,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds shader name, indexed parameters, and texture inputs to ModifyBGCtrl.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -824,7 +1331,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds shadow and reflection shader fields to StageVar and ModifyStageVar.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -836,7 +1345,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds shader-name queries to ExplodVar and ProjVar.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -848,7 +1359,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds shader parameters to the Text controller for sprite-font rendering.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -860,7 +1373,9 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds independent shadow and reflection shader controls.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
         },
@@ -872,9 +1387,23 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds independent shader controls for character, Explod, and Projectile afterimages.",
-          "buildIds": ["ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -883,10 +1412,19 @@
       "id": "def.auto-typed-maps",
       "name": "Auto-typed character DEF map defaults",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["project-symbols", "string-flow", "map-registry", "character-def-editor"],
+      "affectedConsumers": [
+        "project-symbols",
+        "string-flow",
+        "map-registry",
+        "character-def-editor"
+      ],
       "migration": "Treat [Map] defaults as string, integer, or float only for an exact supporting target. Older targets retain their established numeric behavior.",
       "evidence": [
         {
@@ -897,9 +1435,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source parses character DEF [Map] defaults as quoted strings, int32 values, or float32 values.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/char.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -908,10 +1461,18 @@
       "id": "stage.modify-bg-palfx",
       "name": "ModifyStageBG palette effects",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["controller-catalog", "stage-workspace", "visual-previews"],
+      "affectedConsumers": [
+        "controller-catalog",
+        "stage-workspace",
+        "visual-previews"
+      ],
       "migration": "Offer PalFX fields on ModifyStageBG only for an exact supporting target. Runtime rendering and preview parity still require physical comparison.",
       "evidence": [
         {
@@ -922,9 +1483,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source routes the standard PalFX parameter set through ModifyStageBG.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/compiler_functions.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "capability-authority"
@@ -933,10 +1509,18 @@
       "id": "launch.retry-load-on-error",
       "name": "Retry character or stage loading after a development error",
       "changeKind": "introduced",
-      "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+      "buildIds": [
+        "ikemen-go-nightly-b464672651c8-windows-x64",
+        "ikemen-go-nightly-97c77dbda2c5-windows-x64",
+        "ikemen-go-nightly-fb269c975745-windows-x64"
+      ],
       "removedBuildIds": [],
       "fallbackBuildIds": [],
-      "affectedConsumers": ["launch-controls", "test-sessions", "engine-settings"],
+      "affectedConsumers": [
+        "launch-controls",
+        "test-sessions",
+        "engine-settings"
+      ],
       "migration": "Offer RetryLoadOnError only for an exact supporting Nightly target. Never enable it automatically, never use it during netplay or Turns background preload, and never count a successful retry as compile or runtime-test evidence.",
       "evidence": [
         {
@@ -947,9 +1531,24 @@
           "domain": "parser",
           "status": "verified",
           "note": "Official source adds Debug.RetryLoadOnError and limits retry to foreground character/stage loads outside netplay and Turns preload.",
-          "buildIds": ["ikemen-go-nightly-b464672651c8-windows-x64", "ikemen-go-nightly-97c77dbda2c5-windows-x64"],
+          "buildIds": [
+            "ikemen-go-nightly-b464672651c8-windows-x64",
+            "ikemen-go-nightly-97c77dbda2c5-windows-x64"
+          ],
           "fallbackBuildIds": [],
           "projectIds": []
+        },
+        {
+          "sourceId": "ikemen-go-github",
+          "url": "https://github.com/ikemen-engine/Ikemen-GO/blob/fb269c975745d3effc447af4c6d74dd2988fc9ba/src/script.go",
+          "revision": "fb269c975745d3effc447af4c6d74dd2988fc9ba",
+          "observedAt": "2026-11-06T02:56:15.056Z",
+          "domain": "parser",
+          "status": "verified",
+          "note": "Exact feature-specific parser units are byte-identical to the previously reviewed ee4791bcd5e2 source; retained syntax evidence only. Feature-specific hashes: data/qa/engine-feature-source-retention-2026-11-05.json. Compiler cases: data/qa/engine-coding-compiler-fixtures-2026-11-05.json. No rendered or runtime behavior certification.",
+          "buildIds": [
+            "ikemen-go-nightly-fb269c975745-windows-x64"
+          ]
         }
       ],
       "ikemakerSupport": "reviewed-setting"

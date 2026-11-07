@@ -1,5 +1,0 @@
-IKEMaker 0.79.63
-
-- Applies PalFX embedded-mode styling directly to the loaded internal document instead of relying on generated stylesheet injection.
-- Forces readable dark text, controls, tabs, borders, code areas, and responsive layouts after the embedded PalFX document loads.
-- Removes redundant embedded navigation controls directly from the loaded document.

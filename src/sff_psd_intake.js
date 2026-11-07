@@ -15,13 +15,16 @@ function parseIdentifyOutput(text) {
     const fields = line.split('\t');
     if (fields.length < 5) throw new Error(`Unexpected ImageMagick PSD layer record ${ordinal + 1}.`);
     const visibleValue = fields.length >= 7 ? fields[6].trim().toLowerCase() : '';
-    const opacityValue = fields.length >= 8 ? Number(fields[7]) : NaN;
+    const opacityValue = fields.length >= 8 && fields[7].trim() !== '' ? Number(fields[7]) : NaN;
+    const quantumRange = fields.length >= 10 ? Number(fields[9]) : 255;
     return {
       index: integer(fields[0], 'page index'), width: integer(fields[1], 'width'), height: integer(fields[2], 'height'),
       x: integer(fields[3], 'X offset'), y: integer(fields[4], 'Y offset'), name: (fields[5] || '').trim() || `Layer ${fields[0]}`,
       visible: visibleValue ? !['0', 'false', 'no', 'off'].includes(visibleValue) : true,
-      opacity: Number.isFinite(opacityValue) ? Math.max(0, Math.min(1, opacityValue > 1 ? opacityValue / 255 : opacityValue)) : 1,
-      compose: fields.length >= 9 ? fields.slice(8).join('\t').trim().toLowerCase() : ''
+      opacity: Number.isFinite(opacityValue) ? Math.max(0, Math.min(1, opacityValue > 1 ? opacityValue / quantumRange : opacityValue)) : 1,
+      compose: fields.length >= 9 ? fields[8].trim().toLowerCase() : '',
+      metadataKnown: { visibility: /^(?:0|1|true|false|yes|no|on|off)$/.test(visibleValue), opacity: Number.isFinite(opacityValue) && Number.isFinite(quantumRange) && quantumRange > 0, blend: Boolean(fields[8]?.trim()) },
+      rawLayerMetadata: { visibility: fields[6] || '', opacity: fields[7] || '', compose: fields[8] || '', quantumRange: fields[9] || '' }
     };
   });
   if (!records.length || records[0].index !== 0) throw new Error('The PSD did not expose a flattened composite page 0.');
@@ -82,7 +85,7 @@ function planPsdExports(records, mode = 'composite') {
 function inspectPsd(filename, executable = 'magick') {
   const absolute = path.resolve(filename);
   if (!fs.existsSync(absolute)) throw new Error(`PSD source is missing: ${absolute}`);
-  const result = spawnSync(executable, ['identify', '-format', '%p\t%w\t%h\t%X\t%Y\t%[label]\t%[psd:layer.visible]\t%[psd:layer.opacity]\t%[compose]\n', absolute], { windowsHide: true, encoding: 'utf8' });
+  const result = spawnSync(executable, ['identify', '-limit', 'memory', '256MiB', '-limit', 'map', '512MiB', '-limit', 'disk', '512MiB', '-format', '%p\t%w\t%h\t%X\t%Y\t%[label]\t%[psd:layer.visible]\t%[psd:layer.opacity]\t%[compose]\t%[fx:quantumrange]\n', absolute], { windowsHide: true, encoding: 'utf8', timeout: 20000, maxBuffer: 4 * 1024 * 1024 });
   if (result.error || result.status !== 0) throw result.error || new Error(result.stderr || `ImageMagick identify exited with ${result.status}.`);
   return { filename: absolute, records: parseIdentifyOutput(result.stdout), executable };
 }
@@ -94,10 +97,11 @@ function exportPsdPlan(inspection, plan, outputDirectory) {
   fs.mkdirSync(outputDirectory, { recursive: true });
   const outputs = [];
   for (const item of plan.exports) {
-    const output = path.join(outputDirectory, item.filename), args = ['-size', `${plan.canvas.width}x${plan.canvas.height}`, 'canvas:none'];
+    for (const page of item.pages) if (page.index !== 0 && !plan.rawLayerSnapshots && (!page.metadataKnown?.visibility || !page.metadataKnown?.opacity || !page.metadataKnown?.blend || page.visible === false || page.opacity !== 1 || (page.compose && !['over', 'normal'].includes(page.compose)))) throw new Error(`PSD page ${page.name} has unknown or unsupported visibility, opacity or blend settings. Choose the authored flattened composite instead.`);
+    const output = path.join(outputDirectory, item.filename), args = ['-limit', 'memory', '256MiB', '-limit', 'map', '512MiB', '-limit', 'disk', '512MiB', '-size', `${plan.canvas.width}x${plan.canvas.height}`, 'canvas:none'];
     for (const page of item.pages) args.push(`${inspection.filename}[${page.index}]`, '-geometry', geometry(page), '-composite');
     args.push(output);
-    const result = spawnSync(inspection.executable || 'magick', args, { windowsHide: true, encoding: 'utf8' });
+    const result = spawnSync(inspection.executable || 'magick', args, { windowsHide: true, encoding: 'utf8', timeout: 20000, maxBuffer: 4 * 1024 * 1024 });
     if (result.error || result.status !== 0 || !fs.existsSync(output)) throw result.error || new Error(result.stderr || `ImageMagick PSD export exited with ${result.status}.`);
     outputs.push({ filename: output, label: item.label, role: item.role, sourceOrdinal: item.sourceOrdinal, pages: item.pages.map(page => ({ index: page.index, name: page.name })) });
   }

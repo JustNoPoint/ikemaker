@@ -156,7 +156,7 @@ function validateManifest(rows, options = {}) {
       const base = rowNumber(row, 'BaseGroup');
       if (base === null || group !== base + layer * 10000) issues.push(`${label}: invalid layer-bank group`);
     }
-    if (layer === 0 && group !== null) {
+    if (layer === 0 && group !== null && options.validateHyperNaming !== false) {
       const family = hyperFamily(row, options.aliasRegistry || {});
       const hyper = isExplicitHyper(row) || (group >= 3000 && group <= 4999);
       if (hyper && (group < 3000 || group > 4999)) {

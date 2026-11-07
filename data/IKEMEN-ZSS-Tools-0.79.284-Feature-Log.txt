@@ -1,7 +1,0 @@
-IKEMaker 0.79.284
-
-Exact Remappen swatch sizing
-
-- Keeps the 200-index Remappen grid only in the upper editor area; there is no second Remappen section below the canvas.
-- Uses the same fixed 16 by 16 pixel swatch size as Palette Banks A and B.
-- Retains the Remappen-specific organization: ten pairs across, old/source above new/replacement, with spacing between pair bands.

@@ -5,11 +5,11 @@ const path = require('path');
 const { parseDef, unquote } = require('./def_model');
 const { collectRecords } = require('./analyzer');
 
-const FILE_EXTENSIONS = new Set(['.def', '.sff', '.air', '.snd', '.zss', '.cns', '.inp', '.cmd', '.jnp', '.act', '.dat', '.txt', '.json', '.csv', '.lua']);
-const CODE_EXTENSIONS = new Set(['.zss', '.cns', '.inp', '.cmd', '.jnp']);
+const FILE_EXTENSIONS = new Set(['.def', '.sff', '.air', '.snd', '.zss', '.cns', '.st', '.inp', '.cmd', '.jnp', '.act', '.dat', '.txt', '.json', '.csv', '.lua']);
+const CODE_EXTENSIONS = new Set(['.zss', '.cns', '.st', '.inp', '.cmd', '.jnp']);
 
 function kindFor(filename) {
-  return ({ '.def': 'Definition', '.sff': 'Sprites', '.air': 'Animation', '.snd': 'Sound', '.act': 'Palette', '.lua': 'Lua', '.zss': 'Code', '.cns': 'Code', '.inp': 'Commands', '.cmd': 'Legacy Commands', '.jnp': 'Commands' })[path.extname(filename).toLowerCase()] || 'Data';
+  return ({ '.def': 'Definition', '.sff': 'Sprites', '.air': 'Animation', '.snd': 'Sound', '.act': 'Palette', '.lua': 'Lua', '.zss': 'Code', '.cns': 'Code', '.st': 'Code', '.inp': 'Commands', '.cmd': 'Legacy Commands', '.jnp': 'Commands' })[path.extname(filename).toLowerCase()] || 'Data';
 }
 
 function referencedPath(owner, input) {

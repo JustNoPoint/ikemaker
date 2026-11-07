@@ -39,7 +39,8 @@ class IkemenHubProvider {
 // Commands have a primary home, while common entry points are intentionally
 // repeated where a player or creator would reasonably look for them.
 function buildHubItems(){
-  const allowed=require('./interface_capabilities').allows,catalog=require('./viewer_action_registry').publicCommandCatalog();
+  const mode=require('./interface_mode').current(), setup=require('./workspace_setup').current();
+  const allowed=command=>require('./interface_capabilities').allows(command,mode,setup),catalog=require('./viewer_action_registry').publicCommandCatalog();
   const quickStartActions=[
     ['Open Character…','ikemen.character.open','start here'],
     ['Open Move Lab…','ikemen.moveLab.open','moves, throws, animation, assets, code, diagnostics, and tests'],
@@ -88,6 +89,7 @@ function buildAllHubItems() {
       new HubItem('Create New', [
         new HubItem('Create Character…', null, 'ikemen.character.createNew', 'DEF, AIR, SFF, SND, and starter code'),
         new HubItem('Create Stage…', null, 'ikemen.stage.createNew', 'DEF, SFF, and visual workspace'),
+        new HubItem('Stage from PNG layers…', null, 'ikemen.stage.createFromPngLayers', 'ordered art, preview, fighter depth, DEF and SFF'),
         new HubItem('Create Screenpack / Fight UI…', null, 'ikemen.ui.createNew', 'system, fight, sprites, and workspace'),
         new HubItem('Create Storyboard…', null, 'ikemen.storyboard.create', 'openings, endings, credits, logo, loading, or story scenes'),
         new HubItem('Create Game Profile…', null, 'ikemen.projectProfile.create', 'game identity, standards, and ownership'),
@@ -271,7 +273,7 @@ function buildAllHubItems() {
         new HubItem('Create Optional Screenpack Preview Profile…', null, 'ikemen.ui.createPreviewProfile')
       ]),
       new HubItem('Personal Workspace and Preferences', [
-        new HubItem('Configure Learning / Advanced Experience…', null, 'ikemen.experience.configure'),
+        new HubItem('Configure Expanded / Compact Explanations…', null, 'ikemen.experience.configure'),
         new HubItem('Open Docking Panel Prototype…', null, 'ikemen.dockingPrototype.open', 'four movable native Views in the bottom Panel'),
         new HubItem('Open Docking Floating-Window Probe…', null, 'ikemen.dockingPrototype.openEditor', 'optional editor tab for split groups and VS Code floating windows'),
         new HubItem('Save Workspace Layout Preset…', null, 'ikemen.workspacePreset.save'),
@@ -514,11 +516,22 @@ async function launchGame() {
   vscode.window.showInformationMessage('IKEMEN launched.');
 }
 
+async function launchExactStoryboard(request) {
+  const capabilities = hostCapabilities(); if (!capabilities.ikemenLaunch) return vscode.window.showInformationMessage(missingCapabilityMessage('IKEMEN storyboard preview', capabilities));
+  if (!request || typeof request.storyboardFilename !== 'string' || typeof request.gameRoot !== 'string' || !/^[a-f0-9]{64}$/i.test(request.expectedSourceHash || '')) throw new Error('Choose the saved storyboard, its IKEMEN game root, and the reviewed source hash before preview.');
+  const root = path.resolve(request.gameRoot), executable = enginePath(root);
+  try {
+    const launched = await require('./storyboard_runtime_preview').launchStoryboardRuntimePreview({ gameRoot: root, executable, storyboardFilename: request.storyboardFilename, expectedSourceHash: request.expectedSourceHash });
+    vscode.window.showInformationMessage('IKEMEN launched the exact saved storyboard preview.');
+    return launched;
+  } catch (error) { vscode.window.showErrorMessage(error.message); throw error; }
+}
+
 async function restartRunning() {
   const capabilities = hostCapabilities(); if (!capabilities.ikemenLaunch) return vscode.window.showInformationMessage(missingCapabilityMessage('IKEMEN restart', capabilities));
   try {
     const session = await runtimeSession.restart();
-    vscode.window.showInformationMessage(`IKEMEN restarted in ${session.mode === 'quick-versus' ? 'Infinite Quick VS' : session.mode === 'training' ? 'Training' : 'Normal'} mode. Saved motif and screenpack changes were reloaded from disk.`);
+    vscode.window.showInformationMessage(`IKEMEN restarted in ${session.mode === 'quick-versus' ? 'Infinite Quick VS' : session.mode === 'training' ? 'Training' : session.mode === 'storyboard' ? 'Storyboard Preview' : 'Normal'} mode. Saved files were reloaded from disk.`);
   } catch (error) { vscode.window.showErrorMessage(error.message); }
 }
 
@@ -618,6 +631,7 @@ function registerIkemenHub(context, options = {}) {
       if (action === 'Copy Version') { await vscode.env.clipboard.writeText(installedVersion); vscode.window.showInformationMessage(`Copied IKEMaker version ${installedVersion}.`); }
     }),
     vscode.commands.registerCommand('ikemen.launchGame', launchGame),
+    vscode.commands.registerCommand('ikemen.storyboard.runExact', launchExactStoryboard),
     vscode.commands.registerCommand('ikemen.launchMirrorCurrent', currentMirrorVersus),
     vscode.commands.registerCommand('ikemen.launchTrainingCurrent', currentMirror),
     vscode.commands.registerCommand('ikemen.authoring.launchScenarioOwner', launchScenarioOwner),
@@ -640,4 +654,4 @@ function registerIkemenHub(context, options = {}) {
   }
 }
 
-module.exports = { registerIkemenHub, findGameRoot, currentCharacter, launchScenarioOwner, TEAM_MODES, HubItem, IkemenHubProvider, buildHubItems, reviewRetryLoadOnError };
+module.exports = { registerIkemenHub, findGameRoot, currentCharacter, launchScenarioOwner, launchExactStoryboard, TEAM_MODES, HubItem, IkemenHubProvider, buildHubItems, reviewRetryLoadOnError };

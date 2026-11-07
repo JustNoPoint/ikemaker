@@ -43,7 +43,7 @@ function planAirActionSequence(fs, input) {
     const frame = action.frames[element], ordinal = String(element + 1).padStart(5, '0'), candidates = frame.group >= 0 ? (inventory.get(`${frame.group},${frame.index}`) || []) : [], sprite = candidates.length === 1 ? candidates[0] : null;
     const status = frame.group < 0 ? 'blank' : candidates.length > 1 ? 'ambiguous-sprite' : sprite ? 'sprite' : 'missing-sprite';
     if (status === 'sprite') drawable += 1; else if (status === 'blank') blank += 1; else if (status === 'ambiguous-sprite') ambiguous += 1; else missing += 1;
-    const selectedPalette = Number(input.paletteForGroup?.(frame.group)), paletteIndex = status === 'sprite' && sprite.colorDepth === 8 && Number.isInteger(selectedPalette) ? selectedPalette : null;
+    const selectedPalette = input.paletteForGroup?.(frame.group), paletteIndex = status === 'sprite' && sprite.colorDepth === 8 && Number.isInteger(selectedPalette) && selectedPalette >= 0 ? selectedPalette : null;
     let bytes = transparent;
     if (status === 'sprite') {
       const pixels = Number(sprite.width) * Number(sprite.height), key = `${sprite.index}:${paletteIndex}`;

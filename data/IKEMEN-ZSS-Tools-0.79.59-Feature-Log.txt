@@ -1,7 +1,0 @@
-IKEMaker 0.79.59
-
-- Review, Display, and Layer Preview are now working floating SFF workspace modes.
-- Their controls are routed through the existing authoritative SFF viewer rather than creating competing file or preview state.
-- PalFX moved into the workspace mode row; its standalone top-bar launcher was removed.
-- Animations remains an embedded SFF-linked action browser.
-- Palette Workshop and the full PalFX composer remain under safe shared-owner migration and are not duplicated.

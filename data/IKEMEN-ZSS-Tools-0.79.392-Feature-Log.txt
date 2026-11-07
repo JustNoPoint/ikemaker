@@ -1,8 +1,0 @@
-IKEMaker 0.79.392
-
-Palette Workshop disclosure double-toggle correction
-
-- Removed the manual top-level disclosure toggle that fought the browser's built-in section control.
-- Palette Library and the other Workshop sections now open with one click.
-- Kept disclosure state across host refreshes so an opened section remains open.
-- Kept the existing prevent-scroll protections for refreshed Workshop content.

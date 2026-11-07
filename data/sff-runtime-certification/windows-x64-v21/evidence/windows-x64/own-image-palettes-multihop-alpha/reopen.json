@@ -1,0 +1,215 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "reopen",
+  "fixtureId": "own-image-palettes-multihop-alpha",
+  "fixtureByteHash": "29dc86077605200b7faebe789d78996fbcac5342fa112a13d91f526638bd9eca",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "655e84891abad5efe2e23f0b42cad7fc99c6f7431fb29179a4522f85cceaf2ca",
+  "analysisSha256": "f3d4e258beeb5a27d5c702f5553aa2eca4ca93eab252a2f7dd1cab0637826e07",
+  "testedAt": "2026-11-04T23:31:11.832Z",
+  "result": "pass",
+  "observed": {
+    "id": "own-image-palettes-multihop-alpha",
+    "sourceSha256": "29dc86077605200b7faebe789d78996fbcac5342fa112a13d91f526638bd9eca",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 40,
+        "number": 9,
+        "width": 4,
+        "height": 5,
+        "axisX": -15,
+        "axisY": 38,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 3,
+        "number": 700,
+        "width": 4,
+        "height": 5,
+        "axisX": 4,
+        "axisY": -5,
+        "paletteIndex": 1,
+        "link": 0
+      },
+      {
+        "physicalIndex": 2,
+        "group": 60000,
+        "number": 2,
+        "width": 4,
+        "height": 5,
+        "axisX": 99,
+        "axisY": -101,
+        "paletteIndex": 2,
+        "link": 1
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "expected": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "expected": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "expected": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "expected": [
+          40,
+          9,
+          4,
+          5,
+          -15,
+          38,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "expected": [
+          3,
+          700,
+          4,
+          5,
+          4,
+          -5,
+          1
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "expected": [
+          60000,
+          2,
+          4,
+          5,
+          99,
+          -101,
+          2
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [
+      {
+        "physicalIndex": 1,
+        "link": 0
+      },
+      {
+        "physicalIndex": 2,
+        "link": 1
+      }
+    ],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\town-image-palettes-multihop-alpha\t0",
+    "sprite\town-image-palettes-multihop-alpha\t0\t40\t9\t4\t5\t-15\t38\t0",
+    "sprite\town-image-palettes-multihop-alpha\t0\t3\t700\t4\t5\t4\t-5\t1",
+    "sprite\town-image-palettes-multihop-alpha\t0\t60000\t2\t4\t5\t99\t-101\t2",
+    "open\town-image-palettes-multihop-alpha\t1",
+    "sprite\town-image-palettes-multihop-alpha\t1\t40\t9\t4\t5\t-15\t38\t0",
+    "sprite\town-image-palettes-multihop-alpha\t1\t3\t700\t4\t5\t4\t-5\t1",
+    "sprite\town-image-palettes-multihop-alpha\t1\t60000\t2\t4\t5\t99\t-101\t2"
+  ]
+}

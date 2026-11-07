@@ -49,18 +49,20 @@ function createCreatorExecutionLayoutPlan(rawInput = {}) {
   if (capability.checks.directoryFsyncStatus !== 'completed') risks.push('directory-entry-durability-unproven');
 
   const operationId = expectedApprovalHash;
+  const recovery = rederived.receipt.rollback.recovery;
+  const recoveryDirectory = recovery ? require('./sff_creator_temporary_recovery').assertTemporaryRecovery(recovery, active.realpath) : directoryRealpath;
   const paths = {
     destinationPath: rederived.receipt.paths.destinationPath, backupPath: rederived.receipt.paths.backupPath, replacementTempPath: rederived.receipt.paths.replacementTempPath,
-    leasePath: leaf(directoryRealpath, `.ikemaker-sff-${operationId}.lease`), backupPartialPath: leaf(directoryRealpath, `.ikemaker-sff-${operationId}.backup.partial`),
+    leasePath: leaf(directoryRealpath, `.ikemaker-sff-${operationId}.lease`), backupPartialPath: leaf(recoveryDirectory, `.ikemaker-sff-${operationId}.backup.partial`),
     rollbackHoldPath: leaf(directoryRealpath, `.ikemaker-sff-${operationId}.rollback-hold.sff`), failedInstallHoldPath: leaf(directoryRealpath, `.ikemaker-sff-${operationId}.failed-install.sff`), rollbackTempPath: leaf(directoryRealpath, `.ikemaker-sff-${operationId}.rollback-temp.sff`)
   };
   paths.journalPaths = Object.fromEntries(STATES.map((state, index) => [state, leaf(directoryRealpath, `.ikemaker-sff-${operationId}.journal.${String(index).padStart(2, '0')}-${state}.json`)]));
   const allPaths = [...Object.values(paths).filter((value) => typeof value === 'string'), ...Object.values(paths.journalPaths)], keys = allPaths.map(platformKey);
   if (new Set(keys).size !== keys.length) blockers.push('execution-path-alias');
-  for (const filename of allPaths) if (path.dirname(path.resolve(filename)) !== path.resolve(directoryRealpath)) blockers.push('execution-path-escaped-active-directory');
+  for (const filename of allPaths) if (path.dirname(path.resolve(filename)) !== path.resolve([paths.backupPath,paths.backupPartialPath].includes(filename) ? recoveryDirectory : directoryRealpath)) blockers.push('execution-path-escaped-active-directory');
   if (path.resolve(paths.destinationPath) !== path.resolve(active.realpath)) blockers.push('destination-path-drift');
   const inventory = fs.readdirSync(directoryRealpath).sort(), foldedInventory = new Set(inventory.map(platformKey)), observations = {};
-  for (const [name, filename] of Object.entries({ ...paths, ...paths.journalPaths })) if (typeof filename === 'string') { const isDestination = name === 'destinationPath'; const exists = foldedInventory.has(platformKey(path.basename(filename))) || fs.existsSync(filename); observations[name] = { basename: path.basename(filename), exists }; if (isDestination ? !exists : exists) blockers.push(isDestination ? 'destination-missing' : `execution-path-exists:${name}`); }
+  for (const [name, filename] of Object.entries({ ...paths, ...paths.journalPaths })) if (typeof filename === 'string') { const isDestination = name === 'destinationPath'; const exists = (path.dirname(filename)===directoryRealpath ? foldedInventory : new Set(fs.readdirSync(path.dirname(filename)).map(platformKey))).has(platformKey(path.basename(filename))) || fs.existsSync(filename); observations[name] = { basename: path.basename(filename), exists }; if (isDestination ? !exists : exists) blockers.push(isDestination ? 'destination-missing' : `execution-path-exists:${name}`); }
   const directoryObservation = { directoryRealpath, directoryIdentity: statIdentity(directoryStat), inventory, observations }, directoryObservationHash = hashCanonical(directoryObservation);
   const stateMachine = {
     id: 'ikemaker.sff-portable-two-rename-recovery', version: 1, states: STATES, transitions: TRANSITIONS,
@@ -78,7 +80,7 @@ function createCreatorExecutionLayoutPlan(rawInput = {}) {
     sourceSnapshotHash: rederived.receipt.sourceSnapshotHash, sourceValidationHash: rederived.receipt.sourceValidationHash, capabilitySnapshotHash: rederived.receipt.capabilitySnapshotHash, persistenceValidationHash: rederived.receipt.persistenceValidationHash, adoptionApprovalDecisionHash: rederived.receipt.approvalDecisionHash,
     active: rederived.receipt.active, candidate: rederived.receipt.candidate,
     activeDirectory: { path: activeDirectory, realpath: directoryRealpath, identity: statIdentity(directoryStat), device: String(directoryStat.dev) }, paths, replacementProfile: { id: PROFILE_ID, version: 1, atomic: false, crashDurabilityGuaranteed: false, capabilityBasis: 'platform-contract-plus-caller-retained-host-observation', independentlyCertified: false, directoryFsyncObserved: capability.checks.directoryFsyncStatus === 'completed', capabilityArtifactByteHash: capabilityArtifactHash, capability },
-    stateMachine, stateMachineHash: hashCanonical(stateMachine), rollback: { oldActiveByteHash: active.byteHash, candidateByteHash: rederived.receipt.candidate.byteHash, fallbackBackupByteHash: rederived.receipt.rollback.sourceByteHash },
+    stateMachine, stateMachineHash: hashCanonical(stateMachine), rollback: { ...(recovery ? {recovery} : {}), oldActiveByteHash: active.byteHash, candidateByteHash: rederived.receipt.candidate.byteHash, fallbackBackupByteHash: rederived.receipt.rollback.sourceByteHash },
     directoryObservation, directoryObservationHash, blockers: [...new Set(blockers)].sort(), risks: [...new Set(risks)].sort(), reviewRequired: true, executionLayoutApproved: false, executionAuthorityGranted: false, executionAllowed: false, writesCommitted: false, adoptionCompleted: false, activeArchiveModified: false, currentStateGuaranteed: false, byteEqualityRequired: false
   };
   plan.layoutPlanHash = hashCanonical({ ...plan, layoutPlanHash: undefined }); return deepFreeze(plan);

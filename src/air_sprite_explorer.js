@@ -1,9 +1,16 @@
 'use strict';
 
 const { actionSourceRanges } = require('./air_preview_model');
+const crypto = require('node:crypto');
 
 const MAX_PUBLIC_SPRITES = 4096;
 const MAX_SELECTED_SPRITES = 512;
+function spriteSourceRevision(archive) {
+  const digest = crypto.createHash('sha256');
+  if (Buffer.isBuffer(archive?.buffer)) digest.update(archive.buffer);
+  digest.update(JSON.stringify((archive?.sprites || []).map(sprite => [sprite.group, sprite.number, sprite.width, sprite.height, sprite.paletteIndex, sprite.colorDepth, sprite.link])));
+  return digest.digest('hex');
+}
 
 function buildSpriteExplorerModel(archive, reviews = {}) {
   const source = Array.isArray(archive?.sprites) ? archive.sprites : [];
@@ -30,20 +37,23 @@ function buildSpriteExplorerModel(archive, reviews = {}) {
     sprites,
     groups,
     total: source.length,
-    omitted: Math.max(0, source.length - sprites.length)
+    omitted: Math.max(0, source.length - sprites.length),
+    sourceRevision: spriteSourceRevision(archive)
   });
 }
 
-function resolveSelectedSprites(archive, physicalIndexes) {
+function resolveSelectedSprites(archive, selections, sourceRevision) {
   const sprites = Array.isArray(archive?.sprites) ? archive.sprites : [];
-  if (!Array.isArray(physicalIndexes) || !physicalIndexes.length) throw new Error('Select at least one SFF sprite.');
-  if (physicalIndexes.length > MAX_SELECTED_SPRITES) throw new Error(`Select no more than ${MAX_SELECTED_SPRITES} sprites at once.`);
+  if (!Array.isArray(selections) || !selections.length) throw new Error('Select at least one SFF sprite.');
+  if (selections.length > MAX_SELECTED_SPRITES) throw new Error(`Select no more than ${MAX_SELECTED_SPRITES} sprites at once.`);
+  if (typeof sourceRevision !== 'string' || sourceRevision !== spriteSourceRevision(archive)) throw new Error('The selected SFF source revision is stale. Reopen the Sprite Explorer and select again.');
   const seen = new Set(), result = [];
-  for (const raw of physicalIndexes) {
-    const physicalIndex = Number(raw);
+  for (const selected of selections) {
+    const physicalIndex = selected?.physicalIndex;
     if (!Number.isSafeInteger(physicalIndex) || physicalIndex < 0 || physicalIndex >= sprites.length || seen.has(physicalIndex)) throw new Error('The selected SFF sprite list is stale or malformed. Reopen the Sprite Explorer and select again.');
     seen.add(physicalIndex);
     const sprite = sprites[physicalIndex];
+    if (selected.group !== Number(sprite.group) || selected.number !== Number(sprite.number)) throw new Error('The selected SFF sprite identity is stale. Reopen the Sprite Explorer and select again.');
     result.push({ physicalIndex, group: Number(sprite.group), index: Number(sprite.number) });
   }
   return result;
@@ -80,4 +90,4 @@ function appendSpritesToActionPatch(text, options = {}) {
   return { start: range.end, end: range.end, text: prefix + lines.join(eol) + suffix, action };
 }
 
-module.exports = { MAX_PUBLIC_SPRITES, MAX_SELECTED_SPRITES, buildSpriteExplorerModel, resolveSelectedSprites, frameLines, createActionFromSpritesPatch, appendSpritesToActionPatch };
+module.exports = { MAX_PUBLIC_SPRITES, MAX_SELECTED_SPRITES, spriteSourceRevision, buildSpriteExplorerModel, resolveSelectedSprites, frameLines, createActionFromSpritesPatch, appendSpritesToActionPatch };
