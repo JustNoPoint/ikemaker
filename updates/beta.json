@@ -3,22 +3,22 @@
   "productId": "ikemaker",
   "releases": [
     {
-      "version": "0.79.487",
+      "version": "0.79.500",
       "channel": "beta",
-      "publishedAt": "2026-11-07T23:53:14Z",
+      "publishedAt": "2026-11-08T11:51:29Z",
       "compatibleEditor": {
         "min": "1.85.0",
         "max": ""
       },
       "notes": [
-        "Screenpack Maker previews motif artwork, menus, character select and match HUD layouts",
-        "Storyboard Maker previews scene artwork and local video while editing and scrubbing",
-        "Verified on Windows with the IKEMEN1 motif and a fresh VS Code profile"
+        "Entity tabs restore the correct viewer and selection after reloading VS Code.",
+        "Quick Transfer supports SFF, AIR and SND, including optional sprite and palette import with AIR animations.",
+        "Move Lab and HitDef Editor layout improvements, plus Helper Lab placement preview."
       ],
       "package": {
-        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.487/ikemen-zss-tools-0.79.487.vsix",
-        "sha256": "512edf1900ef1c461f4cd5f199d205db26c247195c095978b50e1e2c13dddf58",
-        "bytes": 24155363
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.500/ikemen-zss-tools-0.79.500.vsix",
+        "sha256": "f8b9eb86e2e135faf160e6dab7ed3880170faa5cfa11a8aed056f06fe713ba57",
+        "bytes": 24190875
       }
     }
   ]
