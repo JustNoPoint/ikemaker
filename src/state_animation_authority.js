@@ -18,13 +18,35 @@ function parseStateDefaultAnimation(component){
   if(!/^\s*\[\s*statedef\b/i.test(withoutComment(lines[0]||'',true)))return unavailable('The exact CNS/ST StateDef header is unavailable.');
   for(let line=1;line<lines.length;line+=1){const code=withoutComment(lines[line]||'',true);if(/^\s*\[/.test(code))break;const match=/^\s*(anim)\s*=\s*(.*?)\s*$/i.exec(code);if(match){const fieldStart=match.index+match[0].indexOf(match[1]),rawStart=match.index+match[0].indexOf(match[2]),leading=match[2].length-match[2].trimStart().length,expression=match[2].trim();matches.push({line,start:fieldStart,fieldStart,fieldEnd:fieldStart+match[1].length,valueStart:rawStart+leading,valueEnd:rawStart+leading+expression.length,expression});}}
  }else{
-  const header=withoutComment(lines[0]||'',false);if(!/^\s*\[\s*statedef\b/i.test(header))return unavailable('The exact ZSS StateDef header is unavailable.');
-  const pattern=/\b(anim)\s*:\s*([^;\]]+)/gi;for(let match=pattern.exec(header);match;match=pattern.exec(header)){const rawStart=match.index+match[0].indexOf(match[2]),leading=match[2].length-match[2].trimStart().length,expression=match[2].trim();matches.push({line:0,start:match.index,fieldStart:match.index,fieldEnd:match.index+match[1].length,valueStart:rawStart+leading,valueEnd:rawStart+leading+expression.length,expression});}
+  if(!/^\s*\[\s*statedef\b/i.test(withoutComment(lines[0]||'',false)))return unavailable('The exact ZSS StateDef header is unavailable.');
+  let depth=0,closed=false;
+  for(let line=0;line<lines.length&&!closed;line++){
+   let code=withoutComment(lines[line]||'',false),quote=false,limit=code.length;
+   for(let column=0;column<code.length;column++){
+    if(code[column]==='"'&&code[column-1]!=="\\")quote=!quote;
+    if(quote)continue;
+    if(code[column]==='[')depth++;
+    else if(code[column]===']'&&--depth===0){limit=column;closed=true;break;}
+   }
+   code=code.slice(0,limit);const pattern=/\b(anim)\s*:\s*([^;\]]+)/gi;
+   for(let match=pattern.exec(code);match;match=pattern.exec(code)){const rawStart=match.index+match[0].indexOf(match[2]),leading=match[2].length-match[2].trimStart().length,expression=match[2].trim();matches.push({line,start:match.index,fieldStart:match.index,fieldEnd:match.index+match[1].length,valueStart:rawStart+leading,valueEnd:rawStart+leading+expression.length,expression});}
+  }
+  if(!closed)return unavailable('The exact ZSS StateDef header is incomplete.');
  }
  if(matches.length!==1)return unavailable(matches.length?'The StateDef has duplicate anim declarations.':'The StateDef does not author one default anim declaration.');
  const field=matches[0];if(!/^(?:0|[1-9]\d*)$/.test(field.expression))return unavailable('The authored default anim is dynamic, negative, or not a conservative integer literal.');
  const action=Number(field.expression);if(!Number.isSafeInteger(action))return unavailable('The authored default anim exceeds the safe integer range.');
  return freeze({available:true,action,expression:field.expression,line:Number(component.startLine)+field.line,start:field.start,fieldStart:field.fieldStart,fieldEnd:field.fieldEnd,valueStart:field.valueStart,valueEnd:field.valueEnd});
+}
+// One decoration pass can inspect hundreds of states in the same AIR file.
+function indexAnimationActions(airText){
+ const actions=new Map();
+ for(const action of parseAir(airText)){
+  const matches=actions.get(action.number);
+  if(matches)matches.push(action);
+  else actions.set(action.number,[action]);
+ }
+ return {text:airText,actions};
 }
 function buildStateAnimationAuthority(component,context={}){
  const parsed=parseStateDefaultAnimation(component),unavailable=reason=>freeze({publicAnimation:freeze({available:false,action:parsed.action??null,reason}),authorities:new Map()});
@@ -34,7 +56,7 @@ function buildStateAnimationAuthority(component,context={}){
  if(!assigned.includes(canonical(component.filename)))return unavailable('The selected StateDef source is no longer assigned by the character DEF.');
  if(!sourceText||Buffer.byteLength(sourceText,'utf8')>MAX_SOURCE_BYTES||hash(sourceText)!==component.sourceHash)return unavailable('The exact StateDef source is stale or exceeds the inspection limit.');
  if(!airPath||!airText||Buffer.byteLength(airText,'utf8')>MAX_AIR_BYTES)return unavailable('The assigned AIR is unavailable or exceeds the exact-navigation limit.');
- const matches=parseAir(airText).filter(item=>item.number===parsed.action);if(matches.length!==1)return unavailable(matches.length?`Assigned AIR has multiple Action ${parsed.action} blocks, so exact navigation is ambiguous.`:`Assigned AIR has no Action ${parsed.action}.`);
+ const index=context.animationIndex?.text===airText?context.animationIndex:indexAnimationActions(airText);const matches=index.actions.get(parsed.action)||[];if(matches.length!==1)return unavailable(matches.length?`Assigned AIR has multiple Action ${parsed.action} blocks, so exact navigation is ambiguous.`:`Assigned AIR has no Action ${parsed.action}.`);
  const action=matches[0],route=String(context.token?.(parsed.action)||'');if(!/^[0-9a-f]{48}$/.test(route))return unavailable('Exact navigation authority could not be issued.');
  const authority=freeze({schema:'ikemaker.state-animation-route',version:1,route,generation:Number(context.generation),componentIdentity:componentIdentity(component),stableId:String(component.stableId||''),syntax:component.syntax,stateSignature:String(component.signature||''),fieldLine:parsed.line,fieldStart:parsed.fieldStart,fieldEnd:parsed.fieldEnd,valueStart:parsed.valueStart,valueEnd:parsed.valueEnd,expression:parsed.expression,action:parsed.action,defPath,defHash:hash(defText),sourcePath:path.resolve(component.filename),sourceHash:component.sourceHash,startLine:component.startLine,endLine:component.endLine,rangeHash:component.rangeHash,airPath,airHash:hash(airText),line:action.line,actionHash:hash(JSON.stringify(action))}),authorities=new Map([[route,authority]]);
  return freeze({publicAnimation:freeze({available:true,action:parsed.action,file:path.basename(airPath),line:action.line,route}),authorities});
@@ -52,4 +74,4 @@ function validateStateAnimationOriginSource(origin,context={}){
  return Boolean(componentIdentity(component)===origin.componentIdentity&&parsed.available&&parsed.action===origin.action&&parsed.expression===origin.expression&&parsed.line===origin.fieldLine&&parsed.start===origin.fieldStart);
 }
 
-module.exports={MAX_DEF_BYTES,MAX_SOURCE_BYTES,MAX_AIR_BYTES,componentIdentity,parseStateDefaultAnimation,buildStateAnimationAuthority,validateStateAnimationAuthority,targetOrigin,validateStateAnimationOriginSource};
+module.exports={indexAnimationActions,MAX_DEF_BYTES,MAX_SOURCE_BYTES,MAX_AIR_BYTES,componentIdentity,parseStateDefaultAnimation,buildStateAnimationAuthority,validateStateAnimationAuthority,targetOrigin,validateStateAnimationOriginSource};

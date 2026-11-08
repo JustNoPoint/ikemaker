@@ -19,6 +19,14 @@ async function prepareSffTransferBuild({ packageRoot, seed, analysis, resolution
   if (!resolution.readyForApply || resolution.unresolved?.length) throw new Error('Resolve every Transfer placement, identity, link, and palette decision before preparing Apply.');
   if (seed.authority.requestIdentity !== analysis.requestIdentity || analysis.requestIdentity !== resolution.requestIdentity || seed.reference.identity !== resolution.referenceIdentity) throw new Error('The Transfer review, conflict analysis, and resolution plan do not share one exact authority.');
   if (path.resolve(destinationArchive.filename) !== path.resolve(seed.reference.baseFile) || path.resolve(sourceArchive.filename) !== path.resolve(seed.reference.sourceFile)) throw new Error('The Transfer archives no longer match the reviewed endpoints.');
+  // The current writer identifies preserved palettes by group and number.
+  // Report ambiguous archives before extracting thousands of sprites.
+  const paletteSlots = new Map();
+  for (const [index, palette] of (destinationArchive.palettes || []).entries()) {
+    const slot = `${palette.group},${palette.number}`;
+    if (paletteSlots.has(slot)) throw new Error(`Destination palette ${slot} occurs at physical positions ${paletteSlots.get(slot)} and ${index}. The Transfer writer cannot preserve both assignments. Choose a different Destination or resolve the duplicate palettes in a separate copy. No build files were written.`);
+    paletteSlots.set(slot, index);
+  }
   const root = safeRoot(packageRoot), spritesFolder = path.join(root, 'sprites'), palettesFolder = path.join(root, 'palettes'), rows = [], writes = [], portablePaletteIntake = [], imported = new Map();
   for (const item of resolution.items) {
     if (item.action === 'skip') continue;
@@ -29,7 +37,7 @@ async function prepareSffTransferBuild({ packageRoot, seed, analysis, resolution
     if (item.paletteAction === 'reuse-compatible' || item.paletteAction === 'map-existing-palette') palette = exactPalette(destinationArchive, item.destinationPaletteIndex);
     else if (item.paletteAction === 'import-source-palette') {
       const targetPalette = item.destinationPaletteIndex, importKey = `${item.sourcePaletteIndex}->${targetPalette.group},${targetPalette.number}`;
-      if (!imported.has(importKey)) { const colors = paletteRgba(sourceArchive, item.sourcePaletteIndex); if (!colors) throw new Error(`${item.id} source palette no longer exists.`); const act = paletteAct(colors), actName = `source-palette-${item.sourcePaletteIndex}-to-${targetPalette.group}-${targetPalette.number}.act`, actPath = path.join(palettesFolder, actName), byteHash = sha(act); writes.push([actPath, act]); portablePaletteIntake.push({ group: targetPalette.group, number: targetPalette.number, path: actPath, byteHash, tableOrder: 'index', provenance: { kind: 'reviewed-sff-transfer-palette', requestIdentity: resolution.requestIdentity, sourcePaletteIndex: item.sourcePaletteIndex } }); imported.set(importKey, targetPalette); } palette = { group: targetPalette.group, number: targetPalette.number };
+      if (!imported.has(importKey)) { const colors = paletteRgba(sourceArchive, item.sourcePaletteIndex); if (!colors) throw new Error(`${item.id} source palette no longer exists.`); const act = paletteAct(colors), actName = `source-palette-${item.sourcePaletteIndex}-to-${targetPalette.group}-${targetPalette.number}.act`, actPath = path.join(palettesFolder, actName), byteHash = sha(act); writes.push([actPath, act]); portablePaletteIntake.push({ group: targetPalette.group, number: targetPalette.number, path: actPath, byteHash, tableOrder: 'index', alphaTable:colors.map(color=>color[3]), provenance: { kind: 'reviewed-sff-transfer-palette', requestIdentity: resolution.requestIdentity, sourcePaletteIndex: item.sourcePaletteIndex } }); imported.set(importKey, targetPalette); } palette = { group: targetPalette.group, number: targetPalette.number };
     }
     let axisX = sprite.axisX, axisY = sprite.axisY;
     if (item.identityAction === 'replace-existing' && item.axisAction === 'preserve-destination') { const existing = destinationArchive.sprites[item.destinationPhysicalIndex]; if (!existing) throw new Error(`${item.id} replacement Destination occurrence no longer exists.`); axisX = existing.axisX; axisY = existing.axisY; }

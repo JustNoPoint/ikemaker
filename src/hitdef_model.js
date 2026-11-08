@@ -44,21 +44,31 @@ function parseParams(text, start, end, syntax) {
   const result = {}, duplicates = [];
   for (const line of lineOffsets(text.slice(start, end))) {
     const match = syntax === 'zss'
-      ? /^\s*([\w.]+)\s*:\s*(.*?)\s*;\s*(?:(?:#|\/\/).*)?$/.exec(line.text)
-      : /^\s*([\w.]+)\s*=\s*(.*?)\s*(?:;.*)?$/.exec(line.text);
+      ? /^\s*([\w.]+)\s*:\s*(.*?)\s*;\s*(?:(?:#|\/\/).*)?$/d.exec(line.text)
+      : /^\s*([\w.]+)\s*=\s*(.*?)\s*(?:;.*)?$/d.exec(line.text);
     if (!match) continue;
     const key = match[1].toLowerCase();
     if (syntax === 'cns' && (key === 'type' || /^trigger\d*$/.test(key))) continue;
     if (result[key]) duplicates.push(key);
-    result[key] = { name: match[1], value: match[2].trim(), start: start + line.start, end: start + line.end };
+    result[key] = { name: match[1], value: match[2].trim(), start: start + line.start, end: start + line.end, valueStart: start + line.start + match.indices[2][0], valueEnd: start + line.start + match.indices[2][1] };
   }
   return { values: Object.fromEntries(Object.entries(result).map(([key, item]) => [key, item.value])), entries: result, duplicates };
 }
 
 function parseZss(text) {
-  const blocks = []; const re = /\bhitdef\s*\{/ig; let match;
-  while ((match = re.exec(text))) {
-    const open = text.indexOf('{', match.index), end = matchingBrace(text, open), parsed = parseParams(text, match.index, end, 'zss');
+  // Search executable text only. A quoted example such as # "HitDef{" must
+  // never become the opening brace of a controller spanning later StateDefs.
+  const masked = text.split('');let quote='',comment=false;
+  for(let at=0;at<text.length;at++){
+    const char=text[at],next=text[at+1];
+    if(comment){if(char==='\n'||char==='\r')comment=false;else masked[at]=' ';continue;}
+    if(quote){masked[at]=char==='\n'||char==='\r'?char:' ';if(char==='\\'){if(at+1<text.length){at++;masked[at]=text[at]==='\n'?'\n':' ';}}else if(char===quote)quote='';continue;}
+    if(char==='#'||char==='/'&&next==='/'){comment=true;masked[at]=' ';continue;}
+    if(char==='"'||char==="'"){quote=char;masked[at]=' ';}
+  }
+  const code=masked.join(''),blocks = []; const re = /\bhitdef\s*\{/ig; let match;
+  while ((match = re.exec(code))) {
+    const open = code.indexOf('{', match.index), end = matchingBrace(text, open), parsed = parseParams(text, match.index, end, 'zss');
     blocks.push({ syntax: 'zss', start: match.index, end, bodyStart: open + 1, bodyEnd: Math.max(open + 1, end - 1), ...parsed });
     re.lastIndex = Math.max(re.lastIndex, end);
   }
@@ -106,9 +116,7 @@ function updateHitDef(text, block, changes) {
     }
     const value = String(change.value).trim();
     if (existing) {
-      const old = text.slice(existing.start, existing.end), eol = old.endsWith('\r\n') ? '\r\n' : old.endsWith('\n') ? '\n' : '';
-      const indent = /^\s*/.exec(old)[0], suffix = block.syntax === 'zss' ? ';' : '';
-      edits.push({ start: existing.start, end: existing.end, text: `${indent}${change.name}${block.syntax === 'zss' ? ': ' : ' = '}${value}${suffix}${eol}` });
+      if (value !== existing.value) edits.push({ start: existing.valueStart, end: existing.valueEnd, text: value });
     } else additions.push({ name: change.name, value });
   }
   if (additions.length) {

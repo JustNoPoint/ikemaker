@@ -48,6 +48,9 @@ function cloneRetained(value, seen = new Set(), depth = 0, count = { value:0 }) 
     result = Object.create(null);
     for (const [key, item] of Object.entries(value)) {
       if (FORBIDDEN_RETAINED_KEYS.has(key)) throw new TypeError(`Retained adapter state contains forbidden key ${key}.`);
+      // Optional viewer settings (for example, an untouched Stage camera) have
+      // no persisted value. Keep the same object semantics as JSON.stringify.
+      if (item === undefined) continue;
       result[key] = cloneRetained(item, seen, depth + 1, count);
     }
   }
@@ -118,13 +121,16 @@ function validateHeaderOptions(value) {
 class EntitySwitchHost {
   constructor(options = {}) {
     if (!plain(options)) throw new TypeError('Entity switch host options must be a plain object.');
-    for (const key of Object.keys(options)) if (!['coordinator','openEntity','closeEntity','restoreEntity'].includes(key)) throw new TypeError(`Entity switch host options contain unsupported field ${key}.`);
+    for (const key of Object.keys(options)) if (!['coordinator','openEntity','closeEntity','restoreEntity','focusEntity','focusLoadedEditor'].includes(key)) throw new TypeError(`Entity switch host options contain unsupported field ${key}.`);
     this.coordinator = options.coordinator || createEntitySwitchCoordinator();
     if (!this.coordinator || typeof this.coordinator.snapshot !== 'function' || typeof this.coordinator.switchTo !== 'function' || typeof this.coordinator.subscribe !== 'function') throw new TypeError('Entity switch host requires a coordinator.');
     if (options.openEntity !== undefined && typeof options.openEntity !== 'function') throw new TypeError('openEntity must be a host callback.');
     this.openEntity = options.openEntity || null;
+    if(options.focusEntity!==undefined&&typeof options.focusEntity!=='function')throw new TypeError('focusEntity must be a host callback.');
+    this.focusEntity=options.focusEntity||null;
     if (options.closeEntity !== undefined && typeof options.closeEntity !== 'function') throw new TypeError('closeEntity must be a host callback.');
     if (options.restoreEntity !== undefined && typeof options.restoreEntity !== 'function') throw new TypeError('restoreEntity must be a host callback.');
+    this.focusLoadedEditor=options.focusLoadedEditor;
     this.closeEntity=options.closeEntity||null;
     this.restoreEntity=options.restoreEntity||null;
     this.headers = new Map();
@@ -162,7 +168,7 @@ class EntitySwitchHost {
   }
 
   ready() {
-    if (!this.adapters.size) return false;
+    if (!this.adapters.size && !(this.focusEntity && this.headers.size)) return false;
     for (const binding of this.headers.values()) if (!binding.observerOnly && !this.adapters.has(binding.adapterId)) return false;
     return true;
   }
@@ -211,18 +217,32 @@ class EntitySwitchHost {
         this.status='';if(!changed)this._post(panel,this.projection());return Object.freeze({handled:true,status:changed?'reordered':'unchanged'});
       }catch(error){this.status=reason(error?.message||error,'Entity organization failed.');this._post(panel,this.projection());return Object.freeze({handled:true,status:'failed',reason:this.status});}
     }
-    if (!this.ready()) {
+    const identity = intent.type === PREVIOUS_MESSAGE ? snapshot.previousIdentity : intent.identity;
+    if (!this.ready()&&!(this.focusEntity&&identity===snapshot.activeIdentity&&!snapshot.pending)) {
       this.status = 'Entity switching is unavailable until every open entity-dependent header has a safe retarget adapter.';
       this.broadcast();
       return Object.freeze({ handled:true, status:'unavailable', reason:this.status });
     }
-    const identity = intent.type === PREVIOUS_MESSAGE ? snapshot.previousIdentity : intent.identity;
+
     if (!identity) return Object.freeze({ handled:true, status:'unavailable', reason:'No previous loaded entity is available.' });
     this.status = 'Preparing synchronized entity switch…'; this.broadcast();
-    const result = await this.coordinator.switchTo(identity, this._hooks());
-    this.status = result.status === 'committed' ? '' : reason(result.reason, `Entity switch ${result.status}.`);
+    const requestId=this.navigationRequest=(this.navigationRequest||0)+1;
+    const stillRequested=()=>!this.disposed&&this.navigationRequest===requestId&&this.headers.has(panel)&&this.coordinator.snapshot().generation===snapshot.generation;
+    const descriptor=snapshot.entities.find(item=>item.identity===identity);
+    let focusedExisting=false;
+    try{if(descriptor?.supported&&this.focusLoadedEditor)focusedExisting=await this.focusLoadedEditor(descriptor,stillRequested);}
+    catch(error){this.status=reason(error.message,'Could not focus the open editor.');this.broadcast();return {handled:true,status:'failed',reason:this.status};}
+    if(!stillRequested())return {handled:true,status:'stale'};
+    const result = await this.coordinator.switchTo(identity, focusedExisting?{}:this._hooks());
+    let focusStatus='';
+    if(focusedExisting){focusStatus='focused';this.status='';}
+    else if(this.focusEntity&&['committed','unchanged'].includes(result.status)){
+      const settled=this.coordinator.snapshot(),selectionCurrent=()=>!this.disposed&&this.coordinator.snapshot().generation===settled.generation&&this.coordinator.snapshot().activeIdentity===identity&&!this.coordinator.snapshot().pending,isCurrent=()=>this.headers.has(panel)&&selectionCurrent();
+      try{if(!isCurrent())throw new Error('The entity selection changed before opening its viewer.');const focused=accepted(await this.focusEntity({identity,panel,descriptor:settled.entities.find(item=>item.identity===identity),surfaceId:this.headers.get(panel)?.surfaceId,isCurrent,selectionCurrent}),'The entity viewer could not be opened.');if(!selectionCurrent())throw new Error('The entity selection changed while its viewer was opening.');focusStatus=focused.ok?'focused':'unavailable';this.status=focused.ok?'':focused.reason;}
+      catch(error){focusStatus='unavailable';this.status=reason(error?.message||error,'The entity viewer could not be opened.');}
+    }else this.status = result.status === 'committed' ? '' : reason(result.reason, `Entity switch ${result.status}.`);
     this.broadcast();
-    return Object.freeze({ handled:true, ...result });
+    return Object.freeze({ handled:true, ...result,...(focusStatus?{focusStatus,focusReason:this.status}:{}) });
   }
 
   dispose() {
@@ -281,7 +301,7 @@ class EntitySwitchHost {
           const verdict = accepted(prepared, `${adapter.surfaceId} could not safely retain its current work.`);
           if (!verdict.ok) return cancel(verdict.reason);
         }
-        if (!entries.some(entry => !entry.pinned)) return cancel('Only Transfer-pinned adapters are open; the normal entity context was not changed.');
+        if ((entries.length||!this.focusEntity) && !entries.some(entry => !entry.pinned)) return cancel('Only Transfer-pinned adapters are open; the normal entity context was not changed.');
         const retained = retainCaptures();
         if (!retained.ok) return { ok:false, reason:retained.reason, entries };
         return { ok:true, entries };

@@ -7,6 +7,7 @@ const fs = require('fs');
 const { parseZss, displayName } = require('./parser');
 const { documentOutline } = require('./zss_document_outline');
 const controllerCatalog = require('../data/sctrl.json');
+const stageDefCatalog = require('../data/stage-def-catalog.json');
 const luaApiCatalog = require('../data/lua-api.json');
 const { luaAuthoringInsert } = require('./language_intelligence');
 const { parseLuaFunctions } = require('./lua_function_catalog');
@@ -21,11 +22,10 @@ const { missingFileIssues } = require('./def_file_diagnostics');
 const { basicSyntaxIssues } = require('./basic_syntax_diagnostics');
 const { registerNativeDocumentOutlines } = require('./native_document_outlines');
 const { resolveCommandCatalog, sameFile } = require('./command_reference_model');
-const { createUpdateMonitor, ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG } = require('./updater');
+const { createUpdateMonitor, ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG, readEngineCatalog } = require('./updater');
 const { registerExtensionUpdater } = require('./extension_updater');
 const { registerUpdateCenter } = require('./update_center');
 const engineRuntime = require('./engine_runtime');
-const engineModel = require('./engine_registry_model');
 const engineCapabilityPolicy = require('./engine_capability_policy');
 const { entryAvailable, filterAvailable } = require('./catalog_capability_filter');
 const controllerChangeMarkers = require('./controller_change_markers');
@@ -206,19 +206,19 @@ function analyzeDocument(document) {
   const defDocument=Boolean(document&&/\.def$/i.test(document.fileName || document.uri?.fsPath || ''));
   if (!document || !['zss', 'ikemen-cns'].includes(document.languageId) && !defDocument) return { issues: [], records: {} };
   const options = analyzerOptions(document.uri), result = defDocument
-    ? {issues:[...defMapCapabilityIssues(document.getText(),activeCapabilityResolver(document.uri),document.fileName||document.uri?.fsPath||'character.def'),...defMapValueIssues(document.getText(),activeCapabilityResolver(document.uri)),...typedConstantIssues(document.getText(),activeCapabilityResolver(document.uri),{legacy:true}),...missingFileIssues(document.getText(),document.fileName||document.uri?.fsPath||'character.def')],records:{}}
+    ? {issues:[...defMapCapabilityIssues(document.getText(),options.capabilities,document.fileName||document.uri?.fsPath||'character.def'),...defMapValueIssues(document.getText(),options.capabilities),...typedConstantIssues(document.getText(),options.capabilities,{legacy:true}),...missingFileIssues(document.getText(),document.fileName||document.uri?.fsPath||'character.def')],records:{}}
     : document.languageId === 'zss'
     ? analyzeZss(document.getText(), options)
-    : { issues: [...analyzeCommandReferences(document.getText(), options.commandNames, { semicolonComments: true }),...typedConstantIssues(document.getText(),activeCapabilityResolver(document.uri),{legacy:true})], records: {} };
+    : { issues: [...analyzeCommandReferences(document.getText(), options.commandNames, { semicolonComments: true }),...typedConstantIssues(document.getText(),options.capabilities,{legacy:true})], records: {} };
   if (!defDocument) result.issues.push(...basicSyntaxIssues(document.getText(), document.languageId, options.syntaxDiagnostics));
-  if (/\.(?:cmd|inp|jnp)$/i.test(document.fileName || document.uri?.fsPath || '')) result.issues.push(...commandDocumentTargetDiagnostics(document.getText(), { capabilities: activeCapabilityResolver(document.uri) }, document.fileName || document.uri?.fsPath || ''));
+  if (/\.(?:cmd|inp|jnp)$/i.test(document.fileName || document.uri?.fsPath || '')) result.issues.push(...commandDocumentTargetDiagnostics(document.getText(), { capabilities: options.capabilities }, document.fileName || document.uri?.fsPath || ''));
   const settings = validationSettings(document.uri), diagnostics = result.issues.filter((entry) => validationLevels.enabled({ ...entry, level: validationLevel(entry) }, settings)).map((entry) => {
     const line = Math.min(entry.line, document.lineCount - 1);
     const max = document.lineAt(line).text.length;
     const range = new vscode.Range(line, Math.min(entry.start, max), line, Math.min(entry.start + entry.length, max));
     const diagnostic = new vscode.Diagnostic(range, entry.message, vscodeSeverity(validationLevel(entry)));
     diagnostic.code = entry.code;
-    diagnostic.source = defDocument ? 'IKEMEN DEF' : document.languageId === 'zss' ? 'IKEMEN ZSS' : 'IKEMEN CNS';
+    diagnostic.source = `${defDocument ? 'IKEMEN DEF' : document.languageId === 'zss' ? 'IKEMEN ZSS' : 'IKEMEN CNS'} · ${require('./lua_target_catalog').targetLabel(options.capabilities)}`;
     if (entry.help) diagnostic.relatedInformation = [new vscode.DiagnosticRelatedInformation(
       new vscode.Location(document.uri, range), entry.help
     )];
@@ -525,6 +525,22 @@ class ZssControllerProvider {
     ].join(' '), this.filter, vscode.workspace.getConfiguration('ikemenZss').get('authoring.intentAliases', {}));
   }
 
+  matchesStage(entry) {
+    if (!this.filter) return true;
+    return require('./intent_search').matches([entry.scope, entry.name, entry.signature, entry.key, entry.description].join(' '), this.filter, vscode.workspace.getConfiguration('ikemenZss').get('authoring.intentAliases', {}));
+  }
+
+  stageSections() {
+    const types = stageDefCatalog.types.filter(entry => entry.scope === 'bgctrl' && entry.completable && this.matchesStage(entry));
+    const controls = stageDefCatalog.entries.filter(entry => entry.completable && ['bgctrl', 'bgctrldef'].includes(entry.scope) && this.matchesStage(entry));
+    const def = stageDefCatalog.entries.filter(entry => entry.completable && !['bgctrl', 'bgctrldef'].includes(entry.scope) && this.matchesStage(entry));
+    return [
+      { id: 'bgTypes', label: 'BGCtrl types', entries: types },
+      { id: 'bgOptions', label: 'BGCtrl options', entries: controls },
+      { id: 'defOptions', label: 'Stage DEF options', entries: def }
+    ];
+  }
+
   luaProjectFunctions() {
     const document = vscode.window.activeTextEditor?.document;
     if (!document || document.languageId !== 'lua') return [];
@@ -663,6 +679,15 @@ class ZssControllerProvider {
         if (marked) item.tooltip = `${controllerChangeMarkers.ACCESSIBLE_MARKER}. ${reviewGroup.unreviewedCount} controller${reviewGroup.unreviewedCount === 1 ? '' : 's'} unreviewed; group count remains ${count}.`;
         return item;
       }).filter((item) => !this.filter || this.filteredCatalog(item.status).length);
+      const stageCount = this.stageSections().reduce((count, section) => count + section.entries.length, 0);
+      if (stageCount) {
+        const stage = new NavigatorItem(`Stage Authoring (${stageCount})`, this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'stageAuthoringRoot', contextValue: 'stageAuthoringRoot' });
+        stage.iconPath = new vscode.ThemeIcon('layers');
+        stage.tooltip = 'Read-only Stage DEF and BGCtrl references are available without an open Stage. Open Stage Code for the exact active Stage and its linked sources; character state controllers and triggers belong in attached character code.';
+        controllerGroups.push(stage);
+      }
+      controllerGroups.push(...require("./visual_def_authoring_tree").items(null, vscode, NavigatorItem, this.filter, entry => this.matchesStage(entry)));
       const structureCount = zssStructures.STRUCTURES.filter((item) => this.matchesStructure(item)).length;
       if (structureCount) {
         const structures = new NavigatorItem(
@@ -687,7 +712,7 @@ class ZssControllerProvider {
         controllerGroups.push(lua);
       }
       if (this.filter && !controllerGroups.length) {
-        const empty = new NavigatorItem(`No controller, structure, or Lua matches for “${this.filter}”`, vscode.TreeItemCollapsibleState.None,
+        const empty = new NavigatorItem(`No controller, Stage, structure, or Lua matches for “${this.filter}”`, vscode.TreeItemCollapsibleState.None,
           { nodeType: 'authoringFilterEmpty', contextValue: 'authoringFilterEmpty' });
         empty.description = 'Change or clear the filter to restore results.';
         empty.iconPath = new vscode.ThemeIcon('search-stop');
@@ -716,6 +741,52 @@ class ZssControllerProvider {
       })];
     }
 
+    if (['visualDefRoot', 'visualDefGroup'].includes(element.nodeType)) {
+      return require('./visual_def_authoring_tree').items(element, vscode, NavigatorItem, this.filter, entry => this.matchesStage(entry));
+    }
+    if (element.nodeType === 'stageAuthoringRoot') {
+      const groups = this.stageSections().filter(section => section.entries.length).map(section => {
+        const item = new NavigatorItem(`${section.label} (${section.entries.length})`, this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'stageAuthoringGroup', section: section.id, contextValue: 'stageAuthoringGroup' });
+        item.iconPath = new vscode.ThemeIcon(section.id === 'bgTypes' ? 'symbol-method' : 'symbol-property');
+        item.tooltip = section.id === 'bgTypes' ? 'Native [BGCtrl] types in the Stage DEF.' : 'Documented Stage DEF parameters; authored values depend on the specific Stage.';
+        return item;
+      });
+      const attached = new NavigatorItem('Attached code references…', vscode.TreeItemCollapsibleState.Collapsed,
+        { nodeType: 'stageAttachedReferences', contextValue: 'stageAttachedReferences' });
+      attached.iconPath = new vscode.ThemeIcon('references');
+      attached.tooltip = 'Stage-related character controllers, triggers, and Lua references. CNS/ZSS controllers and triggers require a linked character owner.';
+      return [...groups, attached];
+    }
+
+    if (element.nodeType === 'stageAuthoringGroup') {
+      const section = this.stageSections().find(section => section.id === element.section);
+      if (element.section === 'defOptions') return [...new Set((section?.entries || []).map(entry => entry.scope))].map(scope => {
+        const count = section.entries.filter(entry => entry.scope === scope).length;
+        const item = new NavigatorItem(`[${scope}] (${count})`, this.filter ? vscode.TreeItemCollapsibleState.Expanded : vscode.TreeItemCollapsibleState.Collapsed,
+          { nodeType: 'stageScopeGroup', scope, contextValue: 'stageScopeGroup' });
+        item.iconPath = new vscode.ThemeIcon('symbol-module');
+        return item;
+      });
+      return this.stageEntryItems(section?.entries || []);
+    }
+
+    if (element.nodeType === 'stageScopeGroup') {
+      return this.stageEntryItems(this.stageSections().find(section => section.id === 'defOptions').entries.filter(entry => entry.scope === element.scope));
+    }
+
+    if (element.nodeType === 'stageAttachedReferences') {
+      const categories = ['Trigger', 'State controller', 'Lua'];
+      return categories.map(category => {
+        const item = new NavigatorItem(category === 'State controller' ? 'Stage-related character controllers…' : category === 'Trigger' ? 'Stage-related character triggers…' : 'Stage Lua functions…', vscode.TreeItemCollapsibleState.None,
+          { nodeType: 'stageAttachedReference', category, contextValue: 'stageAttachedReference' });
+        item.iconPath = new vscode.ThemeIcon('book');
+        item.tooltip = 'Browse bundled read-only Stage references. Character controllers and triggers are authored in an explicitly linked CNS/ZSS source.';
+        item.command = { command: 'ikemen.stage.openReference', title: 'Open Stage reference', arguments: [{ category }] };
+        return item;
+      });
+    }
+
     if (element.nodeType === 'authoringFavorites' || element.nodeType === 'authoringRecents') {
       const entries = element.nodeType === 'authoringFavorites' ? authoringLibrary.favorites() : authoringLibrary.recents();
       return entries.slice(0, 10).map((entry) => {
@@ -729,7 +800,6 @@ class ZssControllerProvider {
         return item;
       });
     }
-
     if (element.nodeType === 'controllerGroup') {
       const review = this.reviewProjection();
       return this.filteredCatalog(element.status).map((controller) => {
@@ -836,6 +906,19 @@ class ZssControllerProvider {
     }
 
     return [];
+  }
+
+  stageEntryItems(entries) {
+    return entries.map(entry => {
+      const label = `${entry.signature || `type = ${entry.name}`}${entry.controller ? ` · ${entry.controller}` : ''}`;
+      const item = new NavigatorItem(label, vscode.TreeItemCollapsibleState.None,
+        { nodeType: 'stageAuthoringEntry', entry, contextValue: 'stageAuthoringEntry' });
+      item.description = entry.name ? 'BGCtrl type' : `[${entry.scope}]`;
+      item.iconPath = new vscode.ThemeIcon('book');
+      item.tooltip = `${label}\n\n${String(entry.description || '').replace(/\s+/g, ' ').slice(0, 900)}\n\nRead-only bundled reference; no code is inserted.`;
+      item.command = { command: 'ikemen.stage.openReference', title: 'Open Stage reference', arguments: [{ catalog: entry.name ? 'types' : 'entries', index: (entry.name ? stageDefCatalog.types : stageDefCatalog.entries).indexOf(entry) }] };
+      return item;
+    });
   }
 
   getTreeItem(element) {
@@ -1491,14 +1574,14 @@ async function auditWorkspace(registry, functionDiagnostics, stateDiagnostics) {
       const sameFileLater = entry.result.records.functions.find(item => item.name.toLowerCase() === call.name.toLowerCase() && item.line > call.line);
       if (sameFileLater) {
         const diagnostic = new vscode.Diagnostic(lineRange(call), `${call.name} is declared later in this file; ZSS functions may only call predefined functions.`, vscode.DiagnosticSeverity.Warning);
-        diagnostic.source = 'IKEMEN ZSS'; diagnostic.code = 'function-order'; additions.push(diagnostic);
+        diagnostic.source = `IKEMEN ZSS · ${require('./lua_target_catalog').targetLabel(activeCapabilityResolver(document.uri))}`; diagnostic.code = 'function-order'; additions.push(diagnostic);
       }
     }
     for (const declaration of entry.result.records.functions) {
       const sameFile = entry.result.records.functions.filter(item => item.name.toLowerCase() === declaration.name.toLowerCase());
       if (sameFile.length > 1) {
         const diagnostic = new vscode.Diagnostic(lineRange(declaration), `Function ${declaration.name} is declared ${sameFile.length} times in this file.`, vscode.DiagnosticSeverity.Error);
-        diagnostic.source = 'IKEMEN ZSS'; diagnostic.code = 'duplicate-function'; additions.push(diagnostic);
+        diagnostic.source = `IKEMEN ZSS · ${require('./lua_target_catalog').targetLabel(activeCapabilityResolver(document.uri))}`; diagnostic.code = 'duplicate-function'; additions.push(diagnostic);
       }
     }
     if (additions.length) {
@@ -1520,6 +1603,8 @@ async function auditWorkspace(registry, functionDiagnostics, stateDiagnostics) {
 }
 
 function activate(context) {
+  const visualDefAuthoring = require('./visual_def_authoring_tree');
+  context.subscriptions.push(vscode.commands.registerCommand(visualDefAuthoring.command, (...args) => visualDefAuthoring.useExample(vscode, ...args)));
   // The synchronized entity host must exist before any viewer or companion can
   // attach.  Individual surfaces still opt in only after their exact source is
   // bound, so activation does not create panels or write project assets.
@@ -1533,6 +1618,7 @@ function activate(context) {
   require('./workspace_setup').register(vscode,context);
   require('./asset_workspace').configure(vscode);
   require('./asset_workspace').register(context);
+  require('./sff_private_storage').register(context);
   require('./save_controls').register(context);
   require('./visual_authoring_browser_service').register(context, vscode);
   const capabilities = detectCapabilities({
@@ -1583,8 +1669,8 @@ function activate(context) {
   const runtimeStringCapability=(input={})=>{
     const source=input?.fsPath||input?.fileName||input?.files?.[0]||input?.connectedFiles?.[0]||vscode.window.activeTextEditor?.document?.fileName||'';
     const root=input?.root||require('./character_context').gameRoot(source)||vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath||path.dirname(source||'.');
-    const binding=engineRuntime.targetFor(root,source),catalog=engineModel.normalizeCatalog(context.globalState.get(ENGINE_CATALOG_KEY,BUILT_IN_ENGINE_CATALOG));
-    const capabilities=Object.fromEntries(capabilityIds.map(id=>[id,engineCapabilityPolicy.decision(catalog,binding.target,id)]));
+    const binding=engineRuntime.targetFor(root,source),catalog=readEngineCatalog(context);
+    const capabilities=engineCapabilityPolicy.decisions(catalog,binding.target,capabilityIds);
     const enabledCapabilities=capabilityIds.filter(id=>capabilities[id].enabled);
     return {nightlyStringsEnabled:capabilities['zss.runtime-strings'].enabled,target:binding.target,status:capabilities['zss.runtime-strings'].status,enabledCapabilities,capabilities};
   };
@@ -1612,7 +1698,7 @@ function activate(context) {
   const assetCatalog = document => require('./zss_asset_catalog').buildZssAssetCatalog(vscode, document.uri);
   registerLanguageProviders(vscode, context, () => controllers.catalog, document => analyzerOptions(document.uri).commandCatalog, functionCatalog, assetCatalog, stateCatalog, runtimeStringCapability, async document => {const model=require('./lua_function_catalog'),catalog=await model.buildLuaFunctionCatalog(vscode,document);return model.luaCatalogStillCurrent(vscode,catalog,document)?catalog:{complete:false,definitions:[],limitations:['Lua source or a required module changed before assistance publication.']};});
   registerZssAssetDiagnostics(vscode, context, assetCatalog);
-  registerLuaSupport(context);
+  registerLuaSupport(context,runtimeStringCapability);
   registerDefSemanticHighlighting(vscode, context);
   require('./def_outline').register(vscode, context);
   registerNativeDocumentOutlines(vscode, context);
@@ -1674,6 +1760,11 @@ function activate(context) {
   const updates = createUpdateMonitor(vscode, context, controllerCatalog, (catalog) => controllers.setCatalog(catalog));
   registerSffCommands(context);
   registerSffViewer(context);
+  context.subscriptions.push(vscode.commands.registerCommand('ikemen.quickTransfer',async()=>{
+    const choices=[{label:'SFF - Sprites',command:'sff.quickTransfer'},{label:'AIR - Animations',command:'air.quickTransfer'},{label:'SND - Sounds',command:'snd.quickTransfer'}];
+    const picked=await vscode.window.showQuickPick(choices,{title:'Quick Transfer',placeHolder:'Choose the type of item to copy'});
+    if(picked)return vscode.commands.executeCommand(picked.command);
+  }));
   registerSffTransferHost(context);
   registerSndTransferHost(context);
   registerAirTransferHost(context);
@@ -1700,7 +1791,7 @@ function activate(context) {
   registerStageWorkspace(context);
   registerScreenpackWorkspace(context);
   registerCommandMovelistWorkspace(context, { getCapabilities: runtimeStringCapability });
-  registerCodeStructureWorkspace(vscode, context);
+  registerCodeStructureWorkspace(vscode, context, runtimeStringCapability);
   registerSelectDefWorkspace(context);
   registerMenuModesWorkspace(context);
   registerStoryDialogueWorkspace(context);

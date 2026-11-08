@@ -49,7 +49,7 @@ function remapFrames(block, mappings) {
     if (/^(?:\r\n|\r|\n)$/.test(part)) return part;
     const semicolon = part.indexOf(';'), code = semicolon >= 0 ? part.slice(0, semicolon) : part, comment = semicolon >= 0 ? part.slice(semicolon) : '';
     const match = /^(\s*)(-?\d+)(\s*,\s*)(-?\d+)(\s*,\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+.*)$/.exec(code);
-    if (!match) return part;
+    if (!match || Number(match[2]) === -1 || Number(match[4]) === -1) return part;
     const mapped = mappings.get(`${Number(match[2])},${Number(match[4])}`);
     return mapped ? `${match[1]}${mapped.group}${match[3]}${mapped.index}${match[5]}${comment}` : part;
   }).join('');
@@ -98,7 +98,7 @@ function normalizeSpriteMappings(values) {
 }
 
 function resolveAirTransfer(input) {
-  dataObject(input, 'AIR Transfer resolution input', ['review', 'sourceText', 'destinationText', 'decisions', 'spriteMappings', 'placement'], ['review', 'sourceText', 'destinationText', 'decisions']);
+  dataObject(input, 'AIR Transfer resolution input', ['review', 'sourceText', 'destinationText', 'decisions', 'spriteMappings', 'placement', 'queueOrder'], ['review', 'sourceText', 'destinationText', 'decisions']);
   const sourceText = boundedText(input.sourceText, 'AIR Transfer source text'), destinationText = boundedText(input.destinationText, 'AIR Transfer destination text'), review = validateReview(input.review, sourceText, destinationText);
   const source = sourceRows(sourceText), byId = new Map(source.map(row => [row.id, row])), projections = new Map([...review.items, ...review.copyClosureItems].map(item => [item.id, item])), choices = decisionMap(input.decisions, new Set(projections.keys())), mappings = normalizeSpriteMappings(input.spriteMappings);
   const activeIds = new Set(review.items.map(item => item.id)), unresolved = [];
@@ -107,7 +107,8 @@ function resolveAirTransfer(input) {
     const decision = choices.get(item.id), mode = normalizeCopyMode(decision?.copyDependency);
     if (mode === 'include-copy-targets') for (const id of item.copyDependency.chainIds || []) activeIds.add(id);
   }
-  const active = [...activeIds].map(id => ({ row: byId.get(id), projection: projections.get(id), decision: choices.get(id) })).sort((a, b) => (a.row?.physicalIndex ?? Number.MAX_SAFE_INTEGER) - (b.row?.physicalIndex ?? Number.MAX_SAFE_INTEGER));
+  const active = [...activeIds].map(id => ({ row: byId.get(id), projection: projections.get(id), decision: choices.get(id) }));
+  if(input.queueOrder!==true)active.sort((a,b)=>(a.row?.physicalIndex??Number.MAX_SAFE_INTEGER)-(b.row?.physicalIndex??Number.MAX_SAFE_INTEGER));
   const destination = actionSourceRanges(destinationText), destinationByNumber = new Map(); for (const row of destination) { if (!destinationByNumber.has(row.number)) destinationByNumber.set(row.number, []); destinationByNumber.get(row.number).push(row); }
   let insertionPhysicalIndex=destination.length,insertionOffset=destinationText.length;
   if(input.placement!==undefined&&input.placement!==null){const placement=dataObject(input.placement,'AIR Transfer placement',['kind','targetPhysicalIndex','targetId','position'],['kind','targetPhysicalIndex','targetId','position']),physical=integer(placement.targetPhysicalIndex,'AIR Transfer placement physical index'),target=destination[physical],position=integer(placement.position,'AIR Transfer placement position');if(placement.kind!=='between-actions'||!target||placement.targetId!==`action:${target.number}@${physical}`||![physical,physical+1].includes(position))throw new Error('The AIR Transfer insertion boundary is stale or invalid.');insertionPhysicalIndex=position;insertionOffset=position===destination.length?destinationText.length:destination[position].start;}
@@ -119,6 +120,10 @@ function resolveAirTransfer(input) {
     if (!['preserve-action', 'add-next-free', 'replace-existing', 'manual-action', 'skip'].includes(identity)) { unresolved.push(`${projection.id} has no valid action-ID decision.`); continue; }
     if (identity === 'skip') { allocations.set(projection.id, null); outcomes.push({ id: projection.id, status: 'skipped', sourceAction: row.number, destinationAction: null }); continue; }
     let target = row.number, destinationPhysicalIndex = null;
+    if(identity==='replace-existing'&&decision.manualAction!==undefined){
+      if(!Number.isSafeInteger(decision.manualAction)||decision.manualAction<0||decision.manualAction>2147483647){unresolved.push(projection.id+' needs a valid replacement Action ID.');continue;}
+      target=decision.manualAction;
+    }
     if (identity === 'add-next-free') target = nextFree(reserved, row.number);
     else if (identity === 'manual-action') {
       if (!Number.isSafeInteger(decision.manualAction) || decision.manualAction < 0) { unresolved.push(`${projection.id} needs one non-negative manual Action ID.`); continue; }
@@ -160,8 +165,17 @@ function resolveAirTransfer(input) {
     block = remapFrames(block, mappings);
     if (Buffer.byteLength(block, 'utf8') > MAX_PATCH_BYTES) { unresolved.push(`${projection.id} exceeds the AIR Transfer patch byte limit.`); continue; }
     materialized.add(projection.id);
-    if (allocation.identity === 'replace-existing') { const target = destination[allocation.destinationPhysicalIndex]; patches.push({ start: target.start, end: target.end, text: block, sequence: patches.length }); }
-    else { const eol = eolOf(destinationText),atEnd=insertionOffset===destinationText.length,prefix=atEnd?(!destinationText?'':/(?:\r\n|\r|\n)$/.test(destinationText)?eol:eol+eol):'',suffix=atEnd?'':/(?:\r\n|\r|\n)$/.test(block)?eol:eol+eol; patches.push({ start: insertionOffset, end: insertionOffset, text: prefix + block + suffix, sequence: patches.length }); }
+    const eol=eolOf(destinationText), endsWithBreak=/(?:\r\n|\r|\n)$/.test(block);
+    if (allocation.identity === 'replace-existing') {
+      const target=destination[allocation.destinationPhysicalIndex], following=destinationText.slice(target.end);
+      const separator=following&&!endsWithBreak&&!/^[\r\n]/.test(following)?eol:'';
+      patches.push({start:target.start,end:target.end,text:block+separator,sequence:patches.length});
+    } else {
+      const atEnd=insertionOffset===destinationText.length;
+      const prefix=atEnd&&destinationText?(/[\r\n]$/.test(destinationText)?eol:eol+eol):'';
+      const suffix=endsWithBreak?(atEnd?'':eol):eol;
+      patches.push({start:insertionOffset,end:insertionOffset,text:prefix+block+suffix,sequence:patches.length});
+    }
   }
   const patchBytes = patches.reduce((total, patch) => total + Buffer.byteLength(patch.text, 'utf8'), 0); if (patchBytes > MAX_PATCH_BYTES) unresolved.push('The AIR Transfer patch set exceeds its total byte limit.');
   const status = unresolved.length ? 'blocked' : 'ready', readyPatches = status === 'ready' ? patches : [], outputText = status === 'ready' ? applyPatches(destinationText, readyPatches) : destinationText;

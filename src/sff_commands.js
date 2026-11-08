@@ -629,6 +629,7 @@ function writeSffExecutionReceipt(generated, evidence) {
       targetIdentity: path.basename(evidence.adoption.filename || generated.outputSff), finalTargetHash: String(evidence.finalTargetHash || '').toLowerCase(),
       backupIdentity: evidence.durableBackup?.path ? path.basename(evidence.durableBackup.path) : evidence.adoption.backup ? path.basename(evidence.adoption.backup) : null,
       backupHash: String(evidence.durableBackup?.hash || '').toLowerCase() || null,
+      recoveryRetention: evidence.durableBackup?.retention || null,
       recoveryJournalIdentity: evidence.adoption.journal ? path.basename(evidence.adoption.journal) : null
     } : null
   };
@@ -666,7 +667,7 @@ function candidateImpactSummary(activeBytes, candidateBytes) {
     for (const row of rows) { const key = `${row.group},${row.number}`; if (!grouped.has(key)) grouped.set(key, []); grouped.get(key).push(row); }
     return grouped;
   };
-  const renderedHash = (archive, sprite) => { try { return sha256(spritePng(archive, sprite)); } catch (_) { return null; } };
+  const renderedPngHash = (archive, sprite) => { try { return sha256(spritePng(archive, sprite)); } catch (_) { return null; } };
   const activeSprites = groupByIdentity(active.sprites), candidateSprites = groupByIdentity(candidate.sprites), identities = new Set([...activeSprites.keys(), ...candidateSprites.keys()]);
   const added = [], removed = [], changed = [], unchanged = [];
   for (const identity of identities) {
@@ -674,9 +675,9 @@ function candidateImpactSummary(activeBytes, candidateBytes) {
     for (let index = 0; index < common; index += 1) {
       const left = before[index], right = after[index], fieldsChanged = [];
       for (const field of ['width', 'height', 'axisX', 'axisY', 'colorDepth', 'format', 'paletteIndex']) if (left[field] !== right[field]) fieldsChanged.push(field);
-      const beforePixels = renderedHash(active, left), afterPixels = renderedHash(candidate, right);
-      if (!beforePixels || !afterPixels) fieldsChanged.push('rendered-pixels-unverified');
-      else if (beforePixels !== afterPixels) fieldsChanged.push('rendered-pixels');
+      const beforePng = renderedPngHash(active, left), afterPng = renderedPngHash(candidate, right);
+      if (!beforePng || !afterPng) fieldsChanged.push('rendered-png-unverified');
+      else if (beforePng !== afterPng) fieldsChanged.push('rendered-png-bytes');
       const record = { identity, occurrence: index + 1, fieldsChanged };
       (fieldsChanged.length ? changed : unchanged).push(record);
     }
@@ -835,7 +836,8 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     const detail = indexAudit.issues.slice(0, 20).map((item) => `${item.group},${item.actual ?? 'unresolved'} must be ${item.group},${item.expected} (${item.sequence})`).join('\n');
     throw new Error(`Manifest violates ${profile.profileName}:\n${detail}${indexAudit.issues.length > 20 ? `\n…and ${indexAudit.issues.length - 20} more. Run “Apply Project Get-Hit Indexing” first.` : '\nRun “Apply Project Get-Hit Indexing” first.'}`);
   }
-  const issues = validateManifest(rows, { requireApproved: true, aliasRegistry });
+  // Transfer rows carry reviewed physical identities; generated PNG names do not identify move families.
+  const issues = validateManifest(rows, { requireApproved: true, aliasRegistry, validateHyperNaming: !reviewedPhysicalSpritePlan });
   if (issues.length) throw new Error(`Manifest validation failed:\n${issues.slice(0, 20).join('\n')}${issues.length > 20 ? `\n…and ${issues.length - 20} more` : ''}`);
 
   fs.mkdirSync(outputDirectory, { recursive: true });
@@ -878,6 +880,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
       snapshotPath, approvedSnapshotPath, sourceByteHash, image, incomingManifestOrdinal: manifestOrdinal, incomingSourceIdentity: String(row.SourceIdentity || ''),
       provenance: {
         kind: 'approved-manifest-source', manifest: path.basename(manifestFilename), manifestByteHash: manifestHash,
+        ...(row.GuidedGifAir ? { guidedGifAir: require('./sff_guided_gif_air_provenance').parseGuidedGifAir(row.GuidedGifAir) } : {}),
         originalSource: String(row.OriginalRelativePath || path.basename(source)).replace(/\\/g, '/'),
         sourceArchive: path.basename(String(row.SourceArchive || '')), sourceIdentity: String(row.SourceIdentity || ''),
         approvedByteHash: String(row.SourceSHA256 || '').trim().toLowerCase(),
@@ -900,6 +903,10 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     const bytes = fs.readFileSync(sourcePath), observedHash = sha256(bytes).toUpperCase(), expectedHash = String(item?.byteHash || '').toUpperCase();
     if (!/^[A-F0-9]{64}$/.test(expectedHash) || observedHash !== expectedHash) throw new Error(`Portable palette ${id} changed after recipe review.`);
     const tableOrder = normalizeOrder(item?.tableOrder), colors = readAct(bytes, tableOrder);
+    if(item.alphaTable!==undefined){
+      if(!Array.isArray(item.alphaTable)||item.alphaTable.length!==colors.length||!item.alphaTable.every(a=>Number.isInteger(a)&&a>=0&&a<=255))throw Error('Invalid portable palette alpha table for '+id);
+      colors.forEach((color,index)=>{color[3]=item.alphaTable[index];});
+    }
     portablePaletteIds.add(id); portablePalettes.push({ kind: 'portable-recipe-palette', group, number, colors, source: sourcePath, sourceByteHash: observedHash.toLowerCase(), sourceTableOrder: tableOrder, provenance: item?.provenance || null });
   }
   if (imagePaletteIntake && sharedPalettePath) throw new Error('Choose either per-image palette intake or one shared/temporary palette, not both.');
@@ -923,6 +930,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     }
     for (const entry of mapping) entry.palette = `${sharedPalette.group},${sharedPalette.number}`;
   }
+  const rebasedTruecolorOwners = new Map();
   if (paletteSourceSff) {
     paletteArchive = readSff(paletteSourceSff);
     if (reviewedInsertionPhysicalIndex !== null && (!Number.isSafeInteger(reviewedInsertionPhysicalIndex) || reviewedInsertionPhysicalIndex < 0 || reviewedInsertionPhysicalIndex > paletteArchive.sprites.length)) throw new Error(`Reviewed physical insertion ${reviewedInsertionPhysicalIndex} is outside the Destination SFF physical table.`);
@@ -1071,6 +1079,26 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
       ordered.push(...mapping.filter(entry => !consumed.has(entry)));
       mapping.splice(0, mapping.length, ...ordered);
     }
+    // A linked sprite follows its physical owner at runtime. When a reviewed
+    // truecolor replacement changes that owner, its preserved snapshot must
+    // follow the same new pixels before the candidate is sealed.
+    if (preserveArchiveSprites) for (const original of paletteArchive.sprites) {
+      if (original.dataSize !== 0) continue;
+      const owner = paletteArchive.sprites[original.link];
+      const matches = sprite => mapping.filter(entry => entry.group === sprite.group && entry.index === sprite.number);
+      if (!owner || matches(owner).length !== 1 || matches(original).length !== 1) continue;
+      const ownerEntry = matches(owner)[0], linkedEntry = matches(original)[0];
+      if (!Number.isInteger(linkedEntry.sourcePhysicalIndex) || ownerEntry.sourcePhysicalIndex === owner.index && !rebasedTruecolorOwners.has(owner.index)) continue;
+      if (![24, 32].includes(Number(ownerEntry.image.colorDepth))) continue;
+      if (Number(ownerEntry.image.colorDepth) !== Number(linkedEntry.image.colorDepth) || ownerEntry.image.width !== linkedEntry.image.width || ownerEntry.image.height !== linkedEntry.image.height) throw new Error(`Linked truecolor sprite ${original.group},${original.number} no longer matches its reviewed physical owner. No candidate was built.`);
+      fs.copyFileSync(ownerEntry.snapshotPath, linkedEntry.snapshotPath);
+      linkedEntry.sourceByteHash = ownerEntry.sourceByteHash;
+      linkedEntry.image = { ...ownerEntry.image };
+      linkedEntry.duplicatePolicy = SHARE;
+      linkedEntry.provenance = { ...linkedEntry.provenance, kind: 'preserved-archive-link-rebased', reviewedOwnerPhysicalIndex: owner.index, reviewedOwnerIdentity: `${owner.group},${owner.number}` };
+      rebasedTruecolorOwners.set(owner.index, ownerEntry);
+      rebasedTruecolorOwners.set(original.index, linkedEntry);
+    }
     const deletedUse = mapping.find((entry) => entry.palette && deletedEffective.has(entry.palette));
     if (deletedUse) throw new Error(`Palette ${deletedUse.palette} is staged for deletion but sprite ${deletedUse.group},${deletedUse.index} still uses it.`);
   } else stagedPalettes.push(...portablePalettes);
@@ -1083,6 +1111,23 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
   if (sharedPalette) availableStoredPaletteIds.add(`${sharedPalette.group},${sharedPalette.number}`);
   const missingStoredPalette = mapping.find(entry => entry.palette && !availableStoredPaletteIds.has(entry.palette));
   if (missingStoredPalette) throw new Error(`Sprite ${missingStoredPalette.group},${missingStoredPalette.index} references stored palette ${missingStoredPalette.palette}, but that palette is not present in the reviewed build plan.`);
+
+  // Legacy tool-autocrop must become an exact final source before sealing the
+  // specification. Do not ask the external builder to change reviewed geometry.
+  for (const entry of mapping) {
+    const identity = `${entry.group},${entry.index}`, requestedMode = reviewedCropModes.get(identity) || (cropSet ? (cropSet.has(identity) ? 'autocrop' : 'none') : (autocrop ? 'autocrop' : 'none'));
+    if (requestedMode !== 'autocrop' && !(requestedMode === 'after-axis' && entry.provenance.preparation?.kind !== 'after-axis-crop')) continue;
+    const original = fs.readFileSync(entry.snapshotPath), originalHash = sha256(original).toLowerCase();
+    if (originalHash !== String(entry.sourceByteHash).toLowerCase()) throw new Error(`Crop source changed before its geometry was sealed: ${identity}.`);
+    const sealed = require('./sff_sealed_autocrop').sealAutocropSource(original, entry.axisX, entry.axisY), retained = path.join(outputDirectory, 'crop-input', entry.buildFile);
+    fs.mkdirSync(path.dirname(retained), { recursive: true });
+    if (fs.existsSync(retained)) { if (sha256(fs.readFileSync(retained)).toLowerCase() !== originalHash) throw new Error(`The retained uncropped snapshot changed: ${identity}.`); }
+    else transactionalWrite(fs, retained, original, { allowExisting: false, backup: false, journal: false, label: 'retain-uncropped-source' });
+    transactionalWrite(fs, entry.snapshotPath, sealed.buffer, { expectedHash: originalHash, backup: false, journal: false, label: 'seal-reviewed-crop-source' });
+    entry.axisX = sealed.axisX; entry.axisY = sealed.axisY; entry.sourceByteHash = sha256(sealed.buffer).toLowerCase(); entry.image = pngSnapshotInfo(sealed.buffer, entry.snapshotPath);
+    entry.provenance = { ...entry.provenance, preparation: { ...sealed.preparation, requestedMode, originalSnapshotRelativePath: portableRelative(outputDirectory, retained), priorPreparation: entry.provenance.preparation || null } };
+    reviewedCropModes.set(identity, 'none');
+  }
 
   const buildOutputSff = path.resolve(candidateOutputSff || outputSff);
   const paletteSpecifications = [];
@@ -1141,7 +1186,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     '[Output]', `filename = ${buildOutputSff}`, '', '[Option]', `input.dir = ${inputDirectory}`,
     'sprite.compress.5 = lz5', 'sprite.compress.8 = png8', 'sprite.compress.24 = png24',
     'sprite.compress.32 = png32', 'sprite.decompressonload = 0', `sprite.detectduplicates = ${policies.sprites === SHARE ? 1 : 0}`,
-    `sprite.autocrop = ${autocrop ? 1 : 0}`, `pal.detectduplicates = ${policies.palettes === SHARE ? 1 : 0}`, 'pal.discardduplicates = 0',
+    'sprite.autocrop = 0', `pal.detectduplicates = ${policies.palettes === SHARE ? 1 : 0}`, 'pal.discardduplicates = 0',
     'pal.reversepng = 0', ...(paletteArchive || sharedPalette || portablePalettes.length ? ['pal.reverseact = 1'] : []), 'sprite.usepal = -1', 'sprite.removecolors = -1'
   ];
   if (sharedPalette && !paletteArchive) {
@@ -1182,7 +1227,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
       lines.push(`${sharedPalette.group},${sharedPalette.number}, ${actFile}, 0,255 ; ${sharedPalette.lifecycle ? `temporary placeholder palette ${sharedPalette.lifecycle.lifecycleId}` : 'shared provisional palette'}`);
     }
   }
-  let activePalette = null, activeAutocrop = Boolean(autocrop);
+  let activePalette = null, activeAutocrop = false;
   for (const entry of mapping) {
     const wanted = entry.palette || '-1';
     const cropMode = reviewedCropModes.get(`${entry.group},${entry.index}`), preparedAfterAxis = cropMode === 'after-axis' && entry.provenance.preparation?.kind === 'after-axis-crop', wantedAutocrop = cropMode ? (cropMode === 'autocrop' || (cropMode === 'after-axis' && !preparedAfterAxis)) : cropSet ? cropSet.has(`${entry.group},${entry.index}`) : Boolean(autocrop);
@@ -1242,6 +1287,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
   const temporaryPalettes = sharedPalette?.lifecycle ? [{ ...sharedPalette.lifecycle, ownerSpriteIds: sourceEntries.filter(entry => entry.source.provenance?.placeholder?.lifecycleId === sharedPalette.lifecycle.lifecycleId).map(entry => entry.entryId), owners: sourceEntries.filter(entry => entry.source.provenance?.placeholder?.lifecycleId === sharedPalette.lifecycle.lifecycleId).map(entry => ({ ownerId: entry.source.provenance.placeholder.ownerId, entryId: entry.entryId, group: entry.group, number: entry.number, decodedIndexHash: entry.source.decodedHash, width: entry.source.width, height: entry.source.height, axisX: entry.axisX, axisY: entry.axisY, paletteId: entry.paletteId, note: entry.source.provenance.placeholder.note || '', provenance: entry.source.provenance })) }] : [];
   const preservedEntryByPhysicalIndex = new Map();
   for (let index = 0; index < mapping.length; index += 1) if (Number.isInteger(mapping[index].sourcePhysicalIndex)) preservedEntryByPhysicalIndex.set(mapping[index].sourcePhysicalIndex, sourceEntries[index].entryId);
+  for (const [physicalIndex, entry] of rebasedTruecolorOwners) preservedEntryByPhysicalIndex.set(physicalIndex, sourceEntries[mapping.indexOf(entry)].entryId);
   for (let index = 0; index < mapping.length; index += 1) {
     const linkedPhysicalIndex = mapping[index].preservedLinkPhysicalIndex;
     if (!Number.isInteger(linkedPhysicalIndex)) continue;
@@ -1280,6 +1326,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     ],
     options: {
       shared: {
+        ...(profile.png8Optimization !== 'none' ? { png8Optimization: profile.png8Optimization } : {}),
         physicalOrder: 'authored', manifest: { identity: path.basename(manifestFilename), byteHash: manifestHash },
         paletteSource: paletteSourceSff ? { identity: path.basename(paletteSourceSff), byteHash: sha256(paletteArchive.buffer) } : sharedPalettePath ? { identity: path.basename(sharedPalettePath), byteHash: sha256(fs.readFileSync(sharedPalettePath)), tableOrder: sharedPalette.sourceOrder } : null,
         candidateOutput: path.basename(buildOutputSff), adoptionTarget: path.basename(outputSff), autocrop: Boolean(autocrop),
@@ -1384,8 +1431,9 @@ function stagePrivateSprMakeRun(generated, run) {
   const definition = fs.readFileSync(generated.definitionPath, 'utf8')
     .replace(/^filename\s*=.*$/mi, `filename = ${run.candidate}`)
     .replace(/^input\.dir\s*=.*$/mi, `input.dir = ${inputDirectory}`);
-  fs.writeFileSync(definitionPath, definition, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
-  return { ...generated, outputDirectory: run.directory, definitionPath, candidateOutputSff: run.candidate, privateRun: run };
+  const transport = require('./sff_sprmake2_preservation_transport').preparePreservationTransport(generated.specification, run.directory, definition);
+  fs.writeFileSync(definitionPath, transport.definition, { encoding: 'utf8', flag: 'wx', mode: 0o600 });
+  return { ...generated, outputDirectory: run.directory, definitionPath, candidateOutputSff: run.candidate, privateRun: run, preservationTransport: transport.contract };
 }
 
 function runSprMake(generated, options = {}) {
@@ -1405,10 +1453,16 @@ function runSprMake(generated, options = {}) {
     timer = setTimeout(() => stop(`SprMaker2 execution exceeded the bounded ${timeoutMs}ms timeout.`), timeoutMs);
     if (options.signal) { if (options.signal.aborted) return abort(); options.signal.addEventListener('abort', abort, { once: true }); }
     child.on('close', (code) => {
+      if (settled) return;
       const text = output.toString('utf8');
       if (code !== 0) finish(new Error(`SprMaker2 failed with exit code ${code}. ${text.slice(-2000)}`));
       else if (!fs.existsSync(generated.candidateOutputSff)) finish(new Error(`SprMaker2 reported success but produced no private candidate. Review the generated manifest for unsupported or repeated identities and inspect this output: ${text.slice(-2000) || '(no output)'}`));
-      else finish(null, text);
+      else {
+        try {
+          require('./sff_sprmake2_preservation_transport').finalizePreservationCandidate(generated.candidateOutputSff, generated.preservationTransport, generated.specification);
+          finish(null, text);
+        } catch (error) { finish(error); }
+      }
     });
   });
 }
@@ -1445,7 +1499,7 @@ async function executeReviewedPhysicalBuiltInBuild(generated, options = {}) {
   return withTargetLease(generated.outputSff, async () => {
     const current = captureTarget(fs, generated.outputSff);
     if (!sameTargetSnapshot(current, generated.targetSnapshot)) throw new Error('The target SFF changed after this physical Transfer was reviewed. Nothing was replaced.');
-    const run = createPrivateRun(fs, generated.outputSff);
+    const run = createPrivateRun(fs, generated.outputSff); let transactionRecovery = null;
     try {
       const candidate = createBuiltInReviewedPhysicalTransferCandidate(generated.specification, { executionRoot: generated.outputDirectory });
       fs.writeFileSync(run.candidate, candidate.bytes, { flag: 'wx', mode: 0o600 });
@@ -1457,12 +1511,14 @@ async function executeReviewedPhysicalBuiltInBuild(generated, options = {}) {
         const receipt = writeSffExecutionReceipt(generated, { backend, candidateHash: verified.hash, candidateByteLength: verified.bytes.length, validation: verified.verification, impact, outcome: 'validated-built-in-transfer-adoption-cancelled', adoption: null });
         return { cancelled: true, backend, validation: verified.verification, impact, adoption: null, executionReceiptPath: receipt.path };
       }
-      const durableBackup = currentTarget.exists ? preserveTargetBackup(fs, currentTarget, { journalRoot: projectRoot(generated.outputSff), label: 'preserve-sff-before-reviewed-built-in-transfer' }) : null;
+      const durableBackup = currentTarget.exists ? (transactionRecovery = require('./sff_transaction_recovery').createTransactionRecovery(currentTarget)) : null;
       const adoption = adoptCandidate(fs, verified, generated.targetSnapshot, sffMutationOptions(generated.outputSff, 'adopt-reviewed-built-in-sff-transfer'));
       if (typeof options.onAdopted === 'function') options.onAdopted({ adoption, durableBackup, candidateHash: verified.hash, backend });
       const finalTarget = captureTarget(fs, generated.outputSff), receipt = writeSffExecutionReceipt(generated, { backend, candidateHash: verified.hash, candidateByteLength: verified.bytes.length, validation: verified.verification, impact, outcome: 'validated-built-in-transfer-adopted', adoption, durableBackup, finalTargetHash: finalTarget.hash });
-      return { cancelled: false, backend, validation: verified.verification, impact, adoption, durableBackup, executionReceiptPath: receipt.path };
-    } finally { cleanupPrivateRun(fs, run); }
+      const recoveryCleanup = require('./sff_transaction_recovery').completeTransactionRecovery(durableBackup,{targetFilename:generated.outputSff,expectedTargetHash:verified.hash,receiptPath:receipt.path,receiptHash:receipt.byteHash});
+      if(!recoveryCleanup.verified)throw Error('The SFF was written, but final verification changed. Recovery retained at '+recoveryCleanup.path);
+      return { cancelled: false, backend, candidateHash: verified.hash, validation: verified.verification, impact, adoption, durableBackup, recoveryCleanup, executionReceiptPath: receipt.path };
+    } catch(error) { if(transactionRecovery && fs.existsSync(transactionRecovery.directory)) error.message += ' The target may already have changed; inspect it. Temporary transaction recovery retained at '+transactionRecovery.directory+'.'; throw error; } finally { cleanupPrivateRun(fs, run); }
   });
 }
 
@@ -1477,7 +1533,7 @@ async function executeGeneratedBuild(generated, options = {}) {
     const current = captureTarget(fs, generated.outputSff);
     if (!sameTargetSnapshot(current, generated.targetSnapshot)) throw new Error('The target SFF changed after this package was reviewed. Create a fresh reviewed package; nothing was replaced.');
     if (generated.reviewedTemporaryPaletteCleanup) verifyTemporaryPaletteCleanupReview(generated.outputSff, readSff(generated.outputSff), generated.specification?.options?.shared?.deletedSpriteIdentities || [], generated.reviewedTemporaryPaletteCleanup);
-    const run = createPrivateRun(fs, generated.outputSff);
+    const run = createPrivateRun(fs, generated.outputSff); let transactionRecovery = null;
     try {
       const execution = stagePrivateSprMakeRun(generated, run), output = await runSprMake(execution);
       fs.writeFileSync(path.join(generated.outputDirectory, 'sprmake2.log'), output, 'utf8');
@@ -1491,7 +1547,7 @@ async function executeGeneratedBuild(generated, options = {}) {
         const executionReceipt = writeSffExecutionReceipt(generated, { candidateHash: verified.hash, candidateByteLength: verified.bytes.length, validation: verified.verification, impact, outcome: 'validated-adoption-cancelled', adoption: null });
         return { cancelled: true, output, validation: verified.verification, impact, adoption: null, executionReceiptPath: executionReceipt.path };
       }
-      const durableBackup = currentTarget.exists ? preserveTargetBackup(fs, currentTarget, { journalRoot: projectRoot(generated.outputSff) }) : null;
+      const durableBackup = currentTarget.exists ? (transactionRecovery = require('./sff_transaction_recovery').createTransactionRecovery(currentTarget)) : null;
       let adoption;
       if (generated.placeholderLifecycleRegistry) {
         const registry = mergeLifecycleRegistry(generated.outputSff, generated.placeholderLifecycleRegistry.records, { sourceSffHash: verified.hash, specificationHash: generated.specificationHash, removeLifecycleIds: generated.placeholderLifecycleRegistry.removeLifecycleIds });
@@ -1499,8 +1555,10 @@ async function executeGeneratedBuild(generated, options = {}) {
       } else adoption = adoptCandidate(fs, verified, generated.targetSnapshot, sffMutationOptions(generated.outputSff, 'adopt-verified-sff-candidate'));
       if (typeof options.onAdopted === 'function') options.onAdopted({ adoption, durableBackup, candidateHash: verified.hash });
       const finalTarget = captureTarget(fs, generated.outputSff), executionReceipt = writeSffExecutionReceipt(generated, { candidateHash: verified.hash, candidateByteLength: verified.bytes.length, validation: verified.verification, impact, outcome: 'validated-and-adopted', adoption: Array.isArray(adoption) ? adoption[0] : adoption, durableBackup, finalTargetHash: finalTarget.hash });
-      return { cancelled: false, output, validation: verified.verification, impact, adoption, durableBackup, executionReceiptPath: executionReceipt.path };
-    } finally { cleanupPrivateRun(fs, run); }
+      const recoveryCleanup = require('./sff_transaction_recovery').completeTransactionRecovery(durableBackup,{targetFilename:generated.outputSff,expectedTargetHash:verified.hash,receiptPath:executionReceipt.path,receiptHash:executionReceipt.byteHash});
+      if(!recoveryCleanup.verified)throw Error('The SFF was written, but final verification changed. Recovery retained at '+recoveryCleanup.path);
+      return { cancelled: false, candidateHash: verified.hash, output, validation: verified.verification, impact, adoption, durableBackup, recoveryCleanup, executionReceiptPath: executionReceipt.path };
+    } catch(error) { if(transactionRecovery && fs.existsSync(transactionRecovery.directory)) error.message += ' The target may already have changed; inspect it. Temporary transaction recovery retained at '+transactionRecovery.directory+'.'; throw error; } finally { cleanupPrivateRun(fs, run); }
   });
 }
 
@@ -1517,7 +1575,7 @@ async function executeComparedSprMake2Build(generated, options = {}) {
     const current = captureTarget(fs, generated.outputSff);
     if (!sameTargetSnapshot(current, generated.targetSnapshot)) throw new Error('The target SFF changed after this package was reviewed. Create a fresh reviewed package; nothing was replaced.');
     if (generated.reviewedTemporaryPaletteCleanup) verifyTemporaryPaletteCleanupReview(generated.outputSff, readSff(generated.outputSff), generated.specification?.options?.shared?.deletedSpriteIdentities || [], generated.reviewedTemporaryPaletteCleanup);
-    const run = createPrivateRun(fs, generated.outputSff);
+    const run = createPrivateRun(fs, generated.outputSff); let transactionRecovery = null;
     let comparisonArtifact = null;
     try {
       const execution = stagePrivateSprMakeRun(generated, run);
@@ -1572,15 +1630,17 @@ async function executeComparedSprMake2Build(generated, options = {}) {
         const executionReceipt = writeSffExecutionReceipt(generated, { backend: { id: 'sprmake2', comparisonRequired: true, builtInTestIdentity: builtInArtifact.identity }, candidateHash: sprMake2Verified.hash, candidateByteLength: sprMake2Verified.bytes.length, validation: sprMake2Verified.verification, comparison: comparisonEvidence, impact, outcome: 'dual-validated-sprmake2-update-cancelled', adoption: null });
         return { cancelled: true, backend: { id: 'sprmake2' }, comparison, comparisonReportPath: comparisonArtifact.path, builtInTestPath: builtInArtifact.path, sprMake2TargetPath: generated.outputSff, validation: sprMake2Verified.verification, impact, adoption: null, executionReceiptPath: executionReceipt.path };
       }
-      const durableBackup = currentTarget.exists ? preserveTargetBackup(fs, currentTarget, { journalRoot: projectRoot(generated.outputSff) }) : null;
+      const durableBackup = currentTarget.exists ? (transactionRecovery = require('./sff_transaction_recovery').createTransactionRecovery(currentTarget)) : null;
       let adoption;
       if (generated.placeholderLifecycleRegistry) {
         const registry = mergeLifecycleRegistry(generated.outputSff, generated.placeholderLifecycleRegistry.records, { sourceSffHash: sprMake2Verified.hash, specificationHash: generated.specificationHash, removeLifecycleIds: generated.placeholderLifecycleRegistry.removeLifecycleIds });
         adoption = adoptCandidateWithArtifacts(fs, sprMake2Verified, generated.targetSnapshot, [{ snapshot: generated.placeholderLifecycleRegistry.snapshot, content: `${JSON.stringify(registry, null, 2)}\n` }], sffMutationOptions(generated.outputSff, 'adopt-compared-sprmake2-sff-with-placeholder-lifecycle'));
       } else adoption = adoptCandidate(fs, sprMake2Verified, generated.targetSnapshot, sffMutationOptions(generated.outputSff, 'adopt-compared-sprmake2-sff'));
       const finalTarget = captureTarget(fs, generated.outputSff), executionReceipt = writeSffExecutionReceipt(generated, { backend: { id: 'sprmake2', comparisonRequired: true, builtInTestIdentity: builtInArtifact.identity }, candidateHash: sprMake2Verified.hash, candidateByteLength: sprMake2Verified.bytes.length, validation: sprMake2Verified.verification, comparison: comparisonEvidence, impact, outcome: 'dual-validated-sprmake2-adopted', adoption: Array.isArray(adoption) ? adoption[0] : adoption, durableBackup, finalTargetHash: finalTarget.hash });
-      return { cancelled: false, backend: { id: 'sprmake2' }, comparison, comparisonReportPath: comparisonArtifact.path, builtInTestPath: builtInArtifact.path, sprMake2TargetPath: generated.outputSff, validation: sprMake2Verified.verification, impact, adoption, durableBackup, executionReceiptPath: executionReceipt.path };
-    } finally { cleanupPrivateRun(fs, run); }
+      const recoveryCleanup = require('./sff_transaction_recovery').completeTransactionRecovery(durableBackup,{targetFilename:generated.outputSff,expectedTargetHash:sprMake2Verified.hash,receiptPath:executionReceipt.path,receiptHash:executionReceipt.byteHash});
+      if(!recoveryCleanup.verified)throw Error('The SFF was written, but final verification changed. Recovery retained at '+recoveryCleanup.path);
+      return { cancelled: false, backend: { id: 'sprmake2' }, comparison, comparisonReportPath: comparisonArtifact.path, builtInTestPath: builtInArtifact.path, sprMake2TargetPath: generated.outputSff, validation: sprMake2Verified.verification, impact, adoption, durableBackup, recoveryCleanup, executionReceiptPath: executionReceipt.path };
+    } catch(error) { if(transactionRecovery && fs.existsSync(transactionRecovery.directory)) error.message += ' The target may already have changed; inspect it. Temporary transaction recovery retained at '+transactionRecovery.directory+'.'; throw error; } finally { cleanupPrivateRun(fs, run); }
   });
 }
 
@@ -1912,6 +1972,7 @@ async function openAliasRegistry() {
 }
 
 function registerSffCommands(context) {
+  require('./sff_private_storage').register(context);
   assetWorkSets = new AssetWorkSets(context.workspaceState, vscode.workspace.workspaceFolders?.[0]?.uri?.fsPath || process.cwd());
   context.subscriptions.push(
     vscode.commands.registerCommand('sff.generateBuildFiles', generateBuildFiles),

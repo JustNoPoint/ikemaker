@@ -69,10 +69,10 @@ function availability(filename, expected, fileSystem) {
 
 function resolveEntityTargets(descriptor, services = {}) {
   const fileSystem = services.fs || fs, kind = String(descriptor?.kind || descriptor?.type || '').toLowerCase();
-  if (!['character','stage','screenpack','workspace'].includes(kind)) throw new TypeError('Unsupported entity kind.');
+  if (!['character','stage','screenpack','storyboard','workspace'].includes(kind)) throw new TypeError('Unsupported entity kind.');
   if (kind === 'workspace') return freeze({ identity:String(descriptor?.identity || descriptor?.id || ''), kind, ownerFile:'', ownerRevision:null, sff:availability('', '.sff', fileSystem), air:availability('', '.air', fileSystem), snd:availability('', '.snd', fileSystem), code:[], stage:availability('', '.def', fileSystem), screenpack:availability('', '.def', fileSystem) });
   const owner = readOwner(descriptor.ownerFile, fileSystem, services.readOwnerText), identity = String(descriptor.identity || descriptor.id || `${kind}\0${owner.exact.toLowerCase()}`), ownerRevision = freeze({ size:Buffer.byteLength(owner.text,'utf8'), modifiedMs:Math.trunc(owner.stat.mtimeMs), sourceHash:hash(owner.text), open:owner.open, documentVersion:owner.documentVersion });
-  if (kind === 'stage' || kind === 'screenpack') {
+  if (kind === 'stage' || kind === 'screenpack' || kind === 'storyboard') {
     const own = availability(owner.exact, '.def', fileSystem);
     return freeze({ identity, kind, ownerFile:owner.exact, ownerRevision, sff:availability('', '.sff', fileSystem), air:availability('', '.air', fileSystem), snd:availability('', '.snd', fileSystem), code:[owner.exact], stage:kind === 'stage' ? own : availability('', '.def', fileSystem), screenpack:kind === 'screenpack' ? own : availability('', '.def', fileSystem) });
   }

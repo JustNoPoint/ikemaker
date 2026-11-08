@@ -7,12 +7,11 @@ const knowledgeModel = require('./engine_knowledge_model');
 const engineModel = require('./engine_registry_model');
 const engineUpdateModel = require('./engine_update_model');
 const { notifyEngineCapabilitiesChanged } = require('./engine_capability_events');
-const BUILT_IN_ENGINE_CATALOG = require('../data/engine-capability-catalog.json');
+const { BUILT_IN_ENGINE_CATALOG, ENGINE_CATALOG_KEY, readEngineCatalog } = require('./engine_catalog_access');
 
 const SNAPSHOT_KEY = 'ikemenZss.upstreamSnapshot.v1';
 const REPORT_KEY = 'ikemenZss.upstreamReport.v1';
 const CATALOG_KEY = 'ikemenZss.controllerCatalog.v1';
-const ENGINE_CATALOG_KEY = 'ikemenZss.engineCapabilityCatalog.v1';
 const ENGINE_DECISIONS_KEY = 'ikemenZss.engineUpdateDecisions.v1';
 const SCTRL_URL = 'https://potsmugen.github.io/ikemen-merged-docs/sctrl';
 
@@ -304,8 +303,13 @@ function activeProject(vscode) {
   try {
     const projectContext = require('./project_context_ui'), contextModel = require('./project_context_model');
     const uri = projectContext.activeUri(), root = projectContext.contextRoot(uri) || projectContext.workspaceRoot(uri); if (!root) return null;
-    const loaded = projectContext.readRegistry(root), inferred = uri?.fsPath ? contextModel.contextFor(uri.fsPath, root, loaded.registry) : null;
-    const project = inferred?.project || loaded.registry.projects.find((item) => item.id !== 'universal') || loaded.registry.projects[0];
+    const loaded = projectContext.readRegistry(root);
+    // A synthetic default registry supplies authoring hints for new projects.
+    // Only an explicitly configured project can own a migration decision.
+    if (!loaded.exists || loaded.issues?.some(issue => issue.level === 'error')) return null;
+    const projects = loaded.registry.projects.filter(item => item.engineTarget?.commit);
+    const inferred = uri?.fsPath ? contextModel.contextFor(uri.fsPath, root, loaded.registry)?.project : null;
+    const project = inferred ? projects.find(item => item.id === inferred.id) : projects.length === 1 ? projects[0] : null;
     return project ? { root, loaded, project } : null;
   } catch (_) { return null; }
 }
@@ -322,7 +326,7 @@ async function offerProjectEngineDecision(vscode, context, catalog, changes, usa
     semanticChanges: ['Nightly may intentionally change compatibility and runtime defaults.'], configMigrations: ['Known 1.0 → Nightly INI key migrations'],
     onlineChanges: ['Online/rollback changes require matched-peer verification.'], runtimeSurface: ['Collision, corner-push, renderer, stage, motif, Lua, or compiler deltas require focused tests.'] });
   const appended = `${report}\n\nPROJECT ENGINE DECISION\nProject: ${active.project.name}\nCurrent: ${active.project.engineTarget.version} · ${active.project.engineTarget.channel} · ${(active.project.engineTarget.commit || 'unknown').slice(0, 12)}\nCandidate: Nightly · ${candidate.commit.slice(0, 12)}\nRisk: ${risk.summary}\nReasons:\n${risk.reasons.map((item) => `- ${item.reason}`).join('\n') || '- No scored change evidence.'}\nEvidence gaps:\n${risk.unknowns.map((item) => `- ${item}`).join('\n') || '- None identified.'}\n\nNo engine or project content was changed by this check.`;
-  const action = await vscode.window.showWarningMessage(`A newer exact IKEMEN Nightly is available for ${active.project.name}. ${risk.summary}`, { modal: true, detail: `Current ${(active.project.engineTarget.commit || 'unknown').slice(0, 12)} → candidate ${candidate.commit.slice(0, 12)}\n\nStay records this decision only for this project and immutable candidate. Remind waits seven days. Review performs no writes until a separate migration approval.` }, 'Stay on current build', 'Review migration', 'Remind in 7 days', 'View Report');
+  const action = await vscode.window.showWarningMessage(`A newer exact IKEMEN Nightly is available for ${active.project.name}. ${risk.summary}`, 'Stay on current build', 'Review migration', 'Remind in 7 days', 'View Report');
   if (action === 'Stay on current build') await context.globalState.update(ENGINE_DECISIONS_KEY, engineUpdateModel.recordDecision(decisions, active.project, candidate, 'stay', { projectFingerprint: fingerprint }));
   if (action === 'Remind in 7 days') await context.globalState.update(ENGINE_DECISIONS_KEY, engineUpdateModel.recordDecision(decisions, active.project, candidate, 'remind', { projectFingerprint: fingerprint, remindAfter: new Date(Date.now() + 7 * 86400000).toISOString() }));
   if (action === 'Review migration') await vscode.commands.executeCommand('ikemen.engineMigration.review', { root: active.root, projectId: active.project.id, candidate, risk });
@@ -343,7 +347,7 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
     const previous = context.globalState.get(SNAPSHOT_KEY);
     if (!manual && !due(previous, Math.max(1, config.get('intervalDays', 7)))) return;
     try {
-      return await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Checking IKEMEN releases and documentation', cancellable: false }, async () => {
+      const result = await vscode.window.withProgress({ location: vscode.ProgressLocation.Window, title: 'Checking IKEMEN releases and documentation' }, async () => {
         const customSources = vscode.workspace.getConfiguration('ikemenZss.engine').get('customKnowledgeSources', []);
         const attempted = await buildSnapshot(fetchText, customSources);
         const snapshot = knowledgeModel.mergeSnapshot(previous, attempted);
@@ -354,7 +358,7 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
         const removed = [...changes.flatMap((item) => item.removed || []), ...(registryDiff ? registryDiff.removed : [])];
         const usages = await findWorkspaceUsages(vscode, removed, config.get('maxWorkspaceFiles', 1000), scopeDef);
         const scopeLabel = scopeDef ? vscode.workspace.asRelativePath(scopeDef, false) : '';
-        const currentEngineCatalog = context.globalState.get(ENGINE_CATALOG_KEY, BUILT_IN_ENGINE_CATALOG);
+        const currentEngineCatalog = readEngineCatalog(context);
         const engineRefresh = knowledgeModel.refreshCatalog(currentEngineCatalog, snapshot);
         let report = `${makeReport(snapshot, changes, registryDiff, usages, scopeLabel)}\n\nENGINE KNOWLEDGE CATALOG\nCatalog revision: ${engineRefresh.catalog.catalogRevision}\nExact/candidate builds known: ${engineRefresh.catalog.builds.length}\nCapabilities observed: ${engineRefresh.catalog.capabilities.length}\nRefresh promoted: ${engineRefresh.promoted ? 'yes' : 'no'}\nMetadata changed: ${engineRefresh.changed ? 'yes' : 'no'}\nValidation issues: ${engineRefresh.issues.length}`;
         const storedSnapshot = JSON.parse(JSON.stringify(snapshot));
@@ -367,33 +371,38 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
         await context.globalState.update(REPORT_KEY, report);
         output.clear(); output.appendLine(report);
 
-        const decision = await offerProjectEngineDecision(vscode, context, engineRefresh.catalog, changes, usages, report);
-        if (decision?.report && decision.report !== report) { report = decision.report; await context.globalState.update(REPORT_KEY, report); output.clear(); output.appendLine(report); }
-        if (decision?.show) output.show(true);
-
-        const changed = changes.some((item) => item.status === 'changed');
-        const hasRegistryDiff = registryDiff && (registryDiff.added.length || registryDiff.removed.length || registryDiff.changed.length);
-        const actions = ['View Report'];
-        const offlineActions = vscode.workspace.getConfiguration('ikemenZss.docs').get('offlineUpdatesEnabled', true);
-        if (offlineActions) actions.push('Open Offline Library');
-        if (offlineActions && (manual || changed || hasRegistryDiff)) actions.push('Update Offline Library');
-        if (hasRegistryDiff) actions.unshift('Update Controller Explorer');
-        if (changed || usages.length) actions.push('Audit Workspace');
-        const message = !previous ? 'IKEMEN update baseline established.'
-          : changed || hasRegistryDiff ? `IKEMEN changes found; ${usages.length} workspace migration candidate(s).`
-            : 'No IKEMEN feature or controller-registry changes found.';
-        const action = await vscode.window.showInformationMessage(message, ...actions);
-        if (action === 'View Report') output.show(true);
-        if (action === 'Open Offline Library') await vscode.commands.executeCommand('ikemen.docs.openOffline');
-        if (action === 'Update Offline Library') await vscode.commands.executeCommand('ikemen.docs.updateOffline');
-        if (action === 'Audit Workspace') await vscode.commands.executeCommand('zss.audit.workspace');
-        if (action === 'Update Controller Explorer' && registryDiff) {
-          await context.globalState.update(CATALOG_KEY, registryDiff.catalog);
-          applyCatalog(registryDiff.catalog);
-          vscode.window.showInformationMessage(`ZSS State Controllers updated to ${registryDiff.catalog.length} entries.`);
-        }
         return { snapshot, changes, registryDiff, engineRefresh, usages, report };
       });
+      const { snapshot, changes, registryDiff, engineRefresh, usages } = result;
+      let { report } = result;
+      const decision = await offerProjectEngineDecision(vscode, context, engineRefresh.catalog, changes, usages, report);
+      if (decision?.report && decision.report !== report) { report = decision.report; await context.globalState.update(REPORT_KEY, report); output.clear(); output.appendLine(report); }
+      if (decision?.show) output.show(true);
+
+      const changed = changes.some((item) => item.status === 'changed');
+      const hasRegistryDiff = registryDiff && (registryDiff.added.length || registryDiff.removed.length || registryDiff.changed.length);
+      const actions = ['View Report'];
+      const offlineActions = vscode.workspace.getConfiguration('ikemenZss.docs').get('offlineUpdatesEnabled', true);
+      if (offlineActions) actions.push('Open Offline Library');
+      if (offlineActions && (manual || changed || hasRegistryDiff)) actions.push('Update Offline Library');
+      if (hasRegistryDiff) actions.unshift('Update Controller Explorer');
+      if (changed || usages.length) actions.push('Audit Workspace');
+      const message = !previous ? 'IKEMEN update baseline established.'
+        : changed || hasRegistryDiff ? `IKEMEN changes found; ${usages.length} workspace migration candidate(s).`
+          : 'No IKEMEN feature or controller-registry changes found.';
+      if (!manual && !changed && !hasRegistryDiff) return { ...result, report };
+      const action = await vscode.window.showInformationMessage(message, ...actions);
+      if (action === 'View Report') output.show(true);
+      if (action === 'Open Offline Library') await vscode.commands.executeCommand('ikemen.docs.openOffline');
+      if (action === 'Update Offline Library') await vscode.commands.executeCommand('ikemen.docs.updateOffline');
+      if (action === 'Audit Workspace') await vscode.commands.executeCommand('zss.audit.workspace');
+      if (action === 'Update Controller Explorer' && registryDiff) {
+        await context.globalState.update(CATALOG_KEY, registryDiff.catalog);
+        applyCatalog(registryDiff.catalog);
+        vscode.window.showInformationMessage(`ZSS State Controllers updated to ${registryDiff.catalog.length} entries.`);
+      }
+      return { snapshot, changes, registryDiff, engineRefresh, usages, report };
+
     } catch (error) {
       output.appendLine(`Update check failed: ${error.message}`);
       const action = await vscode.window.showWarningMessage(`IKEMEN update check failed: ${error.message}`, 'Show Details');
@@ -412,5 +421,5 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
 module.exports = {
   SOURCES, BUILD_SOURCES, fetchText, extractFeatures, buildControllerCatalog, compareSnapshots,
   discoverBuilds, discoverCustomCatalogs, buildSnapshot, due, makeReport, parseDefSourcePaths, createUpdateMonitor,
-  ENGINE_CATALOG_KEY, ENGINE_DECISIONS_KEY, BUILT_IN_ENGINE_CATALOG, activeProject, newestNightly, offerProjectEngineDecision
+  ENGINE_CATALOG_KEY, ENGINE_DECISIONS_KEY, BUILT_IN_ENGINE_CATALOG, readEngineCatalog, activeProject, newestNightly, offerProjectEngineDecision
 };

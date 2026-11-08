@@ -93,13 +93,25 @@ async function activateCharacter(entry) {
 
 function ownerDefValue(value) { return typeof value === 'string' && path.isAbsolute(value) && path.extname(value).toLowerCase() === '.def' ? path.resolve(value) : ''; }
 
+// Recover the navigation identity of an independently opened character asset.
+function assignedCharacterDef(folder,filename){
+  if(!folder)return '';
+  try{
+    const matches=fs.readdirSync(folder).filter(name=>/\.def$/i.test(name)).map(name=>path.join(folder,name)).filter(def=>{
+      const assigned=require('./related_work').resolveAssigned(def);
+      return [assigned.sff,assigned.air,assigned.snd,...assigned.code].some(file=>file&&path.relative(file,filename)==='');
+    });
+    return matches.length===1?matches[0]:'';
+  }catch{return '';}
+}
+
 function registerCharacterPanel(panel, filename, kind, onActivate, options = {}) {
   const folder = characterFolder(filename);
   const ownerDefs = new Set((options.ownerDefs || [options.ownerDef]).map(ownerDefValue).filter(Boolean));
   const entry = { panel, filename: path.resolve(filename), kind, characterFolder: folder, characterKey: characterKey(filename), onActivate, onOwnersChanged: typeof options.onOwnersChanged === 'function' ? options.onOwnersChanged : null, ownerDefs, standalone: options.standalone === true && !ownerDefs.size, restoredUnowned: options.restoredUnowned === true && !ownerDefs.size };
   registeredPanels.add(entry);
   const exactOwner=[...ownerDefs][0]||'';
-  if (entry.characterKey || exactOwner) { const root=exactOwner?path.dirname(exactOwner):folder;registerAuthoringPanel(panel, { type: 'character', key: root, label: exactOwner?path.basename(root):characterLabel(filename), root, ownerDef:exactOwner, files: [filename] }); }
+  if (entry.characterKey || exactOwner) { const root=exactOwner?path.dirname(exactOwner):folder;registerAuthoringPanel(panel, { type: 'character', key: exactOwner||assignedCharacterDef(folder,filename)||root, label: exactOwner?path.basename(root):characterLabel(filename), root, ownerDef:exactOwner, files: [filename] }); }
   panel.onDidChangeViewState((event) => { if (event.webviewPanel.active) activateCharacter(entry); });
   panel.onDidDispose(() => registeredPanels.delete(entry));
   return entry;
@@ -122,7 +134,7 @@ function rebindCharacterPanel(panel, filename, ownerDefs = []) {
   entry.filename=exactFilename;entry.characterFolder=characterFolder(exactFilename);entry.characterKey=characterKey(exactFilename);
   entry.ownerDefs=exactOwners;entry.standalone=!exactOwners.size;entry.restoredUnowned=false;
   const exactOwner=[...exactOwners][0]||'',root=exactOwner?path.dirname(exactOwner):entry.characterFolder;
-  if(root)registerAuthoringPanel(panel,{type:'character',key:exactOwner||root,label:path.basename(root),root,ownerDef:exactOwner,files:[exactFilename]});
+  if(root)registerAuthoringPanel(panel,{type:'character',key:exactOwner||assignedCharacterDef(root,exactFilename)||root,label:path.basename(root),root,ownerDef:exactOwner,files:[exactFilename]});
   entry.onOwnersChanged?.([...exactOwners]);
   return true;
 }

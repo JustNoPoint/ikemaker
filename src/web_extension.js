@@ -3,9 +3,10 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.447';
+const PACKAGE_VERSION = '0.79.500';
 
 const FALLBACK_COMMANDS = [
+  'snd.selectPreviousVisible', 'snd.selectNextVisible', 'ikemen.stage.openCode',
   'ikemen.scaleReview.run', 'ikemen.scaleReview.toggleMonitoring', 'ikemen.scaleReview.configureConventions', 'ikemen.scaleReview.exportConventions', 'ikemen.scaleReview.importConventions',
   'ikemen.palette.createTemplate', 'ikemen.palette.openCompanion', 'ikemen.visualBrowser.open',
   'ikemen.lua.insertApi', 'ikemen.lua.goToFunction', 'ikemen.lua.openApiDocs',
@@ -23,7 +24,7 @@ const FALLBACK_COMMANDS = [
   'ikemen.maps.openBrowser', 'ikemen.maps.insert', 'ikemen.maps.configureTextGrammar',
   'ikemen.authoring.openRecipes', 'ikemen.authoring.openSymbols', 'ikemen.authoring.browseFunctions', 'ikemen.authoring.openExamples', 'ikemen.authoring.openFavorites',
   'ikemen.ownership.auditDef',
-  'ikemen.stage.openWorkspace', 'ikemen.stage.createNew', 'ikemen.stage.launchRig',
+  'ikemen.stage.openStart','ikemen.ui.openStart','ikemen.storyboard.openStart','ikemen.stage.openWorkspace', 'ikemen.stage.createNew', 'ikemen.stage.createFromPngLayers', 'ikemen.stage.launchRig',
   'ikemen.def.createNew', 'ikemen.def.openVisualWorkspace', 'ikemen.file.createNew', 'ikemen.lua.createNew', 'ikemen.text.createNew',
   'ikemen.stage.createInteraction',
   'ikemen.ui.openWorkspace', 'ikemen.ui.createNew',
@@ -36,8 +37,8 @@ const FALLBACK_COMMANDS = [
   'ikemen.storyDialogue.openPlayer', 'ikemen.storyDialogue.openCreator',
   'ikemen.storyboard.create', 'ikemen.storyboard.createOpening', 'ikemen.storyboard.createEnding', 'ikemen.storyboard.open',
   'ikemen.paletteOrganizer.open', 'ikemen.palette.openWorkspace', 'ikemen.palettePlayer.open', 'ikemen.palettePlayer.organize', 'ikemen.palettePlayer.finishStaged',
-  'ikemen.moveConstants.open', 'ikemen.moveLab.open', 'ikemen.hitDef.openEditor', 'ikemen.throwCreator.open', 'ikemen.throwCreator.openGuide', 'ikemen.explodComposer.open', 'ikemen.positionCamera.open', 'ikemen.helperLab.open', 'ikemen.paletteImport.open', 'ikemen.artistIntake.open',
-  'ikemen.changeMode', 'ikemen.openHome', 'ikemen.switchToIkeMiner', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
+  'ikemen.moveConstants.open', 'ikemen.moveLab.open', 'ikemen.moveLab.commandTriggerRecipes', 'ikemen.character.firstPlayableAttack', 'ikemen.hitDef.openEditor', 'ikemen.throwCreator.open', 'ikemen.throwCreator.openGuide', 'ikemen.explodComposer.open', 'ikemen.positionCamera.open', 'ikemen.helperLab.open', 'ikemen.paletteImport.open', 'ikemen.artistIntake.open',
+  'ikemen.changeMode', 'ikemen.openHome', 'ikemen.switchToIkeMiner', 'ikemen.switchSuite', 'ikemen.openIKeMeter', 'ikemen.configureIKeMeter', 'ikemen.closeIKeMeter', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
   'ikemen.productionWorkflow.open', 'ikemen.productionWorkflow.editProfile', 'ikemen.productionWorkflow.openGuide',
   'ikemen.testSessions.open',
   'ikemen.release.captureDefaults', 'ikemen.release.openProfile', 'ikemen.release.audit', 'ikemen.release.complete',
@@ -109,9 +110,29 @@ async function configureExperience() {
   vscode.window.showInformationMessage(`IKEMEN experience updated: ${picked.label}`);
 }
 
+// The web worker has no module loader beyond the vscode shim. Keep this
+// conservative policy self-contained; all capability-tagged variants require
+// desktop exact-build evidence and are omitted from portable 1.0 assistance.
+function baselineEntry(entry) {
+  if (!entry || typeof entry !== 'object' || entry.capabilityId) return null;
+  const result = { ...entry }; delete result.capabilityAugmentations;
+  for (const name of ['params','argumentSlots','choices']) if (Array.isArray(entry[name])) result[name] = entry[name].map(value => typeof value === 'string' ? value : baselineEntry(value)).filter(Boolean);
+  return result;
+}
+function baselineCatalog(entries, triggers = false) {
+  return (Array.isArray(entries) ? entries : []).map(entry => {
+    if (!triggers || String(entry?.name || '').toLowerCase() !== 'hitdefvar') return baselineEntry(entry);
+    // Correct the documented tuple spelling at ingestion only. Stable 1.0
+    // implements the base trigger; newer return/comparison variants stay gated.
+    const fix = value => typeof value === 'string' ? value.replace(/\bfall\.velocity\.([xyz])\b/gi, (_match, axis) => `fall.${axis.toLowerCase()}velocity`) : Array.isArray(value) ? value.map(fix) : value && typeof value === 'object' ? Object.fromEntries(Object.entries(value).map(([key,item]) => [key,fix(item)])) : value;
+    const corrected = fix(entry); if (corrected.capabilityId === 'combat.hitdef-var-trigger') delete corrected.capabilityId;
+    return baselineEntry(corrected);
+  }).filter(Boolean);
+}
+
 function decode(bytes) { return new TextDecoder('utf-8').decode(bytes); }
 async function readCatalog(context, name = 'sctrl.json') {
-  try { return JSON.parse(decode(await vscode.workspace.fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'data', name)))); }
+  try { const entries=JSON.parse(decode(await vscode.workspace.fs.readFile(vscode.Uri.joinPath(context.extensionUri, 'data', name)))); return baselineCatalog(entries,name==='triggers.json'); }
   catch (_) { return []; }
 }
 function controllerName(value) { const name = String(value || '').replace(/BG/g, 'Bg').replace(/FX/g, 'Fx').replace(/ID/g, 'Id'); return name.charAt(0).toLowerCase() + name.slice(1); }
@@ -141,12 +162,17 @@ async function chooseController(catalog, title = 'Choose IKEMEN 1.0 state contro
 async function insertController(catalog, supplied) {
   const editor = vscode.window.activeTextEditor;
   if (!editor || editor.document.languageId !== 'zss') return vscode.window.showWarningMessage('Open a ZSS file before inserting a state controller.');
-  const controller = supplied && supplied.name ? supplied : await chooseController(catalog);
-  if (!controller) return;
+  const allowed = baselineCatalog(catalog), chosen = supplied && supplied.name ? supplied : await chooseController(allowed);
+  if (!chosen) return;
+  const controller = allowed.find(entry => entry.name.toLowerCase() === String(chosen.name || '').toLowerCase());
+  if (!controller) return vscode.window.showWarningMessage('This controller is unavailable in the browser’s conservative IKEMEN 1.0 baseline.');
+  const version=editor.document.version, source=editor.document.getText?.(), position={line:editor.selection.active.line,character:editor.selection.active.character};
   const required = (controller.params || []).filter((item) => item.required), optional = (controller.params || []).filter((item) => !item.required);
   const selected = optional.length ? await vscode.window.showQuickPick(optional.map((parameter) => ({ label: parameter.name, description: `Optional · ${parameter.placeholder || 'value'}`, parameter })), { title: `${controller.name} options`, placeHolder: `Required: ${required.map((item) => item.name).join(', ') || 'none'}`, canPickMany: true }) : [];
   if (selected === undefined) return;
-  const parameters = [...required, ...selected.map((item) => item.parameter)], values = {};
+  const selectedNames=selected.map(item=>String(item?.parameter?.name||''));
+  if(selectedNames.some(name=>!optional.some(parameter=>parameter.name===name)))return vscode.window.showWarningMessage('The reviewed parameter is unavailable in the IKEMEN 1.0 baseline. Nothing was inserted.');
+  const parameters = [...required, ...optional.filter(parameter=>selectedNames.includes(parameter.name))], values = {};
   for (const parameter of parameters) {
     const value = await vscode.window.showInputBox({ title: `${controller.name}.${parameter.name}`, placeHolder: parameter.placeholder || 'value', validateInput: (text) => text.trim() ? undefined : 'Enter a reviewed value.' });
     if (value === undefined) return;
@@ -158,6 +184,7 @@ async function insertController(catalog, supplied) {
   lines.push(`${controllerName(controller.name)}{`);
   for (const parameter of parameters) lines.push(`\t${parameter.name}: ${values[parameter.name]};`);
   lines.push('}');
+  if(vscode.window.activeTextEditor!==editor || editor.document.version!==version || editor.document.getText?.()!==source || editor.selection.active.line!==position.line || editor.selection.active.character!==position.character)return vscode.window.showWarningMessage('The source or insertion point changed while reviewing this baseline controller. Nothing was inserted.');
   await editor.edit((builder) => builder.insert(editor.selection.active, `${lines.join('\n')}\n`));
 }
 
@@ -226,7 +253,7 @@ class WebItem extends vscode.TreeItem {
 class WebToolsProvider {
   getTreeItem(item) { return item; }
   getChildren() { return [
-    new WebItem('Configure Learning / Advanced Experience', 'ikemen.experience.configure'),
+    new WebItem('Configure Expanded / Compact Explanations', 'ikemen.experience.configure'),
     new WebItem('Platform Capabilities', 'ikemen.showPlatformCapabilities'),
     new WebItem('Bundled Build Toolchain', 'ikemen.showBundledToolchain'),
     new WebItem('Recommended Lua Authoring Support', 'ikemen.luaSupport.status'),
@@ -328,8 +355,10 @@ async function activate(context) {
     vscode.commands.registerCommand('zssControllers.search', async () => { const value = await vscode.window.showInputBox({ title: 'Filter IKEMEN 1.0 controllers', value: controllers.filter }); if (value !== undefined) controllers.setFilter(value); }),
     vscode.commands.registerCommand('zssControllers.clearFilter', () => controllers.setFilter('')),
     vscode.commands.registerCommand('zssControllers.openDocs', async (controller) => {
-      const selected = controller && controller.name ? controller : await chooseController(controllerCatalog, 'Open bundled controller reference');
-      if (!selected) return;
+      const chosen = controller && controller.name ? controller : await chooseController(controllerCatalog, 'Open bundled controller reference');
+      if (!chosen) return;
+      const selected = controllerCatalog.find(entry=>entry.name.toLowerCase()===String(chosen.name||'').toLowerCase());
+      if (!selected) return vscode.window.showWarningMessage('This controller is unavailable in the browser’s conservative IKEMEN 1.0 baseline.');
       const content = [`# ${selected.name}`, '', selected.description || 'IKEMEN 1.0 state controller.', '', '## Options', '', ...(selected.params || []).map((item) => `- ${item.name} — ${item.required ? 'required' : 'optional'} — ${item.placeholder || 'value'}`)].join('\n');
       const document = await vscode.workspace.openTextDocument({ language: 'markdown', content }); await vscode.window.showTextDocument(document, { preview: false });
     }),
@@ -373,4 +402,4 @@ async function activate(context) {
 }
 
 function deactivate() {}
-module.exports = { activate, deactivate, controllerName, controllerSnippet, signatureSnippet, portableStructure, portableAudit };
+module.exports = { baselineEntry, baselineCatalog, insertController, activate, deactivate, controllerName, controllerSnippet, signatureSnippet, portableStructure, portableAudit };

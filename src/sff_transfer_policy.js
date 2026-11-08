@@ -7,7 +7,7 @@ const SOURCE_MESSAGE_TYPES = new Set([
   'importAct', 'compareAct', 'thumbnails', 'animationImages', 'sprite', 'spritePaletteColors'
 ]);
 const SOURCE_COMMANDS = new Set([
-  'sff.transfer.copySelected', 'sff.transfer.swapSides', 'sff.transfer.openBrowser',
+  'sff.quickTransfer', 'sff.transfer.copySelected', 'sff.transfer.swapSides', 'sff.transfer.openBrowser',
   'sff.transfer.changeSource', 'sff.transfer.changeDestination',
   'sff.transfer.exit', 'sff.transfer.continueAssembly'
 ]);

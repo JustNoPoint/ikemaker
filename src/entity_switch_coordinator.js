@@ -2,7 +2,7 @@
 
 const path = require('path');
 
-const ENTITY_KINDS = Object.freeze(['character', 'stage', 'screenpack', 'workspace']);
+const ENTITY_KINDS = Object.freeze(['character', 'stage', 'screenpack', 'storyboard', 'workspace']);
 const MAX_ENTITIES = 64;
 const MAX_PROJECT_ID_BYTES = 256;
 const MAX_LABEL_BYTES = 512;

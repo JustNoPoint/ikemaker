@@ -1,6 +1,7 @@
 'use strict';
 
 const { parseAir } = require('./air_preview_model');
+const { exactStateAnimation } = require('./move_palette_preview');
 
 const FIELD_SCHEMA = [
   { suffix: 'contactSource', category: 'Classification', label: 'Contact source', type: 'enum', values: ['Unspecified', 'Arm / punch', 'Leg / kick', 'Body', 'Weapon', 'Energy'] },
@@ -18,7 +19,7 @@ const FIELD_SCHEMA = [
   { suffix: 'hitPauseAnimateStartElement', category: 'Animation timing', label: 'Hit-pause animation starts', type: 'integer', min: 0 },
   { suffix: 'hitPauseFreezeElement', category: 'Animation timing', label: 'Hit-pause freeze element', type: 'integer', min: 0 },
   { suffix: 'hitPauseAnimateTicks', category: 'Animation timing', label: 'Hit-pause animation ticks', type: 'integer', min: 0 },
-  { suffix: 'idleElement', category: 'Animation timing', label: 'First recovery / idle element', type: 'integer', min: 1 },
+  { suffix: 'idleElement', category: 'Animation timing', label: 'Authored post-window element', type: 'integer', min: 1 },
   { suffix: 'damage', category: 'Damage', label: 'Damage', type: 'integer', min: 0 },
   { suffix: 'groundHitTime', category: 'Contact timing', label: 'Ground hitstun', type: 'integer', min: 0 },
   { suffix: 'groundSlideTime', category: 'Contact timing', label: 'Ground slide time', type: 'integer', min: 0 },
@@ -138,37 +139,109 @@ function copyMoveFields(text, sourceId, targetIds, suffixes, draftValues = {}) {
 function hitPauseTicks(frames, startElement, freezeElement) {
   const start = Number(startElement), freeze = Number(freezeElement);
   if (!Number.isInteger(start) || !Number.isInteger(freeze) || start < 1 || freeze <= start || freeze > frames.length + 1) return 0;
-  return frames.slice(start - 1, freeze - 1).reduce((total, frame) => total + Math.max(0, Number(frame.time) || 0), 0);
+  const selected = frames.slice(start - 1, freeze - 1);
+  if (selected.some(frame => frame.hold || frame.rawTime === -1 || frame.reachable === false)) return null;
+  return selected.reduce((total, frame) => total + Math.max(0, Number(frame.time) || 0), 0);
 }
 
 function airTimingProposal(timeline, current = {}) {
   const frames = timeline?.frames || [], active = frames.filter((frame) => frame.clsnActive);
   if (!frames.length || !active.length) return { state: 'missing-active-collision', values: {} };
   const start = Number(current.hitPauseAnimateStartElement) || 0, freeze = Number(current.hitPauseFreezeElement) || 0;
+  const smearTicks = start > 0 && freeze > start ? hitPauseTicks(frames, start, freeze) : null;
   return {
     state: 'ready',
     values: {
       firstActiveElement: active[0].element,
       idleElement: active[active.length - 1].element + 1,
-      ...(start > 0 && freeze > start ? { hitPauseAnimateTicks: hitPauseTicks(frames, start, freeze) } : {})
+      ...(smearTicks !== null ? { hitPauseAnimateTicks: smearTicks } : {})
     }
   };
 }
 
-function actionTimeline(airText, move) {
+function actionTimeline(airText, move, parsedActions = null) {
   const actionNumber = Number(move.values.moveID);
-  const action = parseAir(airText).find((candidate) => candidate.number === actionNumber);
+  const action = (parsedActions || parseAir(airText)).find((candidate) => candidate.number === actionNumber);
   if (!action) return { actionNumber, state: 'missing', frames: [], totalTicks: 0 };
-  let tick = 0, activeWindow = 0, wasActive = false;
+  let tick = 0, activeWindow = 0, wasActive = false, held = false;
   const first = Number(move.values.firstActiveElement) || 0, idle = Number(move.values.idleElement) || Number.MAX_SAFE_INTEGER;
   const frames = action.frames.map((frame, index) => {
-    const start = tick; tick += frame.time;
+    const authoredTime = Number.isInteger(frame.rawTime) ? frame.rawTime : frame.time;
+    const duration = authoredTime === -1 ? -1 : Math.max(1, authoredTime);
+    const hold = authoredTime === -1, reachable = !held, start = reachable ? tick : null;
+    if (reachable && !hold) tick += Math.max(1, duration);
+    if (hold) held = true;
     const element = index + 1, clsnActive = frame.clsn1.length > 0;
     if (clsnActive && !wasActive) activeWindow += 1;
     wasActive = clsnActive;
-    return { ...frame, element, start, end: tick - 1, phase: element < first ? 'startup' : element >= idle ? 'recovery' : clsnActive ? 'active' : 'authored-window', clsnActive, activeWindow: clsnActive ? activeWindow : 0 };
+    return { ...frame, element, start, end: reachable && !hold ? tick - 1 : null, authoredTime, duration, hold, reachable, phase: element < first ? 'startup' : element >= idle ? 'post-window' : clsnActive ? 'active' : 'authored-window', clsnActive, activeWindow: clsnActive ? activeWindow : 0 };
   });
-  return { actionNumber, state: 'ready', frames, totalTicks: tick, loopStart: action.loopStart, firstActiveElement: first, idleElement: idle };
+  const holdElement = frames.find(frame => frame.hold && frame.reachable)?.element || null;
+  return { actionNumber, state: 'ready', frames, totalTicks: holdElement ? null : tick, finitePrefixTicks: tick, holdElement, loopStart: action.loopStart, hasLoopMarker: Boolean(action.loopMarkers?.length), firstActiveElement: first, idleElement: idle };
+}
+
+function authoredStateTiming(sections, timeline, projectileDeclared) {
+  const evidence = { release: null, helperSpawn: null, ordinaryControl: null };
+  for (const section of (sections || []).filter(item => item.kind === 'move-state' && item.language !== 'zss')) {
+    const blocks = String(section.text || '').split(/^\s*\[\s*State\s+[^\]]+\]\s*$/im).slice(1);
+    for (const block of blocks) {
+      const entries = [...block.replace(/;[^\r\n]*/g, '').matchAll(/^\s*([A-Za-z][A-Za-z0-9_.]*)\s*=\s*([^\r\n]*)/gm)];
+      const values = name => entries.filter(item => item[1].toLowerCase() === name).map(item => item[2].trim().toLowerCase());
+      const types = values('type'), triggers = entries.filter(item => /^trigger(?:all|\d+)$/i.test(item[1]));
+      if (types.length !== 1 || triggers.length !== 1 || triggers[0][1].toLowerCase() !== 'trigger1') continue;
+      const trigger = triggers[0][2].trim().toLowerCase();
+      if ((!evidence.release || !evidence.helperSpawn) && (types[0] === 'helper' || types[0] === 'projectile')) {
+        const element = /^animelem\s*=\s*(\d+)$/.exec(trigger);
+        if (element) {
+          const frame = timeline.frames?.[Number(element[1]) - 1];
+          if (frame && frame.reachable && Number.isInteger(frame.start)) {
+            const event = `${types[0] === 'helper' ? 'Helper spawned' : 'Projectile controller'} at authored animelem = ${element[1]} (first-pass AIR tick ${frame.start}); runtime creation still depends on state execution`;
+            if (types[0] === 'helper') evidence.helperSpawn ||= event;
+            if (types[0] === 'projectile' || projectileDeclared) evidence.release ||= event;
+          }
+        }
+      }
+      if (!evidence.ordinaryControl && types[0] === 'changestate' && /^(?:!animtime|animtime\s*=\s*0)$/.test(trigger) && values('ctrl').length === 1 && values('ctrl')[0] === '1') evidence.ordinaryControl = `ChangeState grants ctrl = 1 when ${trigger} is true; this is an authored ordinary return, not a cancel window`;
+    }
+  }
+  return evidence;
+}
+
+function timingEvidence(timeline, move, codeSections = []) {
+  if (timeline?.state !== 'ready') return { authored: 'AIR action unavailable', ordinaryControl: 'unknown', cancel: 'unknown', advantage: 'unknown', projectile: null, helperSpawn: null, helperLifetime: null };
+  const frames = timeline.frames || [], first = Number(move?.values?.firstActiveElement), idle = Number(move?.values?.idleElement);
+  const firstStart = Number.isInteger(first) && first > 0 ? frames[first - 1]?.start : null;
+  const postStart = Number.isInteger(idle) && idle > 0 ? frames[idle - 1]?.start : null;
+  const projectileDeclared = Number(move?.values?.deliveryType) === 2;
+  const source = authoredStateTiming(codeSections, timeline, projectileDeclared);
+  const projectile = projectileDeclared || Boolean(source.release);
+  return {
+    attackWindows: require('./move_lab_direct_preview').attackWindows(frames),
+    authored: timeline.holdElement ? `${timeline.finitePrefixTicks} AIR tick(s) before element ${timeline.holdElement} holds` : `${timeline.totalTicks} AIR tick(s) per pass${timeline.hasLoopMarker ? `; Loopstart at element ${timeline.loopStart + 1}` : ''}`,
+    firstActiveHint: Number.isInteger(firstStart) ? firstStart : null,
+    postWindowHint: Number.isInteger(postStart) ? postStart : null,
+    ordinaryControl: source.ordinaryControl || 'unknown from AIR; inspect state transitions',
+    cancel: 'unknown from AIR; inspect conditional state transitions',
+    advantage: 'unknown without contact and defender recovery observation',
+    helperSpawn: source.helperSpawn,
+    helperLifetime: source.helperSpawn ? 'unknown from the parent AIR; inspect the spawned Helper state and removal rules' : null,
+    projectile: projectile ? { release: source.release || 'unknown from AIR; inspect Projectile or Helper controller', lifetime: 'unknown from character AIR; inspect projectile removal rules' } : null
+  };
+}
+
+function directStateTiming(components, airText, parsedActions = null) {
+  const actions = parsedActions || parseAir(airText), byNumber = new Map(), result = {};
+  for (const action of actions) { const bucket = byNumber.get(action.number) || []; bucket.push(action); byNumber.set(action.number, bucket); }
+  for (const component of components || []) {
+    if (component.kind !== 'state' || !component.id) continue;
+    const parsed = exactStateAnimation(component), matches = parsed.available ? byNumber.get(parsed.action) : null;
+    if (!matches || matches.length !== 1) continue;
+    const timeline = actionTimeline('', { values: { moveID: parsed.action } }, matches);
+    const section = { id: component.id, kind: 'move-state', language: parsed.sourceLanguage, filename: component.filename, startLine: component.startLine, text: component.text };
+    const evidence = timingEvidence(timeline, { values: { moveID: parsed.action } }, [section]);
+    result[component.id] = { ...evidence, actionNumber: parsed.action, followups: require('./move_followup_windows').followupWindows([section]) };
+  }
+  return result;
 }
 
 function reactionSummary(move, mode = 'normal') {
@@ -187,4 +260,4 @@ function reactionSummary(move, mode = 'normal') {
   };
 }
 
-module.exports = { FIELD_SCHEMA, parseConstants, moveGroups, fieldsFor, updateConstant, resolveMoveTargets, copyMoveFields, hitPauseTicks, airTimingProposal, actionTimeline, reactionSummary };
+module.exports = { FIELD_SCHEMA, parseConstants, moveGroups, fieldsFor, updateConstant, resolveMoveTargets, copyMoveFields, hitPauseTicks, airTimingProposal, actionTimeline, timingEvidence, directStateTiming, reactionSummary };

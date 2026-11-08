@@ -86,7 +86,8 @@ class SffTransferMode {
       active: true, session: record.session,
       handles: { source: record.handles.source?.ref || null, destination: record.handles.destination?.ref || null },
       capabilities: { source: capabilityProjection('source', record.session.selections.source.length), destination: capabilityProjection('destination', record.session.selections.destination.length) },
-      normalContextRetained: record.normalContext !== undefined, degraded: record.degraded === true, effects: EFFECTS
+      normalContextRetained: record.normalContext !== undefined, degraded: record.degraded === true, effects: EFFECTS,
+      ...(record.assemblyOutcome ? { assemblyOutcome: record.assemblyOutcome } : {})
     });
   }
 
@@ -151,21 +152,22 @@ class SffTransferMode {
     return this.snapshot();
   }
 
-  async reviewSelection(method = 'copy-selected', input = {}) {
+  async reviewSelection(method = 'copy-selected', input = {}, buildReview) {
     const record = this._requireActive();
     exactKeys(input, ['selection', 'boundary'], 'SFF Transfer review request');
     await this._revalidate(record.session.source, 'source'); await this._revalidate(record.session.destination, 'destination');
     const request = createTransferRequest(record.session, { method, selection: input.selection, boundary: input.boundary });
-    const builder = serviceFunction(this.services, 'buildReview', true);
+    const builder = buildReview || serviceFunction(this.services, 'buildReview', true);
     const review = builder ? await builder(deepFreeze({ session: record.session, request, effects: EFFECTS })) : { status: 'ready', reviewFingerprint: request.requestIdentity, summary: `${request.selection.length} exact sprite selection(s) are ready for destination conflict review.` };
     if (!review) return deepFreeze({ status: 'cancelled', session: record.session, effects: EFFECTS });
     await this._revalidate(record.session.source, 'source'); await this._revalidate(record.session.destination, 'destination');
     record.session = stageTransferReview(record.session, request, review);
+    record.assemblyHandoff = null; // A newly staged review supersedes old Assembly continuation.
     return deepFreeze({ status: review.status, request, review: record.session.pendingReview, effects: EFFECTS });
   }
 
   cancelReview() {
-    const record = this._requireActive(); record.session = cancelTransferReview(record.session); return this.snapshot();
+    const record = this._requireActive(); record.session = cancelTransferReview(record.session); record.assemblyHandoff = null; return this.snapshot();
   }
 
   finalizeAssemblyResult(requestIdentity, details, destination, mappings) {
@@ -173,6 +175,51 @@ class SffTransferMode {
     if (!pending || pending.status !== 'ready' || pending.request.requestIdentity !== requestIdentity) throw new Error('The Assembly result does not belong to the current ready Transfer review.');
     record.session = finalizeTransferApply(record.session, pending.request, details, destination, mappings);
     return deepFreeze({ status: record.session.result.status, result: record.session.result, session: record.session, effects: EFFECTS });
+  }
+
+  async beginAssemblyExecution(requestIdentity, token) {
+    const record = this._requireActive(), current = record.session;
+    // Opening Assembly transfers one immutable reviewed selection. Browser
+    // repaint/navigation can update its live selection afterward; only the
+    // captured, still-bound handoff may survive that change, never an arbitrary
+    // request reconstructed from a missing pendingReview.
+    const handoff = record.assemblyHandoff?.requestIdentity === requestIdentity ? record.assemblyHandoff : null;
+    if (!handoff) throw new Error('The Assembly execution has no current ready Transfer handoff for this exact review.');
+    const session = handoff.session, pending = session.pendingReview;
+    if (record.assemblyExecution) throw new Error('An Assembly execution is already in flight.');
+    if (!pending || pending.status !== 'ready' || pending.request.requestIdentity !== requestIdentity) throw new Error('The Assembly execution does not belong to the current ready Transfer review.');
+    if (current.status !== 'active' || current.sessionId !== session.sessionId || current.generation !== session.generation || current.source.identity !== session.source.identity || current.destination.identity !== session.destination.identity || !endpointMatches(current.source, session.source) || !endpointMatches(current.destination, session.destination)) throw new Error('The exact reviewed Assembly handoff endpoints changed.');
+    boundedString(token, 'Assembly execution token', 128);
+    await this._revalidate(session.source, 'source'); await this._revalidate(session.destination, 'destination');
+    if (this.active !== record || record.session !== current || handoff && record.assemblyHandoff !== handoff) throw new Error('The Transfer review changed before Assembly execution began.');
+    record.assemblyExecution = { token, requestIdentity, session };
+    return deepFreeze({ token, requestIdentity, sessionId: session.sessionId, generation: session.generation });
+  }
+
+  endAssemblyExecution(token) {
+    if (this.active?.assemblyExecution?.token !== token) return false;
+    this.active.assemblyExecution = null; return true;
+  }
+
+  cancelAssemblyHandoff(requestIdentity) {
+    if (this.active?.assemblyHandoff?.requestIdentity !== requestIdentity) return false;
+    this.active.assemblyHandoff = null; return true;
+  }
+
+  finalizeAssemblyExecution(token, requestIdentity, details, destination, mappings) {
+    const record = this._requireActive(), execution = record.assemblyExecution, current = record.session;
+    if (!execution || execution.token !== token || execution.requestIdentity !== requestIdentity) throw new Error('The Assembly completion token is stale or belongs to another executed review.');
+    const executed = execution.session;
+    if (current.status !== 'active' || current.sessionId !== executed.sessionId || current.generation !== executed.generation || current.source.identity !== executed.source.identity || current.destination.identity !== executed.destination.identity || !endpointMatches(current.source, executed.source) || !endpointMatches(current.destination, executed.destination)) throw new Error('The executed Transfer endpoints changed; the committed file outcome remains in its execution receipt.');
+    const finalized = finalizeTransferApply(executed, executed.pendingReview.request, details, destination, mappings);
+    const historical = current !== executed;
+    // This token records an already committed outcome. It cannot approve a
+    // candidate or make the old result the result of a newer user selection.
+    record.assemblyOutcome = deepFreeze({ requestIdentity, result: finalized.result, destination: finalized.destination, mappings: finalized.mappings, historical });
+    if (!historical) record.session = finalized;
+    record.assemblyExecution = null;
+    record.assemblyHandoff = null;
+    return deepFreeze({ status: historical ? 'completed-historical' : finalized.result.status, result: finalized.result, session: record.session, requiresReopen: historical, recordedAgainst: 'executed-review', effects: EFFECTS });
   }
 
   async swapSides() {
@@ -220,13 +267,19 @@ class SffTransferMode {
     this.active.handles[role] = null; this.active.degraded = true; this.active.session = cancelTransferSession(this.active.session); return true;
   }
 
-  async continueInAssembly() {
-    const record = this._requireActive(), callback = serviceFunction(this.services, 'continueAssembly', true);
+  async continueInAssembly(continuation) {
+    const record = this._requireActive(), callback = continuation || serviceFunction(this.services, 'continueAssembly', true);
     if (!callback) return deepFreeze({ status: 'unavailable', reason: 'No advanced Two-SFF Assembly continuation is registered.', effects: EFFECTS });
     if (record.session.pendingReview?.status !== 'ready') throw new Error('Review the current exact sprite selection before continuing to Advanced Two-SFF Assembly.');
     await this._revalidate(record.session.source, 'source'); await this._revalidate(record.session.destination, 'destination');
     const reference = deepFreeze({ source: record.session.source, destination: record.session.destination, request: record.session.pendingReview.request, reviewFingerprint: record.session.pendingReview.reviewFingerprint, session: record.session, effects: EFFECTS });
-    const result = await callback(reference);
+    const handoff = deepFreeze({ requestIdentity: reference.request.requestIdentity, session: reference.session });
+    record.assemblyHandoff = handoff;
+    let result;
+    try {
+      result = await callback(reference);
+      if ((!result || result.status === 'unavailable') && record.assemblyHandoff === handoff) record.assemblyHandoff = null;
+    } catch (error) { if (record.assemblyHandoff === handoff) record.assemblyHandoff = null; throw error; }
     return deepFreeze({ status: result?.status || 'continued', result: result || null, reference, effects: EFFECTS });
   }
 

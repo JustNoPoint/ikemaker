@@ -9,7 +9,8 @@ function client(){
   const id=identity(),draft=local[id]||model.formDraft;
   if(draft){local[id]=draft;persist();const fields=new Map(draft.fields.map(field=>[field.name,field]));for(const row of document.querySelectorAll('[data-option]')){const field=fields.get(row.dataset.option);if(field){row.querySelector('input[type=checkbox]').checked=field.enabled;row.querySelector('input[type=text]').value=field.value;}}}
   const conflict=!!draft&&draft.base!==model.sourceHash;
-  document.getElementById('apply').disabled=conflict;document.getElementById('new').disabled=conflict;
+  if(typeof updateControlStates==='function')updateControlStates();
+  else{document.getElementById('apply').disabled=conflict;document.getElementById('new').disabled=conflict;}
   let bar=document.getElementById('hitdefDraftStatus');
   if(!bar){bar=document.createElement('div');bar.id='hitdefDraftStatus';bar.setAttribute('role','status');document.getElementById('groups').before(bar);}
   bar.textContent=draft?(conflict?'The source changed. Your draft is retained; copy any values you need, then discard it to reload the source.':'Unapplied draft retained for this controller.'):'';

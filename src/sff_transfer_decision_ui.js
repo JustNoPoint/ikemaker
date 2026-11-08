@@ -4,19 +4,28 @@ function identity(sprite) { return `${sprite.group},${sprite.number}`; }
 async function pick(vscode, items, options) { const value = await vscode.window.showQuickPick(items, options); return value || null; }
 async function groupIndex(vscode, title, initial = '') { const value = await vscode.window.showInputBox({ title, value: initial, placeHolder: 'group,index', validateInput: text => /^\d+,\d+$/.test(String(text).trim()) ? null : 'Enter non-negative group,index.' }); if (value === undefined) return null; const [group, number] = value.trim().split(',').map(Number); return { group, number }; }
 
-async function collectSffTransferDecisions(vscode, analysis, destinationArchive) {
+async function collectSffTransferDecisions(vscode, analysis, destinationArchive, options = {}) {
   const decisions = { placement: null, items: [] };
-  if (analysis.placementRequired) {
+  if (analysis.placementRequired && options.append) decisions.placement = {kind:'append-end'};
+  else if (analysis.placementRequired) {
     const placements = [{ label: 'Append at end of physical table', description: `Physical position ${destinationArchive.sprites.length}`, value: { kind: 'append-end' } }];
     for (const sprite of destinationArchive.sprites) { placements.push({ label: `Before ${identity(sprite)} · physical ${sprite.index}`, value: { kind: 'between-sprites', targetPhysicalIndex: sprite.index, targetIdentity: identity(sprite), position: sprite.index } }, { label: `After ${identity(sprite)} · physical ${sprite.index}`, value: { kind: 'between-sprites', targetPhysicalIndex: sprite.index, targetIdentity: identity(sprite), position: sprite.index + 1 } }); }
     const placement = await pick(vscode, placements, { title: 'SFF Transfer — choose exact Destination placement', placeHolder: 'This does not write the SFF.' }); if (!placement) return null; decisions.placement = placement.value;
   }
   for (const item of analysis.items) {
     const decision = { id: item.id };
-    if (item.collision.decisionRequired) {
-      const chosen = await pick(vscode, [
-        { label: 'Add at next free index', value: 'add-next-free' }, { label: 'Replace existing sprite', value: 'replace-existing' }, { label: 'Choose another group,index', value: 'manual-identity' }, { label: 'Skip this sprite', value: 'skip' }
-      ], { title: `Identity conflict — ${item.id}`, placeHolder: `${item.identity} already exists in Destination.` }); if (!chosen) return null;
+    const queued=options.rows?.get(item.physicalIndex);
+    const targetId=queued?.targetId?.replace(/\s+/g,'');
+    const manual=targetId && targetId!==item.identity;
+    if(manual){
+      const match=/^(\d+),(\d+)$/.exec(targetId);
+      if(!match||Number(match[1])>65535||Number(match[2])>65535)throw Error('Sprite IDs must be group,index with values from 0 through 65535.');
+      decision.identity={action:'manual-identity',group:Number(match[1]),number:Number(match[2])};
+    }else if (item.collision.decisionRequired) {
+      const policy=({'skip':'skip','replace':'replace-existing','next-free':'add-next-free'})[queued?.conflictPolicy];
+      const chosen = policy&&(policy!=='replace-existing'||item.collision.destinationPhysicalIndices.length)?{value:policy}:await pick(vscode, [
+        { label: 'Add at next free index', value: 'add-next-free' }, ...(item.collision.destinationPhysicalIndices.length ? [{ label: 'Replace existing sprite', value: 'replace-existing' }] : []), { label: 'Choose another group,index', value: 'manual-identity' }, { label: 'Skip this sprite', value: 'skip' }
+      ], { title: `Identity conflict — ${item.id}`, placeHolder: item.collision.status === 'source-duplicate' ? `Two selected Source sprites use ${item.identity}. Choose where this one goes.` : `${item.identity} already exists in Destination.` }); if (!chosen) return null;
       decision.identity = { action: chosen.value };
       if (chosen.value === 'replace-existing' && item.collision.destinationPhysicalIndices.length > 1) { const occurrence = await pick(vscode, item.collision.destinationPhysicalIndices.map(index => ({ label: `${item.identity} · physical ${index}`, value: index })), { title: `Choose exact Destination occurrence — ${item.id}` }); if (!occurrence) return null; decision.identity.destinationPhysicalIndex = occurrence.value; }
       if (chosen.value === 'manual-identity') { const value = await groupIndex(vscode, `New Destination identity — ${item.id}`, item.identity); if (!value) return null; Object.assign(decision.identity, value); }
