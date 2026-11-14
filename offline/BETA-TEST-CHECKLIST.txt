@@ -1,6 +1,6 @@
-IKEMaker 0.79.539 morning check
+IKEMaker 0.79.540 morning check
 
-[ ] Start VS Code with the candidate. Confirm Extensions lists IKEMaker 0.79.539.
+[ ] Start VS Code with the candidate. Confirm Extensions lists IKEMaker 0.79.540.
 [ ] Open HDBZ Title, Options and Character Select. Check the scenery, Options text and P1 starting on Goku. Open the fight HUD and scrub the timer effect through its blank frame.
 [ ] Scrub Cell Arena or Seer's Alcove. Launch a match with the motif and check the stage, timer, portraits and bars.
 [ ] Play and hold Goku's ending, Vegeta's normal ending and the credits. In credits scene 6, compare tick 0 with tick 34.

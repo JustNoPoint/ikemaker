@@ -1,6 +1,9 @@
 'use strict';
 
-const { launchControlsHtml, launchControlsClientScript, handleLaunchMessage } = require('./launch_controls');
+const entityHeader = require('./entity_header');
+const companion = require('./companion_browser_layout');
+const {resizeActiveAuxiliaryWindowBy} = require('./windows_auxiliary_window');
+const {handleLaunchMessage} = require('./launch_controls');
 const { protect } = require('./webview_policy');
 const panels = new WeakMap();
 
@@ -21,11 +24,22 @@ function browserHtml(commands, entries = []) {
   const premade = entries.map((entry,index) => '<li><b>'+escapeText(entry.label)+'</b> <button data-recipe="'+index+'">'+escapeText(entry.action)+'</button><br>'+escapeText(entry.detail)+'</li>').join('');
   const rows = commands.map((command, index) => '<li><button data-index="' + index + '">' +
     escapeText(command.name) + '</button> <code>' + escapeText(command.command) + '</code></li>').join('');
-  return protect('<!doctype html><html><head><meta charset="utf-8"><style>body{color:var(--vscode-foreground);font:var(--vscode-font-size) var(--vscode-font-family)}ul{list-style:none;padding:0}li{padding:.25rem 0}button,input{color:var(--vscode-input-foreground);background:var(--vscode-input-background)}code{overflow-wrap:anywhere}</style></head><body>' +
-    launchControlsHtml('command_movelist', {includeUniversal:true,includeLayout:false,iconSurface:'code'}) +
-    '<main><h2>Command Browser</h2><button id="existing" aria-pressed="true">Character Commands</button> <button id="premade" aria-pressed="false">Premade Commands</button> <button id="floatWindow">Float Window</button><p><label>Find a command <input type="search" id="filter"></label></p><ul id="ownedRows">'+rows+'</ul><ul id="recipeRows" hidden>'+premade+'</ul><p id="empty">No matching commands.</p></main><script>const vscode=acquireVsCodeApi();' +
-    '(' + browserClient.toString() + ')(vscode);' +
-    launchControlsClientScript() + '</script></body></html>');
+  return protect(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
+    ${companion.style()}${entityHeader.style()}
+    *{box-sizing:border-box}body{margin:0;font:13px var(--vscode-font-family);color:var(--vscode-foreground);background:var(--vscode-editor-background)}
+    button,input{font:inherit;color:inherit;background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);padding:5px}
+    .bar,.tabs,.tools{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--vscode-panel-border)}
+    .bar{min-height:44px}.bar strong{margin-right:auto}.panel{border-top:3px solid #4aa3ff}
+    .tabs button[aria-pressed=true]{background:var(--vscode-button-background);color:var(--vscode-button-foreground);outline:2px solid var(--vscode-focusBorder)}
+    .tools input{flex:1;min-width:0}ul{list-style:none;padding:0;margin:0}li{padding:7px;border-bottom:1px solid var(--vscode-panel-border)}code{overflow-wrap:anywhere}
+    </style></head><body class="ikemaker-companion-browser">${entityHeader.html()}
+    <header class="bar"><strong>Command Browser</strong><button id="floatWindow">Float Window</button><button id="owner">Focus Command Maker</button><button id="closeBrowser">Close Browser</button></header>
+    <main class="panel"><div class="tabs"><button id="existing" aria-pressed="true">Character Commands</button><button id="premade" aria-pressed="false">Premade Commands</button></div>
+    <label class="tools">Find <input type="search" id="filter" placeholder="Command name or input"></label>
+    <ul id="ownedRows">${rows}</ul><ul id="recipeRows" hidden>${premade}</ul><p id="empty">No matching commands.</p></main>
+    <script>const vscode=acquireVsCodeApi();(${browserClient.toString()})(vscode);
+    ${entityHeader.clientScript({vscodeVariable:'vscode'})}${companion.clientScript()}${require('./universal_toolbar_webview').companionBrowserShortcutClientScript()}</script></body></html>`);
+
 }
 
 function browserClient(vscode) {
@@ -47,29 +61,41 @@ function browserClient(vscode) {
   el('existing').onclick=()=>{recipes=false;render();};
   el('premade').onclick=()=>{recipes=true;render();};
   el('floatWindow').onclick=()=>vscode.postMessage({type:'floatCommandBrowser'});
+  el('owner').onclick=()=>vscode.postMessage({type:'focusCommandMaker'});
+  el('closeBrowser').onclick=()=>vscode.postMessage({type:'closeCommandBrowser'});
   filter.oninput=render;
   for(const button of document.querySelectorAll('[data-index]'))button.onclick=()=>vscode.postMessage({type:'pickCommand',index:Number(button.dataset.index)});
   for(const button of document.querySelectorAll('[data-recipe]'))button.onclick=()=>vscode.postMessage({type:'pickRecipe',index:Number(button.dataset.recipe)});
-  window.addEventListener('message',event=>{if(event.data?.type==='commandBrowserFloating')el('floatWindow').hidden=event.data.value;});
+  window.addEventListener('message',event=>{if(event.data?.type==='commandBrowserFloating')el('floatWindow').textContent=event.data.value?'Return to Main Window':'Float Window';});
   render();
-  vscode.postMessage({type:'companionBrowserReady'});
+
 }
 
 function escapeText(text) {
   return String(text || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
 }
 
-async function openBrowser(api, owner, seed, commands, select, entries = [], pickRecipe) {
+async function openBrowser(api, owner, seed, commands, select, entries = [], pickRecipe, storage) {
   let record = panels.get(owner);
   const fresh=!record;
   if (!record) {
     const panel = api.window.createWebviewPanel('ikemenCommandBrowser','Command Browser',api.ViewColumn.Active,{enableScripts:true,retainContextWhenHidden:true});
     record = {panel,readiness:require('./companion_browser_lifecycle').createBrowserReadinessController()};
+    const width=companion.createMinimumWidthController(panel,api.commands,undefined,{floatingOnly:true,storage,preferenceKey:'ikemaker.companionBrowserWidth.v2.commands',resizeNative:resizeActiveAuxiliaryWindowBy});
     record.float=async()=>{
       panel.reveal(panel.viewColumn,false);
       if(!panel.active) return;
+      if(record.floating){
+        await api.commands.executeCommand('workbench.action.restoreEditorsToMainWindow');
+        record.floating=false;
+        width.endFloating();
+        await panel.webview.postMessage({type:'commandBrowserFloating',value:false});
+        return;
+      }
       await api.commands.executeCommand('workbench.action.moveEditorToNewWindow');
       record.floating=true;
+      width.beginOpening();
+      await width.request();
       await panel.webview.postMessage({type:'commandBrowserFloating',value:true});
     };
     panels.set(owner,record);
@@ -78,6 +104,12 @@ async function openBrowser(api, owner, seed, commands, select, entries = [], pic
     panel.webview.onDidReceiveMessage(async message=>{
       if(record.readiness.signal(message)){
         if(record.floating)await panel.webview.postMessage({type:'commandBrowserFloating',value:true});
+      }else if(message?.type==='companionBrowserViewport'){
+        if(panel.active)await width.handle(message);
+      }else if(message?.type==='closeCommandBrowser'){
+        panel.dispose();
+      }else if(message?.type==='focusCommandMaker'){
+        owner.reveal(owner.viewColumn,false);
       }else if(message?.type==='floatCommandBrowser'){
         await record.float();
       }else if(message?.type==='pickRecipe'){
