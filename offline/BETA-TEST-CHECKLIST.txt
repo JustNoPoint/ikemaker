@@ -1,9 +1,10 @@
-IKEMaker 0.79.538 morning check
+IKEMaker 0.79.539 morning check
 
-[ ] Start VS Code with the candidate. Confirm Extensions lists IKEMaker 0.79.538.
+[ ] Start VS Code with the candidate. Confirm Extensions lists IKEMaker 0.79.539.
 [ ] Open HDBZ Title, Options and Character Select. Check the scenery, Options text and P1 starting on Goku. Open the fight HUD and scrub the timer effect through its blank frame.
 [ ] Scrub Cell Arena or Seer's Alcove. Launch a match with the motif and check the stage, timer, portraits and bars.
 [ ] Play and hold Goku's ending, Vegeta's normal ending and the credits. In credits scene 6, compare tick 0 with tick 34.
 [ ] In a character copy, reorder an AIR/SFF layer and check it after reopening. Open Command Maker, the movelist preview and Font Lab from the toolbar.
  [ ] Search mash in Command Maker and review all four entries. Copy each kick recognizer.
 [ ] Open the Command Browser, search for a command, select it and check the Coding Assistance toolbar.
+[ ] Open the floating Command Browser. Select Premade Commands and review a native preset for insertion.

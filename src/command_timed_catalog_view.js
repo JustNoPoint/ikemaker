@@ -108,6 +108,14 @@ function renderPlacement(route,placement){const box=el('catalogPlacementBox');co
 addEventListener('message',event=>{const m=event.data;if(!m||m.type!=='catalogRoutePreview'||m.requestId!==catalogRequest)return;const notes=el('catalogNotes');notes.innerHTML='';
  if(m.error){lastRoute=null;el('catalogPreview').textContent='';notes.appendChild(li(m.error,'catalog-error'));for(const id of ['copyCatalogRoute','insertCatalogAndCopy','insertCatalogDefinitions'])setControlAvailability(id,false,m.error);el('catalogPlacementBox').hidden=true;return;}
  lastRoute=m.route;el('catalogPreview').textContent=m.route.text;for(const w of m.route.warnings)notes.appendChild(li(w,'catalog-warning'));for(const n of m.route.notes)notes.appendChild(li(n));setControlAvailability('copyCatalogRoute',true,'');renderPlacement(m.route,m.placement);});
+addEventListener('message',event=>{
+ const m=event.data;if(m?.type!=='browsePremadeCommand')return;
+ showTab('command');
+ const reveal=node=>{for(let p=node;p;p=p.parentElement)if(p.tagName==='DETAILS')p.open=true;node.scrollIntoView({block:'center'});node.focus();};
+ if(m.kind==='preset'){const button=Array.from(document.querySelectorAll('[data-preset]')).find(node=>node.dataset.preset===m.id);if(button){reveal(button);button.click();}return;}
+ if(!famById(m.id))return;
+ el('catalogFilter').value='';renderFamilies();el('catalogFamily').value=m.id;renderFamily();reveal(el('catalogFamily'));
+});
 el('catalogFilter').oninput=renderFamilies;el('catalogFamily').onchange=renderFamily;
 for(const id of ['catalogEdge','catalogAirPolicy','catalogGate','catalogLanguage','catalogNaming'])el(id).onchange=()=>{placementTouched=false;queuePreview();};
 el('copyAirSetting').onclick=()=>vscode.postMessage({type:'copyCatalogAirSetting',request:request()});

@@ -976,6 +976,10 @@ async function populate(panel, seed, options = {}) {
     if(!reference || !findSourceReference(reference,currentText(reference.filename)))return vscode.window.showInformationMessage('This command changed. Refresh Command Maker and reopen its browser.');
     panel.reveal(panel.viewColumn,false);
     await panel.webview.postMessage({type:'commandSourceLine',file:reference.filename,command:reference.command,occurrence:reference.occurrence});
+  },require('./command_browser').browserEntries(data),async entry=>{
+    if(session.disposed||generation!==session.generation)return vscode.window.showInformationMessage('Command Maker changed. Reopen the Command Browser to refresh the recipes.');
+    panel.reveal(panel.viewColumn,false);
+    await panel.webview.postMessage({type:'browsePremadeCommand',kind:entry.kind,id:entry.id});
   });
   session.openBrowser=showCommandBrowser;
   const toolbarHandlers={new:execute('ikemen.text.createNew',false),close,open:execute('workbench.action.files.openFile',false),save:requestSave,'text-source':openExactSource,'connected-resources':connectedResources,backup:execute('ikemen.makeBackup'),recovery:execute('ikemen.mutations.openHistory'),run:execute('ikemen.launchGame'),versus:execute('ikemen.launchMirrorCurrent'),training:execute('ikemen.launchTrainingCurrent'),restart:execute('ikemen.restartRunning',false),project:execute('ikemen.projectManager.open',false),stage:execute('ikemen.stage.openWorkspace'),sprites:characterTarget('sff'),animations:characterTarget('air'),states:execute('zss.openControllers'),sounds:characterTarget('snd'),palettes:execute('ikemen.palette.openWorkspace'),'code-structure':execute('ikemen.codeStructure.openWorkspace'),commands:async()=>{requireActive();return panel.webview.postMessage({type:'toolbarShowConnections'})},'viewer-browser':async()=>{requireActive();session.claim();return showCommandBrowser()},'actions-search':execute('ikemen.textActions.open',false),'suite-switch':execute('ikemen.switchSuite',false),help:execute('ikemen.help.open',false),settings:execute('ikemen.openExtensionSettings',false)};
