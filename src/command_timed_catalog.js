@@ -508,7 +508,7 @@ function catalogSummary(catalog) {
   return {
     origin: catalog.origin, source: catalog.source, parser: catalog.parser, reference: catalog.reference || null, provenance: catalog.provenance || null, issues: catalog.issues || [], engineSources: catalog.engineSources,
     families: catalog.families.map(family => ({
-      id: family.id, origin: family.origin || catalog.origin, derived: family.derived || null, parserRecognized: Boolean(family.parserRecognized), kind: family.kind, orientation: family.orientation, end: family.end, mirror: family.mirror, parserOnly: Boolean(family.parserOnly),
+      displayName: require('./command_mash_presets').familyDisplayName(family), id: family.id, origin: family.origin || catalog.origin, derived: family.derived || null, parserRecognized: Boolean(family.parserRecognized), kind: family.kind, orientation: family.orientation, end: family.end, mirror: family.mirror, parserOnly: Boolean(family.parserOnly),
       buttons: family.buttons, edges: family.edges, routes: family.routes, motionIds: family.motionIds, line: family.line, engine: family.engine, timing: family.timing,
       dependencies: family.dependencies, support: family.support || null,
       reference: family.reference ? { id: family.reference.id, timing: family.reference.timing } : null, ambiguousOwnerCase: family.ambiguousOwnerCase || null,

@@ -40,6 +40,7 @@ const { policyPresets } = require('./command_policy_presets');
 
 const PRESETS = [
   ...policyPresets,
+  ...require('./command_mash_presets').kickMashPresets,
   paired('qcf-held-down', 'QCF with Held-Down Release Window', native('qcf_x', 'D, DF, F, x', 30, 10), native('qcf_x', '~D, DF, F, x', 15, 5), 'Two same-named IKEMEN 1.0 definitions. The release route handles a motion begun after down was already held; no maps are required.'),
   paired('qcb-held-down', 'QCB with Held-Down Release Window', native('qcb_x', 'D, DB, B, x', 30, 10), native('qcb_x', '~D, DB, B, x', 15, 5), 'Use exact ~D rather than ~$D when leaving cardinal down for a diagonal.'),
   paired('dp-held-forward', 'DP with Held-Forward Release Window', native('dp_x', 'F, D, DF, x', 30, 10), native('dp_x', '~F, D, DF, x', 15, 5), 'Supports DP after walking forward by giving the release-start route a shorter continuation window.'),
