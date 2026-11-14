@@ -1,9 +1,10 @@
-IKEMaker 0.79.537
+IKEMaker 0.79.538
 
 Changes since 0.79.500
 
 - SFF and AIR viewers share layer selection and ordering. Link artwork to its base sprite, review offsets and generate attached Explod code for in-game character layers.
 - Sprite intake supports uneven sheets and adjustable cuts. Use Advanced SFF for thumbnail selection, ordering and staged batches. Palette Workshop and the SFF writer include improvements to working with independent palettes.
+- Command Maker opens its own searchable Command Browser. Coding Assistance now includes the shared toolbar.
 - Command Maker names the punch mash families and adds single-kick and two-kick mash recognizers.
 - Command Maker offers HDBZ-style motion recipes, optional inputs and alternative charge rules. Review CNS and ZSS output and preview the movelist with its motif styling.
 - Font Lab provides font authoring alongside the screenpack, fight UI and storyboard tools.

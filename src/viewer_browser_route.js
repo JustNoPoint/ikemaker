@@ -4,6 +4,8 @@ const SURFACE_ROUTES = Object.freeze({
   // A viewer's Browser button is navigation, not an open/close toggle. Using
   // the toggle here disposed an already-open (but hidden) companion and made
   // the button appear to do nothing.
+  commands: Object.freeze({command:'ikemen.commandMovelist.openBrowser',seed:true}),
+  command_movelist: Object.freeze({command:'ikemen.commandMovelist.openBrowser',seed:true}),
   air: Object.freeze({ command: 'air.browseLists', seed: true }),
   sff: Object.freeze({ command: 'sff.browseLists', seed: true }),
   snd: Object.freeze({ command: 'snd.browseLists', seed: true }),
@@ -11,7 +13,7 @@ const SURFACE_ROUTES = Object.freeze({
 });
 
 const CODING_ROUTE = Object.freeze({ command: 'ikemen.authoringBrowser.open', seed: true });
-const CODING_SURFACES=new Set(['code','coding','text','helper','hitdef','move_constants','move_lab','throw_creator','throw-creator','spatial_composer','trajectory','code_structure','command_movelist','commands','palfx_editor','palfx']);
+const CODING_SURFACES=new Set(['code','coding','text','helper','hitdef','move_constants','move_lab','throw_creator','throw-creator','spatial_composer','trajectory','code_structure','palfx_editor','palfx']);
 
 function forSurface(surface, seed = '') {
   const key=String(surface || '').trim().toLowerCase(),route=SURFACE_ROUTES[key] || (CODING_SURFACES.has(key)?CODING_ROUTE:Object.freeze({command:'',seed:false,reason:'This workspace has no owned Viewer Browser.'}));

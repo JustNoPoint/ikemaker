@@ -1,0 +1,33 @@
+'use strict';
+const assert=require('node:assert/strict');
+const {toggle,handleCompanion}=require('../src/viewer_browser_shortcut');
+const route=require('../src/viewer_browser_route');
+const vm=require('node:vm');
+const {browserShortcutClientScript}=require('../src/universal_toolbar_webview');
+
+(async()=>{
+  assert.equal(route.forSurface('snd','C:/x.snd').command,'snd.browseLists');
+  for(const surface of ['command_movelist','commands'])assert.equal(route.forSurface(surface).command,'ikemen.commandMovelist.openBrowser');
+  for(const surface of ['code','helper','hitdef','move_constants','move_lab','throw_creator','throw-creator','spatial_composer','trajectory','code_structure','palfx_editor','palfx'])assert.deepEqual(route.forSurface(surface),route.CODING_ROUTE,`${surface} retains Coding Assistance`);
+  assert.equal(route.forSurface('storyboard','C:/x.def').command,'');
+  assert.equal(route.forSurface('unknown','C:/x.def').command,'');
+  for(const surface of ['artist_intake','mutation_history','test_session','sff_assembly','project_manager'])assert.equal(route.forSurface(surface).command,'',`${surface} has no owned coding browser`);
+  const sent=[],listeners={},button={disabled:false},document={querySelector:()=>button,addEventListener:(type,listener)=>listeners[type]=listener};
+  vm.runInNewContext(browserShortcutClientScript({vscodeVariable:'vscode'}),{document,vscode:{postMessage:message=>sent.push(message)},globalThis:{}});
+  const key=(target={closest:()=>null})=>({key:'B',altKey:true,shiftKey:true,ctrlKey:false,metaKey:false,repeat:false,isComposing:false,target,preventDefault(){this.prevented=true},stopPropagation(){this.stopped=true}});
+  listeners.keydown(key({closest:()=>({tagName:'INPUT'})}));assert.equal(sent.length,0,'typing field keeps shortcut');
+  listeners.keydown(key());assert.equal(JSON.stringify(sent),JSON.stringify([{type:'ikemenBrowserShortcut'}]));
+  const calls=[],owner={active:true,visible:true,viewColumn:1,reveal(){calls.push('owner-focus')}},browser={active:false,visible:false,viewColumn:2,reveal(){calls.push('browser-focus')},dispose(){calls.push('dispose')}},record={panel:browser},api={Uri:{file:value=>({fsPath:value})},commands:{async executeCommand(command,uri){calls.push([command,uri?.fsPath]);return record;}}};
+  const options={surface:'snd',seed:'C:/x.snd',ownerPanel:owner,api,lookup:()=>record,prepare:async()=>{calls.push('guard');return true}};
+  assert.equal(await toggle(options),true);assert.deepEqual(calls,['browser-focus'],'hidden browser is revealed without closing');
+  browser.visible=true;calls.length=0;assert.equal(await toggle({...options,prepare:async()=>false}),false);assert.deepEqual(calls,[],'guard veto keeps browser');
+  calls.length=0;assert.equal(await toggle(options),true);assert.deepEqual(calls,['guard','dispose','owner-focus']);
+  calls.length=0;assert.equal(await toggle({...options,lookup:()=>({...record,transferPinned:true})}),false);assert.deepEqual(calls,[],'owner shortcut never disposes a transfer endpoint');
+  calls.length=0;assert.equal(await toggle({...options,lookup:()=>({...record,unavailable:true})}),false);assert.deepEqual(calls,[],'unavailable browser is not toggled');
+  calls.length=0;assert.equal(await toggle({...options,lookup:()=>null}),true);assert.deepEqual(calls,[['snd.browseLists','C:/x.snd']]);
+  const noReturnApi={...api,commands:{async executeCommand(command,uri){calls.push([command,uri?.fsPath]);return undefined}}};let lookupCount=0;calls.length=0;assert.equal(await toggle({...options,api:noReturnApi,lookup:()=>++lookupCount===1?null:record}),true);assert.deepEqual(calls,[['snd.browseLists','C:/x.snd']]);
+  browser.active=true;owner.active=false;calls.length=0;assert.equal(await handleCompanion({type:'ikemenBrowserShortcut'},'snd','C:/x.snd',browser,{api,lookup:()=>record,prepare:async()=>true}),true);assert.deepEqual(calls,['dispose','owner-focus'],'post-open lookup captures the exact return owner');
+  owner.active=false;calls.length=0;assert.equal(await toggle(options),false);assert.deepEqual(calls,[],'inactive owner cannot toggle');
+  assert.equal(await handleCompanion({type:'ikemenBrowserShortcut'},'snd','C:/x.snd',{active:true,visible:true},{api,lookup:()=>record,prepare:async()=>true}),false,'unrelated browser cannot close exact session');
+  console.log('Browser shortcut exact ownership, hidden reveal, guard veto, close and route PASS');
+})().catch(error=>{console.error(error);process.exitCode=1});
