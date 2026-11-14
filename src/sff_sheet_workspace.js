@@ -144,12 +144,13 @@ function runReview(stored) {
   let active = stored;
   if (active.state.phase === 'closed') active = persistReviewAction(fs, active, 'resume');
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenSffSheetReview', `Sprite Sheet · ${active.session.source.name}`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
-  panel.webview.html = require('./webview_policy').protect(html(viewModel(active)), panel.webview.cspSource);
+  panel.webview.html = require('./webview_policy').protect(require('./standalone_review_header').enhance(html(viewModel(active))), panel.webview.cspSource);
   return new Promise(resolve => {
     let settled = false;
     const finish = value => { if (settled) return; settled = true; active.lock?.release(); resolve(value); };
     const update = () => panel.webview.postMessage({ type: 'state', model: viewModel(active) });
     panel.webview.onDidReceiveMessage(message => Promise.resolve().then(async () => {
+      if(require('./standalone_review_header').isMessage(message)&&await require('./standalone_review_header').handle(message,'',panel))return;
       if (message.type === 'action') { active = persistReviewAction(fs, active, message.action, message.payload || {}); await update(); return; }
       if (message.type === 'adjustRectangle') { active = persistRectangleAdjustment(fs, active, message.rectangle || {}); await update(); return; }
       if (message.type === 'attachComponents') { const proposal = componentAttachmentProposal(active.session, active.state.currentFrame?.frameId, message.componentIds, message.ownership, message.note); if (proposal.warnings.length) { const answer = await vscode.window.showWarningMessage('Attach the selected floating component(s)?', { modal: true, detail: `${proposal.warnings.join('\n')}\n\nThe cached frame will use union rectangle ${proposal.unionRectangle.x},${proposal.unionRectangle.y} ${proposal.unionRectangle.width}×${proposal.unionRectangle.height}. The SFF is not changed.` }, 'Attach Reviewed Components'); if (answer !== 'Attach Reviewed Components') { await update(); return; } } active = persistComponentAttachment(fs, active, message.componentIds, message.ownership, message.note); await update(); return; }

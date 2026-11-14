@@ -1,0 +1,103 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "identityTable",
+  "fixtureId": "repeated-identity-built-in-only",
+  "fixtureByteHash": "e3652116c761e446d5d214e98b8623ae0a325b867b9d6a795f63404c487e4618",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "20fe88c68da76638420d8d63a00246b19724754a3327bebff974b3d3fa285dd8",
+  "analysisSha256": "c6bf1e8021b28bc109990b013ade3c0caeabd80db39732e95058b90930702945",
+  "testedAt": "2026-11-09T02:18:37.334Z",
+  "result": "pass",
+  "observed": {
+    "id": "repeated-identity-built-in-only",
+    "sourceSha256": "e3652116c761e446d5d214e98b8623ae0a325b867b9d6a795f63404c487e4618",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 3,
+        "number": 7,
+        "width": 1,
+        "height": 1,
+        "axisX": -4,
+        "axisY": 9,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 3,
+        "number": 7,
+        "width": 3,
+        "height": 2,
+        "axisX": 12,
+        "axisY": -6,
+        "paletteIndex": 1,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "expected": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "expected": [
+          3,
+          7,
+          1,
+          1,
+          -4,
+          9,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": true,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only.",
+  "absence": null,
+  "trace": [
+    "open\trepeated-identity-built-in-only\t0",
+    "sprite\trepeated-identity-built-in-only\t0\t3\t7\t1\t1\t-4\t9\t0",
+    "open\trepeated-identity-built-in-only\t1",
+    "sprite\trepeated-identity-built-in-only\t1\t3\t7\t1\t1\t-4\t9\t0"
+  ]
+}

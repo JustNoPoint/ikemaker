@@ -20,7 +20,8 @@ function buildProjectileStateAuthorities(component,draft,context={}){
  const snapshot=context.stateSnapshot||buildStateDestinationSnapshot(context),sources=snapshot?.sources;if(!sources)return failAll('The complete assigned state-source inventory is unavailable or exceeds its bounded inspection limit.');
  const source=sources.find(item=>canonical(item.filename)===canonical(component.filename));if(!source||source.sourceHash!==component.sourceHash||String(context.sourceText??'')!==source.text)return failAll('The Projectile source is no longer one exact assigned state source.');
  const evidence=controllerEvidence(component,context),defHash=hash(defText),inventoryHash=snapshot.inventoryHash,generation=Number(context.generation);
- if(!proveExactController(evidence,{defPath,sourcePath:component.filename,sourceText:source.text,sourceDocument:context.sourceDocument,assignedSources:context.assignedSources}))return failAll('The exact authored Projectile controller could not be proven.');
+ const previewMatches=context.previewCache?.specialists?.filter(item=>item.kind==='projectile'&&item.stableId===component.stableId&&item.sourceHash===source.sourceHash&&item.rangeHash===component.rangeHash&&item.startLine===component.startLine&&item.endLine===component.endLine&&item.filename===component.filename)||[];
+ if(previewMatches.length!==1&&!proveExactController(evidence,{defPath,sourcePath:component.filename,sourceText:source.text,sourceDocument:context.sourceDocument,assignedSources:context.assignedSources}))return failAll('The exact authored Projectile controller could not be proven.');
  for(const target of STATE_FIELDS){
   const field=fields.get(target);if(!field||field.status==='omitted')continue;
   if(field.status!=='ready'||!field.editable){publicFields[target]=unavailable(field,field.reason||'The authored expression is not one exact editable literal.');continue;}

@@ -15,16 +15,28 @@ function dependencyDecisions(analysis,destination){
     if(item.link.decisionRequired)choice.link={action:'flatten-copy'};
     const palette=item.palette;
     if(palette.status==='missing-or-invalid')throw Error('Missing attached palette for '+item.identity);
-    if(palette.status==='unmatched'){
-      if(!imported.has(palette.sourcePaletteIndex)){
-        const [group,original]=palette.sourcePaletteIdentity.split(',').map(Number);
-        let number=original;
-        if(used.has(group+','+number)){number=0;while(used.has(group+','+number))number++;}
-        if(number>65535)throw Error('No free palette ID in group '+group);
-        used.add(group+','+number);
-        imported.set(palette.sourcePaletteIndex,{action:'import-source-palette',destinationPaletteGroup:group,destinationPaletteIndex:number});
+    if (palette.status === 'compatible' || palette.status === 'unmatched') {
+      // Equal RGBA alone does not preserve the identity used by player palette remaps.
+      const exact = palette.compatibleDestinations.find(p => p.identity === palette.sourcePaletteIdentity);
+      if (exact) {
+        choice.palette = {action:'reuse-compatible', destinationPaletteIndex:exact.physicalIndex};
+      } else {
+        if (!imported.has(palette.sourcePaletteIndex)) {
+          const [sourceGroup, original] = palette.sourcePaletteIdentity.split(',').map(Number);
+          // Group 1 is used by selectable character palettes. Keep a free primary
+          // slot, but allocate independent copies outside that group.
+          const group = sourceGroup === 1 && !(original === 1 && !used.has('1,1')) ? 2 : sourceGroup;
+          let number = original;
+          if (used.has(group + ',' + number)) {
+            number = 0;
+            while (used.has(group + ',' + number)) number++;
+          }
+          if (number > 65535) throw Error('No free palette ID in group ' + group);
+          used.add(group + ',' + number);
+          imported.set(palette.sourcePaletteIndex, {action:'import-source-palette', destinationPaletteGroup:group, destinationPaletteIndex:number});
+        }
+        choice.palette = imported.get(palette.sourcePaletteIndex);
       }
-      choice.palette=imported.get(palette.sourcePaletteIndex);
     }
     return choice;
   });
@@ -58,6 +70,19 @@ function planImport(review,source,destination){
   return {evidence,mappings:dependencies.map(d=>map(d,byIndex.get(d.physicalIndices[0]))),source,destination,seed,analysis,resolution};
 }
 
+function paletteReview(plan) {
+  const rows = new Set();
+  for (const item of plan.resolution.items) {
+    if (item.paletteAction === 'not-applicable') continue;
+    const source = plan.source.palettes[item.sourcePaletteIndex];
+    const target = item.paletteAction === 'import-source-palette'
+      ? item.destinationPaletteIndex : plan.destination.palettes[item.destinationPaletteIndex];
+    const independent = source.group === 1 && target.group !== 1 ? ' (independent copy)' : '';
+    rows.add('Palette ' + source.group + ',' + source.number + ' to ' + target.group + ',' + target.number + independent);
+  }
+  return [...rows].join(' · ');
+}
+
 async function writeSprites(plan,current,onAdopted){
   if(!plan.resolution)return;
   const {source,destination,seed,analysis,resolution}=plan;
@@ -76,8 +101,13 @@ async function writeSprites(plan,current,onAdopted){
   for(const item of resolution.items){
     if(item.paletteAction==='not-applicable')continue;
     const sprite=final.sprites.find(s=>s.group+','+s.number===item.destinationIdentity);
-    if(!sprite||JSON.stringify(paletteRgba(final,sprite.paletteIndex))!==JSON.stringify(paletteRgba(source,item.sourcePaletteIndex)))
-      throw Error('Palette verification failed for sprite '+item.destinationIdentity);
+    const expected = item.paletteAction === 'import-source-palette'
+      ? item.destinationPaletteIndex : destination.palettes[item.destinationPaletteIndex];
+    const assigned = sprite && final.palettes[sprite.paletteIndex];
+    if (!assigned || assigned.group !== expected.group || assigned.number !== expected.number ||
+        JSON.stringify(paletteRgba(final,sprite.paletteIndex)) !== JSON.stringify(paletteRgba(source,item.sourcePaletteIndex))) {
+      throw Error('Palette identity or colors changed for imported sprite ' + item.destinationIdentity);
+    }
   }
   plan.evidence={...plan.evidence,destination:{...plan.evidence.destination,fingerprint:result.candidateHash.toUpperCase()}};
   return final;
@@ -86,4 +116,4 @@ async function writeSprites(plan,current,onAdopted){
 function restoreDestination(plan,candidateHash){
   transactionalWrite(fs,plan.destination.filename,plan.destination.buffer,{expectedHash:candidateHash.toLowerCase(),allowExisting:true,label:'restore-incomplete-air-sprite-import',backup:false,journal:false});
 }
-module.exports={planImport,writeSprites,restoreDestination,dependencyDecisions};
+module.exports={planImport,writeSprites,restoreDestination,dependencyDecisions,paletteReview};

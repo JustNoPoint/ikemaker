@@ -1210,9 +1210,9 @@ Details:
 * `down.cornerpush.veloff`: Returns the Hitdef's `down.cornerpush.veloff` parameter (float)
 * `guard.cornerpush.veloff`: Returns the Hitdef's `guard.cornerpush.veloff` parameter (float)
 * `airguard.cornerpush.veloff`: Returns the Hitdef's `airguard.cornerpush.veloff` parameter (float)
-* `fall.velocity.x`: Returns the X component of the Hitdef's `fall.velocity` parameter (float)
-* `fall.velocity.y`: Returns the Y component of the Hitdef's `fall.velocity` parameter (float)
-* `fall.velocity.z`: Returns the Z component of the Hitdef's `fall.velocity` parameter (float)
+* `fall.xvelocity`: Returns the Hitdef's `fall.xvelocity` parameter (float)
+* `fall.yvelocity`: Returns the Hitdef's `fall.yvelocity` parameter (float)
+* `fall.zvelocity`: Returns the Hitdef's `fall.zvelocity` parameter (float)
 
 Notes:
 * `guardflag` and `hitflag` are not simply a direct reading of the Hitdef's parameter. That is to say `HitDefVar(guardflag) = L` returns true whether the Hitdef's guardflag is `L`, `M` or `MA` for example.  

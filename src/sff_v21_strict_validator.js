@@ -15,7 +15,7 @@ const SFF_V21_PNG8_VALIDATOR_PROFILE = 'sff-v2.1-png8-strict-v2';
 const SIGNATURE = Buffer.from('ElecbyteSpr\0', 'latin1');
 const PNG_SIGNATURE = Buffer.from('89504e470d0a1a0a', 'hex');
 const VERSION_21 = Buffer.from([0, 1, 0, 2]);
-const HEADER_SIZE = 64;
+const HEADER_SIZE = 512;
 const SPRITE_HEADER_SIZE = 28;
 const PALETTE_HEADER_SIZE = 16;
 const FORMAT_PNG8 = 10;
@@ -134,7 +134,7 @@ function parseHeader(buffer, limits) {
   if (header.literalDataOffset < HEADER_SIZE || header.literalDataOffset > buffer.length) throw new Error('literal-data offset is outside the SFF body.');
   const literalData = { label: 'literal-data section', start: header.literalDataOffset, end: checkedEnd(header.literalDataOffset, header.literalDataLength, buffer.length, 'literal-data section') };
   if (header.translatedDataOffset < HEADER_SIZE || header.translatedDataOffset > buffer.length) throw new Error('translated-data offset is outside the SFF body.');
-  const translatedData = { label: 'translated-data section', start: header.translatedDataOffset, end: buffer.length };
+  const translatedData = { label: 'translated-data section', start: header.translatedDataOffset, end: checkedEnd(header.translatedDataOffset, u32(buffer, 64), buffer.length, 'translated-data section') };
   assertRangesDoNotOverlap([
     { label: 'SFF header', start: 0, end: HEADER_SIZE },
     spriteTable,

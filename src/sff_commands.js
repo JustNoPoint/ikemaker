@@ -1010,6 +1010,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     if (requestedPalette && !shiftedPaletteIds.has(requestedPalette) && requestedPalette !== sharedPaletteKey) throw new Error(`The selected target palette ${requestedPalette} does not exist after the reviewed palette plan.`);
     if (requestedPalette && shiftedPaletteCounts.get(requestedPalette) > 1) throw new Error(`The selected target palette ${requestedPalette} occurs more than once physically after the reviewed palette plan and is ambiguous.`);
     for (const entry of mapping) {
+      if ([24, 32].includes(entry.image?.colorDepth)) { entry.palette = null; continue; }
       const sourceSprite = sourceSprites.get(`${entry.group},${entry.index}`), palette = sourceSprite && paletteArchive.palettes[sourceSprite.paletteIndex];
       if (!entry.palette) {
         if (requestedPalette) entry.palette = requestedPalette;
@@ -1025,7 +1026,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
       const buildFile = `g${String(sprite.group).padStart(5, '0')}_i${String(sprite.number).padStart(5, '0')}_p${String(sprite.index).padStart(6, '0')}.png`;
       const snapshotPath = path.join(inputDirectory, buildFile), snapshot = spritePng(paletteArchive, sprite, null, true);
       fs.writeFileSync(snapshotPath, snapshot);
-      const palette = paletteArchive.palettes[sprite.paletteIndex];
+      const palette = [24, 32].includes(sprite.colorDepth) ? null : paletteArchive.palettes[sprite.paletteIndex];
       const shifted = palette ? applyPaletteShifts(palette.group, palette.number, palettePlan.shifts) : null;
       mapping.push({
         group: sprite.group, index: sprite.number, buildFile, source: paletteSourceSff, axisX: sprite.axisX, axisY: sprite.axisY, layer: 0,
@@ -1037,7 +1038,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
     }
     for (const protectedSprite of paletteArchive.sprites.filter((sprite) => sprite.group === 59000 && (sprite.number === 0 || sprite.number === 1))) {
       if (mapping.some((entry) => entry.group === protectedSprite.group && entry.index === protectedSprite.number)) continue;
-      const buildFile = `g${String(protectedSprite.group).padStart(5, '0')}_i${String(protectedSprite.number).padStart(5, '0')}.png`, palette = paletteArchive.palettes[protectedSprite.paletteIndex];
+      const buildFile = `g${String(protectedSprite.group).padStart(5, '0')}_i${String(protectedSprite.number).padStart(5, '0')}.png`, palette = [24, 32].includes(protectedSprite.colorDepth) ? null : paletteArchive.palettes[protectedSprite.paletteIndex];
       const snapshotPath = path.join(inputDirectory, buildFile), snapshot = spritePng(paletteArchive, protectedSprite);
       fs.writeFileSync(snapshotPath, snapshot);
       const shiftedPalette = palette ? applyPaletteShifts(palette.group, palette.number, palettePlan.shifts) : null;

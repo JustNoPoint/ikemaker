@@ -1,0 +1,149 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "identityTable",
+  "fixtureId": "signed-boundaries",
+  "fixtureByteHash": "7936099a7eb7ef24437eb5df1185c3084546362c9c051308f04312ccda191808",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "20fe88c68da76638420d8d63a00246b19724754a3327bebff974b3d3fa285dd8",
+  "analysisSha256": "c6bf1e8021b28bc109990b013ade3c0caeabd80db39732e95058b90930702945",
+  "testedAt": "2026-11-09T02:18:37.334Z",
+  "result": "pass",
+  "observed": {
+    "id": "signed-boundaries",
+    "sourceSha256": "7936099a7eb7ef24437eb5df1185c3084546362c9c051308f04312ccda191808",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 65534,
+        "number": 65535,
+        "width": 3,
+        "height": 2,
+        "axisX": -32768,
+        "axisY": 32767,
+        "paletteIndex": 0,
+        "link": null
+      },
+      {
+        "physicalIndex": 1,
+        "group": 0,
+        "number": 65000,
+        "width": 3,
+        "height": 2,
+        "axisX": 32767,
+        "axisY": -32768,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "expected": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 0,
+        "actual": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "expected": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "expected": [
+          65534,
+          65535,
+          3,
+          2,
+          -32768,
+          32767,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "expected": [
+          0,
+          65000,
+          3,
+          2,
+          32767,
+          -32768,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\tsigned-boundaries\t0",
+    "sprite\tsigned-boundaries\t0\t65534\t65535\t3\t2\t-32768\t32767\t0",
+    "sprite\tsigned-boundaries\t0\t0\t65000\t3\t2\t32767\t-32768\t0",
+    "open\tsigned-boundaries\t1",
+    "sprite\tsigned-boundaries\t1\t65534\t65535\t3\t2\t-32768\t32767\t0",
+    "sprite\tsigned-boundaries\t1\t0\t65000\t3\t2\t32767\t-32768\t0"
+  ]
+}

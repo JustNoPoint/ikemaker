@@ -85,9 +85,15 @@ function dialogueToken(line, defaults = {}) {
 }
 
 function quoteZss(value) { return `"${String(value || '').replace(/\\/g, '\\\\').replace(/"/g, '\\"').replace(/\r?\n/g, ' ')}"`; }
-function dialogueController(options = {}) {
+function dialogueController(options = {}, language = 'cns') {
   const lines = (options.lines || []).slice(0, 20); if (!lines.length) throw new Error('At least one dialogue line is required.');
   const state = Number(options.state) || (options.phase === 'post' ? 180 : 191), trigger = options.trigger || (options.phase === 'post' ? 'Win' : 'RoundNo = 1');
+  if (language === 'zss') {
+    const condition = options.enemy ? '(' + trigger + ') && (enemy, Name = ' + quoteZss(options.enemy) + ')' : trigger;
+    const fields = options.hidebars ? ['    hidebars: 1;'] : [];
+    lines.forEach((line,index)=>fields.push('    text'+(index+1)+': '+quoteZss(dialogueToken(line,options))+';'));
+    return ['if '+condition+' {','  dialogue {',...fields,'  }','}', ''].join('\n');
+  }
   const out = [`[State ${state}, Dialogue: ${options.label || 'Story encounter'}]`, 'type = Dialogue', `trigger1 = ${trigger}`];
   if (options.enemy) out.push(`trigger1 = enemy, Name = ${quoteZss(options.enemy)}`);
   if (options.hidebars) out.push('hidebars = 1');

@@ -8,6 +8,10 @@ function deepFreeze(value) {
 
 const DIMENSIONS = deepFreeze({ width: 27, height: 27, unit: 'css-px', wrap: 'whole-groups', horizontalScroll: false });
 const CONTRACT_ID = 'universal-v1';
+// A standalone workspace owns one shared menu and compact icon row. An
+// owner-bound Visual Browser is a docked child with only its local controls;
+// adding the owner's chrome there duplicates actions and obscures ownership.
+const HEADER_CHROME = deepFreeze({ standaloneWorkspace: { menus: 1, iconRows: 1 }, ownerBoundVisualBrowser: { menus: 0, iconRows: 0 } });
 
 const GROUPS = deepFreeze([
   {
@@ -65,4 +69,4 @@ const SPECIALIST_ACTION_IDS = deepFreeze([
 function slotIds() { return SLOTS.map((slot) => slot.id); }
 function slotCoordinates() { return SLOTS.map(({ id, group, groupIndex, slotIndex }) => deepFreeze({ id, group, groupIndex, slotIndex })); }
 
-module.exports = { deepFreeze, CONTRACT_ID, DIMENSIONS, GROUPS, SLOTS, SPECIALIST_ACTION_IDS, slotIds, slotCoordinates };
+module.exports = { deepFreeze, CONTRACT_ID, DIMENSIONS, HEADER_CHROME, GROUPS, SLOTS, SPECIALIST_ACTION_IDS, slotIds, slotCoordinates };

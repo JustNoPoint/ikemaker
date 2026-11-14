@@ -68,7 +68,8 @@ function buildProjectSymbolSnapshot(catalog, context = {}) {
     if (!id || Object.prototype.hasOwnProperty.call(entries, id)) return null;
     entries[id] = freeze({ id, category: entry.category, name: String(entry.name || ''), identity: entryIdentity(entry, catalog), sites: freeze((entry.sites || []).map(site => freeze(normalizedSite(site, catalog)))) });
   }
-  return freeze({ complete: true, fingerprint, capabilityFingerprint: capabilityFingerprint(context.capabilities), entries });
+  const byFile=Object.create(null);for(const entry of Object.values(entries))for(const site of entry.sites)(byFile[site.filename] ||= []).push({entry,site});for(const sites of Object.values(byFile))sites.sort((left,right)=>left.site.line-right.site.line);
+  return freeze({ complete: true, fingerprint, capabilityFingerprint: capabilityFingerprint(context.capabilities), entries, byFile });
 }
 
 function componentIdentity(component) {
@@ -90,10 +91,8 @@ function buildProjectSymbolAuthorities(component, snapshot, context = {}) {
   if (context.defDirty || canonical(context.defPath) !== canonical(component.reference?.defPath)) return unavailable('The owner DEF is dirty or no longer proves this selected component.');
   if (snapshot.capabilityFingerprint !== capabilityFingerprint(context.capabilities) || hash(String(context.sourceText || '')) !== component.sourceHash) return unavailable('The selected source or engine capability target is no longer exact.');
   const filename = canonical(component.filename), start = Number(component.startLine), end = Number(component.endLine), candidates = [];
-  for (const entry of Object.values(snapshot.entries)) {
-    const selected = entry.sites.filter(site => site.filename === filename && site.line >= start && site.line <= end && visibleForCapability(site, context.capabilities) && (entry.category !== 'controllers' || site.catalogMatch));
-    if (selected.length) candidates.push({ entry, selected });
-  }
+  const indexed=snapshot.byFile?.[filename];if(indexed){let low=0,high=indexed.length;while(low<high){const middle=(low+high)>>>1;if(indexed[middle].site.line<start)low=middle+1;else high=middle}const selected=new Map();for(let index=low;index<indexed.length&&indexed[index].site.line<=end;index++){const {entry,site}=indexed[index];if(!visibleForCapability(site,context.capabilities)||entry.category==='controllers'&&!site.catalogMatch)continue;const sites=selected.get(entry)||[];sites.push(site);selected.set(entry,sites)}for(const [entry,sites]of selected)candidates.push({entry,selected:sites});}
+  else for (const entry of Object.values(snapshot.entries)) { const selected = entry.sites.filter(site => site.filename === filename && site.line >= start && site.line <= end && visibleForCapability(site, context.capabilities) && (entry.category !== 'controllers' || site.catalogMatch));if (selected.length) candidates.push({ entry, selected }); }
   candidates.sort((left, right) => ELIGIBLE_CATEGORIES.indexOf(left.entry.category) - ELIGIBLE_CATEGORIES.indexOf(right.entry.category) || left.entry.name.localeCompare(right.entry.name, undefined, { numeric: true, sensitivity: 'base' }));
   const authorities = new Map(), items = [];
   for (const candidate of candidates.slice(0, MAX_VISIBLE_ROUTES)) {

@@ -19,11 +19,11 @@ function evictRecordCache() {
   }
 }
 
-function cachedRecords(text, filename) {
-  const source=String(text),bytes=Buffer.byteLength(source,'utf8'),identity=path.resolve(filename).toLowerCase(),hash=crypto.createHash('sha256').update(source).digest('hex'),cached=recordCache.get(identity);
+function cachedRecords(text, filename, languageId='') {
+  const source=String(text),bytes=Buffer.byteLength(source,'utf8'),identity=path.resolve(filename).toLowerCase()+'\0'+languageId,hash=crypto.createHash('sha256').update(source).digest('hex'),cached=recordCache.get(identity);
   if(cached?.hash===hash){recordCache.delete(identity);recordCache.set(identity,cached);recordCacheHits+=1;return{records:cached.records,hash};}
   recordCacheMisses+=1;
-  const records=collectRecords(source,filename);
+  const records=collectRecords(source,filename,{languageId});
   if(cached){recordCache.delete(identity);recordCacheBytes-=cached.bytes;}
   if(bytes<=RECORD_CACHE_LIMITS.perSourceBytes){recordCache.set(identity,{hash,bytes,records});recordCacheBytes+=bytes;evictRecordCache();}
   return{records,hash};
@@ -83,7 +83,7 @@ function buildProjectSymbolCatalog(files, options = {}) {
   if(blocked)admitted=[];
   for (const file of admitted) {
     if (!file?.filename || typeof file.text !== 'string') { failures.push({ filename: file?.filename || '', reason: 'missing source text' }); continue; }
-    const filename = path.resolve(file.filename), isAssigned = assigned.has(filename.toLowerCase()), cached=cachedRecords(file.text,filename),records=cached.records;
+    const filename = path.resolve(file.filename), isAssigned = assigned.has(filename.toLowerCase()), cached=cachedRecords(file.text,filename,file.languageId||''),records=cached.records;
     sources[filename.toLowerCase()] = { filename, hash:cached.hash, bytes:Buffer.byteLength(file.text,'utf8') };
     records.maps.forEach(record => addRecord(groups, 'maps', record, filename, record.declaration ? 'declaration' : record.access || 'reference', isAssigned));
     records.variables.forEach(record => addRecord(groups, 'variables', record, filename, record.access || 'reference', isAssigned));

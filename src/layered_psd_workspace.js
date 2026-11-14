@@ -187,7 +187,8 @@ async function openLayeredPsdWorkspace(options = {}) {
   if (groupValue === undefined || !isCurrent()) return null;
   const indexValue = await vscode.window.showInputBox({ title: 'First sprite index', value: String(finiteInteger(options.startIndex, 0)), validateInput: value => /^\d+$/.test(value) && Number(value) <= 65535 ? undefined : 'Enter a whole number from 0 to 65535.' });
   if (indexValue === undefined || !isCurrent()) return null;
-  const inspection = inspectPsd(picked[0].fsPath), plan = layeredPsdPlan(inspection.records, { ...options, target, group: Number(groupValue), startIndex: Number(indexValue), stackDirection:direction.value });
+  const imageMagick = vscode.workspace.getConfiguration('ikemenZss').get('imageMagickPath', 'magick');
+  const inspection = inspectPsd(picked[0].fsPath, imageMagick), plan = layeredPsdPlan(inspection.records, { ...options, target, group: Number(groupValue), startIndex: Number(indexValue), stackDirection:direction.value });
   const exportPlan = planPsdExports(inspection.records, 'layers');
   const sourceBytes=fs.readFileSync(inspection.filename),psdHash=crypto.createHash('sha256').update(sourceBytes).digest('hex'),digest = crypto.createHash('sha256').update(sourceBytes).update(JSON.stringify({target,group:plan.group,startIndex:plan.startIndex,stackDirection:plan.stackDirection,targetName:plan.targetName,origin:options.origin,targetCanvas:options.targetCanvas})).digest('hex').slice(0, 16);
   const outputDirectory = path.join(os.tmpdir(), 'ikemaker-layered-psd', `${digest}-${crypto.randomUUID()}`);
@@ -203,7 +204,7 @@ async function openLayeredPsdWorkspace(options = {}) {
   const uiBase=String(options.backgroundPrefix||plan.targetName||'TitleBG').replace(/\s*(?:Info|Def)$/i,'')||'Title',codeConfig={target,origin:Array.isArray(options.origin)&&options.origin.length===2?options.origin.map(value=>Number(value)||0):[0,0],layerNo:finiteInteger(options.layerNo,0,-1,2),firstLayer,firstBlock,uiPrefix:/BG$/i.test(uiBase)?uiBase:`${uiBase}BG`};
   if (!isCurrent()) { cleanupLayeredPsdTemporaryExport(outputDirectory); return null; }
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenLayeredPsdWorkspace', `Layered PSD · ${targetLabel}`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
-  panel.webview.html = require('./webview_policy').protect(layeredPsdHtml({ ...plan, psdPath: inspection.filename, outputDirectory, targetLabel, codeConfig }), panel.webview.cspSource);
+  panel.webview.html = require('./webview_policy').protect(require('./standalone_review_header').enhance(layeredPsdHtml({ ...plan, psdPath: inspection.filename, outputDirectory, targetLabel, codeConfig }),'visual.layered-psd'), panel.webview.cspSource);
   const ownerFile=options.ownerFile&&fs.existsSync(options.ownerFile)?path.resolve(options.ownerFile):'',ownerSourceHash=ownerFile?hash(fs.readFileSync(ownerFile)):'';
   const owner={disposed:false,busy:false,completedReviewGeneration:0,generation:1,reviewGeneration:1};let pendingAdoption=null;
   const post=message=>{if(!owner.disposed)panel.webview.postMessage(message)};
@@ -215,7 +216,8 @@ async function openLayeredPsdWorkspace(options = {}) {
     catch(error){if(!owner.disposed&&owner.generation===generation)actionState(false,`Could not ${label.toLowerCase()}: ${error.message}`)}
     finally{if(!owner.disposed&&owner.generation===generation)owner.busy=false}
   }
-  panel.webview.onDidReceiveMessage(message => {
+  panel.webview.onDidReceiveMessage(async message => {
+    if(require('./standalone_review_header').isMessage(message)&&await require('./standalone_review_header').handle(message,options.ownerFile||'',panel))return;
     if(owner.disposed||!validLayeredPsdMessage(message,allDraw))return;
     if(message.type==='reviewChanged'){owner.reviewGeneration++;owner.completedReviewGeneration=0;pendingAdoption=null;post({type:'reviewInvalidated',message:'Layer review changed. Open SFF intake again to seal this order, visibility, and placement.'});return}
     if(message.type==='copyCode')return runExclusive('Copy generated code',async()=>{await vscode.env.clipboard.writeText(message.code);return'Generated layer code copied.'});

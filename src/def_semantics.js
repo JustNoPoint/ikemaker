@@ -38,6 +38,7 @@ function references(text, filename, markers = DEFAULT_COMMON_MARKERS) {
 }
 
 function registerDefSemanticHighlighting(vscode, context) {
+  require('./stage_def_intelligence').registerStageDefIntelligence(vscode,context);
   const legend = new vscode.SemanticTokensLegend(['ikemenCharacterReference', 'ikemenCommonReference']);
   const selector = { language: 'ikemen-def', scheme: 'file' };
   context.subscriptions.push(

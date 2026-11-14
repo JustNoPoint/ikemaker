@@ -15,7 +15,7 @@ const { hash } = require('./mutation_safety');
 function exists(filename) { return Boolean(filename && fs.existsSync(filename)); }
 function language(filename) {
   const ext = path.extname(filename || '').toLowerCase();
-  return ext === '.lua' ? 'lua' : ['.cns', '.inp', '.cmd', '.jnp'].includes(ext) ? 'cns' : 'zss';
+  return ext === '.lua' ? 'lua' : ['.cns', '.st', '.txt', '.inp', '.cmd', '.mfg', '.jnp'].includes(ext) ? 'cns' : 'zss';
 }
 function readCurrent(filename, openDocuments = []) {
   const resolved = path.resolve(filename).toLowerCase();
@@ -57,6 +57,7 @@ function throwPlans(defPath, airText = '') {
 function hitDefSyntax(filename, text) {
   const ext = path.extname(filename || '').toLowerCase();
   if (ext === '.zss') return 'zss';
+  if (['.cns', '.st', '.cmd', '.mfg', '.inp', '.jnp'].includes(ext)) return 'cns';
   return /\bhitdef\s*\{/i.test(text) ? 'zss' : 'cns';
 }
 function lineAt(text, offset) { return text.slice(0, Math.max(0, offset)).split(/\r?\n/).length - 1; }

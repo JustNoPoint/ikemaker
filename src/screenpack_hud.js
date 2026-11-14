@@ -6,7 +6,7 @@ const def = require('./def_model');
 const {embeddedActions} = require('./def_actions');
 const {parseSelectDef} = require('./select_def_model');
 const {rosterCells, portraitFor, resolveCharacterDef, specialCharacter} = require('./select_roster_preview');
-const {selectRosterReference} = require('./screenpack_flow');
+const {selectStartCells, selectRosterReference} = require('./screenpack_flow');
 
 function defaultHudScreen(screens) {
   const index = screens.findIndex(screen => screen.normalized === 'lifebar');
@@ -18,11 +18,11 @@ function defaultHudScreen(screens) {
 // while editing their own section.
 function hudScreenIndices(screens, active) {
   const name = screens[active]?.normalized || '';
-  const match = /^(.*?)(lifebar|powerbar|face|name|time)$/.exec(name);
+  const match = /^(.*?)(lifebar|powerbar|guardbar|stunbar|face|name|time)$/.exec(name);
   const prefix = match?.[1] || '';
   const team = prefix.replace(/_\d+p\s*$/i,' ');
   const result = [];
-  for (const kind of ['lifebar','powerbar','face','name','time']) {
+  for (const kind of ['lifebar','powerbar','guardbar','stunbar','face','name','time']) {
     const index = [prefix+kind,team+kind,kind].map(candidate=>screens.findIndex(s=>s.normalized===candidate)).find(i=>i>=0);
     if(index!==undefined && !result.includes(index)) result.push(index);
   }
@@ -78,7 +78,19 @@ function linkedMotif(filename, root, preferred) {
 
 function populateFighterArt(filename, document, type, root, sourceMotif, model, screens, images, spriteInfo) {
   if(type==='lifebar')for(const screen of screens){
-    screen.hudDrawOrder=screen.elements.map((_,index)=>index).sort((a,b)=>hudOrder(screen.elements[a])-hudOrder(screen.elements[b]));
+    const section=document.sections.find(entry=>entry.line===screen.line);
+    const leaderOnTop=Boolean(def.number(def.value(section,'leaderontop','0')));
+    const slotOrder=item=>{
+      const player=/^p([1-8])(?:\.|$)/.exec(item.base);
+      if(!player)return -1;
+      const zero=Number(player[1])-1,slot=Math.floor(zero/2);
+      return (zero%2)*8+(leaderOnTop?3-slot:slot);
+    };
+    for(const item of screen.elements){
+      if(/(?:lifebar|powerbar|guardbar|stunbar)$/.test(screen.normalized)&&/^p[1-8]\.(?:bg[012]|mid|top|shift|warn|(?:front|red)\d*)$/.test(item.base))item.knownLayer=true;
+    }
+    screen.hudDrawOrder=screen.elements.map((_,index)=>index).sort((a,b)=>
+      slotOrder(screen.elements[a])-slotOrder(screen.elements[b])||hudOrder(screen.elements[a])-hudOrder(screen.elements[b]));
     if(!/(lifebar|powerbar)$/.test(screen.normalized))continue;
     const source=document.sections.find(section=>section.line===screen.line);
     screen.barRanges={};
@@ -96,6 +108,16 @@ function populateFighterArt(filename, document, type, root, sourceMotif, model, 
   const roster=motifDoc&&selectRosterReference(motif,motifDoc);
   const cells=roster?.file&&fs.existsSync(roster.file)?rosterCells(parseSelectDef(fs.readFileSync(roster.file,'utf8'))):[];
   const players=cells.filter(cell=>cell.members[0]&&!specialCharacter(cell.members[0].name)&&!Number(cell.hidden)).slice(0,8).map(cell=>cell.members[0]);
+  if(type==='screenpack' && model.selectGrid){
+    const grid=model.selectGrid, section=def.sectionMap(def.sections(document,'Select Info')[0]);
+    const skipped=new Set((grid.skippedCells||[]).map(pair=>pair.join(',')));
+    for(const [slot,[column,row]] of selectStartCells(section,grid).entries()){
+      const cellIndex=row*grid.columns+column;
+      const precedingSkips=(grid.skippedCells||[]).filter(([x,y])=>y*grid.columns+x<cellIndex).length;
+      const cell=cells[cellIndex-precedingSkips];
+      if(!skipped.has([column,row].join(',')) && cell?.members[0] && !Number(cell.hidden) && !specialCharacter(cell.members[0].name))players[slot]=cell.members[0];
+    }
+  }
   const cache=new Map(),characterActions=new Map();
   for(const screen of screens){
     if(!(/^(?:.*\s)?face$/.test(screen.normalized)||screen.normalized==='select info'))continue;
@@ -131,7 +153,12 @@ function populateFighterArt(filename, document, type, root, sourceMotif, model, 
       item.characterArt={key,scale,offset};
     }
   }
-  return players.map(entry=>entry.name);
+  return players.map(entry=>{
+    const filename=resolveCharacterDef(roster.file,entry.name);
+    if(!filename)return entry.name;
+    const info=def.sections(def.parseDef(fs.readFileSync(filename,'utf8'),filename),'Info')[0];
+    return def.unquote(def.value(info,'displayname','')||def.value(info,'name',''))||entry.name;
+  });
 }
 
 function hudOrder(item) {

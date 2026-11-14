@@ -147,8 +147,8 @@ const COMMAND_SEQUENCE_RECIPES = Object.freeze([
   { id: 'relative-hcb', label: 'Half-circle back (relative)', basis: 'relative', steps: ['F', 'DF', 'D', 'DB', 'B'] },
   { id: 'relative-double-qcf', label: 'Double quarter-circle forward (relative)', basis: 'relative', steps: ['D', 'DF', 'F', 'D', 'DF', 'F'] },
   { id: 'relative-double-qcb', label: 'Double quarter-circle back (relative)', basis: 'relative', steps: ['D', 'DB', 'B', 'D', 'DB', 'B'] },
-  { id: 'relative-charge-bf', label: 'Charge back, then forward (relative)', basis: 'relative', steps: ['/B', 'F'] },
-  { id: 'relative-charge-fb', label: 'Charge forward, then back (relative)', basis: 'relative', steps: ['/F', 'B'] },
+  { id: 'relative-charge-bf', label: 'Charge back, then forward (relative)', basis: 'relative', steps: ['~45$B', 'F'] },
+  { id: 'relative-charge-fb', label: 'Charge forward, then back (relative)', basis: 'relative', steps: ['~45$F', 'B'] },
   { id: 'relative-circle-forward', label: 'Full circle toward forward (relative)', basis: 'relative', steps: ['F', 'DF', 'D', 'DB', 'B', 'UB', 'U', 'UF'] },
   { id: 'relative-circle-back', label: 'Full circle toward back (relative)', basis: 'relative', steps: ['B', 'DB', 'D', 'DF', 'F', 'UF', 'U', 'UB'] },
   { id: 'relative-dash', label: 'Forward dash (relative)', basis: 'relative', steps: ['F', 'F'] },
@@ -161,11 +161,11 @@ const COMMAND_SEQUENCE_RECIPES = Object.freeze([
   { id: 'absolute-hcl', label: 'Half-circle left (absolute)', basis: 'absolute', steps: ['R', 'DR', 'D', 'DL', 'L'] },
   { id: 'absolute-double-qcr', label: 'Double quarter-circle right (absolute)', basis: 'absolute', steps: ['D', 'DR', 'R', 'D', 'DR', 'R'] },
   { id: 'absolute-double-qcl', label: 'Double quarter-circle left (absolute)', basis: 'absolute', steps: ['D', 'DL', 'L', 'D', 'DL', 'L'] },
-  { id: 'absolute-charge-lr', label: 'Charge left, then right (absolute)', basis: 'absolute', steps: ['/L', 'R'] },
-  { id: 'absolute-charge-rl', label: 'Charge right, then left (absolute)', basis: 'absolute', steps: ['/R', 'L'] },
+  { id: 'absolute-charge-lr', label: 'Charge left, then right (absolute)', basis: 'absolute', steps: ['~45$L', 'R'] },
+  { id: 'absolute-charge-rl', label: 'Charge right, then left (absolute)', basis: 'absolute', steps: ['~45$R', 'L'] },
   { id: 'absolute-circle-right', label: 'Full circle clockwise from right (absolute)', basis: 'absolute', steps: ['R', 'DR', 'D', 'DL', 'L', 'UL', 'U', 'UR'] },
   { id: 'absolute-circle-left', label: 'Full circle counterclockwise from left (absolute)', basis: 'absolute', steps: ['L', 'DL', 'D', 'DR', 'R', 'UR', 'U', 'UL'] },
-  { id: 'vertical-charge-du', label: 'Charge down, then up', basis: 'neutral', steps: ['/D', 'U'] }
+  { id: 'vertical-charge-du', label: 'Charge down, then up', basis: 'neutral', steps: ['~45$D', 'U'] }
 ]);
 
 function inputBasis(step) {
@@ -176,7 +176,7 @@ function inputBasis(step) {
   if (hasAbsolute) return 'Absolute screen direction';
   if (hasRelative) return 'Facing-relative direction';
   if (atoms.some((atom) => ['D', 'U', 'N'].includes(atom))) return 'Direction independent of facing';
-  if (atoms.some((atom) => /^[xyzabcswm]$/.test(atom))) return 'Button input';
+  if (atoms.some((atom) => /^[xyzabcswdm]$/.test(atom))) return 'Button input';
   return 'Custom native input';
 }
 
@@ -228,7 +228,7 @@ function editNativeStepModifier(step, modifier, action = 'apply', releaseFrames 
   const release = String(releaseFrames == null ? '' : releaseFrames).trim();
   const releaseSuffix = /^\d+$/.test(release) ? release : '';
   for (const part of layout.parts) {
-    const match = part.core.match(/^((?:(?:[>/]|~\d*|[\$*])*))(DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRNxyzabcswm])$/);
+    const match = part.core.match(/^((?:(?:[>/]|~\d*|[\$*])*))(DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRNxyzabcswdm])$/);
     if (!match) continue;
     if (kind === 'broadDirection' && !/^(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULR])$/.test(match[2])) continue;
     let prefix = remove(match[1]);
@@ -261,7 +261,7 @@ function releaseFinalButtons(command, releaseFrames = '') {
   const marker = '~' + (/^\d+$/.test(release) ? release : '');
   const stepLayout = commandSyntaxLayout(last.core, '+|'), replacements = [];
   for (const part of stepLayout.parts) {
-    const match = part.core.match(/^((?:(?:[>/]|~\d*|[\$*])*))([xyzabcswm])$/);
+    const match = part.core.match(/^((?:(?:[>/]|~\d*|[\$*])*))([xyzabcswdm])$/);
     if (!match || /~\d*/.test(match[1])) continue;
     const leadingExact = match[1].startsWith('>') ? '>' : '';
     let rest = leadingExact ? match[1].slice(1) : match[1];
@@ -372,7 +372,7 @@ function commandModel(entries, startLine, endLine, defaults, source) {
   const rawCommand = entries.command ? entries.command.value.trim() : '';
   const time = read('time', defaults.time);
   const declaredStepTime = read('steptime', defaults.stepTime);
-  const stepTime = declaredStepTime === -1 ? time : declaredStepTime;
+  const stepTime = declaredStepTime <= 0 ? time : declaredStepTime;
   return {
     name: unquote(entries.name && entries.name.value), command: rawCommand,
     steps: splitSteps(rawCommand).map(stepModel), time, stepTime, declaredStepTime,
@@ -391,7 +391,9 @@ function parseCommands(text, filename = '') {
     for (let line = header + 1; line < end; line += 1) if (/^\s*\[[^\]]+\]/.test(lines[line])) { end = line; break; }
     commands.push(commandModel(parseEntries(lines, header + 1, end), header, end, defaults, filename));
   });
-  return { filename, text: sourceText, lines, defaults, commands };
+  const lineOffsets = [0];
+  for (const ending of sourceText.matchAll(/\r\n|\r|\n/g)) lineOffsets.push(ending.index + ending[0].length);
+  return { filename, text: sourceText, lines, lineOffsets, defaults, commands };
 }
 
 function inputTokens(command) {
@@ -399,7 +401,7 @@ function inputTokens(command) {
 }
 
 function nativeInputAtoms(step) {
-  const source = String(step || '').trim(), atom = '(?:(?:[>/]|~\\d*|[\\$*])*(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRNxyzabcswm]))';
+  const source = String(step || '').trim(), atom = '(?:(?:[>/]|~\\d*|[\\$*])*(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRNxyzabcswdm]))';
   if (!new RegExp(`^${atom}(?:\\s*[+|]\\s*${atom})*$`).test(source)) return [];
   return source.match(new RegExp(atom, 'g')) || [];
 }
@@ -411,7 +413,7 @@ function isMotion(command) {
 
 function finalButtons(command) {
   const steps = splitSteps(command), last = steps[steps.length - 1] || '';
-  return nativeInputAtoms(last).map((token) => token.match(/[A-Za-z]+$/)?.[0] || '').filter((token) => /^[xyzabcswm]$/.test(token));
+  return nativeInputAtoms(last).map((token) => token.match(/[A-Za-z]+$/)?.[0] || '').filter((token) => /^[xyzabcswdm]$/.test(token));
 }
 
 function diagnosticsFor(command, allCommands = [], options = {}) {
@@ -429,8 +431,7 @@ function diagnosticsFor(command, allCommands = [], options = {}) {
   if (inputTokens(command.command).some((atom) => atom.includes('$') && atom.includes('*'))) add('error', 'conflicting-direction-modifiers', '$ and * direction modifiers are mutually exclusive on one input.');
   if (inputTokens(command.command).some((atom) => (atom.match(/\*/g) || []).length > 1)) add('error', 'duplicate-broad-direction', '* may appear only once on a native direction input.');
   if (command.time < 1) add('error', 'invalid-time', 'time must be at least 1 frame.');
-  if (command.declaredStepTime !== -1 && command.stepTime < 1) add('error', 'invalid-steptime', 'steptime must be -1 or at least 1 frame.');
-  if (command.declaredStepTime === -1 && command.steps.length > 1) add('info', 'steptime-follows-time', `steptime is -1, so each completed step remains valid for the command time (${command.time} frames).`);
+  if (command.declaredStepTime <= 0 && command.steps.length > 1) add('info', 'steptime-follows-time', `steptime is ${command.declaredStepTime}, so each completed step remains valid for the command time (${command.time} frames).`);
   if (command.steps.length > 1) add('info', 'timing-summary', `Whole command: ${command.time} frames. Maximum gap after each completed step: ${command.stepTime} frames.`);
   const nativeSteps = splitSteps(command.command).map(nativeInputAtoms);
   if (nativeSteps.some((atoms, index) => atoms.length === 1 && index && nativeSteps[index - 1].length === 1 && atoms[0] === nativeSteps[index - 1][0] && /(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRN])$/.test(atoms[0])) && command.autoGreater !== 0) add('info', 'autogreater-repeat', 'Repeated directions use native autogreater expansion. Set autogreater = 0 only when strict repeated-direction behavior is intentional.');
@@ -439,7 +440,7 @@ function diagnosticsFor(command, allCommands = [], options = {}) {
     if (!release) add('suggestion', 'negative-edge-counterpart', 'This motion ends in a press button. Consider an authored release counterpart for the project negative-edge routing policy.');
   }
   const duplicates = allCommands.filter((other) => other !== command && other.name && other.name.toLowerCase() === command.name.toLowerCase());
-  if (duplicates.length) add('warning', 'duplicate-name', `Another command uses the name “${command.name}”.`);
+  if (duplicates.length) add('info', 'duplicate-name', `Multiple input definitions activate “${command.name}”. Review this family together when editing its routes.`);
   return issues;
 }
 
@@ -503,7 +504,7 @@ function commandInsertionReview(commands = [], draft = {}) {
 
 function normalizeCommandStepForReview(step) {
   const source = String(step || '').trim();
-  const nativeAtom = '(?:(?:[>/]|~\\d*|[\\$*])*(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRNxyzabcswm]))';
+  const nativeAtom = '(?:(?:[>/]|~\\d*|[\\$*])*(?:DB|DF|UB|UF|DL|DR|UL|UR|[BDFULRNxyzabcswdm]))';
   return new RegExp(`^${nativeAtom}(?:\\s*[+|]\\s*${nativeAtom})*$`).test(source) ? source.replace(/\s+/g, '') : source;
 }
 
@@ -515,21 +516,34 @@ function commandBlock(values) {
   return lines.join('\n');
 }
 
+function commandBlockRange(document, command) {
+  const source = document.text;
+  const offsets = document.lineOffsets;
+  let last = command.endLine - 1;
+  // Separator comments can describe the next command or close an IKeMaker link.
+  while (last > command.startLine && /^\s*(?:;.*)?$/.test(document.lines[last] || '')) last--;
+  const start = offsets[command.startLine] +
+    (command.startLine === 0 && source.startsWith('\uFEFF') ? 1 : 0);
+  const end = offsets[last] + document.lines[last].length +
+    (last === 0 && source.startsWith('\uFEFF') ? 1 : 0);
+  return { start, end };
+}
+
 function replaceCommandBlock(document, command, nextBlock) {
-  const eol = (String(document.text || '').match(/\r\n|\r|\n/) || ['\n'])[0];
-  const lines = [...document.lines];
-  lines.splice(command.startLine, command.endLine - command.startLine, ...String(nextBlock).split(/\r\n|\r|\n/), '');
-  return lines.join(eol);
+  const { start, end } = commandBlockRange(document, command);
+  const source = document.text;
+  const body = String(nextBlock).replace(/\r\n|\r/g, '\n').replace(/\n+$/, '');
+  return source.slice(0, start) + mergeNormalizedEditorText(source.slice(start, end), body) + source.slice(end);
 }
 
 function commandBlockText(document, command) {
   if (!document || !command) return '';
-  const eol = (String(document.text || '').match(/\r\n|\r|\n/) || ['\n'])[0];
-  return document.lines.slice(command.startLine, command.endLine).join(eol).replace(/(?:\r\n|\r|\n)+$/, '');
+  const { start, end } = commandBlockRange(document, command);
+  return document.text.slice(start, end);
 }
 
 function validateCommandBlockText(text) {
-  const source = String(text || ''), sectionNames = [...source.matchAll(/^\s*\[([^\]]+)\]\s*(?:;.*)?$/gm)].map(match => match[1].trim().toLowerCase());
+  const source = String(text || ''), sectionNames = [...source.matchAll(/^[^\S\r\n]*\[([^\]\r\n]+)\]/gm)].map(match => match[1].trim().toLowerCase());
   if (sectionNames.length !== 1 || sectionNames[0] !== 'command') throw new Error('The constrained source editor accepts exactly one [Command] block and no other sections.');
   const parsed = parseCommands(source, 'reviewed-command-block');
   if (parsed.commands.length !== 1 || !parsed.commands[0].name || !parsed.commands[0].command) throw new Error('The reviewed [Command] block needs both a name and command sequence.');
@@ -564,10 +578,55 @@ function facingCommandTrigger(options = {}) {
   return `(facing = 1 && command = "${right}") || (facing = -1 && command = "${left}")`;
 }
 
+const COMMAND_POSTURES = Object.freeze({
+  grounded: 'StateType != A',
+  standing: 'StateType = S',
+  crouching: 'StateType = C',
+  airborne: 'StateType = A',
+  any: ''
+});
+
+function mirroredAbsoluteMotion(command) {
+  const steps = commandStepLayout(command).steps;
+  const bases = steps.map(step => inputBasis(step.core));
+  if (!bases.includes('Absolute screen direction') || bases.some(basis => ['Facing-relative direction', 'Mixed absolute + facing-relative', 'Custom native input'].includes(basis))) return '';
+  return commandStepLayout(mirrorCommandDirections(command)).steps.map(step => normalizeCommandStepForReview(step.core)).join(',');
+}
+
+function motionCommandTrigger({ posture = 'grounded', name, leftName, rightName, airSide = 'facing' }) {
+  if (!Object.hasOwn(COMMAND_POSTURES, posture)) throw new Error('Choose a listed posture.');
+  const paired = leftName !== undefined || rightName !== undefined;
+  const names = paired ? [leftName, rightName] : [name];
+  if (names.some(value => typeof value !== 'string' || !value.trim() || /["\r\n]/.test(value))) {
+    throw new Error('Choose a valid command name for each input.');
+  }
+  let expression = paired ? facingCommandTrigger({ leftName, rightName }) : `command = "${name}"`;
+  if (paired && ['opponent', 'setting'].includes(airSide) && ['airborne', 'any'].includes(posture)) {
+    // Resolve physical L/R against the opponent only in air. Keep facing on ties or without P2.
+    const enabled = airSide === 'setting' ? ' && map(ikm_air_follow_opponent) = 1' : '';
+    const side = `cond(StateType = A && NumEnemy${enabled}, cond(P2Dist X < 0, -facing, facing), facing)`;
+    expression = `(${side} = 1 && command = "${rightName}") || (${side} = -1 && command = "${leftName}")`;
+  }
+  const guard = COMMAND_POSTURES[posture];
+  return guard ? `${guard} && ${paired ? '(' + expression + ')' : expression}` : expression;
+}
+
+// Physical facing only: this turns the sprite. It never reinterprets an already-recognized buffered
+// command (command routing keeps the facing at recognition unless a route explicitly opts into the
+// parser's live P2-side policy). Place the output in an every-tick state (State -2/-3 or StateDef -2/-3).
 function aerialTurnPolicy(options = {}) {
   const mode = options.mode === 'distance' ? 'distance' : 'locked', distance = Math.max(0, Math.round(Number(options.distance) || 0));
-  if (mode === 'locked') return `; Keep the current facing throughout aerial states.\nassertSpecial{flag: noAutoTurn}`;
-  return `; Keep engine auto-turn disabled, then allow only this reviewed aerial crossover.\nassertSpecial{flag: noAutoTurn}\nif stateType = A && numEnemy && p2Dist x < const240p(-${distance}) {\n    turn{}\n}`;
+  const language = options.language === 'cns' ? 'cns' : 'zss';
+  const separation = 'Physical turning only; buffered command results keep the facing at recognition.';
+  if (language === 'cns') {
+    // NoAutoTurn is asserted only while airborne, so grounded engine auto-turn is retained.
+    const lock = `; ${mode === 'locked' ? 'Keep the current facing throughout aerial states.' : 'Keep engine auto-turn disabled in the air, then allow only this reviewed aerial crossover.'}\n; ${separation}\n[State -2, Air facing lock]\ntype = AssertSpecial\ntrigger1 = StateType = A\nflag = NoAutoTurn`;
+    if (mode === 'locked') return lock;
+    return `${lock}\n\n[State -2, Air crossover turn]\ntype = Turn\ntrigger1 = StateType = A && NumEnemy\ntrigger1 = P2Dist X < Const240p(-${distance})`;
+  }
+  const zssLock = 'if stateType = A {\n    assertSpecial{flag: noAutoTurn}\n}';
+  if (mode === 'locked') return `# Keep the current facing throughout aerial states.\n# ${separation}\n${zssLock}`;
+  return `# Keep engine auto-turn disabled in the air, then allow only this reviewed aerial crossover.\n# ${separation}\n${zssLock}\nif stateType = A && numEnemy && p2Dist x < const240p(-${distance}) {\n    turn{}\n}`;
 }
 
 function assignmentValue(line, value) {
@@ -637,5 +696,5 @@ function changeMovelistSnippet(slot) { return `[State Change Movelist]\ntype = C
 module.exports = {
   uncomment, parseCommands, splitSteps, stepModel, diagnosticsFor, commandDocumentTargetDiagnostics, commandBlock, commandBlockText, validateCommandBlockText, replaceCommandBlock, appendCommandBlock, insertCommandBlock, patchCommandBlock,
   parseMovelistAssignments, movelistPreview, changeMovelistSnippet, nativeInputAtoms, isMotion, finalButtons,
-  INSERTABLE_INPUTS, NIGHTLY_STAR_INPUTS, insertableInputs, nightlyCommandExpressionsEnabled, COMMAND_SEQUENCE_RECIPES, inputBasis, convertDirectionBasis, convertCommandDirectionBasis, combineNativeInput, editNativeStepModifier, releaseFinalButtons, mirrorNativeStep, mirrorCommandDirections, commandSyntaxLayout, commandStepLayout, replaceStepCores, editCommandSteps, mergeNormalizedEditorText, normalizeCommandStepForReview, commandConflictMatrix, commandAuthoringMode, commandInsertionReview, facingCommandTrigger, aerialTurnPolicy
+  INSERTABLE_INPUTS, NIGHTLY_STAR_INPUTS, insertableInputs, nightlyCommandExpressionsEnabled, COMMAND_SEQUENCE_RECIPES, inputBasis, convertDirectionBasis, convertCommandDirectionBasis, combineNativeInput, editNativeStepModifier, releaseFinalButtons, mirrorNativeStep, mirrorCommandDirections, commandSyntaxLayout, commandStepLayout, replaceStepCores, editCommandSteps, mergeNormalizedEditorText, normalizeCommandStepForReview, commandConflictMatrix, commandAuthoringMode, commandInsertionReview, facingCommandTrigger, COMMAND_POSTURES, motionCommandTrigger, mirroredAbsoluteMotion, aerialTurnPolicy
 };

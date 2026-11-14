@@ -74,7 +74,7 @@ $extensionPackProperty
 
     $topFiles = @(
         'package.json', 'README.md', 'language-configuration.json',
-        'cns-language-configuration.json', 'def-language-configuration.json', 'pnpm-lock.yaml',
+        'air-language-configuration.json', 'cns-language-configuration.json', 'def-language-configuration.json', 'pnpm-lock.yaml',
         'THIRD-PARTY-NOTICES.md'
     )
     foreach ($name in $topFiles) {
@@ -83,15 +83,8 @@ $extensionPackProperty
     }
     Add-FileEntry (Join-Path $root 'LICENSE') 'extension/LICENSE.txt'
 
-    foreach ($directory in @('src', 'data', 'media', 'snippets', 'syntaxes', 'bin')) {
-        $base = Join-Path $root $directory
-        Get-ChildItem -LiteralPath $base -File -Recurse | ForEach-Object {
-            # Windows PowerShell 5.1 runs on .NET Framework, which does not
-            # provide Path.GetRelativePath. Both paths are absolute here.
-            $relative = $_.FullName.Substring($root.Length).TrimStart([char[]]@('\', '/'))
-            Add-FileEntry $_.FullName ("extension/$relative")
-        }
-    }
+    . (Join-Path $PSScriptRoot 'public-vsix-inventory.ps1')
+
 }
 finally {
     $zip.Dispose()

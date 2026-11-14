@@ -28,7 +28,7 @@ function distanceSquared(left, right) {
 function remapPngToPalette(buffer, targetColors) {
   if (!Array.isArray(targetColors) || targetColors.length !== 256 || targetColors.some(color => !Array.isArray(color) || color.length !== 4)) throw new Error('Target SFF palette must contain exactly 256 RGBA colors.');
   const decoded = decodePng(buffer), exact = new Map();
-  targetColors.forEach((color, index) => { const id = key(color); if (!exact.has(id)) exact.set(id, index); });
+  targetColors.forEach((color, index) => { const id = key(color); if ((index !== 0 || color[3] === 0) && !exact.has(id)) exact.set(id, index); });
   const cache = new Map(), indices = Buffer.alloc(decoded.width * decoded.height), changedColors = new Map();
   let changedPixels = 0, visibleChangedPixels = 0, totalDistance = 0, maximumDistance = 0, transparentChanged = 0;
   for (let at = 0, pixel = 0; at < decoded.rgba.length; at += 4, pixel += 1) {
@@ -41,8 +41,10 @@ function remapPngToPalette(buffer, targetColors) {
         target = 0; distance = Infinity;
         for (let index = 0; index < targetColors.length; index += 1) {
           const candidate = targetColors[index], candidateDistance = distanceSquared(rgba, candidate);
+          if (rgba[3] > 0 && index === 0 || rgba[3] === 255 && candidate[3] !== 255) continue;
           if (candidateDistance < distance) { distance = candidateDistance; target = index; if (!distance) break; }
         }
+        if (!Number.isFinite(distance)) throw new Error('The selected palette has no eligible opaque index for this visible pixel. Choose a palette that preserves its opacity.');
         cache.set(id, { target, distance }); changedColors.set(id, { source: rgba, targetIndex: target, target: targetColors[target], distance: Math.sqrt(distance) });
       }
       changedPixels += 1; totalDistance += Math.sqrt(distance); maximumDistance = Math.max(maximumDistance, Math.sqrt(distance));

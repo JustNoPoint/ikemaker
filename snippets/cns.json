@@ -1,0 +1,50 @@
+{
+  "StateDef": {
+    "prefix": "statedef",
+    "body": [
+      "; ${2:State name}",
+      "[Statedef ${1:200}]",
+      "type = ${3|S,C,A,L,U|}",
+      "movetype = ${4|I,A,H,U|}",
+      "physics = ${5|S,C,A,N,U|}",
+      "anim = ${6:$1}",
+      "ctrl = ${7|0,1|}",
+      "",
+      "${0}"
+    ],
+    "description": "Create a CNS state definition"
+  },
+  "State controller": {
+    "prefix": "state",
+    "body": [
+      "[State ${1:200}, ${2:Label}]",
+      "type = ${3:ChangeState}",
+      "trigger1 = ${4:AnimTime = 0}",
+      "${0}"
+    ],
+    "description": "Create a CNS state controller"
+  },
+  "ChangeState": {
+    "prefix": "changestate",
+    "body": [
+      "[State ${1:200}, ${2:End}]",
+      "type = ChangeState",
+      "trigger1 = ${3:AnimTime = 0}",
+      "value = ${4:0}",
+      "ctrl = ${5|1,0|}",
+      "${0}"
+    ],
+    "description": "Create a ChangeState controller"
+  },
+  "Command": {
+    "prefix": "command",
+    "body": [
+      "[Command]",
+      "name = \"${1:name}\"",
+      "command = ${2:~D, DF, F, x}",
+      "time = ${3:15}",
+      "${0}"
+    ],
+    "description": "Create a [Command] block for a CMD file"
+  }
+}

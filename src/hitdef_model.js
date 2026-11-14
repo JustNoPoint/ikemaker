@@ -48,7 +48,7 @@ function parseParams(text, start, end, syntax) {
       : /^\s*([\w.]+)\s*=\s*(.*?)\s*(?:;.*)?$/d.exec(line.text);
     if (!match) continue;
     const key = match[1].toLowerCase();
-    if (syntax === 'cns' && (key === 'type' || /^trigger\d*$/.test(key))) continue;
+    if (syntax === 'cns' && (key === 'type' || /^trigger(?:all|\d+)$/.test(key))) continue;
     if (result[key]) duplicates.push(key);
     result[key] = { name: match[1], value: match[2].trim(), start: start + line.start, end: start + line.end, valueStart: start + line.start + match.indices[2][0], valueEnd: start + line.start + match.indices[2][1] };
   }
@@ -90,6 +90,19 @@ function parseCns(text) {
 }
 
 function parseHitDefs(text, syntax) { return syntax === 'cns' ? parseCns(text) : parseZss(text); }
+// Expressions stay verbatim. A cross-language preview covers controller fields only.
+function generatedHitDefPreview(language, fields, cnsContext, sourceSyntax) {
+  if (language === 'zss') return ['hitDef {', ...fields.map(field => '  ' + field.name + ': ' + field.value + ';'), '}'].join('\n');
+  const heading = cnsContext?.length ? cnsContext : ['[State 0, HitDef]', 'type = HitDef',
+    sourceSyntax === 'zss' ? 'trigger1 = 0 ; Set the activation condition from the source move' : 'trigger1 = AnimElem = 1'];
+  return [...heading, ...fields.map(field => field.name + ' = ' + field.value)].join('\n');
+}
+
+function cnsHitDefContext(text, block) {
+  if (block?.syntax !== 'cns') return [];
+  return text.slice(block.start, block.end).split(/\r?\n/).filter(line =>
+    /^\s*(?:\[\s*State\b|(?:type|triggerall|trigger\d+|persistent|ignorehitpause)\s*=)/i.test(line));
+}
 function chooseHitDef(blocks, offset) {
   return blocks.find((item) => offset >= item.start && offset <= item.end)
     || [...blocks].reverse().find((item) => item.start <= offset)
@@ -123,7 +136,7 @@ function updateHitDef(text, block, changes) {
     const eol = text.includes('\r\n') ? '\r\n' : '\n';
     const indent = block.syntax === 'zss' ? '  ' : '';
     const inserted = additions.map((item) => `${indent}${item.name}${block.syntax === 'zss' ? ': ' : ' = '}${item.value}${block.syntax === 'zss' ? ';' : ''}`).join(eol) + eol;
-    edits.push({ start: block.bodyEnd, end: block.bodyEnd, text: block.syntax === 'zss' ? `${eol}${inserted}` : inserted });
+    edits.push({ start: block.bodyEnd, end: block.bodyEnd, text: block.syntax === 'zss' ? `${eol}${inserted}` : (block.bodyEnd && !/[\r\n]/.test(text[block.bodyEnd - 1]) ? eol : '') + inserted });
   }
   return edits.sort((a, b) => b.start - a.start).reduce((value, edit) => value.slice(0, edit.start) + edit.text + value.slice(edit.end), text);
 }
@@ -134,4 +147,4 @@ function newHitDef(syntax = 'zss', state = 'State', selected = STARTER) {
   return ['hitDef {', ...entries.map(([name, value]) => `  ${name}: ${value};`), '}', ''].join(eol);
 }
 
-module.exports = { GROUPS, STARTER, parseHitDefs, chooseHitDef, groupedParameters, updateHitDef, newHitDef };
+module.exports = { GROUPS, STARTER, generatedHitDefPreview, cnsHitDefContext, parseHitDefs, chooseHitDef, groupedParameters, updateHitDef, newHitDef };

@@ -225,13 +225,39 @@ function snapshotEngine(root, backupRoot, metadata = {}) {
 }
 function acquireLock(journalRoot, migrationId) { fs.mkdirSync(journalRoot, { recursive: true }); const filename = path.join(journalRoot, 'engine-migration.lock'), fd = fs.openSync(filename, 'wx'); fs.writeFileSync(fd, `${JSON.stringify({ migrationId, pid: process.pid, createdAt: new Date().toISOString() }, null, 2)}\n`); return { filename, fd, release() { try { fs.closeSync(fd); } finally { if (fs.existsSync(filename)) fs.unlinkSync(filename); } } }; }
 function writeJournal(filename, journal) { const temp = `${filename}.tmp`; fs.writeFileSync(temp, `${JSON.stringify(journal, null, 2)}\n`); fs.renameSync(temp, filename); }
-function preflight(root, stagedRoot, accepted, backupRoot) {
+function realDestination(filename) {
+  const missing = []; let cursor = path.resolve(filename);
+  while (!fs.existsSync(cursor)) { const parent = path.dirname(cursor); if (parent === cursor) break; missing.unshift(path.basename(cursor)); cursor = parent; }
+  return path.join(fs.realpathSync.native(cursor), ...missing);
+}
+function validateBackupRoot(root, backupRoot) {
+  const source = fs.realpathSync.native(root), backup = realDestination(backupRoot), relative = path.relative(source, backup);
+  if (!relative || relative === '.' || relative === '..' || (!relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative)))
+    throw new Error('Choose a backup folder outside the game root. The engine snapshot cannot be stored inside the game it copies.');
+  return backup;
+}
+function snapshotBytes(root, registryFile) {
+  let total = 0;
+  for (const name of safety.MANAGED_DIRECTORIES) for (const file of walkFiles(path.join(root, name))) total += fs.statSync(file).size;
+  for (const name of fs.readdirSync(root)) {
+    const file = path.join(root, name);
+    if (safety.MANAGED_ROOT_FILES.has(name.toLowerCase()) && fs.lstatSync(file).isFile()) total += fs.statSync(file).size;
+  }
+  for (const file of [path.join(root, 'save', 'config.ini'), registryFile]) if (file && fs.existsSync(file)) total += fs.statSync(file).size;
+  return total;
+}
+function preflight(root, stagedRoot, accepted, backupRoot, registryFile) {
   if (!fs.existsSync(path.join(root, 'Ikemen_GO.exe'))) throw new Error('The selected project root does not contain Ikemen_GO.exe.');
   if (runningFromRoot(root).length) throw new Error('IKEMEN GO is running from this engine root. Close it before migration.');
+  validateBackupRoot(root, backupRoot);
   fs.accessSync(root, fs.constants.R_OK | fs.constants.W_OK); fs.mkdirSync(backupRoot, { recursive: true }); fs.accessSync(backupRoot, fs.constants.R_OK | fs.constants.W_OK);
-  const requiredBytes = accepted.reduce((sum, item) => sum + (Number(item.length) || 0), 0) * 2;
-  const available = fs.statfsSync(backupRoot).bavail * fs.statfsSync(backupRoot).bsize; if (available < requiredBytes) throw new Error('The backup location does not have enough free space for staging and rollback data.');
+  const replacementBytes = accepted.reduce((sum, item) => sum + (Number(item.length) || 0), 0), backupBytes = snapshotBytes(root, registryFile);
+  const available = fs.statfsSync(backupRoot).bavail * fs.statfsSync(backupRoot).bsize;
+  const sameVolume = fs.statSync(root).dev === fs.statSync(backupRoot).dev;
+  const requiredBytes = backupBytes + (sameVolume ? replacementBytes : 0) + Math.max(1024 * 1024, Math.ceil(backupBytes * 0.01));
+  if (available < requiredBytes) throw new Error(`The backup location needs at least ${requiredBytes} free bytes for the full engine snapshot${sameVolume ? ' and candidate writes' : ''}; ${available} bytes are available.`);
   for (const item of accepted) if (!fs.existsSync(path.join(stagedRoot, ...item.relative.split('/')))) throw new Error(`Staged file is missing: ${item.relative}`);
+  return { requiredBytes, availableBytes: available, snapshotBytes: backupBytes, sameVolume };
 }
 function applyConfigMappings(text, plan) {
   let output = String(text);
@@ -255,13 +281,14 @@ function applyConfigMappings(text, plan) {
 
 function executeMigration(options) {
   const { root, stagedRoot, accepted, backupRoot, candidate, registryFile, oldTarget } = options, removals = options.removals || [], migrationId = `${candidate.commit.slice(0, 12)}-${Date.now()}`;
+  preflight(root, stagedRoot, accepted, backupRoot, registryFile);
   const journalRoot = path.join(backupRoot, '.migration-state'), lock = acquireLock(journalRoot, migrationId), journalFile = path.join(journalRoot, `${migrationId}.json`);
   const journal = { schemaVersion: 1, migrationId, state: 'preparing', root: path.resolve(root), candidate, oldTarget, registryFile: registryFile || null,
     registryBeforeSha256: registryFile && fs.existsSync(registryFile) ? sha256File(registryFile) : null,
     oldInstalledRegistry: options.oldInstalledRegistry || null, oldCatalog: options.oldCatalog || null,
     createdAt: new Date().toISOString(), writes: [], removals: [], newlyIntroduced: [], backup: null };
   try {
-    writeJournal(journalFile, journal); preflight(root, stagedRoot, accepted, backupRoot);
+    writeJournal(journalFile, journal);
     const backup = snapshotEngine(root, backupRoot, { version: oldTarget?.version || '1.0.0', commit: oldTarget?.commit || '', sourceIdentity: oldTarget, registryFile }); journal.backup = backup.target; journal.state = 'backed-up'; writeJournal(journalFile, journal);
     for (const item of accepted) {
       const source = path.join(stagedRoot, ...item.relative.split('/')), destination = path.join(root, ...item.relative.split('/')), existed = fs.existsSync(destination);
@@ -396,4 +423,4 @@ function recoverPendingMigration(journalFile) {
   const result = { journal, journalFile, lock: { release() { if (fs.existsSync(lockFile)) fs.unlinkSync(lockFile); } } }; return rollbackMigration(result);
 }
 
-module.exports = { WRITE_AUTHORITY, CONFIG_MAPPINGS, sha256Bytes, sha256File, retainedBuildId, requestBuffer, fetchJson, chooseWindowsAsset, resolveExactRelease, resolveExactNightly, sameCandidate, inspectZip, commonArchiveRoot, extractZip, downloadCandidate, parseRetainedArtifact, stageRetainedArtifact, acquireCandidate, classifyLocalFiles, classifyObsoleteFiles, runningFromRoot, snapshotEngine, preflight, applyConfigMappings, executeMigration, finalizeMigration, prepareRegistryWrite, recordRegistryWrite, markRegistryFailure, pendingMigrations, verifyRollbackBackup, rollbackMigration, recoverPendingMigration };
+module.exports = { WRITE_AUTHORITY, CONFIG_MAPPINGS, sha256Bytes, sha256File, retainedBuildId, requestBuffer, fetchJson, chooseWindowsAsset, resolveExactRelease, resolveExactNightly, sameCandidate, inspectZip, commonArchiveRoot, extractZip, downloadCandidate, parseRetainedArtifact, stageRetainedArtifact, acquireCandidate, classifyLocalFiles, classifyObsoleteFiles, runningFromRoot, snapshotEngine, validateBackupRoot, snapshotBytes, preflight, applyConfigMappings, executeMigration, finalizeMigration, prepareRegistryWrite, recordRegistryWrite, markRegistryFailure, pendingMigrations, verifyRollbackBackup, rollbackMigration, recoverPendingMigration };

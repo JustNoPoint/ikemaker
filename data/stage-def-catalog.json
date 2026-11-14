@@ -1,0 +1,3127 @@
+{
+  "version": 1,
+  "scope": "Stage DEF and background-controller source assistance. Bundled documentation is not runtime capability proof.",
+  "sources": [
+    {
+      "file": "mugen/bgs.html",
+      "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad"
+    },
+    {
+      "file": "wiki/Stage-features.html",
+      "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7"
+    },
+    {
+      "file": "wiki/Background-features.html",
+      "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a"
+    }
+  ],
+  "entries": [
+    {
+      "scope": "info",
+      "key": "name",
+      "signature": "name = stage_name",
+      "description": "This parameter sets the name of the stage. The parameter must be enclosed\r\n\nin double-quotes.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 10638,
+        "anchor": "info-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "info",
+      "key": "displayname",
+      "signature": "displayname = display_name",
+      "description": "This parameter sets the name to display in the stage select list.\r\n\nThe parameter must be enclosed in double-quotes.\r\n\nIf omitted, defaults to stage_name.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 10815,
+        "anchor": "info-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "info",
+      "key": "versiondate",
+      "signature": "versiondate = version",
+      "description": "This parameter sets the version of the stage.\r\n\nThe formats accepted are either a date (MM,DD,YYYY) or a x.xx version number,\r\n\ne.g. 1.23.\r\n\nThis parameter is for informational purposes and is currently not used by the engine.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 11071,
+        "anchor": "info-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "info",
+      "key": "mugenversion",
+      "signature": "mugenversion = mugen_version",
+      "description": "This parameter sets the target version number of M.U.G.E.N that the stage\r\n\nis designed for. Valid values are 2002,02,14, 1.0 or 1.1.\r\n\nDefaults to 2002,02,14.\n\nA version number of 2002,02,14 restricts camera movement to whole units\r\n\nof the stage coordinate space, whereas 1.0 and higher allows the camera position to assume\r\n\nfractional values.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 11386,
+        "anchor": "info-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "info",
+      "key": "author",
+      "signature": "author = author_name",
+      "description": "This parameter sets the name of the author of the stage.\r\n\nThe parameter must be enclosed in double-quotes.\r\n\nThis parameter is for informational purposes and is currently not used by the engine.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 12077,
+        "anchor": "info-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "startx",
+      "signature": "startx = pos_x",
+      "description": "Sets the camera's starting x-position. Should be set to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 12534,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "starty",
+      "signature": "starty = pos_y",
+      "description": "Sets the camera's starting y-position. Should be set to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 12705,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "boundleft",
+      "signature": "boundleft = min_x",
+      "description": "This is the minimum x-value that the camera can move to.\r\n\nIt must be negative. Adjust this value to limit how far left the camera can\r\n\nscroll.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 12876,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "boundright",
+      "signature": "boundright = max_x",
+      "description": "This is the maximum x-value that the camera can move to.\r\n\nIt must be positive. Adjust this value to limit how far right the camera\r\n\ncan scroll.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 13138,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "boundhigh",
+      "signature": "boundhigh = min_y",
+      "description": "Controls the minimum y-value that the camera can move to. It must be\r\n\nnegative. Adjust this value to limit how far up the camera can scroll.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 13402,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "boundlow",
+      "signature": "boundlow = max_y",
+      "description": "Controls the maximum y-value that the camera can move to.\r\n\nIt must always be set to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 13660,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "tension",
+      "signature": "tension = h_dist",
+      "description": "This is the horizontal distance a player can get from the left and right edges before\r\n\nthe camera starts to follow.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 13863,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "tensionhigh",
+      "signature": "tensionhigh = top_dist ; (Version 1.1 and higher)",
+      "description": "This is the vertical distance a player can get from the top edge before the camera\r\n\nstarts to follow.\r\n\nThe use of the tensionhigh and tensionlow parameters activates a method\r\n\nof vertical scrolling based on edge tension introduced in Version 1.1.\r\n\nIf tensionhigh and tensionlow are specified, verticalfollow and floortension\r\n\nwill be ignored.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 14061,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "tensionlow",
+      "signature": "tensionlow = bottom_dist ; (Version 1.1 and higher)",
+      "description": "This is the vertical distance a player can get from the bottom edge before the camera\r\n\nstarts to follow.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 14731,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "verticalfollow",
+      "signature": "verticalfollow = closeness",
+      "description": "This value affects the vertical movement of the camera to follow the\r\n\nhighest player. It should be set between 0 and 1. A value\r\n\nof 0 means the camera does not move up at all. A higher value makes the\r\n\ncamera track the higher player closer. A value of 1 makes the camera\r\n\ntrack the player as close as possible.\r\n\nThis parameter is ignored if tensionhigh and tensionlow are used.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 14953,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "floortension",
+      "signature": "floortension = v_dist",
+      "description": "This is the minimum vertical distance the highest player has to be from\r\n\nthe floor (given as a positive value), before the camera starts to move\r\n\nup to follow him. This parameter is used only with the verticalfollow\r\n\ncamera scrolling mode.\r\n\nThis parameter is ignored if tensionhigh and tensionlow are used.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 15499,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "overdrawhigh",
+      "signature": "overdrawhigh = top_pixels ; (Version 1.0 and higher)",
+      "description": "See below.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 16002,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "overdrawlow",
+      "signature": "overdrawlow = bottom_pixels ; (Version 1.0 and higher)",
+      "description": "Number of pixels beyond the top and bottom of the screen that may\r\n\nbe drawn. Overdraw specifies the how much can be seen during an\r\n\nEnvShake. Overdraw pixels will also be used when the screen aspect\r\n\nis taller than the stage aspect.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 16129,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "cuthigh",
+      "signature": "cuthigh = top_pixels ; (Version 1.0 and higher)",
+      "description": "See below.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 16488,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "cutlow",
+      "signature": "cutlow = bottom_pixels ; (Version 1.0 and higher)",
+      "description": "Number of pixels into the top and bottom of the screen that may be\r\n\ncut from drawing when the screen aspect is shorter than the stage\r\n\naspect. These parameters suggest a guideline, and the actual\r\n\nnumber of pixels cut depends on the difference in aspect.\r\n\nIf cuthigh and cutlow are omitted, the engine will attempt\r\n\nto guess a reasonable set of values.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 16610,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "startzoom",
+      "signature": "startzoom = start_zoom_scale ; (Version 1.1 and higher)",
+      "description": "This specifies the initial scale factor for the stage. The effect of this\r\n\nparameter is most visible if there are no characters that affect the camera.\r\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 17155,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "zoomout",
+      "signature": "zoomout = zoom_out_scale ; (Version 1.1 and higher)",
+      "description": "This specifies the scale factor for the stage when the camera is fully zoomed out.\r\n\nNote that a smaller number allows the camera to zoom out more, e.g. zoomout = .5\r\n\nspecifies that the camera can zoom outwards by a factor of 2.\r\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 17447,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "zoomin",
+      "signature": "zoomin = zoom_in_scale ; (Version 1.1 and higher)",
+      "description": "This specifies the scale factor for the stage when the camera is fully zoomed in.\r\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 17846,
+        "anchor": "camera-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p1startx",
+      "signature": "p1startx = x_start",
+      "description": "Sets the starting x-position for Player 1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 18242,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p1starty",
+      "signature": "p1starty = y_start",
+      "description": "Sets the starting y-position for Player 1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 18401,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p2startx",
+      "signature": "p2startx = x_start",
+      "description": "Sets the starting x-position for Player 2.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 18560,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p2starty",
+      "signature": "p2starty = y_start",
+      "description": "Sets the starting y-position for Player 2.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 18719,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p1facing",
+      "signature": "p1facing = facing_flag",
+      "description": "Controls which way Player 1 faces at the start. Set to 1 to face right,\r\n\nor -1 to face left.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 18878,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p2facing",
+      "signature": "p2facing = facing_flag",
+      "description": "Controls which way Player 2 faces at the start. Set to 1 to face right,\r\n\nor -1 to face left.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 19059,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "leftbound",
+      "signature": "leftbound = x_min",
+      "description": "Sets the minimum allowable x-position for all players.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 19240,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "playerinfo",
+      "key": "rightbound",
+      "signature": "rightbound = x_max",
+      "description": "Sets the maximum allowable x-position for all players.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 19410,
+        "anchor": "playerinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bound",
+      "key": "screenleft",
+      "signature": "screenleft = min_dist_left",
+      "description": "Minimum allowable distance between players and the left edge of the screen.\r\n\nMust be positive.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 19754,
+        "anchor": "bound-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bound",
+      "key": "screenright",
+      "signature": "screenright = min_dist_right",
+      "description": "Minimum allowable distance between players and the right edge of the screen.\r\n\nMust be positive.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 19941,
+        "anchor": "bound-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "zoffset",
+      "signature": "zoffset = v_dist",
+      "description": "v_dist is the vertical distance of the ground level from the top\r\n\nof the screen, given in pixels. The zoffset parameter is\r\n\ninappropriately named, but has been left unchanged for compatibility purposes.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 20312,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "zoffsetlink",
+      "signature": "zoffsetlink = elem_ID",
+      "description": "If this parameter is specified, it links the zoffset value to the\r\n\ny-position of a background element with the specified ID number. For\r\n\nexample, you can link the value to a dummy element (see Other\r\n\nbackground element types) with a sin.y parameter to make the\r\n\ncharacters bob up and down in a sinusoidal fashion.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 20642,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "autoturn",
+      "signature": "autoturn = turn_flag",
+      "description": "Leave this parameter to 1 to make characters automatically turn to face\r\n\neach other. Setting this to another value will cause undesirable behavior.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 21225,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "resetBG",
+      "signature": "resetBG = reset_flag",
+      "description": "If set to 1, backgrounds will be reset between rounds. If set to 0,\r\n\nbackgrounds will continue playing.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 21459,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "localcoord",
+      "signature": "localcoord = width, height",
+      "description": "Dimensions of the coordinate space of the stage.\r\n\nDefaults to 320, 240 if omitted.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 21649,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "xscale",
+      "signature": "xscale = xscale",
+      "description": "Horizontal scaling factor of offsets, velocities, sprites and animations.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 21833,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "stageinfo",
+      "key": "yscale",
+      "signature": "yscale = yscale",
+      "description": "Vertical scaling factor of offsets, velocities, sprites and animations.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 21986,
+        "anchor": "stageinfo-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "shadow",
+      "key": "intensity",
+      "signature": "intensity = darkness_val ;(optional) (int)",
+      "description": "This controls how dark the shadow is. Valid values range from 0 (lightest)\r\n\nto 256 (darkest). Defaults to 128 if omitted.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 22312,
+        "anchor": "shadow-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "shadow",
+      "key": "color",
+      "signature": "color = r,g,b ;(optional) (deprecated)",
+      "description": "This parameter is no longer supported as of M.U.G.E.N 1.1 and will be ignored.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 22542,
+        "anchor": "shadow-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "shadow",
+      "key": "yscale",
+      "signature": "yscale = scale_y ;(optional) (float)",
+      "description": "This is the vertical scale factor of the shadow. Use a larger scale_y to\r\n\nmake the shadow longer. You can use a negative scale_y to make the shadow\r\n\nfall on the other side of the players. Defaults to 0.4 if omitted.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 22723,
+        "anchor": "shadow-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "shadow",
+      "key": "fade.range",
+      "signature": "fade.range = top_y, bot_y ;(optional) (int, int)",
+      "description": "This parameter lets you set the range over which the shadow is visible. It\r\n\nis used to create an effect of the shadow fading as the player gets farther\r\n\naway from the ground. The first value is the high level, and the second is\r\n\nthe middle level. Both represent y-coordinates of the player. A shadow is\r\n\ninvisible if the player is above the high level, and fully visible if below\r\n\nthe middle level. The shadow is faded in between the two levels. If\r\n\nomitted, defaults to no effect (shadow is always fully visible). Take note\r\n\nthat y-coordinate values are negative, and TOP_Y should be less than BOT_Y.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 23095,
+        "anchor": "shadow-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "shadow",
+      "key": "xshear",
+      "signature": "xshear = shear ;(optional) (float)",
+      "description": "Specifies the amount of horizontal shearing to apply to the shadow.\r\n\nA positive value shears the shadow to the left of the screen.\r\n\nDefaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 23823,
+        "anchor": "shadow-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "reflection",
+      "key": "reflect",
+      "signature": "reflect = reflect_flag ;(optional)",
+      "description": "Set reflect to 1 to enable reflection shadows, 0 to disable them.\r\n\nReflection shadows create a \"shiny floor\" effect. Defaults to 0 if omitted.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 24290,
+        "anchor": "reflection-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "music",
+      "key": "bgmusic",
+      "signature": "bgmusic = bgm_filename ;(optional)",
+      "description": "bgm_filename is the name of the music file to play in the stage. Music\r\n\nfiles are usually put in the sound/ directory. Leaving bgm_filename\r\n\nblank will result in no music being played. If the music file does not\r\n\nexist, no music will be played. To play CD audio, put the track number\r\n\nfollowed by \".da\". Using a track number of 0 will play a random audio\r\n\ntrack. For example, to play track 3 from a music CD, use bgmusic = 3.da.\r\n\nIf omitted, defaults to no music.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 24741,
+        "anchor": "music-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "music",
+      "key": "bgvolume",
+      "signature": "bgvolume = volume_offset ;(optional)",
+      "description": "This parameter adjusts the volume of the BGM being played. 0 is normal,\r\n\nnegative for softer, and positive for louder (only for mp3, mods and CDA).\r\n\nValid values are from -255 to 255. If omitted, defaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 25401,
+        "anchor": "music-group",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "type",
+      "signature": "type = normal ; (required) (string)",
+      "description": "This specifies that this background element is a static sprite.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 28609,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "spriteno",
+      "signature": "spriteno = groupno, imageno ; (required) (int, int)",
+      "description": "groupno, imageno specifies the sprite in the SFF to display for this background element.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 28773,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "bgTypes": [
+        "normal"
+      ]
+    },
+    {
+      "scope": "bg",
+      "key": "layerno",
+      "signature": "layerno = layer ; (optional) (int)",
+      "description": "If layer is 0, the background element will be drawn behind the\r\n\ncharacters. If layer is 1, the element will be drawn in front of the\r\n\ncharacters. Within each layer, background elements are drawn back-to-front\r\n\nin the order they appear in the DEF file.\r\n\nDefaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 28987,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "start",
+      "signature": "start = x,y ; (optional) (float, float)",
+      "description": "Specifies the background element's starting position with respect to the\r\n\ntop center of the screen. Positive x values go right; positive y\r\n\nvalues go down. The values are given in stage units, which correspond to\r\n\npixel units in typical use.\r\n\nDefaults to 0,0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 29448,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "delta",
+      "signature": "delta = dx,dy ; (optional) (float, float)",
+      "description": "Specifies how many pixels the background element should scroll for each\r\n\npixel of camera movement in the horizontal and vertical directions,\r\n\nrespectively. Setting delta=1,1 will cause the background element to\r\n\nmove at the same speed as the camera. 1,1 is an appropriate value for the\r\n\nground under the characters' feet. For elements off in the distance, use\r\n\nsmaller values of delta to create the illusion of depth. Similarly,\r\n\nelements in the foreground (layerno = 1) should usually be given\r\n\ndeltas larger than 1. Defaults to 1,1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 29874,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "mask",
+      "signature": "mask = mask ; (optional) (boolean)",
+      "description": "If mask is set to 1, color 0 of the sprite will not be drawn. This is\r\n\nused in drawing objects which are not rectangular in shape. For performance\r\n\nreasons, mask should be set to 0 when not needed.\r\n\nThis parameter is ignored for RGB sprites.\r\n\nDefaults to 0 normally.\r\n\nFor historical reasons, mask will default to 1 if the trans\r\n\nparameter is set to add or sub.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 30712,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "tile",
+      "signature": "tile = x_tile,y_tile ; (optional) (int, int)",
+      "description": "Specifies if the background element is to be repeated (\"tiled\") in\r\n\nthe horizontal and/or vertical directions, respectively. A value of 0\r\n\nspecifies no tiling, a value of 1 specifies infinite tiling, and any value\r\n\ngreater than 1 will cause the element to tile that number of times. If this\r\n\nline is omitted, no tiling will be performed.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 31440,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "tilespacing",
+      "signature": "tilespacing = x_spacing,y_spacing ; (optional) (int, int)",
+      "description": "If tiling is enabled, this line specifies the space to put between separate\r\n\ninstances of the tile in the horizontal and vertical directions,\r\n\nrespectively. There is no effect if tiling is not enabled. tilespacing\r\n\ndefaults to 0,0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 31894,
+        "anchor": "static-background-element-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "actionno",
+      "signature": "actionno",
+      "description": "Animated background elements\r\nThe format for specifying an animated background element is almost exactly\r\n\nthe same as for a normal background element. The differences are described below.\n\n[BG my_animated_element]\r\n\ntype = anim\r\n\nactionno = 55\r\n\nAll other parameters other than spriteno are the same as for static\r\n\nbackground elements.\n\nFirst, for the element to animate, a type of anim must be specified.\r\n\nSecond, an \"action number\" (actionno) must be specified. This replaces\r\n\nthe spriteno parameter that would be used for a normal background\r\n\nelement. The value of actionno must be for an animation that is defined\r\n\nin the DEF file. In this example, since actionno is 55, Action 55\r\n\nmust be defined in a manner similar to the following:\n\n[Begin Action 55]\r\n\n0,0,0,0,5\r\n\n0,1,0,0,5\r\n\nThe format is the same as specifying animations in the AIR file, so\r\n\ndetails will be omitted here. The Action definition can be placed anywhere\r\n\nbelow the original [BGDef] group. Typical strategies are either to define\r\n\nthe action immediately after the element it belongs to, or else to collect\r\n\nall the stage's actions together at the beginning or end of the [BGDef]\r\n\ngroup.\n\nNote that each sprite you specify in the animation has its own axis\r\n\n(specified in the SFF file). During animation playback, the axis of each\r\n\nsprite will be lined up to correspond with the axis of the background element\r\n\nitself.\n\nThe effect of the tilespacing parameter is different for anim-type\r\n\nelements compared to normal-type elements. For a normal element, the\r\n\nx-value of this parameter specifies the horizontal distance between the right\r\n\nedge of the first tile and the left edge of the second tile. In the case of\r\n\nan anim element, the x-value specifies the horizontal distance between\r\n\nthe left edge of the ",
+      "examples": [
+        "[BG my_animated_element]\r\n\ntype = anim\r\n\nactionno = 55",
+        "[Begin Action 55]\r\n\n0,0,0,0,5\r\n\n0,1,0,0,5"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 32714,
+        "anchor": "animated-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "bgTypes": [
+        "anim"
+      ]
+    },
+    {
+      "scope": "bg",
+      "key": "width",
+      "signature": "width = top_width, bottom_width ; (int, int)",
+      "description": "top_width and bottom_width respectively specify the top and bottom widths of a\r\n\ntrapezoid that has the same height as the sprite used. The sprite will be distorted\r\n\nto match the shape and size of the trapezoid.\r\n\nThe ratio of top_width to bottom_width affects the amount of shearing as the\r\n\ncamera moves horizontally.\r\n\nUse width if the sprite is not preprocessed for perspective distortion.\r\n\nFor historical reasons, the x-axis specified in the SFF is ignored. The horizontal\r\n\ncenter of the sprite is used as the x-axis instead.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 36638,
+        "anchor": "parallaxing-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "bgTypes": [
+        "parallax"
+      ]
+    },
+    {
+      "scope": "bg",
+      "key": "xscale",
+      "signature": "xscale = top_xscale, bottom_xscale ; (float, float) (deprecated)",
+      "description": "top_xscale and bottom_xscale respectively scale the horizontal delta of the\r\n\nbackground element's top and bottom edge to create a horizontal shearing effect. For\r\n\nexample, delta = .75, .75 amd xscale = 1, 2 specifies the top of the sprite\r\n\nwould move at .75 * 1 = .75 stage units per camera unit, and the bottom would move\r\n\nat .75 * 2 = 1.5 stage units per camera unit. This example assumes the sprite\r\n\naxis is at the top of the sprite.\n\nEither xscale or width is required, but not both at the same time.\r\n\nUse xscale if the sprite has already been preprocessed for perspective distortion.\r\n\nHardware accelerated rendering will have visual artifacts at extreme shear angles.\n\nAnimated parallax may not be used when xscale is used.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 37360,
+        "anchor": "parallaxing-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "bgTypes": [
+        "parallax"
+      ]
+    },
+    {
+      "scope": "bg",
+      "key": "yscalestart",
+      "signature": "yscalestart = yscalestart ; (float) (deprecated)",
+      "description": "This deprecated parameter controls the change in vertical scale of the element\r\n\nas the camera moves vertically. Its functionality is replaced by the general-purpose\r\n\nscalestart and scaledelta advanced parameters.\n\nyscalestart is the inverse of the vertical scale of the sprite when the\r\n\ncamera is at ground level, represented in percentage. For example, a value of\r\n\n100 corresponds to a scale factor of 1, and 50 corresponds to a scale factor\r\n\nof 2. The value defaults to 100.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 38574,
+        "anchor": "parallaxing-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "bgTypes": [
+        "parallax"
+      ]
+    },
+    {
+      "scope": "bg",
+      "key": "yscaledelta",
+      "signature": "yscaledelta = yscaledelta ; (float) (deprecated)",
+      "description": "Specifies the amount to add from the inverted scale factor for every camera\r\n\nunit the camera moves down, represented in percentage. The final scale factor\r\n\nis calculated using the following formula:\n\nscale = 1 / (yscalestart/100 + yscaledelta/100 * camera_y)\r\n\nIn the example above, if the camera moves up by\r\n\none unit, the scale factor will be 1 / (1.00 + .012 * -1) = 1.012, and if it moves up another unit,\r\n\nthe scale will be 1 / (1.00 + .012 * -2) = 1.025 and so on.\n\nThe unintuitive behavior for the yscalestart and yscaledelta\r\n\nparameters is the reason for deprecating these parameters in favor of\r\n\nthe scalestart and scaledelta parameters.",
+      "examples": [
+        "scale = 1 / (yscalestart/100 + yscaledelta/100 * camera_y)"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 39295,
+        "anchor": "parallaxing-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "bgTypes": [
+        "parallax"
+      ]
+    },
+    {
+      "scope": "bg",
+      "key": "trans",
+      "signature": "trans = trans ; (optional) (string)",
+      "description": "Specifies the type of transparency blending to perform on the sprite.\r\n\nTransparency modes are default, none, add, sub.\r\n\nRespectivelty, these specify default behavior, no transparency, color addition and color subtraction.\r\n\ndefault and none both cause non-animated elements to be drawn without\r\n\nany tranparency blending.\r\n\nFor animated background elements, default will use anim-specific transparency\r\n\nwhile other values of trans will override the transparency flags in the anim.\r\n\nIf add is specified, the alpha parameter may be used to control\r\n\nthe blending.\r\n\nDefaults to default.\n\nNote: If mugenversion is less than 1.0, none will behave the same\r\n\nas default for animated elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 40949,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "alpha",
+      "signature": "alpha = src_alpha,dst_alpha ; (optional) (int, int)",
+      "description": "Specifies the source and destination blend contributions when trans = add.\r\n\nAcceptable values are from 0 to 256. Defaults to 256,256.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 42244,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "id",
+      "signature": "id = id_number ; (int)",
+      "description": "This specifies an ID number for the background element. Multiple elements\r\n\ncan share the same ID number. The purpose of the ID number is to allow\r\n\nbackground controllers to specify which elements they are operating on.\r\n\nDefaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 42632,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "positionlink",
+      "signature": "positionlink = link_flag ; (boolean)",
+      "description": "Set positionlink to 1 to lock this element's position to the position of\r\n\nthe element immediately preceding it in the DEF file. If set to 1, the\r\n\nvalues of the start parameter for the current element are treated as an\r\n\noffset from the previous element's position. The delta parameter will\r\n\nhave no effect in this case. This is useful for getting large groups of\r\n\nelements to move in unison; if you edit the start and delta values\r\n\nof the first element in the positionlink chain, the effects will be seen\r\n\nthroughout all elements the chain.\r\n\nDefaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 42960,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "maskwindow",
+      "signature": "maskwindow = x1,y1,x2,y2 ; (int, int, int, int) (Version 1.1 and higher)",
+      "description": "Specifies a masking window for the background element. A masking window is\r\n\nconceptually a rectangular box on the screen in which the sprite is contained.\r\n\nAny part of the sprite that lies outside of the box will not be drawn.\r\n\nx1,y1 specifies the coordinates of the top-left corner of the window, and\r\n\nx2,y2 specifies the coordinates of the bottom-right corner of the window.\r\n\nThese coordinates are relative to the stage origin (top-middle of screen).\r\n\nThese coordinates are \"endpoint exclusive\", i.e. the pixels along the bottom\r\n\nand right edges of the window will not be drawn.\r\n\nIf omitted, window masking will not performed.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 43837,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "window",
+      "signature": "window = x1,y1,x2,y2 ; (int, int, int, int) (deprecated)",
+      "description": "This deprecated parameter is included for compatibility and the use of it\r\n\nis not guaranteed to work correctly under all cases of zooming.\r\n\nIt specifies a masking window with coordinates relative to the top-right\r\n\ncorner of the screen. The coordinates are endpoint inclusive.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 44638,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "windowdelta",
+      "signature": "windowdelta = window_dx,window_dy ; (float, float)",
+      "description": "Specifies the movement delta of the masking window. It works similarly\r\n\nto the delta parameter for the background element itself.\r\n\nDefaults to 0,0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 45042,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "velocity",
+      "signature": "velocity = vel_x, vel_y ; (float, float)",
+      "description": "Specifies initial x- and y-velocities for the background element\r\n\n(these default to 0). This functionality is also subsumed by the\r\n\nVelSet background controller.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 45377,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "scalestart",
+      "signature": "scalestart = scale_x, scale_y ; (float, float)",
+      "description": "Starting scale.\r\n\nDefaults to 1,1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 45750,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "scaledelta",
+      "signature": "scaledelta = scale_dx, scale_dy ; (float, float)",
+      "description": "Similar to the delta parameter, this is the amount to change the\r\n\nscale of the element for each unit of camera movement.\r\n\nDefaults to 0,0.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 45931,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "zoomdelta",
+      "signature": "zoomdelta = dzoom ; (float)",
+      "description": "Specifies the amount that the camera zoom affects the scale of the\r\n\nelement. A value of 0 is means the element will not change size during\r\n\nzoom, and a value of 1 will scale the element by the same factor of\r\n\ncamera zoom.\r\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 46255,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "sin.x",
+      "signature": "sin.x = amplitude, period, phase ; (float, float, float)",
+      "description": "Specifies sinusoidal movement for the element in the x-direction. The\r\n\nfirst parameter is the amplitude, the second parameter is the period of the\r\n\nmotion in game ticks, and the third parameter specifies the initial phase\r\n\nshift of the sinusoidal motion (defaults to 0, i.e., the element will start\r\n\nin the exact middle of its sinusoidal range). This parameter is basically\r\n\nsuperseded by the SinX background controller.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 46627,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "key": "sin.y",
+      "signature": "sin.y = amplitude, period, phase ; (float, float, float)",
+      "description": "Works the same as the sin.x parameter, but in the y-direction.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 47247,
+        "anchor": "advanced-parameters",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrldef",
+      "key": "looptime",
+      "signature": "looptime = GLOBAL_LOOPTIME",
+      "description": "Background controllers\r\nBackground controllers operate on an internal timer that starts at 0 when the\r\n\nround starts, and increases by 1 for every game tick. When the timer reaches\r\n\nthe controller's start time, then the controller becomes active. When the\r\n\ntimer reaches the controller's end time, then the controller deactivates. If a\r\n\npositive looptime is specified for the controller, then the controller's\r\n\ninternal timer will reset to 0 when the looptime is reached.\n\nBackground controllers must be grouped under a parent BGCtrlDef. You can\r\n\nuse multiple BGCtrlDefs to separate the controllers into several groups.\r\n\nEach block of BGCtrlDef and background controllers may be placed anywhere\r\n\nwithin the [BGDef] section of the DEF file. The general format for\r\n\nthese blocks is as follows.\n\n[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)\r\n\nGLOBAL_LOOPTIME specifies the number of ticks after which the\r\n\nBGCtrlDef should reset its internal timer, as well as the internal\r\n\ntimers of all BGCtrls it contains. To disable the looptime, set it\r\n\nto -1 or omit the parameter.\n\nDEFAULTID_1, DEFAULTID_2, etc., specify the IDs of background\r\n\nelements to be affected by any BGCtrl that doesn't specify its own list\r\n\nof ctrlIDs. You can list up to 10 ID numbers for this parameter. If the\r\n\nline is omitted, then the default will be to affect all background elements.\n\nSTART_TIME, END_TIME, and LOOPTIME are the times at which the\r\n\nbackground controller should start acting, stop acting, and reset its\r\n\ninternal timer, respectively. If LOOPTIME i",
+      "examples": [
+        "[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 49417,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrldef",
+      "key": "ctrlID",
+      "signature": "ctrlID = DEFAULTID_1, DEFAULTID_2, ...",
+      "description": "Background controllers\r\nBackground controllers operate on an internal timer that starts at 0 when the\r\n\nround starts, and increases by 1 for every game tick. When the timer reaches\r\n\nthe controller's start time, then the controller becomes active. When the\r\n\ntimer reaches the controller's end time, then the controller deactivates. If a\r\n\npositive looptime is specified for the controller, then the controller's\r\n\ninternal timer will reset to 0 when the looptime is reached.\n\nBackground controllers must be grouped under a parent BGCtrlDef. You can\r\n\nuse multiple BGCtrlDefs to separate the controllers into several groups.\r\n\nEach block of BGCtrlDef and background controllers may be placed anywhere\r\n\nwithin the [BGDef] section of the DEF file. The general format for\r\n\nthese blocks is as follows.\n\n[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)\r\n\nGLOBAL_LOOPTIME specifies the number of ticks after which the\r\n\nBGCtrlDef should reset its internal timer, as well as the internal\r\n\ntimers of all BGCtrls it contains. To disable the looptime, set it\r\n\nto -1 or omit the parameter.\n\nDEFAULTID_1, DEFAULTID_2, etc., specify the IDs of background\r\n\nelements to be affected by any BGCtrl that doesn't specify its own list\r\n\nof ctrlIDs. You can list up to 10 ID numbers for this parameter. If the\r\n\nline is omitted, then the default will be to affect all background elements.\n\nSTART_TIME, END_TIME, and LOOPTIME are the times at which the\r\n\nbackground controller should start acting, stop acting, and reset its\r\n\ninternal timer, respectively. If LOOPTIME i",
+      "examples": [
+        "[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 49417,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "key": "type",
+      "signature": "type = CONTROLLER_TYPE",
+      "description": "Background controllers\r\nBackground controllers operate on an internal timer that starts at 0 when the\r\n\nround starts, and increases by 1 for every game tick. When the timer reaches\r\n\nthe controller's start time, then the controller becomes active. When the\r\n\ntimer reaches the controller's end time, then the controller deactivates. If a\r\n\npositive looptime is specified for the controller, then the controller's\r\n\ninternal timer will reset to 0 when the looptime is reached.\n\nBackground controllers must be grouped under a parent BGCtrlDef. You can\r\n\nuse multiple BGCtrlDefs to separate the controllers into several groups.\r\n\nEach block of BGCtrlDef and background controllers may be placed anywhere\r\n\nwithin the [BGDef] section of the DEF file. The general format for\r\n\nthese blocks is as follows.\n\n[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)\r\n\nGLOBAL_LOOPTIME specifies the number of ticks after which the\r\n\nBGCtrlDef should reset its internal timer, as well as the internal\r\n\ntimers of all BGCtrls it contains. To disable the looptime, set it\r\n\nto -1 or omit the parameter.\n\nDEFAULTID_1, DEFAULTID_2, etc., specify the IDs of background\r\n\nelements to be affected by any BGCtrl that doesn't specify its own list\r\n\nof ctrlIDs. You can list up to 10 ID numbers for this parameter. If the\r\n\nline is omitted, then the default will be to affect all background elements.\n\nSTART_TIME, END_TIME, and LOOPTIME are the times at which the\r\n\nbackground controller should start acting, stop acting, and reset its\r\n\ninternal timer, respectively. If LOOPTIME i",
+      "examples": [
+        "[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 49417,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "key": "time",
+      "signature": "time = START_TIME, END_TIME, LOOPTIME",
+      "description": "Background controllers\r\nBackground controllers operate on an internal timer that starts at 0 when the\r\n\nround starts, and increases by 1 for every game tick. When the timer reaches\r\n\nthe controller's start time, then the controller becomes active. When the\r\n\ntimer reaches the controller's end time, then the controller deactivates. If a\r\n\npositive looptime is specified for the controller, then the controller's\r\n\ninternal timer will reset to 0 when the looptime is reached.\n\nBackground controllers must be grouped under a parent BGCtrlDef. You can\r\n\nuse multiple BGCtrlDefs to separate the controllers into several groups.\r\n\nEach block of BGCtrlDef and background controllers may be placed anywhere\r\n\nwithin the [BGDef] section of the DEF file. The general format for\r\n\nthese blocks is as follows.\n\n[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)\r\n\nGLOBAL_LOOPTIME specifies the number of ticks after which the\r\n\nBGCtrlDef should reset its internal timer, as well as the internal\r\n\ntimers of all BGCtrls it contains. To disable the looptime, set it\r\n\nto -1 or omit the parameter.\n\nDEFAULTID_1, DEFAULTID_2, etc., specify the IDs of background\r\n\nelements to be affected by any BGCtrl that doesn't specify its own list\r\n\nof ctrlIDs. You can list up to 10 ID numbers for this parameter. If the\r\n\nline is omitted, then the default will be to affect all background elements.\n\nSTART_TIME, END_TIME, and LOOPTIME are the times at which the\r\n\nbackground controller should start acting, stop acting, and reset its\r\n\ninternal timer, respectively. If LOOPTIME i",
+      "examples": [
+        "[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 49417,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "key": "ctrlID",
+      "signature": "ctrlID = ID_1, ID_2, ...",
+      "description": "Background controllers\r\nBackground controllers operate on an internal timer that starts at 0 when the\r\n\nround starts, and increases by 1 for every game tick. When the timer reaches\r\n\nthe controller's start time, then the controller becomes active. When the\r\n\ntimer reaches the controller's end time, then the controller deactivates. If a\r\n\npositive looptime is specified for the controller, then the controller's\r\n\ninternal timer will reset to 0 when the looptime is reached.\n\nBackground controllers must be grouped under a parent BGCtrlDef. You can\r\n\nuse multiple BGCtrlDefs to separate the controllers into several groups.\r\n\nEach block of BGCtrlDef and background controllers may be placed anywhere\r\n\nwithin the [BGDef] section of the DEF file. The general format for\r\n\nthese blocks is as follows.\n\n[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)\r\n\nGLOBAL_LOOPTIME specifies the number of ticks after which the\r\n\nBGCtrlDef should reset its internal timer, as well as the internal\r\n\ntimers of all BGCtrls it contains. To disable the looptime, set it\r\n\nto -1 or omit the parameter.\n\nDEFAULTID_1, DEFAULTID_2, etc., specify the IDs of background\r\n\nelements to be affected by any BGCtrl that doesn't specify its own list\r\n\nof ctrlIDs. You can list up to 10 ID numbers for this parameter. If the\r\n\nline is omitted, then the default will be to affect all background elements.\n\nSTART_TIME, END_TIME, and LOOPTIME are the times at which the\r\n\nbackground controller should start acting, stop acting, and reset its\r\n\ninternal timer, respectively. If LOOPTIME i",
+      "examples": [
+        "[BGCtrlDef my_controller_name]\r\n\nlooptime = GLOBAL_LOOPTIME\r\n\nctrlID = DEFAULTID_1, DEFAULTID_2, ...\r\n\n[BGCtrl my_controller_1]\r\n\ntype = CONTROLLER_TYPE\r\n\ntime = START_TIME, END_TIME, LOOPTIME\r\n\nctrlID = ID_1, ID_2, ...\r\n\n(controller-specific parameters here)\r\n\n[BGCtrl my_controller_2]\r\n\n(etc.)"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 49417,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "key": "value",
+      "signature": "value = visible_flag",
+      "description": "Sets the visibility status of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 52422,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "visible"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "value",
+      "signature": "value = enabled_flag",
+      "description": "Sets the enabled status of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 52968,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "enabled"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "x",
+      "signature": "x = vel_x",
+      "description": "Sets the x-velocity of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 53487,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "velset"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "y",
+      "signature": "y = vel_y",
+      "description": "Sets the y-velocity of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 53659,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "velset"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "x",
+      "signature": "x = vel_incr_x",
+      "description": "Changes the x-velocity of the elements by vel_incr_x.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 54381,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "veladd"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "y",
+      "signature": "y = vel_incr_y",
+      "description": "Changes the y-velocity of the elements by vel_incr_y.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 54584,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "veladd"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "x",
+      "signature": "x = pos_x",
+      "description": "Sets the x-position of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 55285,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "posset"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "y",
+      "signature": "y = pos_y",
+      "description": "Sets the y-position of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 55457,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "posset"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "x",
+      "signature": "x = x_displacement",
+      "description": "Displaces the x-coordinate of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 56126,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "posadd"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "y",
+      "signature": "y = y_displacement",
+      "description": "Displaces the y-coordinate of the elements.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 56314,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "posadd"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "value",
+      "signature": "value = action_no",
+      "description": "Changes the animation displayed by the affected elements to the\r\n\nspecified animation number.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 57004,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "anim"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "value",
+      "signature": "value = amplitude, period, offset",
+      "description": "Changes the amplitude, period, and phase offset for the affected elements'\r\n\nsinusoidal motions in the x-direction. These values have the same\r\n\neffect as they do for the sin.x background element parameters.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 57310,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "sinx"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "value",
+      "signature": "value = amplitude, period, offset",
+      "description": "Changes the amplitude, period, and phase offset for the affected elements'\r\n\nsinusoidal motions in the y-direction. These values have the same\r\n\neffect as they do for the sin.y background element parameters.",
+      "examples": [],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 57815,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true,
+      "controller": "siny"
+    },
+    {
+      "scope": "bgdef",
+      "key": "spr",
+      "signature": "spr",
+      "description": "[BGDef]\r\n\nspr = my_stage.sff\r\n\ndebugbg = 0\r\n\nReplace my_stage.sff with the name of the SFF file\r\n\ncontaining your stage's sprite data. The SFF file should be placed in\r\n\nthe same directory as the stage DEF (i.e. stages/).\r\n\nIf debugbg is set to 1, the screen is cleared to magenta before the\r\n\nstage is drawn. This makes \"holes\" in the background more apparent.\r\n\nTo improve runtime speed, set debugbg = 0 before releasing a stage for\r\n\ndistribution.\n\nOnce the BGDef definition is created, everything below it in the DEF\r\n\nfile is considered to belong in the BGDef section. In the BGDef\r\n\nsection, you should specify one or more background elements. Background\r\n\nelements are drawn in the order they appear in the DEF file (with later\r\n\nelements drawn over earlier elements), so the rearmost elements should be\r\n\ndefined first.\n\nFormat of background elements\r\nAn example for specifying a static background element is as follows.\n\n[BG my_element_name]\r\n\ntype = normal\r\n\nspriten",
+      "examples": [
+        "[BGDef]\r\n\nspr = my_stage.sff\r\n\ndebugbg = 0"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 26186,
+        "anchor": "description-of-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgdef",
+      "key": "debugbg",
+      "signature": "debugbg",
+      "description": "[BGDef]\r\n\nspr = my_stage.sff\r\n\ndebugbg = 0\r\n\nReplace my_stage.sff with the name of the SFF file\r\n\ncontaining your stage's sprite data. The SFF file should be placed in\r\n\nthe same directory as the stage DEF (i.e. stages/).\r\n\nIf debugbg is set to 1, the screen is cleared to magenta before the\r\n\nstage is drawn. This makes \"holes\" in the background more apparent.\r\n\nTo improve runtime speed, set debugbg = 0 before releasing a stage for\r\n\ndistribution.\n\nOnce the BGDef definition is created, everything below it in the DEF\r\n\nfile is considered to belong in the BGDef section. In the BGDef\r\n\nsection, you should specify one or more background elements. Background\r\n\nelements are drawn in the order they appear in the DEF file (with later\r\n\nelements drawn over earlier elements), so the rearmost elements should be\r\n\ndefined first.\n\nFormat of background elements\r\nAn example for specifying a static background element is as follows.\n\n[BG my_element_name]\r\n\ntype = normal\r\n\nspriten",
+      "examples": [
+        "[BGDef]\r\n\nspr = my_stage.sff\r\n\ndebugbg = 0"
+      ],
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 26186,
+        "anchor": "description-of-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "camera",
+      "key": "boundhigh",
+      "signature": "boundhigh",
+      "description": "Skipped zoomout processing of boundhigh\r\n:warning: Removed in nigthly. Nigthly build matches MUGEN 1.1 behavior and the Skipped zoomout processing of boundhigh described in this section below no longer applies. Use the new BoundHighZoomDelta camera parameter to bring back this behaviour in a parametrized manner.\n\nIkemen v0.99.0 and below: the lack of boundhigh zoomout correction is the intended behavior. Reasoning:\r\nin MUGEN 1.1, boundhigh changes with zoomout, but the value to be corrected varies per stage, so it can't be done automatically due to the varying zoomdelta of the background layer that determines the boundhigh of the stage. For boundright and boundleft, there is almost always a background layer with a reference zoomdelta of 1, so the value that is shifted due to zoomout is constant. For boundhigh, the zoomdelta of the layer is set to 0.2 or 1. Furthermore, it cannot be determined just by reading the def which layer determines the boundhigh. In MUGEN 1.1, there is a bug that the stage does not reach the display limit unless it is in the maximum zoomout state, and in some cases, boundhigh is set according to this. Also, some creators set boundhigh ignoring the zoomout bug of 1.1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 835,
+        "anchor": "skipped-zoomout-processing-of-boundhigh",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "reflection",
+      "key": "layerno",
+      "signature": "layerno = layer_number (int)",
+      "description": "layerno\r\n\nlayerno = layer_number (int)\n\nSpecifies the stage layer on which the reflection will be drawn \n\nStage reflections can now use layerno = -1 in order to draw the reflections behind layer 0. This allows reflection effects such as water puddles.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 2698,
+        "anchor": "layerno",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "reflection",
+      "key": "offset",
+      "signature": "offset = offset_x, offset_y (float, float)",
+      "description": "Offset\r\n\noffset = offset_x, offset_y (float, float)\n\nSpecifies the offset at which reflections will be drawn. \n\nThe offset parameter will offset the player's reflection by offset_x,offset_y amount.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 3086,
+        "anchor": "offset",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "reflection",
+      "key": "window",
+      "signature": "window = x1, y1, x2, y2 (float, float, float, float)",
+      "description": "Window\r\n\nwindow = x1, y1, x2, y2 (float, float, float, float)\n\nSpecifies the size of a rectangle relative to the stage\n\nThe window parameter forms a rectangle relative to the stage, outside of which reflections will not be drawn.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 3453,
+        "anchor": "window",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "reflection",
+      "key": "xscale",
+      "signature": "xscale= scale (float)",
+      "description": "XScale\r\n\nxscale= scale (float) \n\nDetermines the horizontal scale of the reflection.\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 3841,
+        "anchor": "xscale",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "reflection",
+      "key": "ydelta",
+      "signature": "ydelta = delta (float)",
+      "description": "YDelta\r\n\nydelta = delta (float) \n\nDetermines how closely the reflection will follow the player's movement in the y-axis. A ydelta value of 1 will make no change, a value of 0 will make the reflection not move in the y-axis, and other values scale linearly.\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 4062,
+        "anchor": "ydelta",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "shadow",
+      "key": "Color",
+      "signature": "Color",
+      "description": "Color\r\nThe color parameter will be disabled if the stage's mugenversion is 1.1 and its ikemenversion is 0.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 4529,
+        "anchor": "color",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "shadow",
+      "key": "offset",
+      "signature": "offset = offset_x, offset_y (float, float)",
+      "description": "Offset\r\n\noffset = offset_x, offset_y (float, float)\n\nSpecifies the offset at which shadows will be drawn. \n\nThe offset parameter will offset the player's shadow by offset_x,offset_y amount.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 4740,
+        "anchor": "offset_1",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "shadow",
+      "key": "window",
+      "signature": "window = x1, y1, x2, y2 (float, float, float, float)",
+      "description": "Window\r\n\nwindow = x1, y1, x2, y2 (float, float, float, float)\n\nSpecifies the size of a rectangle relative to the stage\n\nThe window parameter forms a rectangle relative to the stage, outside of which shadows will not be drawn.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 5097,
+        "anchor": "window_1",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "shadow",
+      "key": "xscale",
+      "signature": "xscale= scale (float)",
+      "description": "XScale\r\n\nxscale= scale (float) \n\nDetermines the horizontal scale of the shadow.\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 5479,
+        "anchor": "xscale_1",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "shadow",
+      "key": "ydelta",
+      "signature": "ydelta = delta (float)",
+      "description": "YDelta\r\n\nydelta = delta (float) \n\nDetermines how closely the shadow will follow the player's movement in the y-axis. A ydelta value of 1 will make no change, a value of 0 will make the shadow not move in the y-axis, and other values scale linearly.\n\nDefaults to 1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 5694,
+        "anchor": "ydelta_1",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "AutoZoom",
+      "signature": "AutoZoom",
+      "description": "AutoZoom\r\nAn automatic zoomout is applied and the behavior of the stage changes.\n\nA default zoomout value is automatically calculated based on the stage bounds. While a zoomout value can be specified, it will be limited to prevent showing empty space.\n\nValues equivalent to zoomdelta are automatically applied based on delta values.\n\nThe default values ​​for zoomindelay, zoomoutspeed, zoominspeed are changed.\n\nThe default boundhighzoomdelta is 1.\n\nThe default zoomanchor is bottom.\n\nautoresizeparallax is enabled by default.\n\nThe boundleft, boundright and boundhigh values ​​are not affected by the zoomout value.\n\nThis function is a replicate the zoom behavior of the legacy IKEMEN engine.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 6735,
+        "anchor": "autozoom",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "AutoCenter",
+      "signature": "AutoCenter",
+      "description": "AutoCenter\r\nAlways try to keep the camera centered between the characters. When this parameter is enabled, the Tension value is only used to calculate the camera zoom.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 7576,
+        "anchor": "autocenter",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "BoundHighZoomDelta",
+      "signature": "BoundHighZoomDelta",
+      "description": "BoundHighZoomDelta\r\n\nBoundHighZoomDelta = bg_y_delta (float)\n\nSet to a value >0 to extend the BoundHigh when the camera zooms in. Defaults to 0.\n\nRelated to how camera worked in Ikemen GO v0.99.0 and older.\n\nAutomatically increases BoundHigh when the current camera zoom is not at minimum (ZoomOut), allowing more of the stage to be seen. Default value is 0 (constant BoundHigh). For values above 0, a value closer to 0 means a greater difference, as this value can be interpreted as the horizontal (y) delta of a stage background (BG) that determines the appropriate BoundHigh for the stage, if the ZoomDelta of this is equal to 1.\n\nFor example, if a background that determines the BoundHigh uses only vertical (y) delta and does not specify ZoomDelta, then you only need to set BoundHighZoomDelta to the exact value of the vertical (y) delta of the background. If the background has:\n\n[BG Sky]\r\nType = normal\r\nSpriteNo = 0, 0\r\nStart = 0, 0\r\nDelta = 0.5, 0.7\r\n\nThen you need to set:\n\n[Camera]\r\nBoundHighZoomDelta = 0.7\r\n\nFor backgrounds using either only ZoomDelta or both ZoomDelta and vertical (y) delta the appropriate value needs to be adjusted manually. Some example follow, but you may still need different for different stages:\n\nZoomDelta = 0.7 => BoundHighZoomDelta = 1.95,\n\nZoomDelta = 0.4 => BoundHighZoomDelta = 4.7,\n\nZoomDelta = 0.7, Delta=?, 0.7 => BoundHighZoomDelta = 1.375.",
+      "examples": [
+        "[BG Sky]\r\nType = normal\r\nSpriteNo = 0, 0\r\nStart = 0, 0\r\nDelta = 0.5, 0.7",
+        "[Camera]\r\nBoundHighZoomDelta = 0.7"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 7828,
+        "anchor": "boundhighzoomdelta",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "VerticalFollowZoomDelta",
+      "signature": "VerticalFollowZoomDelta",
+      "description": "VerticalFollowZoomDelta\r\n\nVerticalFollowZoomDelta = vf_zoom_delta (float)\n\nSet to a value above 0 to increase the VerticalFollow when the camera zooms in. Defaults to 0.\n\nAutomatically increases VerticalFollow when the current camera zoom is not at minimum (ZoomOut). Default value is 0 (constant VerticalFollow). For values above 0, the value of VerticalFollow is increased by the amount of current_zoom_in multiplied by vf_zoom_delta, where current_zoom_in is the difference between the current camera zoom value and the minimum camera zoom (as set by ZoomOut).",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 9817,
+        "anchor": "verticalfollowzoomdelta",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "Far",
+      "signature": "Far",
+      "description": "Far\r\nDefine the far plane of the view frustum when the 3D model is rendered",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 10687,
+        "anchor": "far",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "fov",
+      "signature": "fov= fov (float)",
+      "description": "fov\r\n\nfov= fov (float) \n\nField of view of the camera when the 3d model is rendered.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 10818,
+        "anchor": "fov",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "LowestCap",
+      "signature": "LowestCap",
+      "description": "LowestCap\r\nEnabling this parameter allows the camera to also zoom out when players are close to each other but reach the vertical end of the stage.\n\nDefaults to 0. Before Ikemen GO 1.0, the camera was hardcoded to act as if lowestcap = 1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 11002,
+        "anchor": "lowestcap",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "Near",
+      "signature": "Near",
+      "description": "Near\r\nDefine the near plane of the view frustum when the 3D model is rendered",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 11328,
+        "anchor": "near",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "TensionVel",
+      "signature": "TensionVel",
+      "description": "TensionVel\r\nSets default tension correction speed, or how fast the camera will track the players horizontally. Differences can be noticed when a character teleports from one side of the screen to another in the x-axis. Defaults to 1. \n\nThis parameter also affects how fast the stage camera will zoom.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 11463,
+        "anchor": "tensionvel",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "YShift",
+      "signature": "YShift",
+      "description": "YShift\r\nDefine the y shift value of the camera when 3D model is rendered",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 11854,
+        "anchor": "yshift",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "YScrollSpeed",
+      "signature": "YScrollSpeed",
+      "description": "YScrollSpeed\r\n\nYScrollSpeed = speed_factor (float)\n\nSet to a value between 0 and 1 to slow down the speed at which the camera scrolls vertically. Defaults to 1.\n\nThis parameter can be used to unconditionally slow down the speed at which the camera scrolls vertically. The rate of change of the camera's y position is simply multiplied by the set speed_factor at each frame. The default value is 1, which is the fastest speed, matching MUGEN 1.1.\n\nThis can be applied e.g. to slow down vertical scrolling when the camera is in the Y Tension mode (when TensionLow and TensionHigh are set), as the value of VerticalFollow is not applied in this case, especially if a zoom slowdown was also applied using parameters such as TensionVel or ZoomOutSpeed.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 11988,
+        "anchor": "yscrollspeed",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "ZoomAnchor",
+      "signature": "ZoomAnchor",
+      "description": "ZoomAnchor\r\nThis parameter brings back previous zoom out behavior from Ikemen GO 0.98.2. When the ZoomAnchor paramater is set to bottom, an \"anchor\" is placed in the bottom side of the screen, preventing the zoom to go beyond that. Any other parameter will default to center (Mugen 1.1 behavior).",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 13082,
+        "anchor": "zoomanchor",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "ZoomInDelay",
+      "signature": "ZoomInDelay",
+      "description": "ZoomInDelay\r\nMakes the camera wait the specified number of frames before zooming in.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 13487,
+        "anchor": "zoomindelay",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "ZoomInSpeed",
+      "signature": "ZoomInSpeed",
+      "description": "ZoomInSpeed\r\n\nZoomInSpeed = speed_factor (float)\n\nSet to a value between 0 and 1 to slow down the speed at which the camera zooms in. Defaults to 1.\n\nThis parameter can be used to unconditionally slow down the speed at which the camera zooms in. The rate of change of zoom is simply multiplied by the set speed_factor at each frame. The default value is 1, which is the fastest zoom speed, matching MUGEN 1.1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 13645,
+        "anchor": "zoominspeed",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "camera",
+      "key": "ZoomOutSpeed",
+      "signature": "ZoomOutSpeed",
+      "description": "ZoomOutSpeed\r\n\nZoomOutSpeed = speed_factor (float)\n\nSet to a value between 0 and 1 to slow down the speed at which the camera zooms out. Defaults to 1.\n\nThis parameter can be used to unconditionally slow down the speed at which the camera zooms out. The rate of change of zoom is simply multiplied by the set speed_factor at each frame. The default value is 1, which is the fastest zoom speed, matching MUGEN 1.1.\n\nAs opposed to TensionVel, this will forcibly keep the zoom out slow, so setting it too low can cause fast moving characters to be blocked by the screen edge before the camera fully zooms out.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 14197,
+        "anchor": "zoomoutspeed",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "AttachedChar",
+      "signature": "AttachedChar",
+      "description": "AttachedChar\r\nThe character with the specified path appears as the character on the stage side. The main use is to allow stages to realize functions that cannot be implemented with stage DEF file alone, such as stage interactivity.\n\nThis extra character is not taken into account for anything match related (not rendering lifebar, doesn't have to be beaten to finish the round, is not killable, is not part of P1 or P2 team). TeamSide trigger returns 0 for this character. AttachedChar initially begins in standby mode (\"Tagged Out\"). They must be tagged in prior to being able to interfere with characters via RedirectID.\n\nHint: Use AssertSpecial sctrl in order to turn the attached character invisible and/or make it not affecting the camera/pushboxes. RedirectID may be useful for creating stage interactions.\n\nExample:\n\nAttachedChar = stages/myStage/stageInteraction.def",
+      "examples": [
+        "AttachedChar = stages/myStage/stageInteraction.def"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 15573,
+        "anchor": "attachedchar",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "IkemenVersion",
+      "signature": "IkemenVersion",
+      "description": "IkemenVersion\r\nIdentifies which engine version the stage was made for. May alter behavior of certain features.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 17179,
+        "anchor": "ikemenversion",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "round1def",
+      "signature": "round1def = stages/kfm.def",
+      "description": "RoundXDef\r\nRoundXDef parameters can be used to preload more than 1 stage before match and swap to it at particular round. X in parameter name refers to round number and the parameter points to stage DEF file. The last loaded stage remains if the next round doesn't have RoundXDef parameter assigned. The specified path can be relative to the main stage DEF file, data directory, or top ikemen directory.\n\nNote: Values read from the RoundXDef, AttachedChar and Music sections will be read from the main stage instead of each individual preloaded stage. This means that, for instance, you should define the music that plays in each round in the main stage DEF file rather than in each individual stage.\n\nHint: The main stage itself can be either a normal stage (in such case assigning round1def parameter doesn't make much sense) or a \"shell\" for example with only [Info] and [Music] sections, if it's meant to be used just to load particular RoundXDef parameters combination.\n\nExample:\n\nround1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def",
+      "examples": [
+        "round1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 17365,
+        "anchor": "roundxdef",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "round2def",
+      "signature": "round2def = stages/kfm_evening.def",
+      "description": "RoundXDef\r\nRoundXDef parameters can be used to preload more than 1 stage before match and swap to it at particular round. X in parameter name refers to round number and the parameter points to stage DEF file. The last loaded stage remains if the next round doesn't have RoundXDef parameter assigned. The specified path can be relative to the main stage DEF file, data directory, or top ikemen directory.\n\nNote: Values read from the RoundXDef, AttachedChar and Music sections will be read from the main stage instead of each individual preloaded stage. This means that, for instance, you should define the music that plays in each round in the main stage DEF file rather than in each individual stage.\n\nHint: The main stage itself can be either a normal stage (in such case assigning round1def parameter doesn't make much sense) or a \"shell\" for example with only [Info] and [Music] sections, if it's meant to be used just to load particular RoundXDef parameters combination.\n\nExample:\n\nround1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def",
+      "examples": [
+        "round1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 17365,
+        "anchor": "roundxdef",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "round3def",
+      "signature": "round3def = stages/kfm_night.def",
+      "description": "RoundXDef\r\nRoundXDef parameters can be used to preload more than 1 stage before match and swap to it at particular round. X in parameter name refers to round number and the parameter points to stage DEF file. The last loaded stage remains if the next round doesn't have RoundXDef parameter assigned. The specified path can be relative to the main stage DEF file, data directory, or top ikemen directory.\n\nNote: Values read from the RoundXDef, AttachedChar and Music sections will be read from the main stage instead of each individual preloaded stage. This means that, for instance, you should define the music that plays in each round in the main stage DEF file rather than in each individual stage.\n\nHint: The main stage itself can be either a normal stage (in such case assigning round1def parameter doesn't make much sense) or a \"shell\" for example with only [Info] and [Music] sections, if it's meant to be used just to load particular RoundXDef parameters combination.\n\nExample:\n\nround1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def",
+      "examples": [
+        "round1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 17365,
+        "anchor": "roundxdef",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "RoundXDef",
+      "signature": "RoundXDef",
+      "description": "RoundXDef\r\nRoundXDef parameters can be used to preload more than 1 stage before match and swap to it at particular round. X in parameter name refers to round number and the parameter points to stage DEF file. The last loaded stage remains if the next round doesn't have RoundXDef parameter assigned. The specified path can be relative to the main stage DEF file, data directory, or top ikemen directory.\n\nNote: Values read from the RoundXDef, AttachedChar and Music sections will be read from the main stage instead of each individual preloaded stage. This means that, for instance, you should define the music that plays in each round in the main stage DEF file rather than in each individual stage.\n\nHint: The main stage itself can be either a normal stage (in such case assigning round1def parameter doesn't make much sense) or a \"shell\" for example with only [Info] and [Music] sections, if it's meant to be used just to load particular RoundXDef parameters combination.\n\nExample:\n\nround1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def",
+      "examples": [
+        "round1def = stages/kfm.def\r\nround2def = stages/kfm_evening.def\r\nround3def = stages/kfm_night.def"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 17365,
+        "anchor": "roundxdef",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "info",
+      "key": "RoundLoop",
+      "signature": "RoundLoop",
+      "description": "RoundLoop\r\nIf set to 1, main stage, as well as stages loaded via RoundXDef parameters, will show up in ascending order (regardless of round numbers assigned in RoundXDef parameters), looped over if needed.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 18717,
+        "anchor": "roundloop",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "model",
+      "key": "Environment",
+      "signature": "Environment",
+      "description": "Environment\r\n\nEnvironment= hdr_file (string) \n\nFilename of a hdr file. Controls the image based lighting of the 3d model.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 19099,
+        "anchor": "environment",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "model",
+      "key": "EnvironmentIntensity",
+      "signature": "EnvironmentIntensity",
+      "description": "EnvironmentIntensity\r\n\nEnvironmentIntensity= environmentintensity (float) \n\nControls the contribution of image based lighting to the render result of the 3d model",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 19332,
+        "anchor": "environmentintensity",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "model",
+      "key": "Offset",
+      "signature": "Offset",
+      "description": "Offset\r\n\nOffset= offset_x, offset_y, offset_z (float, float, float) \n\nX, Y, and Z coordinates of the 3d model",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 19624,
+        "anchor": "offset_2",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "model",
+      "key": "Scale",
+      "signature": "Scale",
+      "description": "Scale\r\n\nOffset= offset_x, offset_y, offset_z (float, float, float) \n\nX, Y, and Z scale of the 3d model",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 19855,
+        "anchor": "scale",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "music",
+      "key": "final.bgmusic",
+      "signature": "final.bgmusic",
+      "description": "final.bgmusic\r\nBehaves like bgmusic, but refers to a track that should play on the final round.\n\nNote: A round is considered \"final\" when even a draw game will end the match. So it may vary with the maximum draw games setting. \n\nOptional adjustments:\r\n* final.bgmloopstart\r\n* final.bgmloopend\r\n* final.bgmvolume",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 21024,
+        "anchor": "finalbgmusic",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "music",
+      "key": "roundX.bgmusic",
+      "signature": "roundX.bgmusic",
+      "description": "roundX.bgmusic\r\nBehaves like bgmusic, but refers to a track that should play on the round specified in the parameter's name (e.g. round2.bgmusic would play on the second round).\n\nOptional adjustments:\r\n* roundX.bgmloopstart\r\n* roundX.bgmloopend\r\n* roundX.bgmvolume",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 21456,
+        "anchor": "roundxbgmusic",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "music",
+      "key": "life.bgmusic",
+      "signature": "life.bgmusic",
+      "description": "life.bgmusic\r\nLike bgmusic but refers to track that should trigger when the character's life reaches certain percentage value.\n\nOptional adjustments:\r\n* bgmratio: percentage of life that should trigger bgmusic.life track (30% by default)\r\n* bgmtrigger: 0 = music triggers only when character is at risk of being eliminated (there won't be next round when he/she lose), 1 = music triggers in all rounds\r\n* life.bgmloopstart\r\n* life.bgmloopend\r\n* life.bgmvolume",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 21841,
+        "anchor": "lifebgmusic",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "music",
+      "key": "victory.bgmusic",
+      "signature": "victory.bgmusic",
+      "description": "victory.bgmusic\r\nLike bgmusic but refers to track that should trigger right after the final round K.O. and continue throughout the victory screen.\n\nOptional adjustments:\r\n* victory.bgmloopstart\r\n* victory.bgmloopend\r\n* victory.bgmvolume",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 22443,
+        "anchor": "victorybgmusic",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "partnerspacing",
+      "signature": "partnerspacing = 15",
+      "description": "PartnerSpacing\r\n\nSpecifies amount of pixels between team members at the round start (the value automatically takes stage localcoord into account) (default: 25)\n\npartnerspacing = 15",
+      "examples": [
+        "partnerspacing = 15"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 22870,
+        "anchor": "partnerspacing",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p6startx",
+      "signature": "p6startx = 100",
+      "description": "Startx (P5-P8) \r\n\nSets the starting x-position, now supporting values for up to 8 players.\n\np6startx = 100",
+      "examples": [
+        "p6startx = 100"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 23193,
+        "anchor": "startx-p5-p8",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p7starty",
+      "signature": "p7starty = 20",
+      "description": "Starty (P5-P8) \r\n\nSets the starting y-position, now supporting values for up to 8 players.\n\np7starty = 20",
+      "examples": [
+        "p7starty = 20"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 23432,
+        "anchor": "starty-p5-p8",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p1startz",
+      "signature": "p1startz = -20",
+      "description": "Startz\r\n\nSets the starting z-position (used with z-axis), now supporting values for up to 8 players.\n\np1startz = -20",
+      "examples": [
+        "p1startz = -20"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 23670,
+        "anchor": "startz",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "Startz",
+      "signature": "Startz",
+      "description": "Startz\r\n\nSets the starting z-position (used with z-axis), now supporting values for up to 8 players.\n\np1startz = -20",
+      "examples": [
+        "p1startz = -20"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 23670,
+        "anchor": "startz",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "p8facing",
+      "signature": "p8facing = -1",
+      "description": "Facing (P5-P8) \r\n\nControls which way Players faces at the start, now supporting values for up to 8 players. Set to 1 to face right, or -1 to face left.\n\np8facing = -1",
+      "examples": [
+        "p8facing = -1"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 23913,
+        "anchor": "facing-p5-p8",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "scaling",
+      "key": "depthtoscreen",
+      "signature": "depthtoscreen = 0.5; For every 2 pixels in Z space, player is offset 1 pixel in vertical screen space",
+      "description": "DepthToScreen\r\nDetermines how a player's Z position affects their Y offset on screen, enabling finer control of perspective. Defaults to 1, which means 1 pixel in Z space equates to 1 pixel in vertical screen space. \n\nExample:\n\ndepthtoscreen = 0.5; For every 2 pixels in Z space, player is offset 1 pixel in vertical screen space",
+      "examples": [
+        "depthtoscreen = 0.5; For every 2 pixels in Z space, player is offset 1 pixel in vertical screen space"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 24271,
+        "anchor": "depthtoscreen",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "stageinfo",
+      "key": "portraitscale",
+      "signature": "portraitscale = 4",
+      "description": "PortraitScale\r\nSets the portrait draw scale (same idea as lifebar [FightFx] scale), overriding the automatic scaling derived from the stage's localcoord. If not set, a higher-resolution (localcoord) stage needs a proportionally larger portrait, or you can just set portraitscale to compensate.\n\nTo match the scaling factor, use: portraitscale = localcoordX / 320\n\nExample: a 720p stage (localcoord = 1280,720) using a 240×100 portrait needs the following scale to display at the same apparent size as on a 240p stage:\n\nportraitscale = 4",
+      "examples": [
+        "portraitscale = 4"
+      ],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 24797,
+        "anchor": "portraitscale",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "topbound",
+      "signature": "topbound",
+      "description": "[PlayerInfo]\r\ntopbound = -50 ;Top bound (z-movement)\r\nbotbound = 50 ;Bottom bound\r\n\n[Scaling]\r\ntopz = 0 ;Top z-coordinate for scaling\r\nbotz = 50 ;Bottom z-coordinate for scaling\r\ntopscale = 1 ;Scale to use at top\r\nbotscale = 1.2 ;Scale to use at bottom",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 26228,
+        "anchor": "z-axis",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "playerinfo",
+      "key": "botbound",
+      "signature": "botbound",
+      "description": "[PlayerInfo]\r\ntopbound = -50 ;Top bound (z-movement)\r\nbotbound = 50 ;Bottom bound\r\n\n[Scaling]\r\ntopz = 0 ;Top z-coordinate for scaling\r\nbotz = 50 ;Bottom z-coordinate for scaling\r\ntopscale = 1 ;Scale to use at top\r\nbotscale = 1.2 ;Scale to use at bottom",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 26228,
+        "anchor": "z-axis",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "scaling",
+      "key": "topz",
+      "signature": "topz",
+      "description": "[PlayerInfo]\r\ntopbound = -50 ;Top bound (z-movement)\r\nbotbound = 50 ;Bottom bound\r\n\n[Scaling]\r\ntopz = 0 ;Top z-coordinate for scaling\r\nbotz = 50 ;Bottom z-coordinate for scaling\r\ntopscale = 1 ;Scale to use at top\r\nbotscale = 1.2 ;Scale to use at bottom",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 26228,
+        "anchor": "z-axis",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "scaling",
+      "key": "botz",
+      "signature": "botz",
+      "description": "[PlayerInfo]\r\ntopbound = -50 ;Top bound (z-movement)\r\nbotbound = 50 ;Bottom bound\r\n\n[Scaling]\r\ntopz = 0 ;Top z-coordinate for scaling\r\nbotz = 50 ;Bottom z-coordinate for scaling\r\ntopscale = 1 ;Scale to use at top\r\nbotscale = 1.2 ;Scale to use at bottom",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 26228,
+        "anchor": "z-axis",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "scaling",
+      "key": "topscale",
+      "signature": "topscale",
+      "description": "[PlayerInfo]\r\ntopbound = -50 ;Top bound (z-movement)\r\nbotbound = 50 ;Bottom bound\r\n\n[Scaling]\r\ntopz = 0 ;Top z-coordinate for scaling\r\nbotz = 50 ;Bottom z-coordinate for scaling\r\ntopscale = 1 ;Scale to use at top\r\nbotscale = 1.2 ;Scale to use at bottom",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 26228,
+        "anchor": "z-axis",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "scaling",
+      "key": "botscale",
+      "signature": "botscale",
+      "description": "[PlayerInfo]\r\ntopbound = -50 ;Top bound (z-movement)\r\nbotbound = 50 ;Bottom bound\r\n\n[Scaling]\r\ntopz = 0 ;Top z-coordinate for scaling\r\nbotz = 50 ;Bottom z-coordinate for scaling\r\ntopscale = 1 ;Scale to use at top\r\nbotscale = 1.2 ;Scale to use at bottom",
+      "examples": [],
+      "source": {
+        "file": "wiki/Stage-features.html",
+        "sha256": "bbc5145239c45e8503d8fbef8712290fc3433a60dc4af9658472c99208056ba7",
+        "offset": 26228,
+        "anchor": "z-axis",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "zoomdelta",
+      "signature": "zoomdelta = dzoom_x, dzoom_y (float, float)",
+      "description": "zoomdelta\r\n\nzoomdelta = dzoom_x, dzoom_y (float, float)\n\nSpecifies the amount that the camera zoom affects the scale of the element. Defaults to 1,1. \n\nThe second item of zoomdelta is not read in MUGEN 1.1, but here it is processed as Y direction zoomdelta. If omitted, the same value as the first item is entered and the same processing as MUGEN 1.1 is performed.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 884,
+        "anchor": "zoomdelta",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "layerno",
+      "signature": "layerno = layer_number (int)",
+      "description": "layerno\r\n\nlayerno = layer_number (int)\n\nSpecifies the stage layer on which the element will be drawn \n\nIn addition to 0 and 1, this parameter now also accepts -1.\n\nElements in layer -1 will be drawn behind layer 0. While this does not alter stage functionality itself, it can allow characters to be drawn between the elements in those two layers. \n\nNote: For the sake of backwards compatibility, currently this feature only works in stages with ikemenversion.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 1405,
+        "anchor": "layerno",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "RoundPos",
+      "signature": "RoundPos",
+      "description": "RoundPos\r\n\nRoundPos = round_flag (bool)\n\nSet to 1 to round the position of background elements to floor, emulating older MUGEN behavior.\n\nDefaults to 1 if mugenversion is below 1.0 and ikemenversion is 0 (older stages). Otherwise defaults to 1.\n\nThis parameter can also be used in an individual background element ([BG] block).",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 2928,
+        "anchor": "roundpos",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "Model",
+      "signature": "Model",
+      "description": "Model\r\n\nModel = model_file (string)\n\nFilename of a 3D model file. Supported: gltf, glb.\n\nIt is recommended to use PNG/JPEG/embedded image formats for textures. Compressed DDS textures are not supported.\n\nMake sure the world origin of the model is at the camera starting point.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 3481,
+        "anchor": "model",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "SceneNumber",
+      "signature": "SceneNumber",
+      "description": "SceneNumber\r\n\nSceneNumber = scene_number (int)\n\nScene to use from a 3D model file. \n\nDefaults to 0. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 3938,
+        "anchor": "scenenumber",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "FOV",
+      "signature": "FOV",
+      "description": "FOV\r\n\nFOV = field_of_view (float)\n\nField of view used for a 3D model.\n\nDefaults to 0. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 4200,
+        "anchor": "fov",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "Near",
+      "signature": "Near",
+      "description": "Near\r\n\nNear = near_distance (float)\n\nThe near plane of the view frustum when the 3D model is rendered.\n\nDefaults to 0. It is recommended to set this to a low but non-zero value, such as 0.1. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 4432,
+        "anchor": "near",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "Far",
+      "signature": "Far",
+      "description": "Far\r\n\nFar = far_distance (float)\n\nThe far plane of the view frustum when the 3D model is rendered.\n\nDefaults to 0. It is recommended to set this to a high value, such as 1000. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 4784,
+        "anchor": "far",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "ModelOffset",
+      "signature": "ModelOffset",
+      "description": "ModelOffset\r\n\nModelOffset = offset_x, offset_y, offset_z (float, float, float)\n\nPositional offset of a 3D model\n\nDefaults to 0, 0, 0. Translates the model in 3D space, with (0, 0, 0) being the world origin of the model. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 5120,
+        "anchor": "modeloffset",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "ModelRotate",
+      "signature": "ModelRotate",
+      "description": "ModelRotate\r\n\nModelRotate = rotate_x, rotate_y, rotate_z (float, float, float)\n\nRotational offset of a 3D model\n\nDefaults to 0, 0, 0. Rotates the model in 3D space around the world origin of the model. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 5520,
+        "anchor": "modelrotate",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgdef",
+      "key": "ModelScale",
+      "signature": "ModelScale",
+      "description": "ModelScale\r\n\nModelScale = scale_x, scale_y, scale_z (float, float, float)\n\nScale factor of a 3D model\n\nDefaults to 1, 1, 1. Scales the model around the world origin of the model. Requires Model to be defined.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 5902,
+        "anchor": "modelscale",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "Untested",
+      "signature": "Untested",
+      "description": "Untested\r\ntrans, alpha, palfx.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 9578,
+        "anchor": "untested",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "Angle",
+      "signature": "Angle",
+      "description": "Angle\r\n\nAngle = angle (int)\n\nSpecifies the rotation angle of the BG element. Defaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 9763,
+        "anchor": "angle",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "XAngle",
+      "signature": "XAngle",
+      "description": "XAngle\r\n\nXAngle = xangle (int)\n\nSpecifies the X-axis rotation of the BG element. Defaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 9952,
+        "anchor": "xangle",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "YAngle",
+      "signature": "YAngle",
+      "description": "YAngle\r\n\nYAngle = yangle (int)\n\nSpecifies the Y-axis rotation of the BG element. Defaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 10147,
+        "anchor": "yangle",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "AutoResizeParallax",
+      "signature": "AutoResizeParallax",
+      "description": "AutoResizeParallax\r\n\nAutoResizeParallax = resize_flag (boolean)\n\nSet to 1 to auto-correct parallax size when zooming out. Defaults to 0.\n\nSpecifies whether to automatically adjust the size of parallax elements when zooming out. By setting this to 0 and specifying ZoomDelta, you can reproduce the same behavior as when parallax zooms out in MUGEN 1.1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 10342,
+        "anchor": "autoresizeparallax",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "XBottomZoomDelta",
+      "signature": "XBottomZoomDelta",
+      "description": "XBottomZoomDelta\r\n\nXBottomZoomDelta = xzoom (float)\n\nSpecifies the X scale reduction rate of the bottom edge of the image when zooming out. Omitted by default.\n\nCountermeasure for stages using parallax where the X scale on the bottom surface becomes abnormally small / freezes at severe zoom-out (by design). Works only if AutoResizeParallax is set to 1.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 10880,
+        "anchor": "xbottomzoomdelta",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "projection",
+      "signature": "projection",
+      "description": "projection\r\n\nProjection = projection (string)\n\nperspective: distortion relative to the center of the screen\n\nperspective2: distortion relative to the sprite\n\northographic: no distortion\n\nDefaults to orthographic.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 11479,
+        "anchor": "projection",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "FocalLength",
+      "signature": "FocalLength",
+      "description": "FocalLength\r\n\nFocalLength = focallength (float)\n\nFocal length for perspective projections. Has no effect unless projection is perspective or perspective2.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 11900,
+        "anchor": "focallength",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "XShear",
+      "signature": "XShear",
+      "description": "XShear\r\n\nXShear = xshear (float)\n\nSpecifies horizontal shearing to apply to the BG element. Defaults to 0.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 12203,
+        "anchor": "xshear",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bg",
+      "key": "ZoomScaleDelta",
+      "signature": "ZoomScaleDelta",
+      "description": "ZoomScaleDelta\r\n\nZoomScaleDelta = zscale_dx, zscale_dy (float, float)\n\nReverse-correction of ZoomDelta. Defaults to 0,0.\n\nApplies an inverse correction to ZoomDelta, mainly to correct image ratio distortion when zooming out. Reads two values for X and Y; you may apply the correction to just one axis by omitting the other.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 12409,
+        "anchor": "zoomscaledelta",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgctrl",
+      "key": "source",
+      "signature": "source = 0,0",
+      "description": "RemapPal\r\nRemaps a palette from the stage SFF file to another palette from the same file. This can be used to perform static palette changes without duplicating sprites, and to remap palettes dynamically using ModifyBGCtrl.\n\nExample syntax:\n\n[BGCtrl 1]\r\ntype = RemapPal\r\ntime = 200\r\nsource = 0,0\r\ndest = 2,5",
+      "examples": [
+        "[BGCtrl 1]\r\ntype = RemapPal\r\ntime = 200\r\nsource = 0,0\r\ndest = 2,5"
+      ],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 13666,
+        "anchor": "remappal",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false,
+      "controller": "remappal"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "dest",
+      "signature": "dest = 2,5",
+      "description": "RemapPal\r\nRemaps a palette from the stage SFF file to another palette from the same file. This can be used to perform static palette changes without duplicating sprites, and to remap palettes dynamically using ModifyBGCtrl.\n\nExample syntax:\n\n[BGCtrl 1]\r\ntype = RemapPal\r\ntime = 200\r\nsource = 0,0\r\ndest = 2,5",
+      "examples": [
+        "[BGCtrl 1]\r\ntype = RemapPal\r\ntime = 200\r\nsource = 0,0\r\ndest = 2,5"
+      ],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 13666,
+        "anchor": "remappal",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false,
+      "controller": "remappal"
+    },
+    {
+      "scope": "bgctrl",
+      "key": "sctrlid",
+      "signature": "sctrlid = ID (int)",
+      "description": "SctrlId\r\n\nsctrlid = ID (int)\n\nSpecifies an ID number to refer to this background controller block by.\n\nUsed so a character’s ModifyBGCtrl can target specific stage background controllers. Different controllers may share the same ID if necessary.",
+      "examples": [],
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 14115,
+        "anchor": "sctrlid",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    }
+  ],
+  "types": [
+    {
+      "scope": "bgctrl",
+      "name": "null",
+      "description": "As the name implies, this controller does nothing. It is useful mainly\r\n\nfor debugging, when you want to quickly disable a controller without\r\n\ncommenting the whole thing out. Simply change the type to null and\r\n\ncomment out the old type. This controller has no additional parameters.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 51995,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "Visible",
+      "description": "value = visible_flag\r\nSets the visibility status of the elements.\n\nWhile active, this controller sets the affected background elements to\r\n\nbe invisible (0) or visible (1). Time will still pass for invisible\r\n\nelements (meaning, in the case of animated elements, that the animation\r\n\nwill continue to progress even though it can't be seen).",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 52397,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "Enabled",
+      "description": "value = enabled_flag\r\nSets the enabled status of the elements.\n\nThis controller either disables (0) or enables (1) the affected background\r\n\nelements. When an element is disabled, it is invisible and time does not\r\n\npass for it (so, in the case of animated elements, any animation is paused\r\n\nwhen it's disabled).",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 52943,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "VelSet",
+      "description": "x = vel_x\r\nSets the x-velocity of the elements.\n\ny = vel_y\r\nSets the y-velocity of the elements.\n\nThis controller will set the x/y velocity of the affected background\r\n\nelements to the specified values. Velocities are measured in pixels per\r\n\ngame tick. You can specify either or both of the x and y parameters.\r\n\nIf either is omitted, the element's velocity in that direction will not\r\n\nchange.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 53462,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "VelAdd",
+      "description": "x = vel_incr_x\r\nChanges the x-velocity of the elements by vel_incr_x.\n\ny = vel_incr_y\r\nChanges the y-velocity of the elements by vel_incr_y.\n\nThis controller will add the specified values to the x/y velocity\r\n\nof the affected background elements. You can specify either or both of the\r\n\nx and y parameters. If either is omitted, the element's velocity in\r\n\nthat direction will not change.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 54356,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "PosSet",
+      "description": "x = pos_x\r\nSets the x-position of the elements.\n\ny = pos_y\r\nSets the y-position of the elements.\n\nThis controller will set the x/y coordinate of the affected\r\n\nbackground elements to the specified values. You can specify either or\r\n\nboth of the x and y parameters. If either is omitted, the\r\n\nelement's coordinate on that axis will not change.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 55260,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "PosAdd",
+      "description": "x = x_displacement\r\nDisplaces the x-coordinate of the elements.\n\ny = y_displacement\r\nDisplaces the y-coordinate of the elements.\n\nThis controller will displace the x/y coordinate of the affected\r\n\nbackground elements by the specified values. You can specify either or both\r\n\nof the x and y parameters. If either is omitted, the element's\r\n\ncoordinate on that axis will not change.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 56101,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "Anim",
+      "description": "value = action_no\r\nChanges the animation displayed by the affected elements to the\r\n\nspecified animation number.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 56979,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "SinX",
+      "description": "value = amplitude, period, offset\r\nChanges the amplitude, period, and phase offset for the affected elements'\r\n\nsinusoidal motions in the x-direction. These values have the same\r\n\neffect as they do for the sin.x background element parameters.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 57285,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "SinY",
+      "description": "value = amplitude, period, offset\r\nChanges the amplitude, period, and phase offset for the affected elements'\r\n\nsinusoidal motions in the y-direction. These values have the same\r\n\neffect as they do for the sin.y background element parameters.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 57790,
+        "anchor": "background-controllers",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "name": "normal",
+      "description": "Documented background element type. Choose authored sprite/action and parameters separately.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 27762,
+        "anchor": "format-of-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "name": "anim",
+      "description": "Documented background element type. Choose authored sprite/action and parameters separately.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 32699,
+        "anchor": "animated-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "name": "parallax",
+      "description": "Documented background element type. Choose authored sprite/action and parameters separately.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 36249,
+        "anchor": "parallaxing-background-elements",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bg",
+      "name": "dummy",
+      "description": "Documented background element type. Choose authored sprite/action and parameters separately.",
+      "source": {
+        "file": "mugen/bgs.html",
+        "sha256": "467eab8150987dd998384b21212854ac722916ba48e06c4d454334ebcf8391ad",
+        "offset": 47830,
+        "anchor": "other-background-element-types",
+        "snapshot": "Bundled snapshot",
+        "family": "MUGEN stage manual"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "SinX",
+      "description": "SinX and SinY\r\nMUGEN 1.1 has a bug where SinX and SinY of a BGCtrl ignore the parent BGCtrlDef looptime. Therefore, in Ikemen GO, the movement of SinX and SinY of a stage created with MUGEN 1.1 in mind may look strange.\n\nThis can be solved by matching the looptime of BGCtrlDef and the period (2nd value) of SinX and SinY.",
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 2150,
+        "anchor": "sinx-and-siny",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgctrl",
+      "name": "SinY",
+      "description": "SinX and SinY\r\nMUGEN 1.1 has a bug where SinX and SinY of a BGCtrl ignore the parent BGCtrlDef looptime. Therefore, in Ikemen GO, the movement of SinX and SinY of a stage created with MUGEN 1.1 in mind may look strange.\n\nThis can be solved by matching the looptime of BGCtrlDef and the period (2nd value) of SinX and SinY.",
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 2150,
+        "anchor": "sinx-and-siny",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": false
+    },
+    {
+      "scope": "bgctrl",
+      "name": "PalFX",
+      "description": "PalFX\r\nWorks like character PalFX, but for background elements. The effect is applied permanently (due to how BGCtrls work). To reset it, declare PalFX again with empty parameters (all are optional). Using BGPalFX in a character will temporarily override all PalFX BGCtrl.\n\nExample syntax:\n\n; Example only — actual parameters mirror char PalFX\r\n[BGCtrl pal_example]\r\ntype = PalFX\r\ntime = 0, 60\r\n; add = r,g,b\r\n; mul = r,g,b\r\n; sinadd = r,g,b, period, offset",
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 12974,
+        "anchor": "palfx",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": true
+    },
+    {
+      "scope": "bgctrl",
+      "name": "RemapPal",
+      "description": "RemapPal\r\nRemaps a palette from the stage SFF file to another palette from the same file. This can be used to perform static palette changes without duplicating sprites, and to remap palettes dynamically using ModifyBGCtrl.\n\nExample syntax:\n\n[BGCtrl 1]\r\ntype = RemapPal\r\ntime = 200\r\nsource = 0,0\r\ndest = 2,5",
+      "source": {
+        "file": "wiki/Background-features.html",
+        "sha256": "7084a174bc8d03ebf3ba5b3e36b32fcb9c8e2cb79928c4d72489ebd216eb363a",
+        "offset": 13666,
+        "anchor": "remappal",
+        "snapshot": "Bundled snapshot",
+        "family": "IKEMEN wiki extension; runtime support/version must be checked"
+      },
+      "completable": true
+    }
+  ]
+}

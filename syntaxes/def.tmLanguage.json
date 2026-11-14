@@ -3,15 +3,291 @@
   "name": "IKEMEN DEF",
   "scopeName": "source.ikemen-def",
   "patterns": [
-    { "name": "comment.line.semicolon.ikemen-def", "match": ";.*$" },
-    { "name": "meta.section.ikemen-def", "match": "^(\\s*)(\\[)([^\\]]+)(\\])", "captures": { "2": { "name": "punctuation.definition.section.begin.ikemen-def" }, "3": { "name": "entity.name.section.ikemen-def" }, "4": { "name": "punctuation.definition.section.end.ikemen-def" } } },
-    { "name": "meta.assignment.ikemen-def", "begin": "^(\\s*)([A-Za-z_][A-Za-z0-9_.-]*)(\\s*)(=)", "beginCaptures": { "2": { "name": "variable.other.property.ikemen-def" }, "4": { "name": "keyword.operator.assignment.ikemen-def" } }, "end": "(?=;|$)", "patterns": [
-      { "name": "string.quoted.double.ikemen-def", "begin": "\"", "end": "\"" },
-      { "name": "string.quoted.single.ikemen-def", "begin": "'", "end": "'" },
-      { "name": "constant.numeric.ikemen-def", "match": "(?<![A-Za-z_])[-+]?\\d+(?:\\.\\d+)?" },
-      { "name": "constant.language.boolean.ikemen-def", "match": "(?i)\\b(?:true|false|yes|no)\\b" },
-      { "name": "string.unquoted.path.common.ikemen-def", "match": "(?i)(?:\\.\\.[\\/])?[^;,]*[\\/](?:common|shared|template|universal|external)[\\/][^;,]+" },
-      { "name": "string.unquoted.path.character.ikemen-def", "match": "(?i)[^;,=]+\\.(?:sff|snd|air|cns|zss|cmd|def|lua|ogg|mp3|wav|flac|fnt|ttf|otf|png|pcx|spr)" }
-    ] }
-  ]
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#embedded-air"
+    },
+    {
+      "include": "#bgctrl"
+    },
+    {
+      "include": "#backgrounds"
+    },
+    {
+      "include": "#sections"
+    },
+    {
+      "include": "#assignments"
+    }
+  ],
+  "repository": {
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.semicolon.ikemen-def.heading",
+          "match": "^\\s*;[ \\t]*[-=*_]{3,}.*$"
+        },
+        {
+          "name": "comment.line.semicolon.ikemen-def",
+          "match": ";.*$"
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.ikemen-def",
+          "begin": "\"",
+          "end": "\"|$"
+        },
+        {
+          "name": "string.quoted.single.ikemen-def",
+          "begin": "'",
+          "end": "'|$"
+        }
+      ]
+    },
+    "values": {
+      "patterns": [
+        {
+          "name": "string.unquoted.path.common.ikemen-def",
+          "match": "(?i)(?<!\\S)(?:[^\\s\"';,=][^\"';,=\\r\\n]*[\\\\/])?(?:common|shared|template|universal|external)[\\\\/][^\"';,=\\r\\n]+"
+        },
+        {
+          "name": "string.unquoted.path.character.ikemen-def",
+          "match": "(?i)(?<!\\S)[^\\s\"';,=][^\"';,=\\r\\n]*\\.(?:sff|snd|air|cns|zss|cmd|def|lua|ogg|mp3|wav|flac|fnt|ttf|otf|png|pcx|spr)(?=\\s*(?:,|;|$))"
+        },
+        {
+          "include": "#strings"
+        },
+        {
+          "name": "constant.numeric.ikemen-def",
+          "match": "(?<![A-Za-z0-9_.])[-+]?(?:\\d+\\.?(?:\\d*)?|\\.\\d+)(?:[eE][-+]?\\d+)?(?![A-Za-z0-9_.])"
+        },
+        {
+          "name": "constant.language.boolean.ikemen-def",
+          "match": "(?i)\\b(?:true|false|yes|no)\\b"
+        },
+        {
+          "name": "punctuation.separator.sequence.ikemen-def",
+          "match": ","
+        },
+        {
+          "name": "punctuation.section.range.ikemen-def",
+          "match": "[\\[\\]()]"
+        }
+      ]
+    },
+    "sections": {
+      "patterns": [
+        {
+          "name": "meta.section.ikemen-def",
+          "match": "^(\\s*)(\\[)([^\\]]+)(\\])",
+          "captures": {
+            "2": {
+              "name": "punctuation.definition.section.begin.ikemen-def"
+            },
+            "3": {
+              "name": "entity.name.section.ikemen-def"
+            },
+            "4": {
+              "name": "punctuation.definition.section.end.ikemen-def"
+            }
+          }
+        }
+      ]
+    },
+    "assignments": {
+      "patterns": [
+        {
+          "name": "meta.assignment.ikemen-def",
+          "begin": "(?i)^(\\s*)([A-Za-z_][A-Za-z0-9_.-]*)(\\s*)(=)",
+          "beginCaptures": {
+            "2": {
+              "name": "variable.other.property.ikemen-def"
+            },
+            "4": {
+              "name": "keyword.operator.assignment.ikemen-def"
+            }
+          },
+          "end": "(?=;|$)",
+          "patterns": [
+            {
+              "include": "#strings"
+            },
+            {
+              "include": "#values"
+            }
+          ]
+        }
+      ]
+    },
+    "bgctrl": {
+      "patterns": [
+        {
+          "name": "meta.section.bgctrl.ikemen-def",
+          "begin": "^(\\s*)(\\[)((?i:BGCtrl(?:Def)?)(?:\\s+[^\\]\\r\\n]*)?)(\\])",
+          "beginCaptures": {
+            "2": {
+              "name": "punctuation.definition.section.begin.ikemen-def"
+            },
+            "3": {
+              "name": "entity.name.section.ikemen-def"
+            },
+            "4": {
+              "name": "punctuation.definition.section.end.ikemen-def"
+            }
+          },
+          "end": "(?=^\\s*\\[)",
+          "patterns": [
+            {
+              "include": "#comments"
+            },
+            {
+              "name": "meta.assignment.ikemen-def",
+              "begin": "(?i)^(\\s*)(type)(\\s*)(=)",
+              "beginCaptures": {
+                "2": {
+                  "name": "variable.other.property.ikemen-def"
+                },
+                "4": {
+                  "name": "keyword.operator.assignment.ikemen-def"
+                }
+              },
+              "end": "(?=;|$)",
+              "patterns": [
+                {
+                  "include": "#strings"
+                },
+                {
+                  "name": "support.function.bgctrl.ikemen-def",
+                  "match": "(?i)(?<![A-Za-z0-9_.-])(?:Null|Visible|Enabled|VelSet|VelAdd|PosSet|PosAdd|Anim|SinX|SinY|PalFX|RemapPal)(?![A-Za-z0-9_.-])"
+                },
+                {
+                  "include": "#values"
+                }
+              ]
+            },
+            {
+              "include": "#assignments"
+            }
+          ]
+        }
+      ]
+    },
+    "backgrounds": {
+      "patterns": [
+        {
+          "name": "meta.section.background.ikemen-def",
+          "begin": "^(\\s*)(\\[)((?i:BG)(?:\\s+[^\\]\\r\\n]*)?)(\\])",
+          "beginCaptures": {
+            "2": {
+              "name": "punctuation.definition.section.begin.ikemen-def"
+            },
+            "3": {
+              "name": "entity.name.section.ikemen-def"
+            },
+            "4": {
+              "name": "punctuation.definition.section.end.ikemen-def"
+            }
+          },
+          "end": "(?=^\\s*\\[)",
+          "patterns": [
+            {
+              "include": "#comments"
+            },
+            {
+              "name": "meta.assignment.ikemen-def",
+              "begin": "(?i)^(\\s*)(type)(\\s*)(=)",
+              "beginCaptures": {
+                "2": {
+                  "name": "variable.other.property.ikemen-def"
+                },
+                "4": {
+                  "name": "keyword.operator.assignment.ikemen-def"
+                }
+              },
+              "end": "(?=;|$)",
+              "patterns": [
+                {
+                  "include": "#strings"
+                },
+                {
+                  "name": "constant.language.background-type.ikemen-def",
+                  "match": "(?i)(?<![A-Za-z0-9_.-])(?:normal|anim|parallax|dummy)(?![A-Za-z0-9_.-])"
+                },
+                {
+                  "include": "#values"
+                }
+              ]
+            },
+            {
+              "name": "meta.assignment.ikemen-def",
+              "begin": "(?i)^(\\s*)(trans)(\\s*)(=)",
+              "beginCaptures": {
+                "2": {
+                  "name": "variable.other.property.ikemen-def"
+                },
+                "4": {
+                  "name": "keyword.operator.assignment.ikemen-def"
+                }
+              },
+              "end": "(?=;|$)",
+              "patterns": [
+                {
+                  "include": "#strings"
+                },
+                {
+                  "name": "constant.language.blend.ikemen-def",
+                  "match": "(?i)(?<![A-Za-z0-9_.-])(?:none|default|add|add1|sub|addalpha)(?![A-Za-z0-9_.-])"
+                },
+                {
+                  "include": "#values"
+                }
+              ]
+            },
+            {
+              "include": "#assignments"
+            }
+          ]
+        }
+      ]
+    },
+    "embedded-air": {
+      "patterns": [
+        {
+          "name": "meta.embedded.block.air.ikemen-def",
+          "contentName": "source.ikemen-air",
+          "begin": "^(\\s*)(\\[\\s*(?i:Begin\\s+Action)\\s+)(-?\\d+)(\\s*\\])",
+          "beginCaptures": {
+            "2": {
+              "name": "keyword.control.action.begin.ikemen-air"
+            },
+            "3": {
+              "name": "entity.name.section.action.ikemen-air"
+            },
+            "4": {
+              "name": "keyword.control.action.end.ikemen-air"
+            }
+          },
+          "end": "(?=^\\s*\\[)",
+          "patterns": [
+            {
+              "include": "source.ikemen-air"
+            },
+            {
+              "name": "keyword.control.animation.ikemen-air",
+              "match": "(?i)\\b(?:LoopStart|Interpolate\\s+(?:Offset|Blend|Scale|Angle))\\b"
+            },
+            {
+              "name": "storage.modifier.frame.ikemen-air",
+              "match": "(?i)(?<=,)[ \\t]*(?:HV|VH|H|V|AS\\d+D\\d+|A1?|S)(?=\\s*(?:,|;|$))"
+            }
+          ]
+        }
+      ]
+    }
+  }
 }

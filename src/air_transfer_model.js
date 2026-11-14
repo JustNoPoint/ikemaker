@@ -36,7 +36,9 @@ function natural(value, label) { if (!Number.isSafeInteger(value) || value < 0) 
 function dependencies(action) {
   const unique = new Map();
   for (const frame of action?.frames || []) {
-    if (!Number.isSafeInteger(frame.group) || !Number.isSafeInteger(frame.index)) continue;
+    // Stable and Nightly anim.go null only the exact -1 group/index sentinel.
+    // Other negative references are drawing requests (uint16 wrapping), not blanks.
+    if (!Number.isSafeInteger(frame.group) || !Number.isSafeInteger(frame.index) || frame.group === -1 || frame.index === -1) continue;
     const id = `${frame.group},${frame.index}`;
     if (!unique.has(id)) unique.set(id, { id, group: frame.group, number: frame.index, frameCount: 0 });
     unique.get(id).frameCount += 1;
@@ -137,7 +139,7 @@ function analyzeAirTransfer(input) {
   if (!['animation-only', 'animation-with-sprites'].includes(dependencyMode)) throw new Error('AIR Transfer dependency mode must be animation-only or animation-with-sprites.');
   const selected = exactSelection(sourceText, fields.selection.value), available = rows(sourceText), firstByNumber = firstRowsByNumber(available), selectedIds = new Set(selected.map(row => row.id)), destination = rows(destinationText, 'AIR destination'), occupied = new Map();
   for (const row of destination) { if (!occupied.has(row.number)) occupied.set(row.number, []); occupied.get(row.number).push(row.physicalIndex); }
-  const sourceSprites = archiveSprites(fields.sourceSff?.value, 'Source SFF archive', dependencyMode === 'animation-with-sprites'), destinationSprites = archiveSprites(fields.destinationSff?.value, 'Destination SFF archive', dependencyMode === 'animation-with-sprites');
+  const needsSprites = dependencyMode === 'animation-with-sprites' && selected.some(row => row.dependencies.length > 0), sourceSprites = archiveSprites(fields.sourceSff?.value, 'Source SFF archive', needsSprites), destinationSprites = archiveSprites(fields.destinationSff?.value, 'Destination SFF archive', needsSprites);
   const spriteMap = new Map(), closure = new Map();
   const items = selected.map(row => {
     for (const dependency of row.dependencies) { if (!spriteMap.has(dependency.id)) spriteMap.set(dependency.id, { ...dependency, referencedBy: [] }); spriteMap.get(dependency.id).referencedBy.push(row.id); }

@@ -141,6 +141,9 @@ function setTransferSelection(session, role, selection) {
   assertSession(session);
   if (!ROLES.has(role)) throw new TypeError('Transfer selection role must be source or destination.');
   const normalized = normalizeSelection(selection, `${role} selection`);
+  // Repaint/refresh notifications repeat the same exact physical selection.
+  // They do not constitute a new user selection or invalidate its review.
+  if (canonical(normalized) === canonical(session.selections[role])) return session;
   return next(session, { selections: { ...session.selections, [role]: normalized }, pendingReview: null, result: null });
 }
 
@@ -246,6 +249,14 @@ function normalizeMapping(value, session) {
   return deepFreeze(mapping);
 }
 
+function validateTransferMappingEvidence(value,session){
+ plain(value,'Finalized Transfer mapping');const input={};
+ for(const field of ['sourceId','sourceContentFingerprint','destinationId','destinationContentFingerprint','paletteFingerprint','destinationPhysicalIndex','destinationPhysicalOccurrence'])if(Object.prototype.hasOwnProperty.call(value,field))input[field]=value[field];
+ const normalized=normalizeMapping(input,session);
+ if(canonical(value)!==canonical(normalized))throw new Error(`Finalized Transfer mapping ${value.sourceId} has inconsistent content evidence.`);
+ return normalized;
+}
+
 function rememberTransferMapping(session, value) {
   assertSession(session);
   if (session.status !== 'active') throw new Error('A cancelled Transfer session cannot remember mappings.');
@@ -315,6 +326,6 @@ module.exports = {
   createTransferSession, setTransferSelection, swapTransferEndpoints, changeTransferEndpoint,
   createTransferRequest, requestStillCurrent, stageTransferReview, cancelTransferReview,
   rememberTransferMapping, reusableTransferMapping, projectTransferResult, recordTransferResult,
-  finalizeTransferApply,
+  finalizeTransferApply, validateTransferMappingEvidence,
   cancelTransferSession, endpointIdentity
 };

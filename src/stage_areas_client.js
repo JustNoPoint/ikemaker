@@ -1,0 +1,8 @@
+'use strict';
+function mountStageAreas(env){
+ const doc=env.document,section=doc.createElement('section'),toggle=doc.createElement('button'),panel=doc.createElement('div');toggle.id='stageAreasTransitions';toggle.textContent='Areas & Transitions…';toggle.setAttribute('aria-controls','stageAreasPanel');toggle.setAttribute('aria-expanded','false');panel.id='stageAreasPanel';panel.hidden=true;panel.setAttribute('aria-label','Stage round assignments and area tools');
+ const status=doc.createElement('p');status.textContent=(env.rounds.length?env.rounds.map(row=>'Round '+row.round+': '+row.path).join(' · '):'No round Stage assignments.')+' Assignments belong to the main Stage DEF and take effect at round boundaries. Save the reviewed DEF before testing in game.';panel.append(status);
+ for(const [operation,label,title] of [['assign','Assign existing Stage to a round…','Link an existing Stage DEF without replacing art or generating files'],['remove','Remove round assignment…','Review removal while retaining the original authored line as a comment'],['loop','Round sequence mode…','Use authored round numbers or cycle sorted Stage keys'],['variant','Create calibrated art variant…','Reuse the existing art replacement and Canvas review workflow']]){const button=doc.createElement('button');button.id='stageAreas'+operation;button.textContent=label;button.title=title;button.disabled=operation==='remove'&&!env.rounds.length;button.onclick=()=>env.send({type:'stageAreasOperation',generation:env.generation,operation});panel.append(button);}
+ toggle.onclick=()=>{panel.hidden=!panel.hidden;toggle.setAttribute('aria-expanded',String(!panel.hidden));};section.append(toggle,panel);env.container.append(section);return section;
+}
+module.exports={mountStageAreas};

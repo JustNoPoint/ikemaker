@@ -86,6 +86,7 @@ localcoord = ${width},${height}
 [Files]
 spr = system.sff
 fight = ${quoted(options.fightFile) || 'fight.def'}
+select = ${quoted(options.selectFile) || 'select.def'}
 
 [Title Info]
 menu.pos = ${centerX},${centerY}
@@ -96,6 +97,17 @@ footer.version.text = Version 0.0
 [Select Info]
 pos = ${centerX},${centerY}
 cell.bg.spr = 0,0
+`;
+}
+
+function screenpackSelectDef() {
+  return `[Characters]
+; Add character paths here through Roster Manager.
+
+[ExtraStages]
+; Add stage paths here through Roster Manager.
+
+[Options]
 `;
 }
 
@@ -120,4 +132,4 @@ pos = ${Math.round(width / 2)},${Math.max(1, Math.round(height * 50 / 240))}
 `;
 }
 
-module.exports = { coordinates, stageDef, screenpackDef, fightDef };
+module.exports = { coordinates, stageDef, screenpackDef, screenpackSelectDef, fightDef };

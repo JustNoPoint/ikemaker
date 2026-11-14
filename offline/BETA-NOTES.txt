@@ -1,13 +1,17 @@
-IKEMAKER 0.79.500 — TESTER BETA NOTES
+IKEMaker 0.79.536
 
-- Entity tabs restore the selected sprite, stage camera, screenpack page, roster entry, fight HUD page and storyboard scene after reload. Fight HUD has its own tab label.
-- The character, stage and visual workspaces share entity navigation. Stage controls wrap in narrow panes and the full preview can scroll vertically.
-- Screenpack, select screen and storyboard DEF examples are available in IKEMEN: State Controllers. Use an example on a blank line in its indicated section. Existing scalar keys offer navigation or value replacement.
-- Stage preview shows offline cycle timing and separate live StageTime when available. Palette Workshop supports keyboard review and Enter to convert.
-- Quick sprite intake, Move Lab, Throw Maker, screenpack and storyboard authoring remain available from their existing workspaces.
+Changes since 0.79.500
 
-WINDOWS TEST BUILD
-Install the included extension, reload VS Code and verify version 0.79.500.
-Use a backed-up project for editing tests. Windows x64 built-in SFF verification
-covers the documented writer profile. Linux engine behavior is unverified.
-The optional With-LuaLS editions include a separate Lua Language Server extension.
+- SFF and AIR viewers share layer selection and ordering. Link artwork to its base sprite, review offsets and generate attached Explod code for in-game character layers.
+- Sprite intake supports uneven sheets and adjustable cuts. Use Advanced SFF for thumbnail selection, ordering and staged batches. Palette Workshop and the SFF writer include improvements to working with independent palettes.
+- Command Maker offers HDBZ-style motion recipes, optional inputs and alternative charge rules. Review CNS and ZSS output and preview the movelist with its motif styling.
+- Font Lab provides font authoring alongside the screenpack, fight UI and storyboard tools.
+- Screenpack previews include unnamed title and character-select backgrounds, inherited options menu text, and the correct starting roster cells. Fight HUD and storyboard previews now respect intentionally blank animation frames.
+
+Windows downloads
+
+New to VS Code: choose Windows Online Bootstrap.
+Already have VS Code: choose Windows Offline or install the standalone VSIX through Extensions > Install from VSIX.
+Choose a With-LuaLS package if you also want the Lua Language Server.
+
+Offline stage motion and menus extended by game Lua can differ from IKEMEN playback. Check those in-engine.

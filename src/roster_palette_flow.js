@@ -50,11 +50,67 @@ function representativeSprite(archive) {
     || null;
 }
 
-function replacementSummary(archive, paletteIndex, source) {
-  const plan = paletteReplacementPlan(archive, paletteIndex, source.colors), palette = archive.palettes[paletteIndex];
+// Stored colors a palette can be replaced with directly: 1..256 colors whose data covers the declared count.
+function storedColorCount(palette) {
+  const count = Number(palette?.colors);
+  return palette && palette.dataSize > 0 && Number.isInteger(count) && count >= 1 && count <= 256 && palette.dataSize >= count * 4 ? count : 0;
+}
+
+function replaceableTarget(palette) { return storedColorCount(palette) > 0; }
+
+function targetLabel(palette) {
+  const count = storedColorCount(palette);
+  return paletteRole(palette) + (count && count < 256 ? ` · ${count}-color palette` : '');
+}
+
+const overCapacityCache = new WeakMap();
+// A reduced palette (for example 32 colors) stores only indexes 0..count-1. Only that range of the source
+// table is written; source colors beyond it are reported, never written. Sprites that already draw with
+// indexes beyond the stored range are reported for information only: an RGB-only replacement keeps the
+// palette size and cannot make that existing condition better or worse.
+function fittedReplacement(archive, paletteIndex, colors) {
+  const palette = archive.palettes[paletteIndex], count = storedColorCount(palette);
+  if (!count) throw new Error(`Palette ${palette ? `${palette.group},${palette.number}` : paletteIndex} has no stored color table that can be replaced directly.`);
+  if (count === 256) return { colors: colors.map((color) => color.slice()), storedColors: 256, ignoredIndices: [], overCapacitySprites: [] };
+  const current = require('./sff_reader').paletteRgba(archive, paletteIndex), ignoredIndices = [];
+  const fitted = colors.map((color, index) => {
+    if (index < count) return color.slice();
+    const kept = current[index] || [0, 0, 0, 0];
+    if (color[0] !== kept[0] || color[1] !== kept[1] || color[2] !== kept[2]) ignoredIndices.push(index);
+    return kept.slice();
+  });
+  const { spriteMaximumIndex } = require('./palette_editor'), { indexed } = require('./palette_sprite_associations');
+  let cached = overCapacityCache.get(archive);
+  if (!cached) overCapacityCache.set(archive, cached = new Map());
+  if (!cached.has(paletteIndex)) cached.set(paletteIndex, archive.sprites.filter((sprite) => sprite.paletteIndex === paletteIndex && indexed(archive, sprite))
+    .map((sprite) => ({ id: `${sprite.group},${sprite.number}`, maximum: spriteMaximumIndex(archive, sprite) }))
+    .filter((item) => item.maximum >= count));
+  const overCapacitySprites = cached.get(paletteIndex);
+  return { colors: fitted, storedColors: count, ignoredIndices, overCapacitySprites };
+}
+
+function capacityDiagnostics(id, fitted) {
+  const count = fitted.storedColors, lines = [];
+  if (fitted.overCapacitySprites.length) {
+    const sample = fitted.overCapacitySprites.slice(0, 4).map((item) => `${item.id} uses index ${item.maximum}`).join('; ');
+    lines.push(`Palette ${id} stores only ${count} colors (indexes 0-${count - 1}), but ${fitted.overCapacitySprites.length} sprite(s) using it already draw with higher indexes (${sample}${fitted.overCapacitySprites.length > 4 ? '; …' : ''}). Those pixels have no stored color. This replacement keeps the palette size and does not change them; remap those sprites or rebuild the palette with more colors to fix them.`);
+  }
+  if (fitted.ignoredIndices.length) {
+    const sample = fitted.ignoredIndices.slice(0, 8).join(', ') + (fitted.ignoredIndices.length > 8 ? ', …' : '');
+    lines.push(`Palette ${id} stores only ${count} colors, so only source indexes 0-${count - 1} are written. ${fitted.ignoredIndices.length} source color(s) outside that range will NOT be written (index ${sample}). Review the preview: it shows only the colors that will be stored.`);
+  }
+  return lines.join(' ');
+}
+
+function replacementSummary(archive, paletteIndex, source, fitted = fittedReplacement(archive, paletteIndex, source.colors)) {
+  const palette = archive.palettes[paletteIndex], id = `${palette.group},${palette.number}`;
+  const plan = paletteReplacementPlan(archive, paletteIndex, fitted.colors);
   return {
-    paletteIndex, id: `${palette.group},${palette.number}`, role: paletteRole(palette), changedCount: plan.changedCount,
-    affectedSprites: archive.sprites.filter((sprite) => sprite.paletteIndex === paletteIndex).length,
+    paletteIndex, id, role: paletteRole(palette), changedCount: plan.changedCount, storedColors: fitted.storedColors,
+    ignoredCount: fitted.ignoredIndices.length, overCapacityCount: fitted.overCapacitySprites.length, diagnostics: capacityDiagnostics(id, fitted),
+    // RGB24/RGBA32 sprites still carry a palette index in their header (often 0)
+    // but never read the palette, so a replacement cannot affect them.
+    affectedSprites: archive.sprites.filter((sprite) => sprite.paletteIndex === paletteIndex && require('./palette_sprite_associations').indexed(archive, sprite)).length,
     linkedChildren: archive.palettes.filter((item) => item.dataSize === 0 && item.link === paletteIndex).map((item) => `${item.group},${item.number}`)
   };
 }
@@ -68,7 +124,7 @@ function playerPaletteConversion(source, options = {}) {
 
 function rawPage(model) {
   const safe = (value) => JSON.stringify(value).replace(/</g, '\\u003c').replace(/>/g, '\\u003e').replace(/&/g, '\\u0026');
-  return `<!doctype html><html><head><meta charset="utf-8"><style>:root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;font:13px var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground)}header{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--vscode-panel-border)}main{padding:16px;max-width:1050px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid var(--vscode-panel-border);padding:12px;border-radius:5px}.image{height:360px;display:grid;place-items:center;background:repeating-conic-gradient(#333 0 25%,#222 0 50%) 50%/20px 20px}.image img{max-width:100%;max-height:100%;image-rendering:pixelated}button,select{font:inherit;padding:7px 10px;color:inherit;background:var(--vscode-input-background);border:1px solid var(--vscode-input-border)}button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}.warning{border-left:5px solid var(--vscode-charts-yellow)}.muted{color:var(--vscode-descriptionForeground)}.options{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}@media(max-width:720px){.compare{grid-template-columns:1fr}.image{height:260px}}</style></head><body><header><b>Replace Existing Palette — Preview</b><span>${escapeName(model.character)}</span><span>← ${escapeName(model.source.name)}</span></header><main><div class="card warning"><b>No changes have been made.</b> This screen previews replacing one existing stored palette. The SFF changes only after you choose Review Replacement and confirm the replacement warning. Sprites using other palettes—including FX—remain untouched.</div><div class="options"><label>Existing palette to replace <select id="target">${model.targets.map((item) => `<option value="${item.index}">${item.id} · ${item.role} · WILL BE REPLACED</option>`).join('')}</select></label><label><input id="flipTable" type="checkbox" ${model.defaultFlip?'checked':''}> Reverse ACT RGB table</label><label><input id="rememberOrder" type="checkbox" checked> Remember this ACT order</label><label>Simple adjustment <select id="preset"><option value="none">None</option><option value="lighten">Lighter</option><option value="darken">Darker</option><option value="grayscale">Grayscale</option><option value="invert">Invert colors</option><option value="hue-positive">Hue shift A</option><option value="hue-negative">Hue shift B</option></select></label></div><p class="muted">Active order: <b id="activeOrder"></b>. ACT has no producer marker; use the preview to choose file order (0 → 255) or reversed RGB order (255 → 0).</p><div class="compare"><section class="card"><h3>Existing palette before replacement</h3><div class="image"><img id="before"></div></section><section class="card"><h3>Replacement preview from ${model.source.kind}</h3><div class="image"><img id="after" src="${model.after}"></div></section></div><div class="card" id="facts"></div><p><button id="apply" class="primary">Review Replacement…</button> <button id="cancel">Cancel Without Changes</button></p></main><script>const vscode=acquireVsCodeApi(),model=${safe(model)},target=document.getElementById('target'),flip=document.getElementById('flipTable'),remember=document.getElementById('rememberOrder'),preset=document.getElementById('preset');function options(){return{paletteIndex:Number(target.value),flipTable:flip.checked,rememberOrder:remember.checked,preset:preset.value}}function request(){document.getElementById('activeOrder').textContent=flip.checked?'Reversed RGB table (255 → 0)':'ACT file order (0 → 255)';vscode.postMessage({type:'preview',...options()})}target.onchange=request;flip.onchange=request;preset.onchange=request;document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...options()});document.getElementById('cancel').onclick=()=>vscode.postMessage({type:'cancel'});addEventListener('message',event=>{if(event.data.type!=='preview')return;document.getElementById('before').src=event.data.before;document.getElementById('after').src=event.data.after;const s=event.data.summary;document.getElementById('facts').innerHTML='<b>Replacement summary — palette '+s.id+' will be replaced only after confirmation</b><p>'+s.changedCount+' of 256 RGB indices change · '+s.affectedSprites+' sprite(s) directly use '+s.id+'. Sprites using every other palette remain untouched.</p>'+(s.linkedChildren.length?'<p>Linked palette IDs that inherit this stored table: '+s.linkedChildren.join(', ')+'</p>':'<p>No linked child palettes inherit this table.</p>')});request();</script></body></html>`;
+  return `<!doctype html><html><head><meta charset="utf-8"><style>:root{color-scheme:light dark}*{box-sizing:border-box}body{margin:0;font:13px var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground)}header{display:flex;gap:8px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--vscode-panel-border)}main{padding:16px;max-width:1050px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid var(--vscode-panel-border);padding:12px;border-radius:5px}.image{height:360px;display:grid;place-items:center;background:repeating-conic-gradient(#333 0 25%,#222 0 50%) 50%/20px 20px}.image img{max-width:100%;max-height:100%;image-rendering:pixelated}button,select{font:inherit;padding:7px 10px;color:inherit;background:var(--vscode-input-background);border:1px solid var(--vscode-input-border)}button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}.warning{border-left:5px solid var(--vscode-charts-yellow)}.muted{color:var(--vscode-descriptionForeground)}.options{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}@media(max-width:720px){.compare{grid-template-columns:1fr}.image{height:260px}}</style></head><body><header><b>Replace Existing Palette — Preview</b><span>${escapeName(model.character)}</span><span>← ${escapeName(model.source.name)}</span></header><main><div class="card warning"><b>No changes have been made.</b> This screen previews replacing one existing stored palette. The SFF changes only after you choose Review Replacement and confirm the replacement warning. Sprites using other palettes—including FX—remain untouched.</div><div class="options"><label>Existing palette to replace <select id="target">${model.targets.map((item) => `<option value="${item.index}">${item.id} · ${item.role} · WILL BE REPLACED</option>`).join('')}</select></label><label><input id="flipTable" type="checkbox" ${model.defaultFlip?'checked':''}> Reverse ACT RGB table</label><label><input id="rememberOrder" type="checkbox" checked> Remember this ACT order</label><label>Simple adjustment <select id="preset"><option value="none">None</option><option value="lighten">Lighter</option><option value="darken">Darker</option><option value="grayscale">Grayscale</option><option value="invert">Invert colors</option><option value="hue-positive">Hue shift A</option><option value="hue-negative">Hue shift B</option></select></label></div><p class="muted">Active order: <b id="activeOrder"></b>. ACT has no producer marker; use the preview to choose file order (0 → 255) or reversed RGB order (255 → 0).</p><div class="compare"><section class="card"><h3>Existing palette before replacement</h3><div class="image"><img id="before"></div></section><section class="card"><h3>Replacement preview from ${model.source.kind}</h3><div class="image"><img id="after" src="${model.after}"></div></section></div><div class="card" id="facts"></div><p><button id="apply" class="primary">Review Replacement…</button> <button id="cancel">Cancel Without Changes</button></p></main><script>const vscode=acquireVsCodeApi(),model=${safe(model)},target=document.getElementById('target'),flip=document.getElementById('flipTable'),remember=document.getElementById('rememberOrder'),preset=document.getElementById('preset');function options(){return{paletteIndex:Number(target.value),flipTable:flip.checked,rememberOrder:remember.checked,preset:preset.value}}function request(){document.getElementById('activeOrder').textContent=flip.checked?'Reversed RGB table (255 → 0)':'ACT file order (0 → 255)';vscode.postMessage({type:'preview',...options()})}target.onchange=request;flip.onchange=request;preset.onchange=request;document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...options()});document.getElementById('cancel').onclick=()=>vscode.postMessage({type:'cancel'});addEventListener('message',event=>{if(event.data.type!=='preview')return;document.getElementById('before').src=event.data.before;document.getElementById('after').src=event.data.after;const s=event.data.summary;document.getElementById('facts').innerHTML='<b>Replacement summary — palette '+s.id+' will be replaced only after confirmation</b><p>'+s.changedCount+' of '+s.storedColors+' stored RGB indices change · '+s.affectedSprites+' sprite(s) directly use '+s.id+'. Sprites using every other palette remain untouched.</p>'+(s.diagnostics?'<p><b>'+(s.ignoredCount?'Review before replacing: ':'Note: ')+'</b>'+s.diagnostics.replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c])+'</p>':'')+(s.linkedChildren.length?'<p>Linked palette IDs that inherit this stored table: '+s.linkedChildren.join(', ')+'</p>':'<p>No linked child palettes inherit this table.</p>')});request();</script></body></html>`;
 }
 
 function enhanceReplacementPage(output){
@@ -116,28 +172,30 @@ function enhanceNewPalettePage(output){
 async function openRosterPaletteFlow(defPath, sourcePath, preferredPaletteIndex = null) {
   const source = paletteSource(sourcePath), resource = vscode.Uri.file(sourcePath), config = vscode.workspace.getConfiguration('ikemenZss', resource), rememberedOrder = normalizeOrder(config.get('actPaletteOrder', 'index')), sffPath = characterSff(defPath), archive = readSff(sffPath), sprite = representativeSprite(archive),sourceHash=source.byteHash;
   if (!sprite) throw new Error('No indexed sprite is available for a palette preview. True-color sprites use PalFX rather than embedded palette replacement.');
-  const targets = archive.palettes.filter((palette) => palette.dataSize > 0 && palette.colors === 256).map((palette) => ({ index: palette.index, id: `${palette.group},${palette.number}`, role: paletteRole(palette) }));
-  if (!targets.length) throw new Error('This SFF has no stored 256-color palette that can be replaced directly. Stage a new palette through the SFF workspace rebuild tools.');
+  const targets = archive.palettes.filter((palette) => replaceableTarget(palette)).map((palette) => ({ index: palette.index, id: `${palette.group},${palette.number}`, role: targetLabel(palette) }));
+  if (!targets.length) throw new Error('This SFF has no stored palette that can be replaced directly. Stage a new palette through the SFF workspace rebuild tools.');
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenRosterPalettePlacement', `${path.basename(defPath, '.def')} — Palette Preview`, preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true }));
   if (Number.isInteger(preferredPaletteIndex)) targets.sort((a, b) => (a.index === preferredPaletteIndex ? -1 : b.index === preferredPaletteIndex ? 1 : 0));
   panel.webview.html = require('./webview_policy').protect(page({ character: path.basename(defPath, '.def'), source: { name: source.name, kind: source.kind }, targets, after: spriteDataUri(archive, sprite, source.colors), defaultFlip: source.kind === 'ACT' && rememberedOrder === REVERSED_ORDER, rememberedOrder: orderLabel(rememberedOrder) }),panel.webview.cspSource);
+  panel.webview.html=require('./webview_policy').protect(require('./standalone_review_header').enhance(panel.webview.html,'transient.roster-palette-preview'),panel.webview.cspSource);
   const targetIndices=new Set(targets.map(item=>item.index)),sffHash=hash(archive.buffer);let disposed=false,applyBusy=false;
   panel.onDidDispose?.(()=>{disposed=true;});
   panel.webview.onDidReceiveMessage(async (raw) => {
+    if(require('./standalone_review_header').isMessage(raw)&&await require('./standalone_review_header').handle(raw,defPath,panel))return true;
     const message=replacementFlowMessage(raw,targetIndices);if(!message)return false;
     if(message.type==='cancel'){disposed=true;panel.dispose();return true;}
-    const paletteIndex=message.paletteIndex,converted=playerPaletteConversion(source,message),summary=replacementSummary(archive,paletteIndex,converted);
-    if(message.type==='preview'){await panel.webview.postMessage({type:'preview',requestId:message.requestId,before:spriteDataUri(archive,sprite,paletteIndex),after:spriteDataUri(archive,sprite,converted.colors),summary});return true;}
+    const paletteIndex=message.paletteIndex,converted=playerPaletteConversion(source,message),fitted=fittedReplacement(archive,paletteIndex,converted.colors),summary=replacementSummary(archive,paletteIndex,converted,fitted),previewSprite=archive.sprites.find(item=>item.paletteIndex===paletteIndex&&require('./palette_sprite_associations').indexed(archive,item))||sprite;
+    if(message.type==='preview'){await panel.webview.postMessage({type:'preview',requestId:message.requestId,before:spriteDataUri(archive,previewSprite,paletteIndex),after:spriteDataUri(archive,previewSprite,fitted.colors),summary});return true;}
     if(applyBusy){await panel.webview.postMessage({type:'flowBusy',busy:true,status:'Wait for the current replacement review to finish.'});return false;}
     applyBusy=true;try{
       await panel.webview.postMessage({type:'flowBusy',busy:true,status:'Reviewing the exact palette replacement…'});
-      const answer=await vscode.window.showWarningMessage(`Replace palette ${summary.id} in ${path.basename(sffPath)} from ${source.name}?`,{modal:true,detail:`${summary.changedCount} RGB indices change. ${summary.affectedSprites} sprite(s) directly use this palette.${summary.linkedChildren.length?` Linked IDs ${summary.linkedChildren.join(', ')} will inherit it.`:''}\n\nReview the affected sprites before applying this palette replacement.`},'Replace Palette');
+      const answer=await vscode.window.showWarningMessage(summary.ignoredCount?`Replace ${summary.storedColors}-color palette ${summary.id} in ${path.basename(sffPath)} with only source colors 0-${summary.storedColors-1} from ${source.name}? ${summary.ignoredCount} source color(s) will not be written.`:`Replace palette ${summary.id} in ${path.basename(sffPath)} from ${source.name}?`,{modal:true,detail:`${summary.changedCount} RGB indices change. ${summary.affectedSprites} sprite(s) directly use this palette.${summary.linkedChildren.length?` Linked IDs ${summary.linkedChildren.join(', ')} will inherit it.`:''}${summary.diagnostics?`\n\n${summary.diagnostics}`:''}\n\nReview the affected sprites before applying this palette replacement.`},'Replace Palette');
       if(disposed)return false;
       if(answer!=='Replace Palette')return true;
       if(hash(fs.readFileSync(sourcePath))!==sourceHash)throw new Error('The palette source changed while the replacement preview was open. Reopen it and review the current colors.');
       if(hash(fs.readFileSync(sffPath))!==sffHash)throw new Error('The SFF changed while the replacement confirmation was open. Reopen the preview and review the current file before replacing its palette.');
       if(disposed)return false;
-      const result=bufferWithPaletteReplacement(archive,paletteIndex,converted.colors),options=optionsFromConfig(vscode,sffPath,'roster-palette-replace',{journalRoot:path.dirname(defPath),expectedHash:sffHash});
+      const result=bufferWithPaletteReplacement(archive,paletteIndex,fitted.colors),options=optionsFromConfig(vscode,sffPath,'roster-palette-replace',{journalRoot:path.dirname(defPath),expectedHash:sffHash});
       transactionalWrite(fs,sffPath,result.buffer,options);disposed=true;panel.dispose();
       if(source.kind==='ACT'&&message.rememberOrder)try{await rememberActOrder(config,message.flipTable?REVERSED_ORDER:'index');}catch(error){vscode.window.showWarningMessage?.(`Palette ${summary.id} was replaced, but the ACT-order preference could not be saved: ${error.message||error}`);}
       vscode.window.showInformationMessage(`Palette ${summary.id} was replaced in ${path.basename(sffPath)}. Use VS Code’s IKEMaker mutation history to review or restore it.`);return true;
@@ -158,9 +216,10 @@ async function stageNewRosterPalette(defPath, sourcePath) {
     ? `<label><input id="flipTable" type="checkbox" ${defaultFlip ? 'checked' : ''}> Reversed Photoshop method (255 → 0)</label> <label><input id="rememberOrder" type="checkbox" checked> Remember this ACT order</label>`
     : '<label><input id="flipTable" type="checkbox"> Reverse RGB table</label><input id="rememberOrder" type="checkbox" hidden>';
   panel.webview.html = require('./webview_policy').protect(`<!doctype html><html><head><meta charset="utf-8"><style>:root{color-scheme:light dark}body{font:13px var(--vscode-font-family);background:var(--vscode-editor-background);color:var(--vscode-foreground);margin:0;padding:16px}main{max-width:1000px}.compare{display:grid;grid-template-columns:1fr 1fr;gap:12px}.card{border:1px solid var(--vscode-panel-border);padding:12px}.image{height:360px;display:grid;place-items:center;background:#222}.image img{max-width:100%;max-height:100%;image-rendering:pixelated}.options{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:12px 0}button{font:inherit;padding:8px 11px;border:0;background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground)}button.primary{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}</style></head><body><main><h2>Preview new color ${id}</h2><p>Nothing has been saved. Compare the character below, then confirm only if this is the color you intended.</p><div class="options">${orderControl}<span>Active order: <b id="activeOrder"></b></span></div><div class="compare"><section class="card"><h3>Current character color</h3><div class="image"><img src="${before}"></div></section><section class="card"><h3>New color from ${String(source.name).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}</h3><div class="image"><img id="after" src="${after}"></div></section></div><p><button class="primary" id="apply">Add Color ${id}</button> <button id="cancel">Cancel</button></p><details><summary>What happens after I confirm?</summary><p>IKEMaker safely prepares color slot ${id}. The original character file is not replaced yet. Player Mode then opens the reviewed SprMaker2 build path without exposing the general SFF editor.</p></details></main><script>const vscode=acquireVsCodeApi(),isAct=${source.kind === 'ACT'},flip=document.getElementById('flipTable'),remember=document.getElementById('rememberOrder');function values(){return{flipTable:flip.checked,rememberOrder:isAct&&remember.checked}}function preview(){document.getElementById('activeOrder').textContent=flip.checked?(isAct?'Reversed Photoshop method (255 → 0)':'Reversed RGB table (255 → 0)'):'File order (0 → 255)';vscode.postMessage({type:'preview',...values()})}flip.onchange=preview;document.getElementById('apply').onclick=()=>vscode.postMessage({type:'apply',...values()});document.getElementById('cancel').onclick=()=>vscode.postMessage({type:'cancel'});addEventListener('message',event=>{if(event.data.type==='preview')document.getElementById('after').src=event.data.after});preview();</script></body></html>`,panel.webview.cspSource);
-  panel.webview.html=enhanceNewPalettePage(panel.webview.html);
+  panel.webview.html=require('./webview_policy').protect(require('./standalone_review_header').enhance(enhanceNewPalettePage(panel.webview.html),'transient.roster-palette-preview'),panel.webview.cspSource);
   let disposed=false,applyBusy=false;panel.onDidDispose?.(()=>{disposed=true;});
   panel.webview.onDidReceiveMessage(async (raw) => {
+    if(require('./standalone_review_header').isMessage(raw)&&await require('./standalone_review_header').handle(raw,defPath,panel))return true;
     const message=newPaletteFlowMessage(raw);if(!message)return false;
     if(message.type==='cancel'){disposed=true;panel.dispose();return true;}
     const converted=playerPaletteConversion(source,message);
@@ -183,10 +242,10 @@ async function stageNewRosterPalette(defPath, sourcePath) {
 async function routeRosterPalette(defPath, sourcePath) {
   const sffPath = characterSff(defPath), archive = readSff(sffPath);
   const choices = [{ label: '$(add) ADD NEW PALETTE SLOT…', description: 'Creates a new color number; no existing palette is replaced.', newSlot: true }];
-  choices.push(...archive.palettes.filter((palette) => palette.dataSize > 0 && palette.colors === 256).map((palette) => ({ label: `$(replace) REPLACE EXISTING · Color ${palette.group},${palette.number}`, description: `${paletteRole(palette)} — selecting this previews replacement; it does not write yet.`, paletteIndex: palette.index })));
+  choices.push(...archive.palettes.filter((palette) => replaceableTarget(palette)).map((palette) => ({ label: `$(replace) REPLACE EXISTING · Color ${palette.group},${palette.number}`, description: `${targetLabel(palette)} — selecting this previews replacement; it does not write yet.`, paletteIndex: palette.index })));
   const choice = await vscode.window.showQuickPick(choices, { title: `${path.basename(defPath, '.def')} · Add New or Replace Existing?`, placeHolder: 'Choose ADD NEW to preserve every existing palette, or explicitly choose an existing palette to preview its replacement.' });
   if (choice?.newSlot) return stageNewRosterPalette(defPath, sourcePath);
   if (choice && Number.isInteger(choice.paletteIndex)) return openRosterPaletteFlow(defPath, sourcePath, choice.paletteIndex);
 }
 
-module.exports = { paletteSource, characterSff, representativeSprite, replacementSummary, playerPaletteConversion, rememberActOrder, replacementFlowMessage, newPaletteFlowMessage, openRosterPaletteFlow, stageNewRosterPalette, routeRosterPalette };
+module.exports = { paletteSource, characterSff, representativeSprite, replacementSummary, fittedReplacement, replaceableTarget, playerPaletteConversion, rememberActOrder, replacementFlowMessage, newPaletteFlowMessage, openRosterPaletteFlow, stageNewRosterPalette, routeRosterPalette };

@@ -72,7 +72,7 @@ function normalizeHelper(input = {}) {
     inheritChannels: Math.max(0, Math.min(2, int(input.inheritChannels))), preserve: bool(input.preserve), standby: int(input.standby, -1),
     pauseMoveTime: int(input.pauseMoveTime), superMoveTime: int(input.superMoveTime), maps: (input.maps || []).map(normalizeMap), recipe, scalePolicy: scalePolicy(input.scalePolicy),
     projectile: normalizeProjectile(input.projectile, stateNo, recipe),
-    cleanup: { destroyOnStateEnd: bool(input.cleanup?.destroyOnStateEnd, true), recursive: bool(input.cleanup?.recursive, true), removeExplods: bool(input.cleanup?.removeExplods, true) }
+    cleanup: { watch: oneOf(input.cleanup?.watch,['none','parent','root'],'none'), watchEvent: oneOf(input.cleanup?.watchEvent,['state','hit','signal'],'state'), watchState: int(input.cleanup?.watchState,0), watchMap:key(input.cleanup?.watchMap,'helper_done'), destroyOnStateEnd: bool(input.cleanup?.destroyOnStateEnd, true), recursive: bool(input.cleanup?.recursive, true), removeExplods: bool(input.cleanup?.removeExplods, true) }
   };
 }
 
@@ -145,8 +145,20 @@ function validateHelper(input) {
   }
   if (plan.extendsMap && plan.maps.some((map) => map.direction === 'private')) issues.push({ level: 'suggestion', field: 'maps', message: 'ExtendsMap inherits parent values, but creation maps override matching names. Review intentional shadowing.' });
   if (plan.role === 'projectile' && !plan.ownProjectile) issues.push({ level: 'suggestion', field: 'ownProjectile', message: 'Projectile helpers normally need OwnProjectile when their projectiles must remain helper-owned. Orphaned projectiles stop interacting if the helper is destroyed.' });
-  if (!plan.cleanup.destroyOnStateEnd) issues.push({ level: 'warning', field: 'cleanup', message: 'No cleanup scaffold is requested. Define every lifetime and DestroySelf exit explicitly.' });
+  if (!plan.cleanup.destroyOnStateEnd && plan.cleanup.watch === 'none' && !PROJECTILE_RECIPES.includes(plan.recipe)) issues.push({ level: 'warning', field: 'cleanup', message: 'No cleanup scaffold is requested. Define every lifetime and DestroySelf exit explicitly.' });
   return { valid: !issues.some((issue) => issue.level === 'error'), plan, issues };
+}
+
+function ownerExit(plan) {
+  const c = plan.cleanup;
+  if (c.watch === 'none') return [];
+  const predicate = c.watchEvent === 'state' ? 'StateNo != ' + c.watchState :
+    c.watchEvent === 'hit' ? 'MoveType = H' : 'Map(' + c.watchMap + ') != 0';
+  const test = '(' + c.watch + ', ' + predicate + ')';
+  const when = c.watch === 'parent' ? 'Cond(ParentExist, ' + test + ', 1)' : test;
+  const recursive = Number(c.recursive), remove = Number(c.removeExplods);
+  return plan.language === 'zss' ? ['', 'if ' + when + ' { destroySelf{recursive: ' + recursive + '; removeexplods: ' + remove + '} }'] :
+    ['', '[State ' + plan.stateNo + ', watch ' + c.watch + ']', 'type = DestroySelf', 'trigger1 = ' + when, 'recursive = ' + recursive, 'removeexplods = ' + remove];
 }
 
 function zssHelper(input) {
@@ -166,6 +178,7 @@ function zssHelper(input) {
   const lines = [`# ${p.role} helper · ${p.name}${projectileRecipe ? ` · ${p.recipe} recipe` : ''}`, ...(p.scalePolicy ? [`# IKEMaker scale convention: ${p.scalePolicy} (new-effect authoring note; not runtime enforcement)`] : []), `if ${p.trigger} && !numHelper(${p.id}) {`, `\thelper{${params.join('; ')}}`, `\tmap(${instanceMap}) := lastPlayerID;`, '}', '', stateHeader, `# The helper confirms its exact runtime PlayerID on its first tick.`, `if time = 0 { parentMapSet{map: "${instanceMap}"; value: id} }`];
   if (projectileRecipe) lines.push('', ...zssProjectileBody(p));
   else if (p.cleanup.destroyOnStateEnd) lines.push('', '# Replace this reviewed lifetime condition.', `if time > 300 { destroySelf{recursive: ${p.cleanup.recursive ? 1 : 0}; removeexplods: ${p.cleanup.removeExplods ? 1 : 0}} }`);
+  lines.push(...ownerExit(p));
   return lines.join('\n');
 }
 function cnsHelper(input) {
@@ -183,6 +196,7 @@ function cnsHelper(input) {
   const lines = [`; ${p.role} helper · ${p.name}${projectileRecipe ? ` · ${p.recipe} recipe` : ''}`, ...(p.scalePolicy ? [`; IKEMaker scale convention: ${p.scalePolicy} (new-effect authoring note; not runtime enforcement)`] : []), `[State Helper ${p.id}]`, 'type = Helper', `trigger1 = ${p.trigger}`, `trigger1 = NumHelper(${p.id}) = 0`, ...params, '', `[State Helper ${p.id}, capture exact instance]`, 'type = MapSet', `trigger1 = NumHelper(${p.id}) > 0`, `trigger1 = Map(${instanceMap}) = 0 || !PlayerIDExist(Map(${instanceMap}))`, `map = "${instanceMap}"`, 'value = LastPlayerID', '', `[Statedef ${p.stateNo}]`, ...(projectileRecipe ? ['type = A', 'movetype = A', 'physics = N', `anim = ${q.animation}`, 'ctrl = 0'] : []), '', `[State ${p.stateNo}, confirm exact instance]`, 'type = ParentMapSet', 'trigger1 = Time = 0', `map = "${instanceMap}"`, 'value = ID'];
   if (projectileRecipe) lines.push('', `[State ${p.stateNo}, no push]`, 'type = PlayerPush', 'trigger1 = 1', 'value = 0', '', `[State ${p.stateNo}, initial velocity]`, 'type = VelSet', 'trigger1 = Time = 0', `x = ${compact(q.velocity[0])}`, `y = ${compact(q.velocity[1])}`, '', `[State ${p.stateNo}, attack]`, 'type = HitDef', `trigger1 = Map(${hits}) < ${q.maxHits}`, `attr = ${q.attribute}`, 'hitflag = MAF', 'guardflag = M', `damage = ${q.damage}, ${q.guardDamage}`, `pausetime = ${q.hitPause.join(', ')}`, `ground.hittime = ${q.groundHitTime}`, `guard.hittime = ${q.guardHitTime}`, `ground.velocity = ${q.groundVelocity.map(compact).join(', ')}`, `air.velocity = ${q.airVelocity.map(compact).join(', ')}`, `yaccel = ${compact(q.yAccel)}`, `fall = ${q.fall ? 1 : 0}`, 'sparkno = -1', 'guard.sparkno = -1', '', `[State ${p.stateNo}, count contacts]`, 'type = MapAdd', 'trigger1 = MoveContact', `map = "${hits}"`, 'value = 1', '', `[State ${p.stateNo}, reset contact]`, 'type = MoveHitReset', 'trigger1 = MoveContact', '', `[State ${p.stateNo}, projectile lifetime]`, 'type = DestroySelf', `trigger1 = Map(${hits}) >= ${q.maxHits}`, `trigger2 = Time >= ${q.lifetime}`, 'recursive = 1', 'removeexplods = 1');
   else if (p.cleanup.destroyOnStateEnd) lines.push('', `[State ${p.stateNo}, reviewed cleanup]`, 'type = DestroySelf', 'trigger1 = Time > 300', `recursive = ${p.cleanup.recursive ? 1 : 0}`, `removeexplods = ${p.cleanup.removeExplods ? 1 : 0}`);
+  lines.push(...ownerExit(p));
   return lines.join('\n');
 }
 function generateHelperParts(input) {
@@ -221,24 +235,35 @@ function flowCode(input, language = 'zss') {
 
 function stateRanges(text) {
   const starts = [], re = /(?:\[\s*StateDef\s+(-?\d+)[^\]]*\]|\bstateDef\s+(-?\d+)\s*\{)/ig; let match;
-  while ((match = re.exec(text))) starts.push({ state: int(match[1] ?? match[2]), index: match.index, line: text.slice(0, match.index).split(/\r?\n/).length });
+  let line=1,offset=0;
+  while ((match = re.exec(text))) {
+    while(offset<match.index)if(text[offset++]==='\n')line++;
+    starts.push({state:int(match[1] ?? match[2]),index:match.index,line});
+  }
   return starts.map((entry, index) => ({ ...entry, end: starts[index + 1]?.index ?? text.length }));
 }
 function paramsFrom(body) {
   const output = {}; for (const match of body.matchAll(/\b([A-Za-z][\w.]*)\s*[:=]\s*("[^"]*"|[^;\r\n}]+)/g)) output[match[1].toLowerCase()] = clean(match[2]).replace(/^"|"$/g, ''); return output;
 }
-function helperBlocks(text) {
-  const blocks = [], zss = /\bhelper\s*\{([^}]*)\}/ig, cns = /\[\s*State\b[^\]]*\][\s\S]*?\btype\s*=\s*helper\b([\s\S]*?)(?=\n\s*\[|$)/ig; let match;
-  while ((match = zss.exec(text))) blocks.push({ index: match.index, endIndex: zss.lastIndex, body: match[1], syntax: 'zss' });
-  while ((match = cns.exec(text))) blocks.push({ index: match.index, endIndex: cns.lastIndex, body: match[1], syntax: 'cns' });
-  return blocks.sort((a, b) => a.index - b.index);
+function helperStructureMask(text,syntax){
+ const chars=String(text).split('');let quote='',escaped=false;
+ for(let at=0;at<chars.length;at++){const char=text[at],next=text[at+1];if(quote){chars[at]=' ';if(escaped)escaped=false;else if(char==='\\')escaped=true;else if(char===quote)quote='';continue;}if(char==='"'||char==="'"){quote=char;chars[at]=' ';continue;}if(syntax==='cns'&&char===';'||syntax==='zss'&&(char==='#'||char==='/'&&next==='/')){for(;at<chars.length&&text[at]!=='\n'&&text[at]!=='\r';at++)chars[at]=' ';at--;}}
+ return chars.join('');
+}
+function helperBlocks(text,syntax) {
+ const blocks=[],masked=helperStructureMask(text,'zss'),zss=/\bhelper\s*\{/ig;let match;
+ while(syntax!=='cns'&&(match=zss.exec(masked))){const open=masked.indexOf('{',match.index);let depth=1,at=open+1;for(;at<masked.length&&depth;at++){if(masked[at]==='{')depth++;else if(masked[at]==='}')depth--;}if(depth)continue;blocks.push({index:match.index,endIndex:at,body:text.slice(open+1,at-1),syntax:'zss'});zss.lastIndex=at;}
+ const cns=/^[ \t]*\[\s*State\b[^\]\r\n]*\](?:(?!\r?\n[ \t]*\[)[\s\S])*?^[ \t]*type[ \t]*=[ \t]*helper\b([\s\S]*?)(?=\r?\n[ \t]*\[|(?![\s\S]))/igm,cnsMasked=helperStructureMask(text,'cns');
+ while(syntax!=='zss'&&(match=cns.exec(cnsMasked)))blocks.push({index:match.index,endIndex:cns.lastIndex,body:text.slice(cns.lastIndex-match[1].length,cns.lastIndex),syntax:'cns'});
+ return blocks.sort((a,b)=>a.index-b.index);
 }
 function inspectSource(source) {
-  const text = String(source.text || ''), ranges = stateRanges(text), spawns = [], flows = [], reads = [], cleanup = [];
-  for (const block of helperBlocks(text)) {
+  const syntax = /\.zss$/i.test(source.filename||'')?'zss':'cns';
+  const text = String(source.text || ''), ranges = stateRanges(helperStructureMask(text,syntax)), spawns = [], flows = [], reads = [], cleanup = [];
+  for (const block of helperBlocks(text,/\.zss$/i.test(source.filename||'')?'zss':/\.(?:cns|st|cmd)$/i.test(source.filename||'')?'cns':null)) {
     const p = paramsFrom(block.body), owner = [...ranges].reverse().find((range) => range.index <= block.index && block.index < range.end);
     const idExpression = clean(p.id), staticId = /^\d+$/.test(idExpression) ? int(idExpression) : null;
-    spawns.push({ uid: uid(`${source.filename}:${block.index}`), filename: source.filename, line: text.slice(0, block.index).split(/\r?\n/).length, syntax: block.syntax, startIndex: block.index, endIndex: block.endIndex, ownerState: owner?.state ?? null, id: staticId ?? idExpression, dynamicId: staticId === null && Boolean(idExpression), stateNo: int(p.stateno), name: p.name || `Helper ${p.id || '?'}`, params: p, maps: Object.entries(p).filter(([name]) => name.startsWith('map.')).map(([name, value]) => ({ name: name.slice(4), value })), extendsMap: int(p.extendsmap) === 1 });
+    spawns.push({ uid: uid(`${source.filename}:${block.index}`), filename: source.filename, line: text.slice(0, block.index).split(/\r?\n/).length, syntax: block.syntax, startIndex: block.index, endIndex: block.endIndex, ownerState: owner?.state ?? null, sourceHash: crypto.createHash('sha256').update(text).digest('hex'), controllerHash: crypto.createHash('sha256').update(text.slice(block.index,block.endIndex)).digest('hex'), id: staticId ?? idExpression, dynamicId: staticId === null && Boolean(idExpression), dynamicState: !/^\d+$/.test(String(p.stateno||'')) || !Number.isSafeInteger(Number(p.stateno)), stateNo: /^\d+$/.test(String(p.stateno||''))&&Number.isSafeInteger(Number(p.stateno))?Number(p.stateno):null, name: p.name || `Helper ${p.id || '?'}`, params: p, maps: Object.entries(p).filter(([name]) => name.startsWith('map.')).map(([name, value]) => ({ name: name.slice(4), value })), extendsMap: int(p.extendsmap) === 1 });
   }
   const flowRe = /\b(parent|root|team)?map(set|add)\s*\{([^}]*)\}|\b(parent|root|helper\s*\([^)]*\)|playerid\s*\([^)]*\))\s*,\s*map\s*\(([^)]+)\)\s*(:=|\+=)|\bmap\s*\(([^)]+)\)\s*(:=|\+=)/ig; let flow;
   while ((flow = flowRe.exec(text))) { const params = paramsFrom(flow[3] || ''), rawScope = clean(flow[1] || flow[4] || 'self').toLowerCase(), scope = rawScope.startsWith('helper') ? 'helper' : rawScope.startsWith('playerid') ? 'playerid' : rawScope; flows.push({ filename: source.filename, index: flow.index, line: text.slice(0, flow.index).split(/\r?\n/).length, scope, operation: String(flow[2] || flow[6] || flow[8]).toLowerCase().includes('add') || flow[6] === '+=' || flow[8] === '+=' ? 'add' : 'set', map: clean(params.map || flow[5] || flow[7]).replace(/^"|"$/g, '') }); }
@@ -248,14 +273,31 @@ function inspectSource(source) {
     const rawScope = clean(read[1] || 'self').toLowerCase(), scope = rawScope.startsWith('helper') ? 'helper' : rawScope.startsWith('playerid') ? 'playerid' : rawScope;
     reads.push({ filename: source.filename, line: text.slice(0, read.index).split(/\r?\n/).length, scope, operation: 'read', map: clean(read[2]).replace(/^"|"$/g, '') });
   }
-  for (const match of text.matchAll(/\bdestroySelf\s*\{|\btype\s*=\s*destroyself\b/ig)) { const owner = [...ranges].reverse().find((range) => range.index <= match.index && match.index < range.end); cleanup.push({ filename: source.filename, line: text.slice(0, match.index).split(/\r?\n/).length, ownerState: owner?.state ?? null }); }
-  return { filename: source.filename, states: ranges, spawns, flows, reads, cleanup };
+  const signals = [];
+  if (/destroyself|removeexplod|stopsnd/i.test(text)) {
+    const controllers = require('./move_controller_review').inspectMoveControllers(text,syntax,false);
+    let ownerIndex = -1;
+    for (const controller of controllers) {
+      if (!['destroyself','removeexplod','stopsnd'].includes(controller.type)) continue;
+      while(ownerIndex+1 < ranges.length && ranges[ownerIndex+1].index <= controller.start) ownerIndex++;
+      const state = ranges[ownerIndex], ownerState = state && controller.start < state.end ? state.state : null;
+      const site = {filename:source.filename,line:controller.line+1,ownerState};
+      if (controller.type === 'destroyself') cleanup.push(site);
+      const conditions = syntax === 'zss' ? controller.guards : controller.conditions.map(f=>f.value);
+      for (const condition of conditions) {
+        if (!/\b(?:root|parent)\s*,/i.test(helperStructureMask(condition,syntax))) continue;
+        signals.push({...site,operation:controller.type,condition});
+      }
+    }
+  }
+  return { filename: source.filename, states: ranges, spawns, flows, reads, cleanup, signals };
 }
 
 function csvPair(value, fallback = [0, 0]) { const parts = String(value ?? '').split(',').map((item) => item.trim()); return parts.length ? pair(parts, fallback) : fallback.slice(); }
 function csvInts(value, fallback = [0]) { const parts = String(value ?? '').split(',').map((item) => item.trim()).filter(Boolean); return parts.length ? parts.map((item) => int(item)) : fallback.slice(); }
 function planFromSpawn(spawn = {}) {
   const p = spawn.params || {};
+  if(spawn.dynamicId||!Number.isSafeInteger(spawn.id)||spawn.id<0||!/^\d+$/.test(String(p.stateno??spawn.stateNo??''))||!Number.isSafeInteger(Number(p.stateno??spawn.stateNo)))throw new Error('Dynamic, omitted, or ambiguous Helper ID/starting state is read-only. Inspect its exact source expressions.');
   return newHelper({
     name: p.name || spawn.name || 'Existing Helper', language: spawn.syntax === 'cns' ? 'cns' : 'zss', id: Number.isInteger(spawn.id) ? spawn.id : 0,
     stateNo: int(p.stateno, spawn.stateNo), position: csvPair(p.pos), postype: p.postype || 'p1', facing: num(p.facing, 1), keyCtrl: csvInts(p.keyctrl),
@@ -276,6 +318,7 @@ function buildHelperGraph(sources = []) {
     const owner = parent ? byUid.get(parent.uid) : byUid.get('root'); owner.children.push(node.uid); node.parentUid = owner.uid;
     if (!node.id) node.issues.push({ level: 'warning', message: 'No explicit helper ID was found.' });
     if (node.dynamicId) node.issues.push({ level: 'suggestion', message: `Computed helper ID ${node.id} cannot be reduced to one family during static review; verify its runtime range.` });
+    if (node.dynamicState) node.issues.push({level:'warning',message:'Dynamic or omitted starting StateDef is read-only; no state 0 is inferred.'});
     if (!node.stateNo) node.issues.push({ level: 'warning', message: 'No explicit starting state was found.' });
     if (node.ownerState === node.stateNo) node.issues.push({ level: 'warning', message: `State ${node.stateNo} creates a helper that starts in the same state. Guard against unintended recursive spawning.` });
     const stateDefinitions = inspected.flatMap((source) => source.states.map((state) => ({ ...state, filename: source.filename }))).filter((state) => state.state === node.stateNo);
@@ -287,7 +330,7 @@ function buildHelperGraph(sources = []) {
   const duplicateIds = new Set(spawns.filter((spawn, i) => spawn.id && spawns.findIndex((other) => other.id === spawn.id) !== i).map((spawn) => spawn.id));
   for (const node of nodes) if (duplicateIds.has(node.id)) node.issues.push({ level: 'suggestion', message: `Helper ID ${node.id} has multiple spawn sites; use index or PlayerID when addressing a specific instance.` });
   const flows = inspected.flatMap((source) => source.flows), reads = inspected.flatMap((source) => source.reads), cleanup = inspected.flatMap((source) => source.cleanup);
-  return { nodes, roots: ['root'], flows, reads, cleanup, totals: { helpers: spawns.length, nested: nodes.filter((node) => node.parentUid && node.parentUid !== 'root').length, mapInitializers: spawns.reduce((sum, spawn) => sum + spawn.maps.length, 0), flows: flows.length, reads: reads.length, cleanupSites: cleanup.length } };
+  return { nodes, roots: ['root'], flows, reads, cleanup, signals: inspected.flatMap(s=>s.signals), totals: { helpers: spawns.length, nested: nodes.filter((node) => node.parentUid && node.parentUid !== 'root').length, mapInitializers: spawns.reduce((sum, spawn) => sum + spawn.maps.length, 0), flows: flows.length, reads: reads.length, cleanupSites: cleanup.length } };
 }
 
 module.exports = { ROLES, POSTYPES, FLOW_SCOPES, FLOW_OPERATIONS, HELPER_RECIPES, PROJECTILE_RECIPES, BUILTIN_SCAFFOLDS, DATA_DOMAINS, newHelper, normalizeHelper, applyRecipe, applyProjectileDefaults, usedIdentifiers, suggestUnusedPair, validateHelper, generateHelperParts, generateHelper, normalizeFlow, flowCode, inspectSource, buildHelperGraph, planFromSpawn };

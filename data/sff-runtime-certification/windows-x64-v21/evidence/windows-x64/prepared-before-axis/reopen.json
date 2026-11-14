@@ -1,0 +1,92 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "reopen",
+  "fixtureId": "prepared-before-axis",
+  "fixtureByteHash": "8f276578650efd6eeee6078108cfa0e674c6268f5c90c9d9726f0e88496423b0",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "20fe88c68da76638420d8d63a00246b19724754a3327bebff974b3d3fa285dd8",
+  "analysisSha256": "c6bf1e8021b28bc109990b013ade3c0caeabd80db39732e95058b90930702945",
+  "testedAt": "2026-11-09T02:18:37.334Z",
+  "result": "pass",
+  "observed": {
+    "id": "prepared-before-axis",
+    "sourceSha256": "8f276578650efd6eeee6078108cfa0e674c6268f5c90c9d9726f0e88496423b0",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 20,
+        "number": 4,
+        "width": 3,
+        "height": 2,
+        "axisX": 1,
+        "axisY": 1,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "expected": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "expected": [
+          20,
+          4,
+          3,
+          2,
+          1,
+          1,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\tprepared-before-axis\t0",
+    "sprite\tprepared-before-axis\t0\t20\t4\t3\t2\t1\t1\t0",
+    "open\tprepared-before-axis\t1",
+    "sprite\tprepared-before-axis\t1\t20\t4\t3\t2\t1\t1\t0"
+  ]
+}

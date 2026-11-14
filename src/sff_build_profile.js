@@ -4,6 +4,7 @@ const DEFAULT_PROFILE = Object.freeze({
   version: 1,
   profileName: 'Universal IKEMEN SFF build rules',
   projectId: 'universal',
+  png8Optimization: 'none',
   standardSets: ['ikemen-1.0-character-core'],
   requiredAnimations: [],
   getHitIndexing: {
@@ -34,6 +35,7 @@ function normalizeProfile(raw = {}) {
     version: Number(input.version) || base.version,
     profileName: String(input.profileName || base.profileName),
     projectId: String(input.projectId || base.projectId).toLowerCase(),
+    png8Optimization: require('./sff_png8_optimization').normalizePng8Optimization(input.png8Optimization),
     standardSets: Array.isArray(input.standardSets) ? input.standardSets : base.standardSets,
     requiredAnimations: Array.isArray(input.requiredAnimations) ? input.requiredAnimations : [],
     getHitIndexing: {

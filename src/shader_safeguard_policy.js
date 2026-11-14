@@ -13,10 +13,11 @@ function classifySafeguards(project, effect) {
   return Object.freeze(SAFEGUARD_DEFINITIONS.map(definition => {
     const enabled = project.safeguards[definition.id] === true, capability = RULES[definition.id];
     let status = 'advisory', message = 'Disabled by the user; retained as an advisory review item.';
-    if (enabled && HOST_ENFORCED.has(definition.id)) { status='enforced'; message='Enforced by the Shader Workshop host.'; }
+    if (project.target?.kind==='fullscreen' && capability) { status='not applicable';message='This safeguard applies to individual sprites. Fullscreen effects process the composed game frame.'; }
+    else if (enabled && HOST_ENFORCED.has(definition.id)) { status='enforced'; message='Enforced by the Shader Workshop host.'; }
     else if (enabled && capability && effect.capabilities[capability] === true) { status='blocked'; message=`${effect.label} cannot run while this safeguard is enabled.`; }
     else if (enabled && capability) { status='enforced'; message='The trusted effect contract and host wrapper preserve this property.'; }
-    else if (enabled) { status='audited'; message='Checked by the offline pixel audit; runtime equivalence is not claimed.'; }
+    else if (enabled) { status='advisory'; message='Review this property in the exported effect.'; }
     return Object.freeze({ id:definition.id, label:definition.label, enabled, status, message });
   }));
 }

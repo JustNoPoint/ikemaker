@@ -1,0 +1,92 @@
+{
+  "kind": "ikemaker-observed-windows-sff-check",
+  "version": 1,
+  "check": "identityTable",
+  "fixtureId": "prepared-after-axis",
+  "fixtureByteHash": "357fcb3d0d2cd02ec06f9873be486390bf91b468925f6c0858fca739216c677f",
+  "engineRevision": "6e564af055bb1341b787990f971828ff930935b4",
+  "engineSha256": "319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+  "probeReportSha256": "20fe88c68da76638420d8d63a00246b19724754a3327bebff974b3d3fa285dd8",
+  "analysisSha256": "c6bf1e8021b28bc109990b013ade3c0caeabd80db39732e95058b90930702945",
+  "testedAt": "2026-11-09T02:18:37.334Z",
+  "result": "pass",
+  "observed": {
+    "id": "prepared-after-axis",
+    "sourceSha256": "357fcb3d0d2cd02ec06f9873be486390bf91b468925f6c0858fca739216c677f",
+    "sourceHashMatches": true,
+    "physicalEntries": [
+      {
+        "physicalIndex": 0,
+        "group": 21,
+        "number": 5,
+        "width": 3,
+        "height": 2,
+        "axisX": 100,
+        "axisY": -100,
+        "paletteIndex": 0,
+        "link": null
+      }
+    ],
+    "openedTwice": true,
+    "metadata": [
+      {
+        "pass": 0,
+        "actual": [
+          21,
+          5,
+          3,
+          2,
+          100,
+          -100,
+          0
+        ],
+        "expected": [
+          21,
+          5,
+          3,
+          2,
+          100,
+          -100,
+          0
+        ],
+        "matched": true
+      },
+      {
+        "pass": 1,
+        "actual": [
+          21,
+          5,
+          3,
+          2,
+          100,
+          -100,
+          0
+        ],
+        "expected": [
+          21,
+          5,
+          3,
+          2,
+          100,
+          -100,
+          0
+        ],
+        "matched": true
+      }
+    ],
+    "missing": [],
+    "links": [],
+    "duplicateLookupLimitation": false,
+    "runtimeExpectation": "render-sealed-pixels",
+    "lookupMatches": true,
+    "physicalIdentityMatches": true
+  },
+  "special": "Every unique runtime-addressable sprite was rendered afterloadandreopen.",
+  "absence": null,
+  "trace": [
+    "open\tprepared-after-axis\t0",
+    "sprite\tprepared-after-axis\t0\t21\t5\t3\t2\t100\t-100\t0",
+    "open\tprepared-after-axis\t1",
+    "sprite\tprepared-after-axis\t1\t21\t5\t3\t2\t100\t-100\t0"
+  ]
+}

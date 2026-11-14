@@ -69,7 +69,7 @@ function resolveReference(registry,prefix,kind) {
   const candidates=registry.candidates.filter(item=>item.prefix===prefix&&item[kind]);
   // Profile records and their generated DEF can describe the same target.
   const targets=new Map();
-  for(const item of candidates){const identity=key(item[kind]),previous=targets.get(identity);targets.set(identity,previous?{...previous,air:previous.air||item.air,sff:previous.sff||item.sff,snd:previous.snd||item.snd}:item);}
+  for(const item of candidates){const identity=['air','sff','snd'].map(kind=>item[kind]?key(item[kind]):'').join('\0');if(!targets.has(identity))targets.set(identity,item);}
   const unique=[...targets.values()];
   return {prefix,candidates:unique,diagnostics:registry.diagnostics};
 }

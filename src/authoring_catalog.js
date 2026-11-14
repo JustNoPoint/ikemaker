@@ -10,9 +10,9 @@ const STANDARD_RECIPES = [
     label: 'Basic Normal Move', detail: 'A modular StateDef scaffold with startup, active, recovery, and cleanup sections.',
     compatibility: 'universal', beginnerSafe: true,
     sections: [
-      { id: 'state', label: 'State entry', detail: 'Declares the authored attack state.', snippet: '# ${2:Normal name}\n[StateDef ${1:200}; type: S; moveType: A; physics: S]\n\n${0}' },
-      { id: 'attack', label: 'Attack definition', detail: 'Adds a HitDef starting point to an existing attack state.', snippet: 'if time = ${1:startupFrame} {\n\thitDef {\n\t\tattr: S, NA;\n\t\tdamage: ${2:30}, ${3:0};\n\t}\n}\n${0}' },
-      { id: 'return', label: 'Recovery and return', detail: 'Returns control when the animation finishes.', snippet: 'if !animTime {\n\tchangeState { value: ${1:0}; ctrl: 1 }\n}\n${0}' }
+      { id: 'state', label: 'State entry', detail: 'Declares the authored attack state.', cnsSnippet: "; ${2:Normal name}\n[Statedef ${1:200}]\ntype = S\nmovetype = A\nphysics = S\n\n${0}", snippet: '# ${2:Normal name}\n[StateDef ${1:200}; type: S; moveType: A; physics: S]\n\n${0}' },
+      { id: 'attack', label: 'Attack definition', detail: 'Adds a HitDef starting point to an existing attack state.', cnsSnippet: "[State 200, Attack]\ntype = HitDef\ntrigger1 = time = ${1:0}\nattr = S, NA\ndamage = ${2:30}, ${3:0}\n${0}", snippet: 'if time = ${1:startupFrame} {\n\thitDef {\n\t\tattr: S, NA;\n\t\tdamage: ${2:30}, ${3:0};\n\t}\n}\n${0}' },
+      { id: 'return', label: 'Recovery and return', detail: 'Returns control when the animation finishes.', cnsSnippet: "[State 0, Recovery]\ntype = ChangeState\ntrigger1 = !AnimTime\nvalue = ${1:0}\nctrl = 1\n${0}", snippet: 'if !animTime {\n\tchangeState { value: ${1:0}; ctrl: 1 }\n}\n${0}' }
     ]
   },
   {
@@ -20,8 +20,8 @@ const STANDARD_RECIPES = [
     label: 'Basic Special Move', detail: 'A project-neutral special move skeleton with explicit recovery.',
     compatibility: 'universal', beginnerSafe: true,
     sections: [
-      { id: 'state', label: 'State entry', detail: 'Declares the special state.', snippet: '# ${2:Special name}\n[StateDef ${1:1000}; type: S; moveType: A; physics: S; ctrl: 0]\n\n${0}' },
-      { id: 'return', label: 'Recovery and return', detail: 'Returns to standing when the animation completes.', snippet: 'if !animTime {\n\tchangeState { value: ${1:0}; ctrl: 1 }\n}\n${0}' }
+      { id: 'state', label: 'State entry', detail: 'Declares the special state.', cnsSnippet: "; ${2:Special name}\n[Statedef ${1:1000}]\ntype = S\nmovetype = A\nphysics = S\nctrl = 0\n\n${0}", snippet: '# ${2:Special name}\n[StateDef ${1:1000}; type: S; moveType: A; physics: S; ctrl: 0]\n\n${0}' },
+      { id: 'return', label: 'Recovery and return', detail: 'Returns to standing when the animation completes.', cnsSnippet: "[State 0, Recovery]\ntype = ChangeState\ntrigger1 = !AnimTime\nvalue = ${1:0}\nctrl = 1\n${0}", snippet: 'if !animTime {\n\tchangeState { value: ${1:0}; ctrl: 1 }\n}\n${0}' }
     ]
   },
   {
@@ -29,7 +29,7 @@ const STANDARD_RECIPES = [
     label: 'Helper Projectile Skeleton', detail: 'A guarded helper/projectile starting point with visible cleanup guidance and no project-specific maps.',
     compatibility: 'universal', beginnerSafe: false,
     sections: [
-      { id: 'spawn', label: 'Spawn helper', detail: 'Creates a helper with an authored ID and state.', snippet: 'helper {\n\tname: "${1:Projectile}";\n\tid: ${2:1000};\n\tstateNo: ${3:1001};\n\tpos: ${4:0}, ${5:0};\n\tposType: P1;\n}\n${0}' },
+      { id: 'spawn', label: 'Spawn helper', detail: 'Creates a helper with an authored ID and state.', cnsSnippet: "[State 0, Spawn helper]\ntype = Helper\ntrigger1 = time = 0\nname = \"${1:Projectile}\"\nid = ${2:1000}\nstateno = ${3:1001}\npos = ${4:0}, ${5:0}\npostype = P1\n${0}", snippet: 'helper {\n\tname: "${1:Projectile}";\n\tid: ${2:1000};\n\tstateNo: ${3:1001};\n\tpos: ${4:0}, ${5:0};\n\tposType: P1;\n}\n${0}' },
       { id: 'guard', label: 'Safe helper access', detail: 'Checks helper existence before redirecting.', structureId: 'helperGuard' }
     ]
   },
@@ -91,9 +91,9 @@ function sectionItems() {
   return allRecipes().flatMap((recipe) => recipe.sections.map((section) => ({
     id: `${recipe.id}.section.${section.id}`, kind: 'recipeSection', source: recipe.source,
     label: section.label, detail: `${recipe.label}: ${section.detail}`, compatibility: recipe.compatibility,
-    family: recipe.family, parentId: recipe.id, sectionId: section.id, snippet: section.snippet, structureId: section.structureId,
+    family: recipe.family, parentId: recipe.id, sectionId: section.id, snippet: section.snippet, cnsSnippet: section.cnsSnippet, structureId: section.structureId,
     referenceOnly: Boolean(section.referenceOnly), sourceFileHint: section.sourceFileHint, symbol: section.symbol,
-    allowedFileTypes: section.allowedFileTypes || [], ownership: section.ownership || '', nightlyString:Boolean(section.nightlyString || recipe.nightlyString), capabilityId:section.capabilityId||recipe.capabilityId||''
+    allowedFileTypes: section.allowedFileTypes || (section.cnsSnippet ? ['zss','ikemen-cns'] : section.snippet ? ['zss'] : []), ownership: section.ownership || '', nightlyString:Boolean(section.nightlyString || recipe.nightlyString), capabilityId:section.capabilityId||recipe.capabilityId||''
   })));
 }
 

@@ -36,12 +36,16 @@ class VisualWorkspaceHistory {
   }
 
   state(busy = false) {
+    for(const [action,entry] of this.replaying?[]:[['undo',this.undoStack.at(-1)],['redo',this.redoStack.at(-1)]]){
+      if(entry?.resource?.checkHistory)try{entry.resource.checkHistory(action);}catch(error){this.undoStack.length=0;this.redoStack.length=0;this.resourceError='Resource history changed outside this visual operation. Use native Undo/Redo after checking both files. '+error.message;break;}
+    }
     return Object.freeze({
       canUndo: !busy && !this.replaying && this.undoStack.length > 0,
       canRedo: !busy && !this.replaying && this.redoStack.length > 0,
       busy: Boolean(busy || this.replaying),
       undoLabel: this.undoStack.at(-1)?.label || '',
-      redoLabel: this.redoStack.at(-1)?.label || ''
+      redoLabel: this.redoStack.at(-1)?.label || '',
+      ...(this.resourceError?{resourceError:this.resourceError}:{})
     });
   }
 
@@ -50,11 +54,12 @@ class VisualWorkspaceHistory {
     return Object.freeze({ before: snapshotText(beforeValue), after: snapshotText(afterValue), label: boundedLabel(labelValue) });
   }
 
-  record(beforeValue, afterValue, labelValue) {
+  record(beforeValue, afterValue, labelValue, resource = null) {
     if (this.replaying) return false;
     const {before,after,label}=this.prepare(beforeValue,afterValue,labelValue);
-    if (before === after) return false;
-    this.undoStack.push(Object.freeze({ before, after, beforeHash: hash(before), afterHash: hash(after), label }));
+    if (before === after && !resource) return false;
+    this.resourceError='';
+    this.undoStack.push(Object.freeze({ before, after, beforeHash: hash(before), afterHash: hash(after), label, ...(resource ? {resource} : {}) }));
     this.redoStack.length = 0;
     while (this.undoStack.length > this.maxEntries || this._retainedChars() > MAX_RETAINED_CHARS) this.undoStack.shift();
     return true;
@@ -81,7 +86,7 @@ class VisualWorkspaceHistory {
     let applied;
     try {
       if (!operations.isActive()) throw new Error('This visual workspace lost source authority before history could be applied.');
-      await operations.write(target, `${action}-${entry.label}`);
+      await operations.write(target, `${action}-${entry.label}`, entry, action);
       if (!operations.isActive()) throw new Error('This visual workspace lost source authority while history was applied.');
       if (hash(await operations.read()) !== targetHash) throw new Error('The owning editor did not apply the exact history snapshot.');
       source.pop();
@@ -102,7 +107,7 @@ function controlsHtml(state = {}) {
 }
 
 function controlsClientScript(generationExpression = 'data.generation') {
-  return `(()=>{const undo=document.getElementById('visualWorkspaceUndo'),redo=document.getElementById('visualWorkspaceRedo');if(!undo||!redo)return;const update=state=>{undo.disabled=!state?.canUndo;redo.disabled=!state?.canRedo;undo.title=state?.undoLabel?'Undo '+state.undoLabel:'Undo the last committed workspace mutation';redo.title=state?.redoLabel?'Redo '+state.redoLabel:'Redo the last undone workspace mutation'};const send=action=>{undo.disabled=true;redo.disabled=true;vscode.postMessage({type:'${MESSAGE_TYPE}',generation:${generationExpression},action})};undo.onclick=()=>send('undo');redo.onclick=()=>send('redo');addEventListener('message',event=>{const message=event.data;if(message?.type==='${STATE_TYPE}'&&message.generation===${generationExpression})update(message.state)})})();`;
+  return `(()=>{const undo=document.getElementById('visualWorkspaceUndo'),redo=document.getElementById('visualWorkspaceRedo');if(!undo||!redo)return;const update=state=>{undo.disabled=!state?.canUndo;redo.disabled=!state?.canRedo;undo.title=state?.resourceError||(state?.undoLabel?'Undo '+state.undoLabel:'Undo the last committed workspace mutation');redo.title=state?.resourceError||(state?.redoLabel?'Redo '+state.redoLabel:'Redo the last undone workspace mutation')};const send=action=>{undo.disabled=true;redo.disabled=true;vscode.postMessage({type:'${MESSAGE_TYPE}',generation:${generationExpression},action})};undo.onclick=()=>send('undo');redo.onclick=()=>send('redo');addEventListener('message',event=>{const message=event.data;if(message?.type==='${STATE_TYPE}'&&message.generation===${generationExpression})update(message.state)})})();`;
 }
 
 function stateMessage(history, generation, busy = false) {

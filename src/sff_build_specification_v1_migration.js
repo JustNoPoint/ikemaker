@@ -61,12 +61,18 @@ function migrateSealedLegacyV21Specification(input = {}) {
       decisions: legacy.decisions || [], legacyEnvelope: { requirements: legacy.requirements || [], options: legacy.options || {} }
     }
   };
+  const optimization = require('./sff_png8_optimization'), mode = optimization.legacyPng8Optimization(legacy), encodingIntent = { ...(input.encodingIntent || {}) };
+  if (mode !== optimization.NONE && optimization.NATIVE_V21.has(input.backendId)) {
+    const bags = { ...(encodingIntent.backendOptions || {}) }, selected = { ...(bags[input.backendId] || {}) };
+    if (selected.png8Optimization !== undefined && selected.png8Optimization !== mode) throw new Error('PNG8 optimization drifted from the sealed legacy build profile.');
+    bags[input.backendId] = { ...selected, png8Optimization: mode }; encodingIntent.backendOptions = bags;
+  }
   return createSffBuildSpecificationV2({
     planId: legacy.planId,
     selection: { targetId: 'sff-v2.1', backendId: input.backendId },
     archive: { identity: legacy.target.archiveIdentity, fingerprint: legacy.target.archiveFingerprint },
     logical: { sourceRoot: legacy.sourceRoot, sprites, palettes, provenance: { migratedFromSealedLegacyV21: true } },
-    encodingIntent: input.encodingIntent || {}, capabilityRequest: input.capabilityRequest || {}, review
+    encodingIntent, capabilityRequest: input.capabilityRequest || {}, review
   });
 }
 

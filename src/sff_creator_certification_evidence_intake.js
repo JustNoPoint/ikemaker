@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { requireSffBackend } = require('./sff_backend_registry');
-const { validateCertificationEvidence } = require('./sff_runtime_certification');
+const { validateCertificationEvidence, authoringValidationScope } = require('./sff_runtime_certification');
 
 const MAX_JSON_BYTES = 16 * 1024 * 1024;
 const MAX_ARTIFACT_BYTES = 256 * 1024 * 1024;
@@ -64,10 +64,10 @@ function createCreatorCertificationEvidenceLoader(dependencies = {}) {
     }
     const rootAfterLinked = exactStat(boundFs, 'lstatSync', artifactRoot), rootAfterReal = path.resolve(boundFs.realpathSync.native(artifactRoot)), rootAfter = exactStat(boundFs, 'statSync', rootAfterReal);
     if (!rootAfterLinked.isDirectory() || rootAfterLinked.isSymbolicLink() || !rootAfter.isDirectory() || rootAfterReal !== rootReal || !sameIdentity(rootAfterLinked, rootBefore) || !sameIdentity(rootAfter, rootBefore) || !sameModifiedTime(rootAfter, rootBefore)) fail('evidence root changed while evidence was read.');
-    const certification = { manifestText: manifestFile.bytes.toString('utf8'), ledgerText: ledgerFile.bytes.toString('utf8'), evidenceArtifacts };
+    const certification = { validationScope: authoringValidationScope(), manifestText: manifestFile.bytes.toString('utf8'), ledgerText: ledgerFile.bytes.toString('utf8'), evidenceArtifacts };
     const checked = validate(backend, input.targetId, certification);
-    if (!checked?.valid || checked?.validation?.physicalGateSatisfied !== true) fail(checked?.error || 'physical certification evidence is incomplete.');
-    return freeze({ status: 'certification-evidence-ready', targetId: input.targetId, backendId: input.backendId, manifestPath: manifestFile.real, ledgerPath: ledgerFile.real, evidenceRoot: rootReal, evidenceArtifactCount: unique.length, evidenceByteLength: total, freshCapabilityRequest: { evidence: { certification } } });
+    if (!checked?.valid || checked.validationScope !== certification.validationScope || checked?.validation?.physicalGateSatisfied !== true) fail(checked?.error || 'physical certification evidence is incomplete or its host scope changed.');
+    return freeze({ status: 'certification-evidence-ready', validationScope: checked.validationScope, unverifiedPlatforms: checked.validation.unverifiedPlatforms, targetId: input.targetId, backendId: input.backendId, manifestPath: manifestFile.real, ledgerPath: ledgerFile.real, evidenceRoot: rootReal, evidenceArtifactCount: unique.length, evidenceByteLength: total, freshCapabilityRequest: { evidence: { certification } } });
   };
 }
 

@@ -3,23 +3,13 @@
 const { classifyRuntimeValue, classifyArguments, summarizeRuntimeValue, summarizeArguments } = require('./runtime_value_kind');
 const { parseStateSource } = require('./state_transfer_model');
 const { enabledCapabilityIds } = require('./catalog_capability_filter');
-const TRIGGER_CATALOG=require('../data/triggers.json');
+const TRIGGER_CATALOG=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const TRIGGER_BY_NAME=new Map(TRIGGER_CATALOG.map(entry=>[String(entry.name||'').toLowerCase(),entry]).filter(([name])=>name));
 const TRIGGER_NAMES=new Set(TRIGGER_BY_NAME.keys());
 const CONTROLLER_BY_NAME=new Map(require('../data/sctrl.json').map(entry=>[String(entry.name||'').toLowerCase(),entry]).filter(([name])=>name));
 
 function controllerContract(name){const catalog=CONTROLLER_BY_NAME.get(String(name||'').toLowerCase());return catalog?{name:catalog.name,signature:catalog.name,documentation:catalog.description||'',catalogMatch:true,metadata:{status:catalog.status||'documented','option count':String((catalog.params||[]).length),visibilityCapabilityId:catalog.capabilityId||''}}:{name:String(name||''),signature:String(name||''),documentation:'',catalogMatch:false,metadata:{status:'not in bundled catalog','option count':'unknown',visibilityCapabilityId:''}};}
 
-const REDIRECTS = [
-  ['root', /\broot\s*,/i, null],
-  ['parent', /\bparent\s*,/i, 'numHelper'],
-  ['helper', /\bhelper(?:\s*\([^)]*\))?\s*,/i, 'numHelper'],
-  ['target', /\btarget(?:\s*\([^)]*\))?\s*,/i, 'numTarget'],
-  ['enemy', /\benemy(?:Near)?(?:\s*\([^)]*\))?\s*,/i, 'numEnemy'],
-  ['partner', /\bpartner(?:\s*\([^)]*\))?\s*,/i, 'numPartner'],
-  ['player/playerID', /\b(?:player|playerID)\s*\([^)]*\)\s*,/i, null],
-  ['stateOwner', /\bstateOwner\s*,/i, null]
-];
 
 function withoutComment(line) {
   let quote = false;
@@ -602,22 +592,6 @@ function analyzeZss(text, options = {}) {
         'Use `time <= 1` only when a two-tick window is safe, use an entry latch for exactly-once work, or add `# @time-zero engine` for a verified hardcoded engine contract.'));
     }
 
-    // Redirects that can disappear between team modes or during state transitions.
-    for (const [name, pattern, guard] of REDIRECTS) {
-      const match = pattern.exec(line);
-      if (!match) continue;
-      if (guard && !new RegExp(`\\b${guard}\\b`, 'i').test(context)) {
-        issues.push(issue(i, match.index, match[0].length, 'warning', 'redirect-guard',
-          `${name} redirect has no nearby ${guard} validity guard.`,
-          `Guard the redirect in the same condition/block; ${name} may not exist in every Simul, Tag, Turns, or lifecycle frame.`));
-      }
-      if (name === 'root' && !/\bnumHelper\b/i.test(context)) {
-        issues.push(issue(i, match.index, match[0].length, 'information', 'root-context',
-          'root redirect assumes this code is executing as a helper.',
-          'If this function can run for both a player and helper, branch on numHelper or document the ownership contract.'));
-      }
-    }
-
     const p2Line = withoutStrings(line);
     const p2 = /\bp2\s*,/i.exec(p2Line);
     if (p2 && opponentSeverity) {
@@ -721,6 +695,9 @@ function analyzeZss(text, options = {}) {
     }
   }
 
+  if (options.syntaxDiagnostics?.enabled !== false && options.syntaxDiagnostics?.debugFloods !== false && Buffer.byteLength(text, 'utf8') <= 4 * 1024 * 1024) {
+    issues.push(...require('./debug_flood_actions').debugFloodProblems(text, 'zss').slice(0,500).map(p=>p.diagnostic));
+  }
   return { issues, records };
 }
 
@@ -794,14 +771,14 @@ function adjacentDocumentation(lines,line,{parameters=false,commentMarker='#'}={
 
 function adjacentFunctionDocumentation(lines,line){return adjacentDocumentation(lines,line,{parameters:true});}
 
-function collectRecords(text, file = '') {
+function collectRecords(text, file = '', options = {}) {
+  const legacy=options.languageId?options.languageId==='ikemen-cns':/\.(?:cns|cmd|st|inp|jnp)$/i.test(file),ini=options.languageId?options.languageId==='ikemen-def':/\.def$/i.test(file);
   const lines = text.split(/\r?\n/);
-  const functionHeaders = require('./zss_function_syntax').parseFunctionHeaders(text), functionHeadersByLine = new Map(functionHeaders.filter(value => value.valid).map(value => [value.line, value]));
-  const dynamicMapKeysByLine = new Map();for(const value of require('./nightly_string_assistance').dynamicMapKeySites(text)){if(!dynamicMapKeysByLine.has(value.line))dynamicMapKeysByLine.set(value.line,[]);dynamicMapKeysByLine.get(value.line).push(value);}
+  const functionHeaders = legacy||ini?[]:require('./zss_function_syntax').parseFunctionHeaders(text), functionHeadersByLine = new Map(functionHeaders.filter(value => value.valid).map(value => [value.line, value]));
+  const dynamicMapKeysByLine = new Map();for(const value of legacy||ini?[]:require('./nightly_string_assistance').dynamicMapKeySites(text)){if(!dynamicMapKeysByLine.has(value.line))dynamicMapKeysByLine.set(value.line,[]);dynamicMapKeysByLine.get(value.line).push(value);}
   const records = { maps: [], variables: [], locals: [], redirects: [], controllers: [], triggers: [], constants: [], commands: [], functions: [], calls: [], states: [], stateReferences: [], resources: [], functionSyntaxErrors: functionHeaders.flatMap(value => value.errors || []) };
   const add = (bucket, name, line, start, extra = {}) => records[bucket].push({ name, line, start, file, ...extra });
   let owner = null, section = '', sectionLine=-1,scopeParameters=new Set(),scopeLocals=new Set();
-  const legacy=/\.(?:cns|cmd|st)$/i.test(file),ini=/\.def$/i.test(file);
   const stringOperandsByLine=new Map();if(!legacy&&!ini)for(const source of [runtimeStringControllerOperands(lines),expandedStringTriggerOperands(lines)])for(const [line,values] of source)stringOperandsByLine.set(line,[...(stringOperandsByLine.get(line)||[]),...values]);
   const ownerByLine = [];
 
@@ -884,7 +861,7 @@ function collectRecords(text, file = '') {
       while((localMatch=localPattern.exec(line))){const name=localMatch[1],kind=scopeParameters.has(name)?'parameter':'local',rest=line.slice(localMatch.index+localMatch[0].length),write=/^\s*(?::=|=)\s*([^;{}]*)/.exec(rest),access=write?'write':'read',observed=String(write?.[1]||'').trim(),commandOperand=commandOperands.find(value=>value.kind==='local'&&value.name===name&&localMatch.index===value.start),stringOperand=stringOperands.find(value=>value.kind==='local'&&value.name===name&&localMatch.index>=value.start&&localMatch.index<value.start+value.length);add('locals',name,lineNumber,localMatch.index,{access,declaration:false,localKind:kind,sigil:'$',identity:`${owner.ownerKind}:${owner.ownerName}:${owner.ownerLine}:${name}`,metadata:{scope:scopeLabel,kind,declared:String(scopeParameters.has(name)||scopeLocals.has(name)),...(commandOperand?{usage:'dynamic command name','command trigger':commandOperand.trigger,commandVisibilityCapabilityId:'command.nightly-expressions'}:{}),...(stringOperand?.metadata||{})},observedValue:observed,valueKind:observed?classifyRuntimeValue(observed).kind:'unknown',valueSummary:observed?summarizeRuntimeValue(observed):'',...owner});}
     }
     ownerByLine[lineNumber] = owner ? { ...owner } : null;
-    for (const call of callRecords(line)) add('calls', call.name, lineNumber, call.start, { arity: call.arity, args: call.args, argumentKinds:classifyArguments(call.args), argumentSummaries:summarizeArguments(call.args), ...(owner || {}) });
+    for (const call of legacy||ini?[]:callRecords(line)) add('calls', call.name, lineNumber, call.start, { arity: call.arity, args: call.args, argumentKinds:classifyArguments(call.args), argumentSummaries:summarizeArguments(call.args), ...(owner || {}) });
   });
   const uncommentedLines=lines.map(line=>legacy?withoutLegacyComment(line):withoutComment(line)),uncommented=uncommentedLines.join('\n'),resourceStructure=uncommentedLines.map(withoutStrings).join('\n');
   const addResourceMatches=(kind,controller,field,role,access)=>{

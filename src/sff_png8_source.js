@@ -32,13 +32,13 @@ function paeth(a, b, c) {
 function readIndexedPng8(buffer, options = {}) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 8 || !buffer.subarray(0, 8).equals(SIGNATURE)) throw new Error('Source sprite is not a PNG.');
   const maxPixels = Number(options.maxPixels || 100000000);
-  let offset = 8, width = 0, height = 0, palette = null, alpha = null, ended = false, sawIdat = false;
+  let offset = 8, width = 0, height = 0, palette = null, alpha = null, ended = false, sawIdat = false, sawIend = false;
   const idat = [];
   while (offset < buffer.length) {
     if (buffer.length - offset < 12) throw new Error('Source PNG has a truncated chunk header.');
     const size = buffer.readUInt32BE(offset), end = offset + size + 12;
     if (!Number.isSafeInteger(end) || end > buffer.length) throw new Error('Source PNG chunk exceeds the file.');
-    const type = buffer.toString('ascii', offset + 4, offset + 8), data = buffer.subarray(offset + 8, offset + 8 + size);
+    const type = buffer.toString('latin1', offset + 4, offset + 8), data = buffer.subarray(offset + 8, offset + 8 + size);
     if (!/^[A-Za-z]{4}$/.test(type) || type[2] !== type[2].toUpperCase()) throw new Error('Source PNG has invalid chunk type bytes or a lowercase reserved type bit.');
     const storedCrc = buffer.readUInt32BE(offset + 8 + size), actualCrc = crc32(buffer.subarray(offset + 4, offset + 8 + size));
     if (storedCrc !== actualCrc) throw new Error(`Source PNG ${type} CRC is invalid.`);
@@ -51,22 +51,26 @@ function readIndexedPng8(buffer, options = {}) {
       if (!width || palette || sawIdat || size !== 768) throw new Error('Source PNG must contain one 256-color PLTE before IDAT.');
       palette = Buffer.from(data);
     } else if (type === 'tRNS') {
-      if (!palette || sawIdat || alpha || size > 256) throw new Error('Source PNG has an invalid tRNS chunk.');
+      if (!palette || sawIdat || alpha || size < 1 || size > 256) throw new Error('Source PNG has an invalid tRNS chunk.');
       alpha = Buffer.from(data);
     } else if (type === 'IDAT') {
       if (!palette || ended) throw new Error('Source PNG IDAT chunks must be consecutive after PLTE.');
       sawIdat = true; idat.push(data);
     } else if (type === 'IEND') {
       if (!sawIdat || size !== 0) throw new Error('Source PNG has an invalid IEND.');
+      sawIend = true;
       offset = end;
       if (offset !== buffer.length) throw new Error('Source PNG contains bytes after IEND.');
       break;
-    } else if (sawIdat) ended = true;
+    } else {
+      if (type[0] === type[0].toUpperCase()) throw new Error(`Source PNG contains an unsupported critical chunk: ${type}.`);
+      if (sawIdat) ended = true;
+    }
     offset = end;
   }
-  if (!width || !palette || !sawIdat || offset !== buffer.length) throw new Error('Source PNG is missing required indexed chunks.');
+  if (!width || !palette || !sawIdat || !sawIend || offset !== buffer.length) throw new Error('Source PNG is missing required indexed chunks (IHDR, PLTE, IDAT, IEND).');
   let raw;
-  try { raw = zlib.inflateSync(Buffer.concat(idat), { maxOutputLength: height * (width + 1) + 1 }); }
+  try { const compressed = Buffer.concat(idat), decoded = zlib.inflateSync(compressed, { info: true, maxOutputLength: height * (width + 1) + 1 }); if (decoded.engine.bytesWritten !== compressed.length) throw new Error('IDAT contains bytes after its zlib stream.'); raw = decoded.buffer; }
   catch (error) { throw new Error(`Source PNG pixel stream is invalid: ${error.message}`); }
   if (raw.length !== height * (width + 1)) throw new Error(`Source PNG decoded ${raw.length} scanline bytes; expected ${height * (width + 1)}.`);
   const indices = Buffer.alloc(width * height);

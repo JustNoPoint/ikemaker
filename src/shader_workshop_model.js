@@ -43,13 +43,13 @@ const NODE_TYPE_BY_ID = new Map(NODE_TYPES.map(item=>[item.id,item]));
 
 const PRESETS = Object.freeze([
   Object.freeze({ id:'passthrough', label:'Unmodified', family:'utility', description:'Displays the selected input without changing its pixels.', conflicts:Object.freeze([]) }),
-  Object.freeze({ id:'outline', label:'Outline', family:'edge', description:'Adds a colored boundary around visible pixels.', conflicts:Object.freeze(['preserveTransparentPixels','preserveSpriteSilhouette','preventColorBleeding']) }),
-  Object.freeze({ id:'outer-glow', label:'Outer Glow', family:'edge', description:'Adds a soft colored glow outside the visible source.', conflicts:Object.freeze(['preserveTransparentPixels','preserveSpriteSilhouette','preventColorBleeding']) }),
+  Object.freeze({ id:'outline', label:'Outline', family:'edge', description:'Colors transparent pixels next to visible ones. Stays inside the sprite image, so leave a transparent margin.', targetKinds:Object.freeze(['sprite','animation','explod','projectile']), conflicts:Object.freeze(['preserveTransparentPixels','preserveSpriteSilhouette','preventColorBleeding']) }),
+  Object.freeze({ id:'outer-glow', label:'Outer Glow', family:'edge', description:'Adds a soft colored glow in transparent pixels around the sprite, inside its image margin.', targetKinds:Object.freeze(['sprite','animation','explod','projectile']), conflicts:Object.freeze(['preserveTransparentPixels','preserveSpriteSilhouette','preventColorBleeding']) }),
   Object.freeze({ id:'palette-tint', label:'Palette Tint', family:'color', description:'Mixes a chosen color into visible source pixels.', conflicts:Object.freeze(['preservePaletteColors','preserveIndexedPaletteBehavior']) }),
   Object.freeze({ id:'grayscale', label:'Grayscale', family:'color', description:'Converts visible source colors to luminance.', conflicts:Object.freeze(['preservePaletteColors','preserveIndexedPaletteBehavior']) }),
   Object.freeze({ id:'hit-flash', label:'Hit Flash', family:'color', description:'Temporarily blends visible source colors toward a selected flash color.', conflicts:Object.freeze(['preservePaletteColors','preserveIndexedPaletteBehavior']) }),
-  Object.freeze({ id:'dissolve', label:'Dissolve', family:'mask', description:'Removes portions of the source using a threshold pattern.', conflicts:Object.freeze(['preservePartialAlpha','preserveSpriteSilhouette']) }),
-  Object.freeze({ id:'uv-wave', label:'Wave Distortion', family:'distortion', description:'Offsets texture sampling with an animated wave.', conflicts:Object.freeze(['preserveSpriteSilhouette']) }),
+  Object.freeze({ id:'dissolve', label:'Dissolve', family:'mask', description:'Hides cells of the sprite with a fixed pattern. Amount sets how much is hidden.', targetKinds:Object.freeze(['sprite','animation','explod','projectile']), conflicts:Object.freeze(['preservePartialAlpha','preserveSpriteSilhouette']) }),
+  Object.freeze({ id:'uv-wave', label:'Wave Distortion', family:'distortion', description:'Shifts rows sideways. Set speed to animate or use zero to hold the chosen phase.', targetKinds:Object.freeze(['sprite','animation','explod','projectile','fullscreen']), conflicts:Object.freeze(['preservePaletteColors','preserveTransparentPixels','preservePartialAlpha','preserveSpriteSilhouette','preventColorBleeding']) }),
   Object.freeze({ id:'pixelate', label:'Pixelate', family:'sampling', description:'Samples the source on a coarser pixel grid.', conflicts:Object.freeze([]) }),
   Object.freeze({ id:'crt', label:'CRT Screen', family:'screen', description:'Adds scanlines and screen-space display treatment.', targetKinds:Object.freeze(['screenpack','fullscreen']), conflicts:Object.freeze(['preservePaletteColors']) })
 ]);
@@ -81,7 +81,9 @@ function normalizeGraph(value) {
     if(!item||typeof item!=='object'||Array.isArray(item))continue;
     const id=boundedText(item.id,128),type=boundedText(item.type,64);
     if(!id||ids.has(id)||!NODE_TYPE_BY_ID.has(type))continue;
-    ids.add(id);nodes.push(Object.freeze({id,type,label:boundedText(item.label,128),x:Number.isFinite(item.x)?Math.max(-100000,Math.min(100000,item.x)):0,y:Number.isFinite(item.y)?Math.max(-100000,Math.min(100000,item.y)):0}));
+    const value=type==='number' && Number.isFinite(item.value)?Math.max(-10000,Math.min(10000,item.value)):
+      type==='color' && Array.isArray(item.value) && item.value.length===3 && item.value.every(Number.isFinite)?Object.freeze(item.value.map(v=>Math.max(0,Math.min(1,v)))):undefined;
+    ids.add(id);nodes.push(Object.freeze({id,type,...(value===undefined?{}:{value}),label:boundedText(item.label,128),x:Number.isFinite(item.x)?Math.max(-100000,Math.min(100000,item.x)):0,y:Number.isFinite(item.y)?Math.max(-100000,Math.min(100000,item.y)):0}));
   }
   const edges=[],edgeIds=new Set();
   for(const item of Array.isArray(source.edges)?source.edges.slice(0,512):[]){
@@ -121,7 +123,7 @@ function createShaderProject(options = {}) {
   const name = boundedText(options.name, 128) || 'Untitled Shader';
   const id = boundedText(options.id, 128) || idFromSeed(`${name}\0${now}`);
   return Object.freeze({
-    schema:SCHEMA, id, name, createdAt:now, updatedAt:now,
+    schema:SCHEMA, id, name, ...(['1.0','nightly'].includes(options.engine) ? {engine:options.engine} : {}), createdAt:now, updatedAt:now,
     engineIndependent:true,
     mode, presetId,
     target:Object.freeze({ kind:targetKind, label:boundedText(options.targetLabel,128), sourceRef:boundedText(options.sourceRef,512) }),
@@ -219,11 +221,16 @@ function serializeShaderProject(project) {
   return `${JSON.stringify(project, null, 2)}\n`;
 }
 
+function shaderText(text = '') {
+  if (typeof text !== 'string' || text.includes('\0') || Buffer.byteLength(text, 'utf8') > 1024 * 1024) throw new Error('Shader source must be UTF-8 text of at most 1 MiB per stage.');
+  return text;
+}
+
 function parseShaderProject(text) {
   if (typeof text !== 'string' || Buffer.byteLength(text, 'utf8') > 4 * 1024 * 1024) throw new Error('Shader project text is missing or oversized.');
   const source = JSON.parse(text);
   if (!source || source.schema !== SCHEMA) throw new Error('Unsupported Shader Workshop project schema.');
-  const project = createShaderProject(source);
+  const project = createShaderProject({...source, targetKind:source.target?.kind, targetLabel:source.target?.label, sourceRef:source.target?.sourceRef});
   return Object.freeze({ ...project,
     id:boundedText(source.id,128) || project.id,
     createdAt:Number.isFinite(source.createdAt)?source.createdAt:project.createdAt,
@@ -231,7 +238,7 @@ function parseShaderProject(text) {
     safeguards:exactBooleanMap(source.safeguards),
     parameters:Object.freeze(source.parameters && typeof source.parameters==='object'&&!Array.isArray(source.parameters)?{...source.parameters}:{}),
     graph:normalizeGraph(source.graph),
-    code:Object.freeze({ vertex:boundedText(source.code?.vertex,1024*1024), fragment:boundedText(source.code?.fragment,1024*1024) })
+    code:Object.freeze({ vertex:shaderText(source.code?.vertex), fragment:shaderText(source.code?.fragment) })
   });
 }
 
@@ -239,5 +246,5 @@ module.exports = {
   SCHEMA, MODES, TARGET_KINDS, SAFEGUARD_DEFINITIONS, SAFEGUARD_IDS, PRESETS, NODE_TYPES,
   defaultSafeguards, createShaderProject, setSafeguard, selectPreset, setTargetKind,
   safeguardConflicts, normalizeGraph, graphSafeguardConflicts, replaceGraph, buildAiShaderBrief, reviewGeneratedCandidate,
-  serializeShaderProject, parseShaderProject
+  shaderText, serializeShaderProject, parseShaderProject
 };

@@ -8,8 +8,10 @@ function installPaletteWorkshopViewport() {
     'paletteTemplateIntakeRoute', 'paletteTemplatePaletteOnlyStarted', 'paletteIndexMigrationContinue',
     'paletteCompanionFocusTool', 'paletteCompanionBridgeAction']);
   let pending = null, generation = 0, anchor = null, settleTimer = null, layoutFrame = 0;
-  let userScrollUntil = 0;
+  let userScrollUntil = 0, backgroundFocus = null, internalScroll = false;
   let appliedTop = window.scrollY, appliedLeft = window.scrollX;
+  const nativeScrollTo=window.scrollTo;
+  window.scrollTo=function(...args){if(backgroundFocus&&!internalScroll)userIntent();return nativeScrollTo.apply(this,args)};
   const scrollSelector = '#libraryList,#embeddedPaletteList,.colors,.comparison-grid,.large-preview,.template-canvas-palette-panel,[data-layout-board]';
   function locator(node) {
     if (!node || node === document.body) return null;
@@ -59,7 +61,11 @@ function installPaletteWorkshopViewport() {
     appliedTop = Math.max(0, top); appliedLeft = fallbackLeft;
     // Even a same-position scrollTo cancels Chromium's native smooth scrolling.
     // Host echoes and observer callbacks must not interrupt an in-flight gesture.
-    if (window.scrollX !== appliedLeft || window.scrollY !== appliedTop) window.scrollTo(appliedLeft, appliedTop);
+    if (window.scrollX !== appliedLeft || window.scrollY !== appliedTop) {
+      internalScroll=true;
+      try { window.scrollTo(appliedLeft, appliedTop); }
+      finally { internalScroll=false; }
+    }
     appliedTop = window.scrollY;
     return appliedTop;
   }
@@ -81,10 +87,10 @@ function installPaletteWorkshopViewport() {
   }
   // A fresh wheel/key/pointer gesture owns the viewport immediately; no queued
   // frame or image load is permitted to put the user back at an old position.
-  function userIntent() { anchor = null; clearTimeout(settleTimer); userScrollUntil = performance.now() + 250; release(); }
+  function userIntent() { backgroundFocus = null; anchor = null; clearTimeout(settleTimer); userScrollUntil = performance.now() + 250; release(); }
   for (const type of ['wheel', 'touchstart', 'pointerdown', 'keydown']) addEventListener(type, userIntent, { capture: true, passive: true });
   addEventListener('scroll', event => {
-    if (event.target !== document || pending?.restoring) return;
+    if (event.target !== document || pending?.restoring || backgroundFocus) return;
     if (window.scrollX !== appliedLeft || window.scrollY !== appliedTop) {
       userIntent();
     }
@@ -98,16 +104,35 @@ function installPaletteWorkshopViewport() {
     layoutFrame = requestAnimationFrame(() => {
       layoutFrame = 0;
       if (pending) restore(pending);
-      else if (anchor) restoreAnchor(anchor, appliedTop, appliedLeft);
+      else if (anchor) {
+        if (window.scrollX !== appliedLeft || window.scrollY !== appliedTop) anchor = null;
+        else restoreAnchor(anchor, appliedTop, appliedLeft);
+      }
     });
   }
   const layoutObserver = new ResizeObserver(stabilizeLayout);
   layoutObserver.observe(document.body);
   const contentObserver = new MutationObserver(stabilizeLayout);
   contentObserver.observe(document.body, { childList: true, subtree: true, characterData: true });
-  addEventListener('focusin', () => {
+  addEventListener('focusin', event => {
     if (pending?.restoring) return;
-    if (anchor) restoreAnchor(anchor, appliedTop, appliedLeft);
+    if (!anchor) return;
+    if (performance.now() < userScrollUntil) { restoreAnchor(anchor, appliedTop, appliedLeft); return; }
+    // A deferred control can acquire focus without a new user gesture. Browser
+    // focus scrolling and the shared header's reveal run after focusin; wait
+    // for both before putting the visible workflow content back in place.
+    const saved = anchor, target = event.target;
+    backgroundFocus = saved;
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const rect=target?.getBoundingClientRect?.();
+      if (!rect || rect.bottom < 0 || rect.top > innerHeight) {
+        if (backgroundFocus === saved) backgroundFocus = null;
+        if (anchor === saved && (scrollX !== appliedLeft || scrollY !== appliedTop)) anchor = null;
+        return;
+      }
+      if (backgroundFocus === saved && anchor === saved) restoreAnchor(saved, appliedTop, appliedLeft);
+      if (backgroundFocus === saved) backgroundFocus = null;
+    }));
   }, true);
   function restore(state) {
     if (pending !== state) return;

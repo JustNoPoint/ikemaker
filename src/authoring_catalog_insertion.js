@@ -12,7 +12,7 @@ async function insertCatalogItem(vscode,entry,services={}){
     const editor=vscode.window.activeTextEditor;
     if(!editor||!['zss','ikemen-cns'].includes(editor.document.languageId)){await vscode.window.showWarningMessage('Open a ZSS or CNS file before inserting this recipe section.');return{inserted:false,reason:'editor-unavailable'};}
     if(entry.allowedFileTypes?.length&&!entry.allowedFileTypes.includes(editor.document.languageId)){const expected=entry.allowedFileTypes.includes('zss')?'a ZSS code file':'an IKEMEN constants/CNS file';await vscode.window.showWarningMessage(`This recipe section belongs in ${expected}. No text was inserted.`);return{inserted:false,reason:'wrong-file-type'};}
-    inserted=await editor.insertSnippet(new vscode.SnippetString(entry.snippet),editor.selection.active)!==false;
+    inserted=await editor.insertSnippet(new vscode.SnippetString(editor.document.languageId==='ikemen-cns' && entry.cnsSnippet ? entry.cnsSnippet : entry.snippet),editor.selection.active)!==false;
   }else{await vscode.commands.executeCommand(entry.kind==='examplePack'?'ikemen.authoring.openExamples':'ikemen.authoring.openRecipes');return{inserted:false,navigated:true};}
   if(!inserted)return{inserted:false,reason:'insertion-refused'};
   try{await services.recordRecent?.(entry.id);return{inserted:true,recentRecorded:true};}

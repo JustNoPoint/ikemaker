@@ -1,12 +1,17 @@
 'use strict';
 
 const controllers = require('../data/sctrl.json');
-const triggers = require('../data/triggers.json');
+const triggers = require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const { zssControllerName } = require('./sctrl');
 
 const CONTROLLERS = new Set(controllers.flatMap(entry => [entry.name, zssControllerName(entry.name)]).map(value => value.toLowerCase()));
+// Registered by IKEMEN's compiler but absent from the authoring catalog.
+CONTROLLERS.add('loadstate');
+CONTROLLERS.add('savestate');
 const TRIGGERS = new Set(triggers.map(entry => String(entry.name).toLowerCase()));
 const STRUCTURES = new Set(['if','else','for','while','switch','case','default','persistent','ignorehitpause']);
+// Compiler redirections accept a parenthesized selector in trigger expressions.
+const REDIRECTIONS = new Set(['partner','enemy','enemynear','playerid','player','playerindex','helperindex','helper','target']);
 const CALL_KEYWORDS = new Set(['if','for','while','switch','call','return','map','const','var','fvar','sysvar']);
 
 function issue(line, start, length, code, message) { return { line, start: Math.max(0, start), length: Math.max(1, length), severity: 'warning', code, message }; }
@@ -55,6 +60,8 @@ function balancedExpressionDelimiters(source) {
 function structureIssues(lines, languageId) {
   const findings = [], stack = [];
   for (let line = 0; line < lines.length; line += 1) {
+    // CNS State controller labels are free text and can contain apostrophes.
+    if (languageId === 'ikemen-cns' && /^\s*\[\s*state\b[^\]]*\]/i.test(lines[line])) continue;
     const masked = maskedLine(lines[line], languageId);
     if (masked.unterminated !== null) findings.push(issue(line, masked.unterminated, 1, 'unterminated-string', 'String literal is not closed on this line.'));
     if (/^\s*\[/.test(uncomment(lines[line], languageId)) && !/\]/.test(uncomment(lines[line], languageId))) { let closed = false; for (let cursor = line + 1; cursor < lines.length && cursor <= line + 32; cursor += 1) { if (/\]/.test(uncomment(lines[cursor], languageId))) { closed = true; break; } if (/^\s*\[/.test(uncomment(lines[cursor], languageId))) break; } if (!closed) findings.push(issue(line, Math.max(0, lines[line].indexOf('[')), 1, 'unclosed-section-header', 'Section header is missing a closing ].')); }
@@ -68,10 +75,30 @@ function structureIssues(lines, languageId) {
   return findings;
 }
 
+// Guards run up to the opening brace and can span several physical lines.
+function guardContinuationLines(lines) {
+  const continuations = new Set();
+  let start = -1;
+  for (let line = 0; line < lines.length; line += 1) {
+    const code = maskedLine(lines[line], 'zss').text.trim();
+    if (/^(?:}\s*)?(?:else\s+)?(?:if|while|for|switch)\b/i.test(code)) start = line;
+    if (start < 0) continue;
+    const header = line === start ? code.replace(/^}\s*/, '') : code;
+    const boundary = header.search(/[{};]/);
+    if (boundary < 0) continue;
+    if (header[boundary] === '{') {
+      for (let index = start + 1; index <= line; index += 1) continuations.add(index);
+    }
+    start = -1;
+  }
+  return continuations;
+}
+
 function missingSemicolonIssues(lines) {
-  const findings = [];
+  const findings = [], guardLines = guardContinuationLines(lines);
   const significantAfter = line => { for (let index = line + 1; index < lines.length; index += 1) { const code = uncomment(lines[index], 'zss').trim(); if (code) return code; } return ''; };
   for (let line = 0; line < lines.length; line += 1) {
+    if (guardLines.has(line)) continue;
     const raw = uncomment(lines[line], 'zss'), code = raw.trim();
     if (!code || /^\[/.test(code) || /[;{}]\s*$/.test(code) || /^\s*(?:if|else|for|while|switch|case|default)\b/i.test(code)) continue;
     const masked = maskedLine(raw, 'zss').text, balanced = balancedExpressionDelimiters(masked);
@@ -88,8 +115,11 @@ function zssControllerBlocks(text) {
   while ((match = pattern.exec(masked))) {
     const name = match[1], open = masked.indexOf('{', match.index), close = matchingBrace(masked, open);
     if (close < 0) continue;
-    const before = masked.slice(0, match.index), line = (before.match(/\n/g) || []).length;
-    if (CONTROLLERS.has(name.toLowerCase())) blocks.push({ name, open, close, line, body: masked.slice(open + 1, close) });
+    const line = (masked.slice(0, open + 1).match(/\n/g) || []).length;
+    const body = masked.slice(open + 1, close);
+    // Controller parameters cannot contain blocks. A name such as SprPriority
+    // can also be a trigger at the end of an if guard.
+    if (CONTROLLERS.has(name.toLowerCase()) && !body.includes('{')) blocks.push({ name, open, close, line, body });
     pattern.lastIndex = open + 1;
   }
   return { masked, blocks };
@@ -99,10 +129,10 @@ function duplicateParameterIssues(text, languageId) {
   const findings = [];
   if (languageId === 'zss') {
     for (const block of zssControllerBlocks(text).blocks) {
-      const seen = new Map(), linesBefore = text.slice(0, block.open + 1).split(/\r?\n/).length - 1;
+      const seen = new Map();
       for (const [offset, raw] of block.body.split(/\r?\n/).entries()) {
         const match = /^\s*([A-Za-z_][A-Za-z0-9_.]*)\s*:/.exec(raw); if (!match) continue;
-        const key = match[1].toLowerCase(), line = linesBefore + offset;
+        const key = match[1].toLowerCase(), line = block.line + offset;
         if (seen.has(key)) findings.push(issue(line, raw.indexOf(match[1]), match[1].length, 'duplicate-controller-parameter', `${block.name}.${match[1]} is assigned more than once in this controller.`)); else seen.set(key, line);
       }
     }
@@ -113,7 +143,7 @@ function duplicateParameterIssues(text, languageId) {
     const code = uncomment(lines[line], languageId), header = /^\s*\[\s*([^\]]+)\]/.exec(code);
     if (header) { state = /^state\b/i.test(header[1]); seen = new Map(); type = 'controller'; continue; }
     if (!state) continue;
-    const field = /^\s*([A-Za-z_][A-Za-z0-9_.]*)\s*=/.exec(code); if (!field || /^trigger\d*$/i.test(field[1])) continue;
+    const field = /^\s*([A-Za-z_][A-Za-z0-9_.]*)\s*=/.exec(code); if (!field || /^trigger(?:all|\d+)$/i.test(field[1])) continue;
     if (/^type$/i.test(field[1])) type = code.slice(code.indexOf('=') + 1).trim() || type;
     const key = field[1].toLowerCase(); if (seen.has(key)) findings.push(issue(line, code.indexOf(field[1]), field[1].length, 'duplicate-controller-parameter', `${type}.${field[1]} is assigned more than once in this controller.`)); else seen.set(key, line);
   }
@@ -127,7 +157,8 @@ function unknownControllerIssues(text, languageId, ignored) {
     for (let line = 0; line < lines.length; line += 1) { const code = uncomment(lines[line], languageId), header = /^\s*\[\s*([^\]]+)\]/.exec(code); if (header) { state = /^state\b/i.test(header[1]); continue; } if (!state) continue; const match = /^\s*type\s*=\s*([A-Za-z_][A-Za-z0-9_]*)/i.exec(code); if (match && !CONTROLLERS.has(match[1].toLowerCase()) && !ignored.has(match[1].toLowerCase())) findings.push(issue(line, code.indexOf(match[1]), match[1].length, 'unknown-controller', `Unknown state controller ${match[1]}.`)); }
     return findings;
   }
-  for (let line = 0; line < lines.length; line += 1) { const code = maskedLine(lines[line], 'zss').text, match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(code); if (!match) continue; const key = match[1].toLowerCase(); if (CONTROLLERS.has(key) || STRUCTURES.has(key) || ignored.has(key)) continue; findings.push(issue(line, code.indexOf(match[1]), match[1].length, 'unknown-controller', `Unknown controller or structure ${match[1]}.`)); }
+  const guardLines = guardContinuationLines(lines);
+  for (let line = 0; line < lines.length; line += 1) { if (guardLines.has(line)) continue; const code = maskedLine(lines[line], 'zss').text, match = /^\s*([A-Za-z_][A-Za-z0-9_]*)\s*\{/.exec(code); if (!match) continue; const key = match[1].toLowerCase(); if (CONTROLLERS.has(key) || STRUCTURES.has(key) || ignored.has(key)) continue; findings.push(issue(line, code.indexOf(match[1]), match[1].length, 'unknown-controller', `Unknown controller or structure ${match[1]}.`)); }
   return findings;
 }
 
@@ -135,10 +166,10 @@ function unknownTriggerIssues(text, languageId, ignored) {
   const findings = [], lines = String(text).split(/\r?\n/), declared = new Set([...String(text).matchAll(/\[\s*Function\s+([A-Za-z_][A-Za-z0-9_.]*)/gi)].map(match => match[1].toLowerCase()));
   for (let line = 0; line < lines.length; line += 1) {
     const code = maskedLine(lines[line], languageId).text;
-    if (languageId === 'ikemen-cns' && !/^\s*trigger\d*\s*=/i.test(code)) continue;
+    if (languageId === 'ikemen-cns' && !/^\s*trigger(?:all|\d+)\s*=/i.test(code)) continue;
     if (languageId === 'zss' && !/^\s*(?:if|else\s+if|while|for|let|return)\b/i.test(code)) continue;
     const calls = /\b([A-Za-z_][A-Za-z0-9_.]*)\s*\(/g; let match;
-    while ((match = calls.exec(code))) { const key = match[1].toLowerCase(); if (TRIGGERS.has(key) || declared.has(key) || ignored.has(key) || CALL_KEYWORDS.has(key)) continue; findings.push(issue(line, match.index, match[1].length, 'unknown-trigger', `Unknown trigger or function ${match[1]}. Add it to the ignored-name setting if it is supplied externally.`)); }
+    while ((match = calls.exec(code))) { const key = match[1].toLowerCase(); if (TRIGGERS.has(key) || declared.has(key) || ignored.has(key) || REDIRECTIONS.has(key) || CALL_KEYWORDS.has(key)) continue; findings.push(issue(line, match.index, match[1].length, 'unknown-trigger', `Unknown trigger or function ${match[1]}. Add it to the ignored-name setting if it is supplied externally.`)); }
   }
   return findings;
 }
@@ -157,13 +188,17 @@ function basicSyntaxIssues(text, languageId, options = {}) {
   const source = String(text || ''); if (Buffer.byteLength(source, 'utf8') > 4 * 1024 * 1024) return [];
   const safeIgnored = (Array.isArray(options.ignoredNames) ? options.ignoredNames : []).slice(0, 512).map(value => String(value)).filter(value => /^[A-Za-z_][A-Za-z0-9_.]*$/.test(value) && Buffer.byteLength(value, 'utf8') <= 128);
   const lines = source.split(/\r?\n/), ignored = new Set(safeIgnored.map(value => value.toLowerCase())); let findings = [];
+  if (languageId === 'ikemen-cns' && options.structure !== false) findings.push(...require('./cns_trigger_groups').triggerProblems(source).map(item=>item.diagnostic));
   if (options.structure !== false) findings.push(...structureIssues(lines, languageId));
   if (languageId === 'zss' && options.missingSemicolons !== false) findings.push(...missingSemicolonIssues(lines));
   if (options.duplicateParameters !== false) findings.push(...duplicateParameterIssues(source, languageId));
   if (options.unknownControllers !== false) findings.push(...unknownControllerIssues(source, languageId, ignored));
   if (options.unknownTriggers === true) findings.push(...unknownTriggerIssues(source, languageId, ignored));
   if (languageId === 'zss' && options.controlFlow !== false) findings.push(...controlFlowIssues(source));
+  if (languageId === 'ikemen-cns' && options.debugFloods !== false) {
+    findings.push(...require('./debug_flood_actions').debugFloodProblems(source, languageId).map(problem => problem.diagnostic));
+  }
   return findings.slice(0, 500);
 }
 
-module.exports = { balancedExpressionDelimiters, basicSyntaxIssues, controlFlowIssues, duplicateParameterIssues, missingSemicolonIssues, structureIssues, unknownControllerIssues, unknownTriggerIssues };
+module.exports = { maskedLine, balancedExpressionDelimiters, basicSyntaxIssues, controlFlowIssues, duplicateParameterIssues, missingSemicolonIssues, structureIssues, unknownControllerIssues, unknownTriggerIssues };

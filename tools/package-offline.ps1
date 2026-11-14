@@ -25,7 +25,7 @@ if ([string]::IsNullOrWhiteSpace($OutputPath)) {
 }
 $defaultLuaVsix = Join-Path $root ("third_party\Lua-Language-Server-{0}-win32-x64.vsix" -f $luaVersion)
 if ([string]::IsNullOrWhiteSpace($LuaVsixPath)) { $LuaVsixPath = $defaultLuaVsix }
-if ($IncludeLuaLanguageServer -and -not (Test-Path -LiteralPath $LuaVsixPath)) { throw "Official Lua Language Server VSIX is missing: $LuaVsixPath" }
+if ($IncludeLuaLanguageServer) { Assert-IkemakerLuaCompanion $LuaVsixPath }
 $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
 New-Item -ItemType Directory -Path (Split-Path -Parent $OutputPath) -Force | Out-Null
 if (Test-Path -LiteralPath $OutputPath) { throw "Output already exists: $OutputPath" }

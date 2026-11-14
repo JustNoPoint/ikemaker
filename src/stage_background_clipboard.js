@@ -1,6 +1,6 @@
 'use strict';
 
-const { parseDef } = require('./def_model');
+const { parseDef, sectionMap } = require('./def_model');
 const { uniqueSectionName } = require('./visual_component_model');
 
 const SCHEMA_VERSION = 1;
@@ -64,7 +64,13 @@ function reorder(text, sourceLines, targetLine, placement = 'before') {
   for (const span of sources) { retained += text.slice(cursor, span.start); cursor = span.end; }
   retained += text.slice(cursor);
   const originalAt = placement === 'before' ? target.start : target.end, at = originalAt - removedBefore(originalAt);
-  return retained.slice(0,at) + moved + retained.slice(at);
+  const result=retained.slice(0,at) + moved + retained.slice(at);
+  // positionlink follows the last unlinked BG in native source order.
+  const anchors=value=>{let anchor=null;return parseDef(value).sections.filter(section=>/^bg\s/i.test(section.name)).map(section=>{const linked=Number(sectionMap(section).positionlink||0)!==0;if(!linked)anchor=section.name;return linked?[section.name,anchor]:null}).filter(Boolean)};
+  const originalAnchors=new Map(anchors(text));
+  if(originalAnchors.size){const names=parseDef(text).sections.filter(section=>/^bg\s/i.test(section.name)).map(section=>section.name.toLowerCase());if(new Set(names).size!==names.length)throw new Error('Resolve duplicate BG section names before reordering positionlinked backgrounds. Nothing was changed.');}
+  if(anchors(result).some(([name,anchor])=>originalAnchors.get(name)!==anchor))throw new Error('This move changes a positionlink anchor. Move the linked backgrounds with their original unlinked anchor, or review positionlink in native code first. Nothing was changed.');
+  return result;
 }
 
 class StageBackgroundClipboard {

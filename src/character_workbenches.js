@@ -21,15 +21,21 @@ const CATEGORIES = [
   ['Palettes', new Set(['.act'])], ['Sound', new Set(['.snd'])], ['Notes and Data', new Set(['.txt', '.md', '.json', '.csv'])], ['Other', new Set()]
 ];
 const SESSION_OPTIONS = [
-  { id: 'essentials', label: 'Character essentials', description: 'DEF, AIR text, connected ZSS/CNS/CMD code, assigned SFF, and assigned SND', picked: true },
-  { id: 'connections', label: 'Character connection tree', description: 'See every DEF-assigned asset and cross-file code relationship', picked: true },
-  { id: 'health', label: 'Character health and cleanup', description: 'Audit duplicate, shadowed, unknown, malformed, empty, and missing character data' },
-  { id: 'animation', label: 'Repair animations or disappearing frames', description: 'AIR visual editor, SFF, AIR text, and AIR/SFF Problems' },
-  { id: 'attacks', label: 'Adjust attack properties', description: 'Move Constants editor, constants, and AIR visual preview' },
-  { id: 'throws', label: 'Author a throw interaction', description: 'Dual P1/P2 timelines, binds, parts, events, and reviewed throw code' },
-  { id: 'sound', label: 'Work on sounds', description: 'Assigned and character-local SND archives' },
-  { id: 'code', label: 'Open every connected code file', description: 'All DEF-assigned ZSS, CNS, command, Lua, and DEF files' },
-  { id: 'workflow', label: 'Workflow and QA', description: 'Production checklist, evidence, testing, and signoff' }
+  { id: 'essentials', label: 'Character essentials', description: 'Connected code, DEF, AIR text and preview, assigned sprites and sounds', picked: true },
+  { id: 'connections', label: 'Character overview', description: 'Browse the character connection tree and assigned files' },
+  { id: 'moves', label: 'Create or edit moves', description: 'Move Lab, command inputs, throws and effects' },
+  { id: 'editAnimation', label: 'Edit animations', description: 'AIR editor with the character’s sprites' },
+  { id: 'sprites', label: 'Edit sprites and palettes', description: 'SFF viewer with Quick Add and Palette Workshop' },
+  { id: 'sound', label: 'Edit sounds', description: 'Assigned and character-local sound archives' },
+  { id: 'source', label: 'Edit character code', description: 'Choose a connected source file' },
+  { section: 'Shortcuts' },
+  { id: 'attacks', label: 'Adjust attack properties', description: 'Open attack settings in Move Lab' },
+  { id: 'throws', label: 'Author a throw interaction', description: 'Open Throw Maker' },
+  { id: 'code', label: 'Open every connected code file', description: 'Open the grouped character sources' },
+  { section: 'Review' },
+  { id: 'animation', label: 'Repair animations or disappearing frames', description: 'AIR editor, sprites and Problems' },
+  { id: 'health', label: 'Character health and cleanup', description: 'Find missing, malformed or conflicting character data' },
+  { id: 'workflow', label: 'Workflow and QA', description: 'Production checklist, testing and signoff' }
 ];
 
 function activeFile() { return vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri.scheme === 'file' ? vscode.window.activeTextEditor.document.fileName : null; }
@@ -193,7 +199,7 @@ async function openWorkbench(profile, allCode = false) {
 
 async function chooseSessionOptions(profile) {
   const remembered = new Set(profile.lastSession || []), hasRemembered = remembered.size > 0;
-  const picked = await vscode.window.showQuickPick(SESSION_OPTIONS.map((item) => ({
+  const picked = await vscode.window.showQuickPick(SESSION_OPTIONS.map((item) => item.section ? { label: item.section, kind: vscode.QuickPickItemKind.Separator } : ({
     label: item.label, description: item.description, id: item.id,
     picked: hasRemembered ? remembered.has(item.id) : Boolean(item.picked)
   })), {
@@ -230,16 +236,26 @@ async function openCharacterSession(profile, context, provider) {
     for (const file of groupedCodeFiles(profile, sources)) opened.add(normalized(file));
     await open(sprite); for (const sound of sounds) await open(sound);
   }
+  if (selected.has('sprites') || selected.has('editAnimation')) {
+    if (sprite && fs.existsSync(sprite)) await open(sprite);
+    else vscode.window.showWarningMessage('Assign a sprite archive in the character DEF to open its sprites and palettes.');
+    if(cancelled())return;
+  }
   if (selected.has('animation')) {
     await open(sprite); await open(air);
     await vscode.commands.executeCommand('workbench.actions.view.problems');
     if(cancelled())return;
   }
-  if ((selected.has('essentials') || selected.has('animation')) && air) {
+  if ((selected.has('essentials') || selected.has('animation') || selected.has('editAnimation')) && air && fs.existsSync(air)) {
     const result = await vscode.commands.executeCommand('air.openAnimationPreview', vscode.Uri.file(air), { preserveFocus: true, sourceColumn: column, viewerColumn: assetColumn, ownerDef: profile.defPath });
     if(cancelled())return;
     const resolved = result?.panel?.viewColumn || result?.viewColumn;
     if (Number.isInteger(resolved) && resolved > 0) assetColumn = resolved;
+  }
+  if (selected.has('editAnimation') && (!air || !fs.existsSync(air))) vscode.window.showWarningMessage('Assign an AIR file in the character DEF to edit its animations.');
+  if (selected.has('moves') && !selected.has('attacks')) {
+    await vscode.commands.executeCommand('ikemen.moveLab.open', vscode.Uri.file(profile.defPath));
+    if(cancelled())return;
   }
   if (selected.has('attacks')) {
     await open(constants);
@@ -256,7 +272,16 @@ async function openCharacterSession(profile, context, provider) {
     for (const sound of [...sounds, ...localSounds]) await open(sound);
     if(cancelled())return;
   }
-  if (selected.has('code')) {
+  if (selected.has('source') && !selected.has('code')) {
+    const files = groupedCodeFiles(profile, [profile.defPath, ...(profile.connectedFiles || []).filter(file => categoryFor(file, profile) === 'Code')]);
+    const file = await vscode.window.showQuickPick(files.map(filename => ({
+      label: path.basename(filename), description: path.relative(profile.folder, filename), filename
+    })), { title: profile.name + ' — Edit character code', matchOnDescription: true });
+    if(cancelled())return;
+    if (file) await openFile(profile, file.filename, column, assetColumn);
+    if(cancelled())return;
+  }
+  if (selected.has('code') && !selected.has('essentials')) {
     const sources = (profile.connectedFiles || []).filter((filename) => categoryFor(filename, profile) === 'Code');
     const grouped = await openGroupedCode(profile, sources, 'character-all-code');
     if(cancelled())return;

@@ -13,7 +13,12 @@ function renderedPixelHash(png) {
 function selectByEvidence(archive, mode, current, references = new Map(), renderedHashes = new Map()) {
   const sprites = archive?.sprites || [];
   if (!current) return [];
-  if (mode === 'palette') return sprites.filter(sprite => sprite.paletteIndex === current.paletteIndex);
+  // RGB24/RGBA32 sprites store a palette-index field but never read a palette,
+  // so they are not palette users. Only indexed (5/8-bit) sprites match.
+  if (mode === 'palette') {
+    const indexed = sprite => [5, 8].includes(Number(sprite?.colorDepth)) && ![11, 12].includes(Number(sprite?.format));
+    return indexed(current) ? sprites.filter(sprite => indexed(sprite) && sprite.paletteIndex === current.paletteIndex) : [];
+  }
   if (mode === 'dimensions') return sprites.filter(sprite => sprite.width === current.width && sprite.height === current.height);
   if (mode === 'format') return sprites.filter(sprite => sprite.format === current.format && sprite.colorDepth === current.colorDepth);
   if (mode === 'referenced' || mode === 'unreferenced') return sprites.filter(sprite => Boolean((references.get(`${sprite.group},${sprite.number}`) || []).length) === (mode === 'referenced'));

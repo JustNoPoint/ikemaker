@@ -5,6 +5,8 @@ const { preferredViewerColumn, trackViewerPanel } = require('./viewer_group');
 const path = require('path');
 const fs = require('fs');
 const { parseZss, displayName } = require('./parser');
+const codeNavigatorModel = require('./code_navigator_model');
+const codeNavigatorAssignments = require('./code_navigator_assignments');
 const { documentOutline } = require('./zss_document_outline');
 const controllerCatalog = require('../data/sctrl.json');
 const stageDefCatalog = require('../data/stage-def-catalog.json');
@@ -161,6 +163,7 @@ function analyzerOptions(resource) {
     capabilities: activeCapabilityResolver(resource),
     syntaxDiagnostics: {
       enabled: config.get('diagnostics.syntax.enabled', true),
+      debugFloods: config.get('diagnostics.syntax.debugFloods', true),
       missingSemicolons: config.get('diagnostics.syntax.missingSemicolons', true),
       duplicateParameters: config.get('diagnostics.syntax.duplicateParameters', true),
       unknownControllers: config.get('diagnostics.syntax.unknownControllers', true),
@@ -186,7 +189,7 @@ function vscodeSeverity(severity) {
     suggestion: vscode.DiagnosticSeverity.Hint,
     information: vscode.DiagnosticSeverity.Information,
     hint: vscode.DiagnosticSeverity.Hint
-  }[severity] || vscode.DiagnosticSeverity.Warning;
+  }[severity] ?? vscode.DiagnosticSeverity.Warning;
 }
 
 function validationLevel(entry) {
@@ -202,23 +205,34 @@ function validationSettings(resource) {
   } catch (_) { return fallback; }
 }
 
+let diagnosticAssignments;
+const analyzedAssignedDocuments=new WeakSet();
+function assignedLegacyText(document) {
+  return document?.languageId==='plaintext' && /\.txt$/i.test(document.fileName||'') &&
+    Boolean(diagnosticAssignments?.ownersOf(document.fileName).length);
+}
+
 function analyzeDocument(document) {
   const defDocument=Boolean(document&&/\.def$/i.test(document.fileName || document.uri?.fsPath || ''));
-  if (!document || !['zss', 'ikemen-cns'].includes(document.languageId) && !defDocument) return { issues: [], records: {} };
+  const assigned=assignedLegacyText(document);
+  if (assigned) analyzedAssignedDocuments.add(document);
+  else if (document && analyzedAssignedDocuments.delete(document)) diagnosticCollection.delete(document.uri);
+  const filename=document?.fileName||document?.uri?.fsPath||'',languageId=assigned?'ikemen-cns':/\.zss$/i.test(filename)?'zss':/\.(?:cns|st)$/i.test(filename)?'ikemen-cns':document?.languageId;
+  if (!document || !['zss', 'ikemen-cns'].includes(languageId) && !defDocument) return { issues: [], records: {} };
   const options = analyzerOptions(document.uri), result = defDocument
     ? {issues:[...defMapCapabilityIssues(document.getText(),options.capabilities,document.fileName||document.uri?.fsPath||'character.def'),...defMapValueIssues(document.getText(),options.capabilities),...typedConstantIssues(document.getText(),options.capabilities,{legacy:true}),...missingFileIssues(document.getText(),document.fileName||document.uri?.fsPath||'character.def')],records:{}}
-    : document.languageId === 'zss'
+    : languageId === 'zss'
     ? analyzeZss(document.getText(), options)
     : { issues: [...analyzeCommandReferences(document.getText(), options.commandNames, { semicolonComments: true }),...typedConstantIssues(document.getText(),options.capabilities,{legacy:true})], records: {} };
-  if (!defDocument) result.issues.push(...basicSyntaxIssues(document.getText(), document.languageId, options.syntaxDiagnostics));
-  if (/\.(?:cmd|inp|jnp)$/i.test(document.fileName || document.uri?.fsPath || '')) result.issues.push(...commandDocumentTargetDiagnostics(document.getText(), { capabilities: options.capabilities }, document.fileName || document.uri?.fsPath || ''));
+  if (!defDocument) result.issues.push(...basicSyntaxIssues(document.getText(), languageId, options.syntaxDiagnostics));
+  if (require('./command_sequence_syntax').isCommandFile(document.fileName || document.uri?.fsPath || '')) result.issues.push(...require('./command_sequence_syntax').commandSequenceIssues(document.getText()), ...commandDocumentTargetDiagnostics(document.getText(), { capabilities: options.capabilities }, document.fileName || document.uri?.fsPath || ''));
   const settings = validationSettings(document.uri), diagnostics = result.issues.filter((entry) => validationLevels.enabled({ ...entry, level: validationLevel(entry) }, settings)).map((entry) => {
     const line = Math.min(entry.line, document.lineCount - 1);
     const max = document.lineAt(line).text.length;
     const range = new vscode.Range(line, Math.min(entry.start, max), line, Math.min(entry.start + entry.length, max));
     const diagnostic = new vscode.Diagnostic(range, entry.message, vscodeSeverity(validationLevel(entry)));
     diagnostic.code = entry.code;
-    diagnostic.source = `${defDocument ? 'IKEMEN DEF' : document.languageId === 'zss' ? 'IKEMEN ZSS' : 'IKEMEN CNS'} · ${require('./lua_target_catalog').targetLabel(options.capabilities)}`;
+    diagnostic.source = `${defDocument ? 'IKEMEN DEF' : languageId === 'zss' ? 'IKEMEN ZSS' : 'IKEMEN CNS'} · ${require('./lua_target_catalog').targetLabel(options.capabilities)}`;
     if (entry.help) diagnostic.relatedInformation = [new vscode.DiagnosticRelatedInformation(
       new vscode.Location(document.uri, range), entry.help
     )];
@@ -356,27 +370,76 @@ class ZssNavigator {
     this.context = context;
     this.changeEmitter = new vscode.EventEmitter();
     this.onDidChangeTreeData = this.changeEmitter.event;
+    // DEF-assigned code files with otherwise unrecognized extensions (GotenksZ2 st8 = config.txt).
+    this.assignments = typeof codeNavigatorAssignments !== 'undefined' ? new codeNavigatorAssignments.DefAssignmentIndex() : null;
+    if (this.assignments && typeof vscode.workspace.createFileSystemWatcher === 'function') {
+      const watcher = vscode.workspace.createFileSystemWatcher('**/*.def');
+      const changed = () => this.invalidateAssignments();
+      watcher.onDidCreate(changed); watcher.onDidChange(changed); watcher.onDidDelete(changed);
+      context?.subscriptions?.push?.(watcher);
+    }
   }
 
   refresh() {
     this.changeEmitter.fire(undefined);
   }
 
+  // Explicit Refresh command: also re-reads DEF [Files] assignments.
+  refreshAll() {
+    this.invalidateAssignments();
+  }
+
+  invalidateAssignments() {
+    this.assignments?.invalidate();
+    this.refresh();
+  }
+
+  // Cache-only; used by per-keystroke change handlers.
+  isKnownAssignedFile(file) {
+    return Boolean(this.assignments?.isKnownAssignedFile(file));
+  }
+
+  // Active ZSS / legacy CNS-family document, or an exact DEF-assigned code file.
+  activeCodeEntry() {
+    const document = vscode.window.activeTextEditor?.document;
+    if (!document) return undefined;
+    const format = codeNavigatorModel.navigatorFormat(document);
+    if (format) return { document, format, owners: [] };
+    if (!this.assignments || document.uri?.scheme && document.uri.scheme !== 'file' || !document.fileName) return undefined;
+    const owners = this.assignments.ownersOf(document.fileName);
+    return owners.length ? { document, format: 'legacy', owners } : undefined;
+  }
+
+  activeCodeDocument() {
+    return this.activeCodeEntry()?.document;
+  }
+
   activeZssDocument() {
-    const editor = vscode.window.activeTextEditor;
-    return editor && editor.document.languageId === 'zss' ? editor.document : undefined;
+    return this.activeCodeDocument();
+  }
+
+  symbolItem(node, uri) {
+    const item = new NavigatorItem(node.label, node.children.length ? vscode.TreeItemCollapsibleState.Collapsed : vscode.TreeItemCollapsibleState.None, {
+      nodeType: 'symbol', uri, line: node.line, contextValue: node.contextValue, childNodes: node.children
+    });
+    item.description = node.description;
+    if (node.tooltip) item.tooltip = node.tooltip;
+    item.iconPath = new vscode.ThemeIcon(node.icon);
+    item.command = { command: 'zssNavigator.reveal', title: 'Reveal Code Symbol', arguments: [item] };
+    return item;
   }
 
   async getChildren(element) {
     if (!element) {
       const roots = [];
-      const active = this.activeZssDocument();
+      const activeEntry = this.activeCodeEntry(), active = activeEntry?.document;
       if (active) {
         const current = new NavigatorItem(
           `Current: ${path.basename(active.fileName)}`,
           vscode.TreeItemCollapsibleState.Expanded,
-          { nodeType: 'document', uri: active.uri, contextValue: 'zssCurrentFile' }
+          { nodeType: 'document', uri: active.uri, contextValue: 'zssCurrentFile', format: activeEntry.format }
         );
+        if (activeEntry.owners.length) Object.assign(current, codeNavigatorAssignments.ownerSummary(activeEntry.owners));
         current.iconPath = new vscode.ThemeIcon('symbol-file');
         roots.push(current);
       }
@@ -384,20 +447,21 @@ class ZssNavigator {
       const config = vscode.workspace.getConfiguration('zssNavigator');
       if (config.get('showWorkspaceFiles', true) && vscode.workspace.workspaceFolders) {
         const workspace = new NavigatorItem(
-          'Workspace ZSS Files',
+          'Workspace Code Files',
           vscode.TreeItemCollapsibleState.Collapsed,
           { nodeType: 'workspace', contextValue: 'zssWorkspace' }
         );
+        workspace.description = codeNavigatorModel.SOURCE_SUMMARY;
         workspace.iconPath = new vscode.ThemeIcon('files');
         roots.push(workspace);
       }
       if (!roots.length) {
-        const empty = new NavigatorItem('Open a ZSS file or workspace folder to begin', vscode.TreeItemCollapsibleState.None,
+        const empty = new NavigatorItem('Open a ZSS, CNS, or CMD file or workspace folder to begin', vscode.TreeItemCollapsibleState.None,
           { nodeType: 'navigatorEmpty', contextValue: 'zssNavigatorEmpty' });
-        empty.description = 'no ZSS navigation source';
-        empty.tooltip = 'Open a ZSS source file, or add a workspace folder containing ZSS files.';
+        empty.description = 'no code navigation source';
+        empty.tooltip = `Open a code file (${codeNavigatorModel.SOURCE_SUMMARY}), or add a workspace folder containing one.`;
         empty.iconPath = new vscode.ThemeIcon('info');
-        empty.command = { command: 'workbench.action.files.openFile', title: 'Open a ZSS File' };
+        empty.command = { command: 'workbench.action.files.openFile', title: 'Open a Code File' };
         roots.push(empty);
       }
       return roots;
@@ -405,56 +469,75 @@ class ZssNavigator {
 
     if (element.nodeType === 'workspace') {
       const limit = vscode.workspace.getConfiguration('zssNavigator').get('maxWorkspaceFiles', 500);
-      const uris = await vscode.workspace.findFiles('**/*.zss', '**/{.git,node_modules}/**', limit);
-      if (!uris.length) {
-        const empty = new NavigatorItem('No ZSS files found in this workspace', vscode.TreeItemCollapsibleState.None,
+      const uris = await vscode.workspace.findFiles(codeNavigatorModel.WORKSPACE_GLOB, codeNavigatorModel.WORKSPACE_EXCLUDE, limit);
+      // DEF-assigned extras (e.g. st8 = config.txt). DEFs are scanned once per invalidation, not per refresh.
+      let assigned = [], merged = null;
+      if (this.assignments) {
+        if (!this.assignments.workspace) {
+          const defs = await vscode.workspace.findFiles('**/*.def', codeNavigatorModel.WORKSPACE_EXCLUDE, Math.min(limit, codeNavigatorAssignments.LIMITS.workspaceDefs));
+          this.assignments.indexWorkspace(defs.map(uri => uri.fsPath));
+        }
+        // Current owners first: an active DEF, or the proved owner DEF(s) of the active assigned file,
+        // even when the capped global DEF scan missed them. Recomputed on every expansion/refresh.
+        const activeDocument = vscode.window.activeTextEditor?.document;
+        const activeIsFile = activeDocument && !(activeDocument.uri?.scheme && activeDocument.uri.scheme !== 'file');
+        const priorityDefs = activeIsFile && /\.def$/i.test(activeDocument.fileName || '') ? [activeDocument.fileName]
+          : (this.activeCodeEntry()?.owners || []).map(row => row.owner);
+        merged = this.assignments.workspaceRows(priorityDefs);
+        const listed = new Set(uris.map(uri => uri.fsPath.toLowerCase()));
+        assigned = merged.rows.filter(row => !listed.has(row.file.toLowerCase()));
+      }
+      if (!uris.length && !assigned.length) {
+        const empty = new NavigatorItem('No ZSS, CNS, or CMD files found in this workspace', vscode.TreeItemCollapsibleState.None,
           { nodeType: 'navigatorWorkspaceEmpty', contextValue: 'zssNavigatorWorkspaceEmpty' });
-        empty.description = 'Open or create a ZSS file, then use Refresh.';
-        empty.tooltip = 'The current workspace folders contain no discoverable .zss files.';
+        empty.description = 'Open or create a code file, then use Refresh.';
+        empty.tooltip = `The current workspace folders contain no discoverable ${codeNavigatorModel.NAVIGABLE_EXTENSIONS.map(value => `.${value}`).join(', ')} files.`;
         empty.iconPath = new vscode.ThemeIcon('info');
-        empty.command = { command: 'workbench.action.files.openFile', title: 'Open a ZSS File' };
+        empty.command = { command: 'workbench.action.files.openFile', title: 'Open a Code File' };
         return [empty];
       }
-      return uris
-        .sort((a, b) => a.fsPath.localeCompare(b.fsPath))
-        .map((uri) => {
+      const entries = [
+        ...uris.map(uri => ({ uri, format: undefined, owners: [] })),
+        ...assigned.map(row => ({ uri: vscode.Uri.file(row.file), format: 'legacy', owners: merged.byFile.get(row.file.toLowerCase()) || [row] }))
+      ];
+      return entries
+        .sort((a, b) => a.uri.fsPath.localeCompare(b.uri.fsPath))
+        .map(({ uri, format, owners }) => {
           const relative = vscode.workspace.asRelativePath(uri, false);
           const item = new NavigatorItem(relative, vscode.TreeItemCollapsibleState.Collapsed, {
-            nodeType: 'document', uri, contextValue: 'zssFile'
+            nodeType: 'document', uri, contextValue: 'zssFile', format
           });
+          item.description = codeNavigatorModel.formatLabel(uri.fsPath);
           item.iconPath = new vscode.ThemeIcon('file-code');
           item.tooltip = uri.fsPath;
+          if (owners.length) {
+            const summary = codeNavigatorAssignments.ownerSummary(owners);
+            item.description = `${path.extname(uri.fsPath).slice(1).toUpperCase()} · ${summary.description}`;
+            item.tooltip = `${uri.fsPath}\n${summary.tooltip}`;
+          }
           return item;
         });
     }
 
     if (element.nodeType === 'document') {
       const document = await vscode.workspace.openTextDocument(element.uri);
-      const symbols = parseZss(document.getText());
-      if (!symbols.length) {
-        const empty = new NavigatorItem('No authored states or functions found', vscode.TreeItemCollapsibleState.None,
+      const format = element.format || codeNavigatorModel.navigatorFormat(document) || codeNavigatorModel.navigatorFormat({ fileName: element.uri?.fsPath })
+        || (this.assignments?.ownersOf(document.fileName || element.uri?.fsPath).length ? 'legacy' : 'zss');
+      const nodes = codeNavigatorModel.navigatorNodes(document.getText(), format);
+      if (!nodes.length) {
+        const notice = codeNavigatorModel.emptyDocumentNotice(format, document.fileName || element.uri?.fsPath);
+        const empty = new NavigatorItem(notice.label, vscode.TreeItemCollapsibleState.None,
           { nodeType: 'navigatorDocumentEmpty', contextValue: 'zssNavigatorDocumentEmpty' });
-        empty.description = 'Add a StateDef or Function, save, then use Refresh.';
-        empty.tooltip = `No navigable StateDef or Function declaration was parsed in ${path.basename(document.fileName || element.uri?.fsPath || 'this file')}.`;
+        empty.description = notice.description;
+        empty.tooltip = notice.tooltip;
         empty.iconPath = new vscode.ThemeIcon('info');
         return [empty];
       }
-      return symbols.map((symbol) => {
-        const item = new NavigatorItem(displayName(symbol), vscode.TreeItemCollapsibleState.None, {
-          nodeType: 'symbol', uri: document.uri, line: symbol.startLine,
-          contextValue: symbol.type === 'state' ? 'zssState' : 'zssFunction'
-        });
-        item.description = symbol.type === 'state' ? symbol.id : 'function';
-        item.iconPath = new vscode.ThemeIcon(
-          symbol.type === 'state' ? 'symbol-class' : 'symbol-function'
-        );
-        item.command = {
-          command: 'zssNavigator.reveal',
-          title: 'Reveal ZSS Symbol',
-          arguments: [item]
-        };
-        return item;
-      });
+      return nodes.map((node) => this.symbolItem(node, document.uri));
+    }
+
+    if (element.nodeType === 'symbol' && Array.isArray(element.childNodes)) {
+      return element.childNodes.map((node) => this.symbolItem(node, element.uri));
     }
 
     return [];
@@ -1516,7 +1599,7 @@ async function assignClsn2HitReactionRegion() {
 async function revealSymbol(item) {
   if (!item || !item.uri) {
     await focusIkemenView('zssNavigator');
-    return vscode.window.showInformationMessage('Choose a file and authored symbol in the ZSS Navigator to reveal it.');
+    return vscode.window.showInformationMessage('Choose a file and authored symbol in the Code Navigator to reveal it.');
   }
   const document = await vscode.workspace.openTextDocument(item.uri);
   const editor = await vscode.window.showTextDocument(document, { preview: false });
@@ -1662,6 +1745,7 @@ function activate(context) {
   const selector = { language: 'zss', scheme: 'file' };
   engineRuntime.initialize(context);
   const navigator = new ZssNavigator(context);
+  diagnosticAssignments=navigator.assignments;
   const persistedControllerCatalog = context.globalState.get('ikemenZss.controllerCatalog.v1', controllerCatalog);
   const persistedControllerNames = new Set((persistedControllerCatalog || []).map((item) => String(item?.name || '').toLowerCase()));
   const savedControllerCatalog = [...(persistedControllerCatalog || []), ...controllerCatalog.filter((item) => !persistedControllerNames.has(String(item?.name || '').toLowerCase()))];
@@ -1702,13 +1786,18 @@ function activate(context) {
   registerDefSemanticHighlighting(vscode, context);
   require('./def_outline').register(vscode, context);
   registerNativeDocumentOutlines(vscode, context);
+  require('./batch_cmd_detection').registerBatchCmdDetection(vscode, context);
   registerNavigationProviders(vscode, context, zssIndex, functionCatalog, stateCatalog, runtimeStringCapability);
   registerMutationHistory(context);
   registerDiagnosticExplanations(vscode, context);
   registerCommentAssistance(vscode, context);
+  require('./copied_layer_links').activate(context.workspaceState);
+  require('./authoring_links_workspace').register(vscode, context);
   registerTriggerExpressionPicker(vscode, context, runtimeStringCapability);
   registerFunctionCallPicker(vscode, context, functionCatalog, runtimeStringCapability);
   require('./coding_assistance_insights').register(vscode, context);
+  require('./debug_flood_actions').registerDebugFloodFixes(vscode,context,assignedLegacyText);
+  require('./cns_trigger_groups').registerTriggerFixes(vscode,context,assignedLegacyText);
   require('./unused_let_code_actions').registerUnusedLetCodeActions(vscode, context);
   require('./scoped_local_code_actions').registerScopedLocalCodeActions(vscode, context);
   require('./contextual_recommendation_code_actions').registerContextualRecommendationCodeActions(vscode, context, {
@@ -1811,14 +1900,17 @@ function activate(context) {
   registerArtistIntake(context);
   registerSffAssembly(context);
   context.subscriptions.push(require('./sff_writer_preference').register(context));
+  require('./sff_sheet_drafts').configure(context.globalStorageUri?.fsPath);
   require('./sff_creator_workspace').register(context);
   require('./sff_add_sprites_workspace').register(context);
+  context.subscriptions.push(vscode.commands.registerCommand('ikemen.fontLab.open', options => require('./font_lab').createFontLabPanel(vscode, context.extensionUri, options?.fsPath ? {} : options || {})));
   require('./shader_workshop_host').registerShaderWorkshop(context);
   registerProductionWorkflow(context);
   registerReleaseBuilder(context);
   registerTestSessionWorkspace(context);
   registerRelatedWork(context);
   require('./viewer_navigation').registerViewerNavigation(context);
+  require('./viewer_native_shortcuts').register(context, vscode);
   require('./viewer_sources').registerSources(context);
   require('./viewer_comparison').registerComparison(context);
   registerOfflineDocs(vscode, context);
@@ -1853,7 +1945,7 @@ function activate(context) {
     vscode.window.registerTreeDataProvider('zssNavigator', navigator),
     vscode.window.registerTreeDataProvider('zssStateControllers', controllers),
     vscode.window.registerTreeDataProvider('zssRegistry', registry),
-    vscode.commands.registerCommand('zssNavigator.refresh', () => navigator.refresh()),
+    vscode.commands.registerCommand('zssNavigator.refresh', () => navigator.refreshAll()),
     vscode.commands.registerCommand('zssNavigator.reveal', revealSymbol),
 		vscode.commands.registerCommand('zss.goToLine', goToLine),
 		vscode.commands.registerCommand('zss.toggleLineComment', () => vscode.commands.executeCommand('editor.action.commentLine')),
@@ -1921,12 +2013,17 @@ function activate(context) {
     vscode.window.onDidChangeActiveTextEditor((editor) => {
       navigator.refresh();
       controllers.refresh();
-      if (editor && (['zss', 'ikemen-cns'].includes(editor.document.languageId)||/\.def$/i.test(editor.document.fileName||''))) analyzeDocument(editor.document);
+      if (editor && (['zss', 'ikemen-cns'].includes(editor.document.languageId)||assignedLegacyText(editor.document)||/\.def$/i.test(editor.document.fileName||''))) analyzeDocument(editor.document);
     }),
     vscode.workspace.onDidSaveTextDocument((document) => {
       if (document.languageId === 'lua') controllers.refresh();
-      if (['zss', 'ikemen-cns'].includes(document.languageId)||/\.def$/i.test(document.fileName||'')) {
-        navigator.refresh();
+      // A saved DEF can change [Files] assignments (e.g. st8 = config.txt): re-read them once.
+      if (/\.def$/i.test(document.fileName || '')) {
+        navigator.invalidateAssignments();
+        for (const open of vscode.workspace.textDocuments || []) if (open.languageId==='plaintext' && /\.txt$/i.test(open.fileName||'')) analyzeDocument(open);
+      }
+      else if (codeNavigatorModel.navigatorRefreshNeeded(document, file => navigator.isKnownAssignedFile(file))) navigator.refresh();
+      if (['zss', 'ikemen-cns'].includes(document.languageId)||assignedLegacyText(document)||/\.def$/i.test(document.fileName||'')) {
         if (document.languageId === 'zss') registry.refresh();
         analyzeDocument(document);
       }
@@ -1935,8 +2032,8 @@ function activate(context) {
     }),
     vscode.workspace.onDidChangeTextDocument((event) => {
       if (event.document.languageId === 'lua') controllers.refresh();
-      if (['zss', 'ikemen-cns'].includes(event.document.languageId)||/\.def$/i.test(event.document.fileName||'')) {
-        navigator.refresh();
+      if (codeNavigatorModel.navigatorRefreshNeeded(event.document, file => navigator.isKnownAssignedFile(file))) navigator.refresh();
+      if (['zss', 'ikemen-cns'].includes(event.document.languageId)||assignedLegacyText(event.document)||/\.def$/i.test(event.document.fileName||'')) {
         scheduleAnalysis(event.document);
       }
       if (/\.(?:cmd|inp|jnp|def)$/i.test(event.document.fileName)) scheduleCommandReferenceAnalysis();

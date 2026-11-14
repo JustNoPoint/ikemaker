@@ -70,7 +70,10 @@ function existingStateDefs(sources, number) {
   for (const source of Array.isArray(sources) ? sources : []) {
     if (!source || source.available === false || typeof source.text !== 'string') continue;
     const filename = String(source.filename || '');
-    const languageId = source.languageId || source.syntax || (/\.cns$/i.test(filename) ? 'ikemen-cns' : 'zss');
+    const languageId = /\.(?:cns|st|cmd|txt)$/i.test(filename) ? 'ikemen-cns'
+      : /\.zss$/i.test(filename) ? 'zss'
+      : source.languageId === 'zss' || source.grammar === 'zss' || source.syntax === 'zss' ? 'zss'
+      : source.languageId === 'ikemen-cns' || source.grammar === 'cns' || source.syntax === 'cns' || /\.txt$/i.test(filename) ? 'ikemen-cns' : 'zss';
     const parsed = parseStateSource(source.text, filename, languageId);
     for (const declaration of parsed.declarations || []) {
       if (!declaration.dynamic && declaration.value === number) matches.push(Object.freeze({ filename, line: declaration.line, character: declaration.character, expression: declaration.expression }));

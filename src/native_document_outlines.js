@@ -76,7 +76,25 @@ function selection(vscode, document, line) {
   return new vscode.Range(bounded, 0, bounded, document.lineAt(bounded).text.length);
 }
 
+// Folding ranges for CNS/ST/CMD sections (StateDef blocks with their
+// [State] controllers nested inside) and AIR actions. Trailing blank lines and
+// the comment block that introduces the next section are left unfolded so the
+// next section's heading stays visible.
+function foldingRanges(parser, text) {
+  const lines = String(text || '').split(/\r?\n/), output = [];
+  const tail = (start, end) => { let last = end; while (last > start && (!lines[last].trim() || /^\s*;/.test(lines[last]))) last -= 1; return last; };
+  const add = (start, end) => { const last = tail(start, Math.min(end, lines.length - 1)); if (last > start) output.push({ start, end: last }); };
+  for (const entry of parser(text)) {
+    add(entry.line, entry.endLine);
+    for (const child of entry.children || []) add(child.line, child.endLine);
+  }
+  return output;
+}
+
 function registerNativeDocumentOutlines(vscode, context) {
+  const folding = parser => ({ provideFoldingRanges(document) {
+    return foldingRanges(parser, document.getText()).map(item => new vscode.FoldingRange(item.start, item.end, vscode.FoldingRangeKind?.Region));
+  } });
   const provider = parser => ({ provideDocumentSymbols(document) {
     return parser(document.getText()).map(entry => {
       const kind = entry.kind === 'action' ? (vscode.SymbolKind.Array ?? vscode.SymbolKind.Namespace) : entry.kind === 'stateDef' ? vscode.SymbolKind.Class : vscode.SymbolKind.Namespace;
@@ -87,8 +105,12 @@ function registerNativeDocumentOutlines(vscode, context) {
   } });
   context.subscriptions.push(
     vscode.languages.registerDocumentSymbolProvider({ language: 'ikemen-cns' }, provider(cnsOutline)),
-    vscode.languages.registerDocumentSymbolProvider({ language: 'ikemen-air' }, provider(airOutline))
+    vscode.languages.registerDocumentSymbolProvider({ language: 'ikemen-air' }, provider(airOutline)),
+    ...(typeof vscode.languages.registerFoldingRangeProvider === 'function' && typeof vscode.FoldingRange === 'function' ? [
+      vscode.languages.registerFoldingRangeProvider({ language: 'ikemen-cns' }, folding(cnsOutline)),
+      vscode.languages.registerFoldingRangeProvider({ language: 'ikemen-air' }, folding(airOutline))
+    ] : [])
   );
 }
 
-module.exports = { airOutline, cnsOutline, registerNativeDocumentOutlines, usefulComment };
+module.exports = { airOutline, cnsOutline, foldingRanges, registerNativeDocumentOutlines, usefulComment };

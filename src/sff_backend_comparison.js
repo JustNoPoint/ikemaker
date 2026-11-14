@@ -7,7 +7,7 @@
 const crypto = require('crypto');
 const { specificationHash } = require('./sff_build_specification');
 const { createBuiltInCompareCandidate } = require('./sff_builtin_backend');
-const { assertSffV21Png8 } = require('./sff_v21_strict_validator');
+const { assertSffV21Mixed } = require('./sff_v21_mixed_strict_validator');
 
 function sha256(value) { return crypto.createHash('sha256').update(value).digest('hex'); }
 
@@ -64,7 +64,7 @@ function semanticModel(validation) {
     physicalSpriteOrder: sprites.map((sprite) => `${sprite.group},${sprite.number}`),
     physicalPaletteOrder: palettes.map((palette) => `${palette.group},${palette.number}`),
     sprites: sprites.map((sprite) => {
-      const palette = palettes[sprite.paletteIndex];
+      const palette = sprite.colorDepth === 8 ? palettes[sprite.paletteIndex] : null;
       const resolvedPalette = palette ? resolvedEntry(palettes, palette.index) : null;
       return {
         physicalIndex: sprite.index,
@@ -74,6 +74,7 @@ function semanticModel(validation) {
         format: sprite.format,
         colorDepth: sprite.colorDepth,
         decodedIndexHash: sprite.decodedIndexHash,
+        ...(sprite.colorDepth === 24 || sprite.colorDepth === 32 ? { decodedPixelHash: sprite.decodedPixelHash } : {}),
         paletteAssignment: palette ? {
           physicalIndex: palette.index,
           identity: `${palette.group},${palette.number}`,
@@ -136,7 +137,7 @@ function compareSffBackends(input = {}, dependencies = {}) {
   const specification = input.specification;
   const initialSpecificationHash = assertCanonicalSpecification(specification);
   const sprMake2Bytes = requireBytes(input.sprMake2CandidateBytes, 'SprMake2 candidate');
-  const validate = dependencies.validate || assertSffV21Png8;
+  const validate = dependencies.validate || assertSffV21Mixed;
   const createBuiltIn = dependencies.createBuiltIn || createBuiltInCompareCandidate;
 
   // The built-in candidate is created and validated first. Pre-release

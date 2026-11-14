@@ -17,7 +17,9 @@ function adapt(surfaceId, capabilities = {}, options = {}) {
   const sourceCapabilities = options.capabilities || CAPABILITIES;
   const resolverIds = new Set(options.resolverIds || []);
   const slots = SLOTS.map((slot) => {
-    const capability = slot.id === 'restart'
+    const capability = slot.id === 'actions-search' && !capabilities[slot.actionId] && !capabilities[slot.id]
+      ? {enabled:true, dispatch:'command:ikemen.viewer.actionsSearch'}
+      : slot.id === 'restart'
       ? { enabled: true, dispatch: 'command:ikemen.restartRunning' }
       : slot.id === 'updates'
       ? { enabled: true, dispatch: 'command:ikemen.updates.checkAll' }

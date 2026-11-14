@@ -46,10 +46,12 @@ function normalizeExplod(input = {}) {
     position: pair(input.position), velocity: pair(input.velocity), acceleration: pair(input.acceleration),
     bindId: integer(input.bindId, -1), bindTime: integer(input.bindTime, 1), removeTime: integer(input.removeTime, -2),
     scale: pair(input.scale, [1, 1]), angle: number(input.angle), facing: number(input.facing, 1) < 0 ? -1 : 1,
+    ownerTransform:input.ownerTransform===true,
+    runtimeRendering:input.runtimeRendering==='grouped'?'grouped':'independent',syncLayer:integer(input.syncLayer,1)||1,
     spritePriority: integer(input.spritePriority), layerNo: integer(input.layerNo), onTop: bool(input.onTop),
     ownPalette: bool(input.ownPalette), palette: pair(input.palette).map((v) => integer(v)),
     transparency: cleanName(input.transparency, 'default').toLowerCase(), ignoreHitPause: bool(input.ignoreHitPause),
-    removeOnGetHit: bool(input.removeOnGetHit), localCoord: pair(input.localCoord, [320, 240]), scalePolicy: scalePolicy(input.scalePolicy),
+    removeOnGetHit: bool(input.removeOnGetHit), removeOnChangeState: bool(input.removeOnChangeState), localCoord: pair(input.localCoord, [320, 240]), scalePolicy: scalePolicy(input.scalePolicy),
     timeline: Array.isArray(input.timeline) ? input.timeline.map(normalizeEvent).sort((a, b) => a.tick - b.tick) : []
   };
 }
@@ -73,9 +75,9 @@ function zssParams(p, mode = 'create', event = null) {
   const src = event || p, lines = [`id: ${p.id}`];
   if (mode === 'create') lines.push(`anim: ${p.anim}`, `space: ${p.space}`, `postype: ${p.anchor}`);
   if (mode !== 'remove') {
-    lines.push(`pos: ${compact(src.position[0])}, ${compact(src.position[1])}`);
+    lines.push(`pos: ${compact(src.position[0])}${p.ownerTransform?' * const(size.xscale) * scale x':''}, ${compact(src.position[1])}${p.ownerTransform?' * const(size.yscale) * scale y':''}`);
     if (mode === 'create' || event) lines.push(`vel: ${compact(src.velocity[0])}, ${compact(src.velocity[1])}`, `accel: ${compact(src.acceleration[0])}, ${compact(src.acceleration[1])}`);
-    if (mode === 'create') lines.push(`bindid: ${p.bindId}`, `bindtime: ${p.bindTime}`, `removetime: ${p.removeTime}`, `scale: ${compact(p.scale[0])}, ${compact(p.scale[1])}`, `angle: ${compact(p.angle)}`, `facing: ${p.facing}`, `sprpriority: ${p.spritePriority}`, `layerno: ${p.layerNo}`, `ontop: ${p.onTop ? 1 : 0}`, `ownpal: ${p.ownPalette ? 1 : 0}`, `ignorehitpause: ${p.ignoreHitPause ? 1 : 0}`, `removeongethit: ${p.removeOnGetHit ? 1 : 0}`);
+    if (mode === 'create') lines.push(`bindid: ${p.bindId}`, `bindtime: ${p.bindTime}`, `removetime: ${p.removeTime}`, `scale: ${compact(p.scale[0])}${p.ownerTransform?' * const(size.xscale) * scale x':''}, ${compact(p.scale[1])}${p.ownerTransform?' * const(size.yscale) * scale y':''}`, `angle: ${compact(p.angle)}`, `facing: ${p.facing}`, `sprpriority: ${p.runtimeRendering==='grouped'?'sprpriority':p.spritePriority}`, `layerno: ${p.runtimeRendering==='grouped'?'layerno':p.layerNo}`, `ontop: ${p.runtimeRendering==='grouped'?0:p.onTop?1:0}`, `ownpal: ${p.ownPalette ? 1 : 0}`, `ignorehitpause: ${p.ignoreHitPause ? 1 : 0}`, `removeongethit: ${p.removeOnGetHit ? 1 : 0}`, `removeonchangestate: ${p.removeOnChangeState ? 1 : 0}`,`syncid: ${p.runtimeRendering==='grouped'?-1:0}`,`synclayer: ${p.syncLayer}`, 'syncparams: 0');
     if (p.palette[0] || p.palette[1]) lines.push(`remappal: ${p.palette[0]}, ${p.palette[1]}`);
     if (p.transparency !== 'default') lines.push(`trans: ${p.transparency}`);
   }
@@ -90,6 +92,7 @@ function zssExplod(input) {
     if (e.type === 'bind') out.push(`if time = ${e.tick} { explodBindTime{id: ${p.id}; time: ${e.bindTime}} }`);
     if (e.type === 'remove') out.push(`if time = ${e.tick} { removeExplod{id: ${p.id}} }`);
   }
+  if(p.runtimeRendering==='grouped')out.push(`ignorehitpause if numExplod(${p.id}) {modifyExplod{id: ${p.id}; sprpriority: sprpriority; layerno: layerno; under: isAsserted(drawunder);}}`);
   return out.join('\n');
 }
 
@@ -100,12 +103,12 @@ function cnsExplodParams(p, event = null) {
   const src = event || p;
   const params = [
     `anim = ${p.anim}`, `ID = ${p.id}`, `space = ${p.space}`, `postype = ${p.anchor}`,
-    `pos = ${src.position.map(compact).join(', ')}`, `vel = ${src.velocity.map(compact).join(', ')}`,
+    `pos = ${compact(src.position[0])}${p.ownerTransform?' * Const(size.xscale) * Scale X':''}, ${compact(src.position[1])}${p.ownerTransform?' * Const(size.yscale) * Scale Y':''}`, `vel = ${src.velocity.map(compact).join(', ')}`,
     `accel = ${src.acceleration.map(compact).join(', ')}`, `bindid = ${p.bindId}`, `bindtime = ${p.bindTime}`,
-    `removetime = ${p.removeTime}`, `scale = ${p.scale.map(compact).join(', ')}`, `angle = ${compact(p.angle)}`,
-    `facing = ${p.facing}`, `sprpriority = ${p.spritePriority}`, `layerno = ${p.layerNo}`,
-    `ontop = ${p.onTop ? 1 : 0}`, `ownpal = ${p.ownPalette ? 1 : 0}`,
-    `ignorehitpause = ${p.ignoreHitPause ? 1 : 0}`, `removeongethit = ${p.removeOnGetHit ? 1 : 0}`
+    `removetime = ${p.removeTime}`, `scale = ${compact(p.scale[0])}${p.ownerTransform?' * Const(size.xscale) * Scale X':''}, ${compact(p.scale[1])}${p.ownerTransform?' * Const(size.yscale) * Scale Y':''}`, `angle = ${compact(p.angle)}`,
+    `facing = ${p.facing}`, `sprpriority = ${p.runtimeRendering==='grouped'?'SprPriority':p.spritePriority}`, `layerno = ${p.runtimeRendering==='grouped'?'LayerNo':p.layerNo}`,
+    `ontop = ${p.runtimeRendering==='grouped'?0:p.onTop?1:0}`, `ownpal = ${p.ownPalette ? 1 : 0}`,
+    `ignorehitpause = ${p.ignoreHitPause ? 1 : 0}`, `removeongethit = ${p.removeOnGetHit ? 1 : 0}`, `removeonchangestate = ${p.removeOnChangeState ? 1 : 0}`,`syncid = ${p.runtimeRendering==='grouped'?-1:0}`,`synclayer = ${p.syncLayer}`, 'syncparams = 0'
   ];
   if (p.palette[0] || p.palette[1]) params.push(`remappal = ${p.palette[0]}, ${p.palette[1]}`);
   if (p.transparency.toLowerCase() !== 'default') params.push(`trans = ${p.transparency}`);
@@ -126,6 +129,7 @@ function cnsExplod(input) {
     if (e.type === 'bind') out.push(cnsBlock(p.name, 'ExplodBindTime', trigger, [`ID = ${p.id}`, `time = ${e.bindTime}`]));
     if (e.type === 'remove') out.push(cnsBlock(p.name, 'RemoveExplod', trigger, [`ID = ${p.id}`]));
   }
+  if(p.runtimeRendering==='grouped')out.push(cnsBlock(p.name+' owner draw group','ModifyExplod',`NumExplod(${p.id})`,[`ID = ${p.id}`,'sprpriority = SprPriority','layerno = LayerNo','under = IsAsserted(DrawUnder)',`ignorehitpause = ${p.ignoreHitPause?1:0}`]));
   return out.join('\n\n');
 }
 

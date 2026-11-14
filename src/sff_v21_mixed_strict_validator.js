@@ -24,14 +24,14 @@ function resolve(rows, index, label) { const seen = new Set(); let row = rows[in
 function rgb(decoded) { const out = Buffer.alloc(decoded.width * decoded.height * 3); for (let i = 0, j = 0; i < decoded.rgba.length; i += 4) { out[j++] = decoded.rgba[i]; out[j++] = decoded.rgba[i + 1]; out[j++] = decoded.rgba[i + 2]; } return out; }
 
 function parseHeader(bytes) {
-  if (!Buffer.isBuffer(bytes) || bytes.length < 64) fail('archive is truncated.');
+  if (!Buffer.isBuffer(bytes) || bytes.length < 512) fail('archive is truncated.');
   if (!bytes.subarray(0, 12).equals(SIGNATURE)) fail('signature is invalid.');
   if (!bytes.subarray(12, 16).equals(VERSION_21) || !bytes.subarray(24, 28).equals(VERSION_21)) fail('primary or compatible version is not SFF 2.1.');
   if (bytes.subarray(16, 24).some(value => value !== 0) || bytes.subarray(28, 36).some(value => value !== 0)) fail('reserved header bytes must be zero.');
   const header = { spriteTable: bytes.readUInt32LE(36), spriteCount: bytes.readUInt32LE(40), paletteTable: bytes.readUInt32LE(44), paletteCount: bytes.readUInt32LE(48), literalData: bytes.readUInt32LE(52), literalLength: bytes.readUInt32LE(56), translatedData: bytes.readUInt32LE(60) };
   end(header.paletteTable, header.paletteCount * 16, bytes.length, 'palette table'); end(header.spriteTable, header.spriteCount * 28, bytes.length, 'sprite table');
-  if (header.paletteTable !== 64 || header.spriteTable !== header.paletteTable + header.paletteCount * 16 || header.literalData !== header.spriteTable + header.spriteCount * 28) fail('canonical tables must be contiguous and must not overlap.');
-  if (header.literalData < 64 || end(header.literalData, header.literalLength, bytes.length, 'literal-data section') !== bytes.length || header.translatedData !== bytes.length) fail('canonical data-section offsets or archive length are invalid.');
+  if (header.paletteTable !== 512 || header.spriteTable !== header.paletteTable + header.paletteCount * 16 || header.literalData !== header.spriteTable + header.spriteCount * 28) fail('canonical tables must be contiguous and must not overlap.');
+  if (bytes.readUInt32LE(64) !== 0 || header.literalData < 512 || end(header.literalData, header.literalLength, bytes.length, 'literal-data section') !== bytes.length || header.translatedData !== bytes.length) fail('canonical data-section offsets or archive length are invalid.');
   return header;
 }
 
@@ -98,7 +98,10 @@ function assertSffV21Mixed(input, specification, options = {}) {
     const table = bytes.readUInt32LE(36), count = bytes.readUInt32LE(40);
     if (table >= 64 && table + count * 28 <= bytes.length && Array.from({ length: count }, (_, index) => bytes[table + index * 28 + 14]).every(format => format === 10)) return assertSffV21Png8(input, null, options);
   }
-  if (options.compatibilityProfile && options.compatibilityProfile !== 'canonical') fail('mixed PNG validation currently accepts canonical native archives only.');
+  // The production SprMake2 preservation transport also validates mixed files.
+  // Accept its profile label while retaining the same exact layout, payload,
+  // palette and decoded-pixel checks; broader external layouts still refuse.
+  if (options.compatibilityProfile && !['canonical', 'sprmake2-v2.1'].includes(options.compatibilityProfile)) fail('unknown mixed PNG compatibility profile.');
   const limits = { sprites: 1000000, palettes: 65536, decodedPixels: 100000000, decodedPixelsTotal: 100000000, ...(options.limits || {}) };
   const header = parseHeader(bytes);
   if (header.spriteCount > limits.sprites || header.paletteCount > limits.palettes) fail('sprite or palette count exceeds the configured limit.');
@@ -108,7 +111,7 @@ function assertSffV21Mixed(input, specification, options = {}) {
   for (const range of ranges) { if (range.start !== cursor) fail('stored data blocks overlap or leave unreviewed gaps.'); cursor = range.end; }
   if (cursor !== bytes.length) fail('stored data blocks do not cover the literal-data section.');
   if (specification) validateSpecification(specification, sprites, palettes);
-  return { ok: true, kind: 'sff-v2.1-mixed-png', profile: PROFILE, compatibilityProfile: 'canonical', header, sprites, palettes, evidence: { archiveByteHash: sha(bytes), spriteCount: sprites.length, paletteCount: palettes.length }, physicalOrder: sprites.map(row => ({ index: row.index, group: row.group, number: row.number, pixelKind: row.pixelKind, decodedHash: row.decodedHash })) };
+  return { ok: true, kind: 'sff-v2.1-mixed-png', profile: PROFILE, compatibilityProfile: options.compatibilityProfile || 'canonical', header, sprites, palettes, evidence: { archiveByteHash: sha(bytes), spriteCount: sprites.length, paletteCount: palettes.length }, physicalOrder: sprites.map(row => ({ index: row.index, group: row.group, number: row.number, pixelKind: row.pixelKind, decodedHash: row.decodedHash })) };
 }
 
 module.exports = { SFF_V21_MIXED_VALIDATOR_ID: ID, SFF_V21_MIXED_VALIDATOR_VERSION: VERSION, SFF_V21_MIXED_VALIDATOR_PROFILE: PROFILE, FORMAT_PNG8: 10, FORMAT_PNG24: 11, FORMAT_PNG32: 12, assertSffV21Mixed };

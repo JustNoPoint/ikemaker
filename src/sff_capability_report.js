@@ -6,7 +6,7 @@ const { validateCertificationEvidence } = require('./sff_runtime_certification')
 
 const SFF_CAPABILITY_REPORT_VERSION = 1;
 const SUPPORT_STATES = Object.freeze(['supported', 'unsupported', 'unproven']);
-const DISPLAY_STATUSES = Object.freeze(['Built-in Certified', 'Built-in Experimental', 'External Ready', 'External Needs Runner', 'Unavailable']);
+const DISPLAY_STATUSES = Object.freeze(['Built-in Certified', 'Windows verified; Linux unverified', 'Built-in Experimental', 'External Ready', 'External Needs Runner', 'Unavailable']);
 
 function canonicalize(value, label = 'value', ancestors = new Set()) {
   if (value === null || typeof value === 'string' || typeof value === 'boolean') return value;
@@ -71,11 +71,12 @@ function backendStatus(backend, evidence = {}, selectedTargetId = null) {
   const targetId = selectedTargetId || (backend.targetIds.length === 1 ? backend.targetIds[0] : null);
   if (backend.kind === 'built-in') {
     const available = backend.implemented === true && evidence.implementationAvailable !== false;
-    const certified = available && certificationPassed(evidence.certification, backend, targetId);
+    const certification = available ? validateCertificationEvidence(backend, targetId, evidence.certification || {}) : null, certified = certification?.valid === true;
     return deepFreeze({
-      display: !available ? 'Unavailable' : certified ? 'Built-in Certified' : 'Built-in Experimental',
+      display: !available ? 'Unavailable' : certified ? certification.validation.crossPlatformGateSatisfied ? 'Built-in Certified' : 'Windows verified; Linux unverified' : 'Built-in Experimental',
       availability: available ? 'available' : 'unavailable',
-      certification: certified ? 'certified' : available ? 'unproven' : 'unavailable'
+      certification: certified ? 'certified' : available ? 'unproven' : 'unavailable',
+      ...(certified ? { certificationScope: certification.validationScope, unverifiedPlatforms: certification.validation.unverifiedPlatforms } : {})
     });
   }
 

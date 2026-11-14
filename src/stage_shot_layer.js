@@ -1,0 +1,5 @@
+'use strict';
+function validShotLayer(value){return value===undefined||value===null||Boolean(value&&Object.keys(value).sort().join('|')==='id|name|type'&&typeof value.name==='string'&&value.name.length<=1024&&typeof value.type==='string'&&value.type.length<=64&&(value.id===null||(Number.isInteger(value.id)&&value.id>=-2147483648&&value.id<=2147483647)));}
+function shotLayerReference(backgrounds,index){const item=backgrounds[index];return item?{name:item.name,id:item.id,type:item.type}:null;}
+function resolveShotLayer(backgrounds,reference){if(!reference)return{index:null,notice:''};const matches=[];for(let i=0;i<backgrounds.length;i++){const item=backgrounds[i];if(item.name===reference.name&&item.id===reference.id&&item.type===reference.type)matches.push(i);}return matches.length===1?{index:matches[0],notice:''}:{index:null,notice:matches.length?'Saved background identity is ambiguous; current selection kept.':'Saved background is unavailable; current selection kept.'};}
+module.exports={validShotLayer,shotLayerReference,resolveShotLayer};

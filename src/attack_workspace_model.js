@@ -20,7 +20,7 @@ function fieldExplanation(field) {
   const direct = {
     moveID: 'The move identity used to connect this profile to its StateDef and AIR action. It is a number, not a duration.',
     firstActiveElement: 'The first AIR element treated as active. Elements are counted from 1; this is not a game tick.',
-    idleElement: 'The first recovery or idle AIR element. Elements before this remain inside the authored attack window.',
+    idleElement: 'The first element after the authored attack window. This marker does not prove when ordinary control returns or a cancel becomes available.',
     hitPauseAnimateStartElement: 'The first AIR element allowed to advance during hit pause. Zero disables the smear range.',
     hitPauseFreezeElement: 'The AIR element that holds after the hit-pause smear finishes.',
     hitPauseAnimateTicks: 'How many 60 Hz game ticks the authored smear range consumes before it freezes.',
@@ -56,8 +56,8 @@ function timingProblems(move) {
   const frames = timeline.frames || [], first = Number(move.values.firstActiveElement), idle = Number(move.values.idleElement);
   if (!frames.length) { add('error', 'The linked AIR action has no elements', 'Add at least one AIR element before authoring attack timing.'); return problems; }
   if (Number.isFinite(first) && (first < 1 || first > frames.length)) add('error', 'First active element is outside the AIR action', `firstActiveElement is ${first}, but the action has ${frames.length} element(s).`, null, 'firstActiveElement');
-  if (Number.isFinite(idle) && (idle < 1 || idle > frames.length + 1)) add('error', 'Recovery element is outside the AIR action', `idleElement is ${idle}, but the action has ${frames.length} element(s).`, null, 'idleElement');
-  if (Number.isFinite(first) && Number.isFinite(idle) && idle <= first) add('error', 'Recovery begins before the active window can finish', `idleElement (${idle}) must come after firstActiveElement (${first}).`, null, 'idleElement');
+  if (Number.isFinite(idle) && (idle < 1 || idle > frames.length + 1)) add('error', 'Post-window element is outside the AIR action', `idleElement is ${idle}, but the action has ${frames.length} element(s).`, null, 'idleElement');
+  if (Number.isFinite(first) && Number.isFinite(idle) && idle <= first) add('error', 'Post-window element precedes the active start', `idleElement (${idle}) must come after firstActiveElement (${first}).`, null, 'idleElement');
   if (Number.isFinite(first) && Number.isFinite(idle) && first >= 1 && idle > first) {
     const end = Math.min(frames.length, idle - 1), missing = [];
     for (let index = first - 1; index < end; index += 1) if (!(frames[index].clsn1 || []).length) missing.push(index);

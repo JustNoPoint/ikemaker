@@ -2,13 +2,21 @@
 
 const path = require('path');
 const model = require('./statedef_authoring');
+const { malformedAssignedCnsText } = require('./assigned_state_text_dialect');
 
-function supported(document) {
-  if (!document) return false;
-  if (document.languageId === 'zss') return true;
-  return document.languageId === 'ikemen-cns' && /\.(?:cns|st)$/i.test(document.fileName || '');
+function assignedCodeEntry(document, catalog) {
+  const filename = document?.fileName;
+  if (!filename || !/\.(?:txt|cmd)$/i.test(filename)) return null;
+  return (catalog?.entries || []).find(entry => normalizeFilename(entry.filename) === normalizeFilename(filename)) || null;
 }
-function grammar(document) { return document?.languageId === 'ikemen-cns' ? 'cns' : 'zss'; }
+function supported(document, catalog) {
+  if (!document) return false;
+  if (/\.zss$/i.test(document.fileName || '')) return true;
+  if (/\.(?:cns|st)$/i.test(document.fileName || '')) return true;
+  if (assignedCodeEntry(document, catalog)) return !/\.txt$/i.test(document.fileName || '') || !malformedAssignedCnsText(document.getText());
+  return !path.extname(document.fileName || '') && ['zss','ikemen-cns'].includes(document.languageId);
+}
+function grammar(document, catalog) { return /\.(?:cns|st|cmd|txt)$/i.test(document?.fileName || '') ? 'cns' : /\.zss$/i.test(document?.fileName || '') ? 'zss' : document?.languageId === 'ikemen-cns' ? 'cns' : 'zss'; }
 function normalizeFilename(filename) { return path.resolve(String(filename || '.')).toLowerCase(); }
 
 function suggestedStateNumber(text, offset) {
@@ -31,9 +39,9 @@ function exactSources(document, catalog) {
     const filename = source?.filename || source?.fileName;
     if (!filename || typeof source.text !== 'string') return;
     const key = normalizeFilename(filename); if (seen.has(key)) return; seen.add(key);
-    records.push({ filename, languageId: source.languageId || source.syntax || (/\.(?:cns|st)$/i.test(filename) ? 'ikemen-cns' : 'zss'), text: source.text, available: source.available !== false });
+    records.push({ filename, languageId: /\.(?:cns|st|cmd|txt)$/i.test(filename) ? 'ikemen-cns' : /\.zss$/i.test(filename) ? 'zss' : source.languageId === 'ikemen-cns' || source.grammar === 'cns' || source.syntax === 'cns' ? 'ikemen-cns' : 'zss', text: source.text, available: source.available !== false });
   };
-  add({ filename: document.fileName, languageId: document.languageId, text: document.getText() });
+  add({ filename: document.fileName, languageId: document.languageId, grammar: grammar(document,catalog), text: document.getText() });
   for (const entry of catalog?.entries || []) add(entry);
   return records;
 }
@@ -58,11 +66,12 @@ async function openExisting(vscode, match) {
 
 async function createStateDef(vscode, options = {}) {
   const editor = vscode.window.activeTextEditor, document = editor?.document;
-  if (!supported(document)) return vscode.window.showWarningMessage('Open a writable ZSS, CNS, or ST source before creating a StateDef.');
+  if (!document) return vscode.window.showWarningMessage('Open a writable ZSS, CNS, or assigned state source before creating a StateDef.');
   const sourceUri = document.uri.toString(), sourceVersion = document.version, sourceText = document.getText();
   const unchanged = () => !document.isClosed && document.uri.toString() === sourceUri && document.version === sourceVersion && document.getText() === sourceText;
   let catalog = null;
   try { catalog = await options.getStateCatalog?.(document); } catch (_) {}
+  if (!supported(document,catalog)) return vscode.window.showWarningMessage('Open a writable ZSS, CNS, ST, or DEF-assigned TXT/CMD state source before creating a StateDef.');
   const sources = exactSources(document, catalog), inventoryComplete = Boolean(catalog?.complete);
   let number;
   while (number === undefined) {
@@ -115,13 +124,13 @@ async function createStateDef(vscode, options = {}) {
       const value = await vscode.window.showInputBox({ title: `${controllerName}.${parameter.name}`, prompt: parameter.required ? 'Required controller argument.' : 'Selected optional controller argument.', placeHolder: parameter.placeholder || 'value', validateInput: input => input.trim() ? undefined : `Enter a reviewed value for ${parameter.name}.` });
       if (value === undefined) return null; values[parameter.name] = value;
     }
-    condition = await vscode.window.showInputBox({ title: `${controllerName} · Condition`, prompt: grammar(document) === 'cns' ? 'Optional trigger1 expression. Blank uses trigger1 = 1.' : 'Optional condition. Blank inserts the controller unconditionally.', value: '' });
+    condition = await vscode.window.showInputBox({ title: `${controllerName} · Condition`, prompt: grammar(document,catalog) === 'cns' ? 'Optional trigger1 expression. Blank uses trigger1 = 1.' : 'Optional condition. Blank inserts the controller unconditionally.', value: '' });
     if (condition === undefined) return null;
   }
-  const experienceKey = document.languageId === 'ikemen-cns' ? 'experience.cns' : 'experience.zss';
+  const experienceKey = grammar(document,catalog) === 'cns' ? 'experience.cns' : 'experience.zss';
   const experience = vscode.workspace.getConfiguration('ikemenZss', document.uri).get(experienceKey, 'learning');
   let plan;
-  try { plan = model.createStateDefPlan({ language: grammar(document), number, name, stateType, moveType, physics, anim, ctrl, controllerName, optionalNames, values, condition, experience }, { catalog: controllerCatalog, capabilities, sources }); }
+  try { plan = model.createStateDefPlan({ language: grammar(document,catalog), number, name, stateType, moveType, physics, anim, ctrl, controllerName, optionalNames, values, condition, experience }, { catalog: controllerCatalog, capabilities, sources }); }
   catch (error) { await vscode.window.showErrorMessage(`StateDef was not created: ${error.message}`); return null; }
   const inventoryNote = inventoryComplete ? 'Duplicate check: complete assigned runtime state inventory.' : 'Duplicate check: current and available sources only; the owning runtime inventory is incomplete.';
   const scopeNote = number < 0 ? 'Scope: negative StateDef — global/shared hook. Runtime ownership is not inferred.' : 'Scope: ordinary nonnegative StateDef.';
@@ -141,4 +150,4 @@ function register(vscode, context, options = {}) {
   context.subscriptions.push(vscode.commands.registerCommand('ikemen.statedef.create', () => createStateDef(vscode, options)));
 }
 
-module.exports = { supported, grammar, suggestedStateNumber, exactSources, createStateDef, register };
+module.exports = { supported, grammar, assignedCodeEntry, suggestedStateNumber, exactSources, createStateDef, register };

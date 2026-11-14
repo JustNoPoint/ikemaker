@@ -415,6 +415,47 @@ function moveFrameElementPatch(text, options) {
   };
 }
 
+function moveFrameBlockPatch(text, options) {
+  const source = String(text || ''), actionNumber = integerField(options.action, 'Action number'), ownership = frameElementRanges(source, actionNumber), blocks = ownership.blocks;
+  const indices = options.frameIndices;
+  if (!Array.isArray(indices) || !indices.length || indices.some(index => !Number.isSafeInteger(index) || index < 0 || index >= blocks.length) || new Set(indices).size !== indices.length) throw new Error('Choose distinct current AIR elements to move.');
+  const chosen = new Set(indices), moving = blocks.map((_, index) => index).filter(index => chosen.has(index)), remaining = blocks.map((_, index) => index).filter(index => !chosen.has(index));
+  const position = options.position;
+  if (!Number.isSafeInteger(position) || position < 1 || position > remaining.length + 1) throw new Error(`Choose a destination position from 1 to ${remaining.length + 1}.`);
+  const order = [...remaining.slice(0, position - 1), ...moving, ...remaining.slice(position - 1)];
+  const changedPositions = order.map((index, position) => index === position ? -1 : position).filter(position => position >= 0);
+  if (!changedPositions.length) throw new Error('The selected AIR elements are already at that position.');
+  const newPosition = new Map(order.map((original, slot) => [original, slot]));
+  let highestOriginalBeforeBoundary = -1;
+  for (let boundary = 1; boundary < blocks.length; boundary += 1) {
+    highestOriginalBeforeBoundary = Math.max(highestOriginalBeforeBoundary, order[boundary - 1]);
+    if (!blocks[boundary].boundaryBefore.length) continue;
+    if (highestOriginalBeforeBoundary >= boundary) throw new Error(`This move crosses ${blocks[boundary].boundaryBefore.join('; ')}. Use AIR Source to review that boundary.`);
+  }
+  const first = changedPositions[0], last = changedPositions[changedPositions.length - 1];
+  for (let index = first; index < last; index += 1) {
+    const gap = source.slice(blocks[index].end, blocks[index + 1].start);
+    if (gap.trim()) throw new Error(`An unattached comment or directive lies between AIR elements ${index + 1} and ${index + 2}. Review its ownership in AIR Source before reordering.`);
+  }
+  const ending = value => { const match = /(\r\n|\r|\n)$/.exec(value); return match ? match[0] : ''; };
+  let replacement = '';
+  for (let slot = first; slot <= last; slot += 1) {
+    const body = blocks[order[slot]].text.replace(/(\r\n|\r|\n)$/, '');
+    replacement += body + ending(blocks[slot].text);
+    if (slot < last) replacement += source.slice(blocks[slot].end, blocks[slot + 1].start);
+  }
+  const patch = { start: blocks[first].start, end: blocks[last].end, text: replacement }, updated = applyActionPatches(source, [patch]);
+  const next = frameElementRanges(updated, actionNumber), expected = order.map(index => frameSemantic(ownership.action.frames[index])), actual = next.action.frames.map(frameSemantic);
+  const comparable = frames => JSON.stringify(frames, (key, value) => key === 'line' ? undefined : value);
+  if (comparable(actual) !== comparable(expected)) throw new Error('The moved AIR would change frame or collision semantics. Review this action in AIR Source.');
+  const loopMarkers = blocks.reduce((count, block) => count + block.loopStart, 0);
+  if (loopMarkers > 1) throw new Error(`Action ${actionNumber} has more than one LoopStart marker; reorder it in AIR Source.`);
+  if (loopMarkers) { const owner = blocks.findIndex(block => block.loopStart); if (next.action.loopStart !== newPosition.get(owner)) throw new Error('LoopStart ownership could not be preserved; reorder this action in AIR Source.'); }
+  const active = Number.isSafeInteger(options.activeFrameIndex) && chosen.has(options.activeFrameIndex) ? options.activeFrameIndex : moving[0];
+  const firstHold = frames => frames.findIndex(frame => frame.rawTime === -1);
+  return { ...patch, action: actionNumber, from: active, to: newPosition.get(active), selectedIndices: moving.map(index => newPosition.get(index)), changedPositions, count: moving.length, loopStartBefore: loopMarkers ? ownership.action.loopStart : null, loopStartAfter: loopMarkers ? next.action.loopStart : null, holdBefore: firstHold(ownership.action.frames), holdAfter: firstHold(next.action.frames), interpolationCount: changedPositions.reduce((count, index) => count + blocks[index].interpolation.length, 0) };
+}
+
 function sourceLines(text) {
   const source = String(text || ''), records = []; let start = 0, match;
   const eols = /\r\n|\r|\n/g;
@@ -609,4 +650,4 @@ function selectionAtLine(text, lineZeroBased) {
   return null;
 }
 
-module.exports = { parseAir, updateCollisionBlock, updateCollisionBlocks, updateFrameElement, updateFrameDirectives, insertFrameElement, deleteFrameElement, frameElementRanges, moveFrameElementPatch, actionSourceRanges, createActionPatch, duplicateActionPatch, deleteActionPatches, applyActionPatches, requireActionMutationBaseline, deleteActions, actionAtLine, selectionAtLine };
+module.exports = { parseAir, updateCollisionBlock, updateCollisionBlocks, updateFrameElement, updateFrameDirectives, insertFrameElement, deleteFrameElement, frameElementRanges, moveFrameElementPatch, moveFrameBlockPatch, actionSourceRanges, createActionPatch, duplicateActionPatch, deleteActionPatches, applyActionPatches, requireActionMutationBaseline, deleteActions, actionAtLine, selectionAtLine };

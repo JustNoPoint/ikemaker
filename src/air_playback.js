@@ -44,6 +44,36 @@ function runtime() {
     }
     return { index: count - 1, elapsed: 0 };
   }
+  // Relative comparisons follow the playback traversal; a pin always counts
+  // from the first displayed tick of the action (tick 1 in the UI).
+  function onionTick(action, index, elapsed, mode, pinnedTick, wrapped = false) {
+    const frames = action?.frames;
+    if (!frames?.length || !Number.isInteger(index) || !frames[index]) return null;
+    if (mode === 'pinned') {
+      if (!Number.isSafeInteger(pinnedTick) || pinnedTick < 1) return null;
+      const pose = locate(action, pinnedTick - 1);
+      return duration(frames[pose.index], pose.index, frames.length) > 0 ? pose : null;
+    }
+    if (mode !== 'next' && mode !== 'previous') return null;
+    const count = frames.length;
+    const ticks = duration(frames[index], index, count);
+    const current = Math.min(Math.max(0, ticks - 1), Math.max(0, Math.floor(elapsed) || 0));
+    if (mode === 'next') {
+      if (current + 1 < ticks) return { index, elapsed: current + 1 };
+      const next = step(action, index + 1 < count ? index + 1 : loopStart(action));
+      return duration(frames[next.index], next.index, count) > 0 ? { index: next.index, elapsed: 0 } : null;
+    }
+    if (current > 0) return { index, elapsed: current - 1 };
+    const start = wrapped ? loopStart(action) : 0;
+    let cursor = index;
+    for (let visited = 0; visited < count; visited++) {
+      if (cursor <= start && !wrapped) return null;
+      cursor = cursor <= start ? count - 1 : cursor - 1;
+      const length = duration(frames[cursor], cursor, count);
+      if (length > 0) return { index: cursor, elapsed: Number.isFinite(length) ? length - 1 : 0 };
+    }
+    return null;
+  }
   function frameAt(action, tick) { return locate(action, tick).index; }
   function createClock(now = () => performance.now()) {
     let action, index = -1, ticks = 0, running = false, started = now();
@@ -57,7 +87,7 @@ function runtime() {
       elapsed() { return ticks + (running ? Math.max(0, now() - started) * 60 / 1000 : 0); }
     };
   }
-  return { duration, step, locate, frameAt, createClock };
+  return { duration, step, locate, onionTick, frameAt, createClock };
 }
 
 module.exports = { runtime, ...runtime() };

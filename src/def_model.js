@@ -88,7 +88,7 @@ function kind(document) {
 }
 
 function setSectionEntry(document, sectionLine, key, nextValue) {
-  const target = document.sections.find((section) => section.line === sectionLine);
+  const target = document.sections.find((section) => section.name && section.line === sectionLine) || document.sections.find((section) => section.line === sectionLine);
   if (!target) throw new Error(`Section at line ${sectionLine + 1} was not found.`);
   const existing = entry(target, key);
   const lines = [...document.lines];

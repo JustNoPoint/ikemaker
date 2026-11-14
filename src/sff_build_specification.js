@@ -173,6 +173,7 @@ function deepFreeze(value) {
 }
 
 function createSffBuildSpecification(input = {}) {
+  require('./sff_png8_optimization').normalizePng8Optimization(input.options?.shared?.png8Optimization);
   const sprites = (input.sprites || []).map(normalizeSprite);
   const palettes = (input.palettes || []).map(normalizePalette);
   assertUniqueEntryIds(sprites, 'sprites');

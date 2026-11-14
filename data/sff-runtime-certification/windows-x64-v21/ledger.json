@@ -1,0 +1,1571 @@
+{
+  "kind": "ikemaker-sff-runtime-certification-results",
+  "version": 2,
+  "fixtureManifestSha256": "bd0465d869ef2c3695f79046fa0ceb3ccd9892a3a3bb39b9115fee96ee066aeb",
+  "writerProfile": "sff-v2.1-mixed-png",
+  "adoptionAllowed": false,
+  "gatePolicy": {
+    "requiredPlatforms": [
+      "windows-x64",
+      "linux-x64"
+    ],
+    "optionalPlatforms": [
+      "macos-arm64",
+      "macos-x64"
+    ],
+    "requiredChecks": [
+      "load",
+      "reopen",
+      "identityTable",
+      "renderComparison",
+      "transparency",
+      "linkedData"
+    ]
+  },
+  "platforms": [
+    {
+      "platformId": "windows-x64",
+      "required": true,
+      "tester": "IKEMaker automated actual stock-engine renderer; independently decoded screenshot comparisons",
+      "testedAt": "2026-11-09T02:18:37.334Z",
+      "osVersion": "Windows 10.0.26300 x64; OpenGL renderer recorded in engine.log",
+      "architecture": "x64",
+      "ikemenBuild": "official nightly 6e564af055bb1341b787990f971828ff930935b4; exe SHA256 319e949b19990cde639145842faed96ecf11094fddec95d604aa574b035d9ffc",
+      "fixtures": [
+        {
+          "fixtureId": "empty-built-in-only",
+          "fixtureByteHash": "b2b5527f3d10893322e70aecdb5c1df229fed0cfdf531fce900cb886caac3937",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/empty-built-in-only/load.json",
+                "sha256": "49de8e29243489ea84097185fb5e0faf76b076eb17a6bbd2c1b0f8ad7a7b58da",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/empty-built-in-only/reopen.json",
+                "sha256": "2017b332fb069e0d4ed355315743e06c77f085d714868a582382a66ad32b6892",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/empty-built-in-only/identityTable.json",
+                "sha256": "7ce4e33e759b443e1a5c02a8695f05272d1749716f27b86d06589c5e632dde70",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/empty-built-in-only/renderComparison.json",
+                "sha256": "81e4cbdf836e17994480731335dd7c7fe8b452afe95a9f1869a11a4e830adc10",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/empty-built-in-only/transparency.json",
+                "sha256": "8d1f8ea91fbd71a7d332f888c22ef0c76bc0e75639bff1a9ba26b9f6b0f3812b",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/empty-built-in-only/linkedData.json",
+                "sha256": "72bc11641b8336625bdd92bcba22455a074c37b8cfa3e00bfc047452af8fb64d",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "minimal",
+          "fixtureByteHash": "fd3e55c94fc29766d04fbad8bbed9b1dd5a8b1ff2f748bc019c6fd1145f56eed",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/minimal/load.json",
+                "sha256": "c71f6f99dae9810d080717d6943c2ab83ed212c5c992e05be2e8a2f4f63693e7",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/minimal/reopen.json",
+                "sha256": "5dcb546dae725b0f4456edb0625ddc952f3b91039b2a4da90ec4b10651946be4",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/minimal/identityTable.json",
+                "sha256": "00e4f12ea53c3f8556eb16df6487bcd1efa391cfdb20761de5f500a105e3a581",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/minimal/renderComparison.json",
+                "sha256": "da87e47dacb3552c720e9a6b4cb5fc25d84cc8332882b0b1379e91cbe67d9b46",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/minimal/transparency.json",
+                "sha256": "3db85a098a85158d5e5bef08b722285ea1571b9f88656ce1270e78821bd19807",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/minimal/linkedData.json",
+                "sha256": "919535c3afe8c6611f3f0a421e56809b5079aee0915aff0bf148d628d9938ec4",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "signed-boundaries",
+          "fixtureByteHash": "7936099a7eb7ef24437eb5df1185c3084546362c9c051308f04312ccda191808",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/signed-boundaries/load.json",
+                "sha256": "5b40d1c085810603a07fcc9d49d27902ec89a01d29b50b411aaeaa6c59868237",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/signed-boundaries/reopen.json",
+                "sha256": "4c79b00f56fdf980b65e7027a67e4f28286bcc54e992d0ce3c9a481b34d7dc94",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/signed-boundaries/identityTable.json",
+                "sha256": "ec7269163bf3b94fcc6e0bcb9bc567ef9cb669c3021081e86f075c21908f4b5a",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/signed-boundaries/renderComparison.json",
+                "sha256": "4adaf2103b6c8afcf16796b9b2323477825cf006364240f2d5ec67bc24f862d9",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/signed-boundaries/transparency.json",
+                "sha256": "bdcb0a581fd2616a646569786fbf99fb77fdf95463077599979e52d6bd293548",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/signed-boundaries/linkedData.json",
+                "sha256": "0582e2cc6dc40c581276ecd55c00407bfe388b8bc8de852a36f7716866cedc89",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "reserved-group-negative",
+          "fixtureByteHash": "6991a230aa58e9236ba893d5506ee2c8ccc7fc9791e477d78716064da8d1cb83",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/reserved-group-negative/load.json",
+                "sha256": "7ab5f74a627f5da414ce5e4da98415afdc0ca1a691e1d69157944eb8c2a8c96d",
+                "description": "Actual Windows load: Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/reserved-group-negative/reopen.json",
+                "sha256": "8e29889e667ea02cc997abef16fbba1034eeffabd3a91ab6b9d79a20f0df6e0f",
+                "description": "Actual Windows reopen: Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/reserved-group-negative/identityTable.json",
+                "sha256": "962764ba1749b25151d4f9ce0a1cd97fe75175b749c5ee7c06501fde1a6c5aef",
+                "description": "Actual Windows identityTable: Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/reserved-group-negative/renderComparison.json",
+                "sha256": "1a5219ebb1272f13ad19397f3c495eee41166dc23f102c34ebfe2c106db6ce0f",
+                "description": "Actual Windows renderComparison: Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/reserved-group-negative/transparency.json",
+                "sha256": "3c66aa03f859f67b66424c130506200301462f9deb5c2e98f1657ca2da8da58b",
+                "description": "Actual Windows transparency: Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/reserved-group-negative/linkedData.json",
+                "sha256": "b220a36b08201cafd0f64b08a8a5ae63247c093ad4419a3ad472c0c54fa24ac4",
+                "description": "Actual Windows linkedData: Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Reserved group65535 storage is preserved; actual public lookup returnsnil and images remain blank."
+        },
+        {
+          "fixtureId": "prepared-before-axis",
+          "fixtureByteHash": "8f276578650efd6eeee6078108cfa0e674c6268f5c90c9d9726f0e88496423b0",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/prepared-before-axis/load.json",
+                "sha256": "f86e96303e49d172892f22695a6fd9bc440126b9b4f3de882387af80db720fea",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/prepared-before-axis/reopen.json",
+                "sha256": "4bdb3c4fa17d4db4acc5c883624f72f205cfc4906c2e59bdb7bb1be0fb80b3bd",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/prepared-before-axis/identityTable.json",
+                "sha256": "1f9cc1be417608680740b17d3b6a28c8e53ddc11972e65810290eb1f47aa34fd",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/prepared-before-axis/renderComparison.json",
+                "sha256": "7f3abc9f86fd832a5a9ba91e97d23c7a95b691aec529c1d4737c88b6d0885680",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/prepared-before-axis/transparency.json",
+                "sha256": "0057028311e5c048622a00e3e53d0a665eab108b528f68b7f7ed35880ebb931a",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/prepared-before-axis/linkedData.json",
+                "sha256": "71325ab9e9e5cf4bfc0912faacee9401111b0bfc90e22d95df75f1bfcb2c55cf",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "prepared-after-axis",
+          "fixtureByteHash": "357fcb3d0d2cd02ec06f9873be486390bf91b468925f6c0858fca739216c677f",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/prepared-after-axis/load.json",
+                "sha256": "dc0285b9dbfd126638dd9a13707828d3bf23e3b0c898e2d54217c8d85ebdfe66",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/prepared-after-axis/reopen.json",
+                "sha256": "962a6476712258d0812751be60c0e77cd24189c65727cfb9c8d59e0500579bf3",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/prepared-after-axis/identityTable.json",
+                "sha256": "abd67e925854b59082a54f64d9a53a89a01e8d9be8fe041ad2899de240ad85d2",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/prepared-after-axis/renderComparison.json",
+                "sha256": "36d5071654032dd987cae0255371ec009e0eb30d7db71fc95d1aef8055a52b35",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/prepared-after-axis/transparency.json",
+                "sha256": "a82ba3325bd15145be39f80ef20af59c5489d9fda44c5ca5deac138e8d1a0ec6",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/prepared-after-axis/linkedData.json",
+                "sha256": "fe72b91e4642911f5ec088bca3b1dda744e6f649610eec44fdfc0f53425ed36a",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "stored-palette-overrides-png",
+          "fixtureByteHash": "be0f42c758c718d92479f8d1360eddb45d2f72f20a95f95fbda1664dfe50c800",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/stored-palette-overrides-png/load.json",
+                "sha256": "648892af456e7b064ad3a93ed550c7fe1010573969c3742402094b7d70c2cddd",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/stored-palette-overrides-png/reopen.json",
+                "sha256": "e4fe97ae8fe82586501d1cf974b71fe9b38154265aeb563e2c5a467f283aa6ab",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/stored-palette-overrides-png/identityTable.json",
+                "sha256": "391fb0c970de3a832d34e497340a27334b1b9239afa398513dcd48c0cdffe119",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/stored-palette-overrides-png/renderComparison.json",
+                "sha256": "3cf23f4572557e2e26b675c7b212aa79b8026d02cc8877a6cadadcf4413a6450",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/stored-palette-overrides-png/transparency.json",
+                "sha256": "11220d61b24c833f3571fe22fe304b94faf45b4c0804f89174e54c9702e214e4",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/stored-palette-overrides-png/linkedData.json",
+                "sha256": "c8f11408d95d489436a4d36aa743621bd8af7aa3c9eb981bcfe52138e039aba4",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "linked-data",
+          "fixtureByteHash": "5bcd4c901c10e7989c6031fda33b1a40786c288eff2bffa618d97a2a6888aaea",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/linked-data/load.json",
+                "sha256": "cef1c86a2caa4b73c36a535d7beeda2b0a9df711a4af50d336e541acf7d2f5e1",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/linked-data/reopen.json",
+                "sha256": "9902f3d55af6d6fcf553908d5f7f44205a8ccd61b46cf5057a1236bf6530109c",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/linked-data/identityTable.json",
+                "sha256": "90f5119849a0699ffd203d231cd1705531cf4cf62852d99866a09708fa78c71b",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/linked-data/renderComparison.json",
+                "sha256": "3334a5cb7210d5b0888d84e0d64236f743422342710d98b5a31bacf63d7cd523",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/linked-data/transparency.json",
+                "sha256": "bb65865854deeefbaf7a78bd9e0dd98eb6c99e2ec5324465655faad54a986932",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/linked-data/linkedData.json",
+                "sha256": "17e5f598fc762c242b84f813d2462b159c31cf835978b90a840b29ffc2e1cfcd",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "own-image-palettes-multihop-alpha",
+          "fixtureByteHash": "b65fbfa239b77d6dee63df72bc29447c88431ea39d5437ab8c5e9728ea7222c7",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/own-image-palettes-multihop-alpha/load.json",
+                "sha256": "2a08b9c6b7d7eb777000d8d519bfcb4f35fa6ae2004101535ef46da4d9a995e8",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/own-image-palettes-multihop-alpha/reopen.json",
+                "sha256": "faf76fbef100e0cbd25ab87071d332b6bdbf7ab13113445cf4e420aac8004397",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/own-image-palettes-multihop-alpha/identityTable.json",
+                "sha256": "7fb4c86785139c3c74cdb9bc7ccdf2561dc7c710a3aa0fcc9a0e855d2a8a7c19",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/own-image-palettes-multihop-alpha/renderComparison.json",
+                "sha256": "c5faa0701298482ea192e104416b4262e4f1f82f53799501dba0c83f2c509cb8",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/own-image-palettes-multihop-alpha/transparency.json",
+                "sha256": "4f6c77032ea8a907fd6b28d2ff2f26a4e3108a3e058a70c8e8ff43a811c54a2a",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/own-image-palettes-multihop-alpha/linkedData.json",
+                "sha256": "a52b110bf01b7bccec57d759c5a3004528519efc9467ec6438837877f47dbaad",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        },
+        {
+          "fixtureId": "repeated-identity-built-in-only",
+          "fixtureByteHash": "e3652116c761e446d5d214e98b8623ae0a325b867b9d6a795f63404c487e4618",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/repeated-identity-built-in-only/load.json",
+                "sha256": "7829621b96db019cb043264da0e72dc48ee605bfea91b81d8b4be699ef800ec4",
+                "description": "Actual Windows load: Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/repeated-identity-built-in-only/reopen.json",
+                "sha256": "2f6671c632c7f25d0d0d5f5e53add5c9366971c14a2c7a081bcbf47cb4ad11ef",
+                "description": "Actual Windows reopen: Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/repeated-identity-built-in-only/identityTable.json",
+                "sha256": "e0e5b591075a41a3939ee8ad9c1173c97d86152eef1d819f61b88b80086890c1",
+                "description": "Actual Windows identityTable: Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/repeated-identity-built-in-only/renderComparison.json",
+                "sha256": "0ea2548754ea13d1ca16eebb3004f0293de810a5ef3c404301ef59bf657654f1",
+                "description": "Actual Windows renderComparison: Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/repeated-identity-built-in-only/transparency.json",
+                "sha256": "a8daa3976aae05a78908a4bfeb69bcac833eb3c096f775ce4dee7fd4e9504c3e",
+                "description": "Actual Windows transparency: Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/repeated-identity-built-in-only/linkedData.json",
+                "sha256": "f64109f7da447a1fe8166a538bc4865896b82aef04d2757aa1acb05eecbd2f25",
+                "description": "Actual Windows linkedData: Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Allphysicalentries are structurally retained; actualengine lookup/renders address first matchinggroup/index only."
+        },
+        {
+          "fixtureId": "truecolor-rgb24-rgba32",
+          "fixtureByteHash": "ca948bed6ff3344d31c2716d61ebf556e5f54183504114107fb9c70124ce94e1",
+          "checks": {
+            "load": "pass",
+            "reopen": "pass",
+            "identityTable": "pass",
+            "renderComparison": "pass",
+            "transparency": "pass",
+            "linkedData": "pass"
+          },
+          "checkEvidence": {
+            "load": [
+              {
+                "id": "windows-x64/truecolor-rgb24-rgba32/load.json",
+                "sha256": "c492697b2e1db8f1f6b22ce0707561fe5cae3e21da588af922a7ed8afc208ec9",
+                "description": "Actual Windows load: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "reopen": [
+              {
+                "id": "windows-x64/truecolor-rgb24-rgba32/reopen.json",
+                "sha256": "a6dc079546e0e4165da48704fe9ec301e9ced315d56fa158a78989fe035fc55a",
+                "description": "Actual Windows reopen: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "identityTable": [
+              {
+                "id": "windows-x64/truecolor-rgb24-rgba32/identityTable.json",
+                "sha256": "d77d93a5916ac809ec0f5c87845f480baf50026176830377c73e18ae0bed834e",
+                "description": "Actual Windows identityTable: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "renderComparison": [
+              {
+                "id": "windows-x64/truecolor-rgb24-rgba32/renderComparison.json",
+                "sha256": "58285f603c70e374d38302ec1bbb6997c4b59d59281644ef08fa2f22229d6d38",
+                "description": "Actual Windows renderComparison: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "transparency": [
+              {
+                "id": "windows-x64/truecolor-rgb24-rgba32/transparency.json",
+                "sha256": "69738a0c9d2431c87331c475a83c903bf68e4bf7b7ee81fe7c5ba451587a4940",
+                "description": "Actual Windows transparency: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ],
+            "linkedData": [
+              {
+                "id": "windows-x64/truecolor-rgb24-rgba32/linkedData.json",
+                "sha256": "bca8f4aaf36b91d385902c1d1fc7251473d3f652d390944f1b9631c77c7a2ef3",
+                "description": "Actual Windows linkedData: Every unique runtime-addressable sprite was rendered afterloadandreopen."
+              }
+            ]
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": "NearestRGBfilter comparison; indexed/truecolor pixels over blackandwhite. Every unique runtime-addressable sprite was rendered afterloadandreopen."
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "platformId": "linux-x64",
+      "required": true,
+      "tester": "",
+      "testedAt": "",
+      "osVersion": "",
+      "architecture": "x64",
+      "ikemenBuild": "",
+      "fixtures": [
+        {
+          "fixtureId": "empty-built-in-only",
+          "fixtureByteHash": "b2b5527f3d10893322e70aecdb5c1df229fed0cfdf531fce900cb886caac3937",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "minimal",
+          "fixtureByteHash": "fd3e55c94fc29766d04fbad8bbed9b1dd5a8b1ff2f748bc019c6fd1145f56eed",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "signed-boundaries",
+          "fixtureByteHash": "7936099a7eb7ef24437eb5df1185c3084546362c9c051308f04312ccda191808",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "reserved-group-negative",
+          "fixtureByteHash": "6991a230aa58e9236ba893d5506ee2c8ccc7fc9791e477d78716064da8d1cb83",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "prepared-before-axis",
+          "fixtureByteHash": "8f276578650efd6eeee6078108cfa0e674c6268f5c90c9d9726f0e88496423b0",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "prepared-after-axis",
+          "fixtureByteHash": "357fcb3d0d2cd02ec06f9873be486390bf91b468925f6c0858fca739216c677f",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "stored-palette-overrides-png",
+          "fixtureByteHash": "be0f42c758c718d92479f8d1360eddb45d2f72f20a95f95fbda1664dfe50c800",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "linked-data",
+          "fixtureByteHash": "5bcd4c901c10e7989c6031fda33b1a40786c288eff2bffa618d97a2a6888aaea",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "own-image-palettes-multihop-alpha",
+          "fixtureByteHash": "b65fbfa239b77d6dee63df72bc29447c88431ea39d5437ab8c5e9728ea7222c7",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "repeated-identity-built-in-only",
+          "fixtureByteHash": "e3652116c761e446d5d214e98b8623ae0a325b867b9d6a795f63404c487e4618",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "truecolor-rgb24-rgba32",
+          "fixtureByteHash": "ca948bed6ff3344d31c2716d61ebf556e5f54183504114107fb9c70124ce94e1",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "platformId": "macos-arm64",
+      "required": false,
+      "tester": "",
+      "testedAt": "",
+      "osVersion": "",
+      "architecture": "arm64",
+      "ikemenBuild": "",
+      "fixtures": [
+        {
+          "fixtureId": "empty-built-in-only",
+          "fixtureByteHash": "b2b5527f3d10893322e70aecdb5c1df229fed0cfdf531fce900cb886caac3937",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "minimal",
+          "fixtureByteHash": "fd3e55c94fc29766d04fbad8bbed9b1dd5a8b1ff2f748bc019c6fd1145f56eed",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "signed-boundaries",
+          "fixtureByteHash": "7936099a7eb7ef24437eb5df1185c3084546362c9c051308f04312ccda191808",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "reserved-group-negative",
+          "fixtureByteHash": "6991a230aa58e9236ba893d5506ee2c8ccc7fc9791e477d78716064da8d1cb83",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "prepared-before-axis",
+          "fixtureByteHash": "8f276578650efd6eeee6078108cfa0e674c6268f5c90c9d9726f0e88496423b0",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "prepared-after-axis",
+          "fixtureByteHash": "357fcb3d0d2cd02ec06f9873be486390bf91b468925f6c0858fca739216c677f",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "stored-palette-overrides-png",
+          "fixtureByteHash": "be0f42c758c718d92479f8d1360eddb45d2f72f20a95f95fbda1664dfe50c800",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "linked-data",
+          "fixtureByteHash": "5bcd4c901c10e7989c6031fda33b1a40786c288eff2bffa618d97a2a6888aaea",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "own-image-palettes-multihop-alpha",
+          "fixtureByteHash": "b65fbfa239b77d6dee63df72bc29447c88431ea39d5437ab8c5e9728ea7222c7",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "repeated-identity-built-in-only",
+          "fixtureByteHash": "e3652116c761e446d5d214e98b8623ae0a325b867b9d6a795f63404c487e4618",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "truecolor-rgb24-rgba32",
+          "fixtureByteHash": "ca948bed6ff3344d31c2716d61ebf556e5f54183504114107fb9c70124ce94e1",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "platformId": "macos-x64",
+      "required": false,
+      "tester": "",
+      "testedAt": "",
+      "osVersion": "",
+      "architecture": "x64",
+      "ikemenBuild": "",
+      "fixtures": [
+        {
+          "fixtureId": "empty-built-in-only",
+          "fixtureByteHash": "b2b5527f3d10893322e70aecdb5c1df229fed0cfdf531fce900cb886caac3937",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "minimal",
+          "fixtureByteHash": "fd3e55c94fc29766d04fbad8bbed9b1dd5a8b1ff2f748bc019c6fd1145f56eed",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "signed-boundaries",
+          "fixtureByteHash": "7936099a7eb7ef24437eb5df1185c3084546362c9c051308f04312ccda191808",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "reserved-group-negative",
+          "fixtureByteHash": "6991a230aa58e9236ba893d5506ee2c8ccc7fc9791e477d78716064da8d1cb83",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "prepared-before-axis",
+          "fixtureByteHash": "8f276578650efd6eeee6078108cfa0e674c6268f5c90c9d9726f0e88496423b0",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "prepared-after-axis",
+          "fixtureByteHash": "357fcb3d0d2cd02ec06f9873be486390bf91b468925f6c0858fca739216c677f",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "stored-palette-overrides-png",
+          "fixtureByteHash": "be0f42c758c718d92479f8d1360eddb45d2f72f20a95f95fbda1664dfe50c800",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "linked-data",
+          "fixtureByteHash": "5bcd4c901c10e7989c6031fda33b1a40786c288eff2bffa618d97a2a6888aaea",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "own-image-palettes-multihop-alpha",
+          "fixtureByteHash": "b65fbfa239b77d6dee63df72bc29447c88431ea39d5437ab8c5e9728ea7222c7",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "repeated-identity-built-in-only",
+          "fixtureByteHash": "e3652116c761e446d5d214e98b8623ae0a325b867b9d6a795f63404c487e4618",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        },
+        {
+          "fixtureId": "truecolor-rgb24-rgba32",
+          "fixtureByteHash": "ca948bed6ff3344d31c2716d61ebf556e5f54183504114107fb9c70124ce94e1",
+          "checks": {
+            "load": "pending",
+            "reopen": "pending",
+            "identityTable": "pending",
+            "renderComparison": "pending",
+            "transparency": "pending",
+            "linkedData": "pending"
+          },
+          "checkEvidence": {
+            "load": [],
+            "reopen": [],
+            "identityTable": [],
+            "renderComparison": [],
+            "transparency": [],
+            "linkedData": []
+          },
+          "optionalDataChecks": {
+            "decodedIndexes": "pending",
+            "paletteBytes": "pending"
+          },
+          "notes": ""
+        }
+      ],
+      "notes": ""
+    }
+  ]
+}

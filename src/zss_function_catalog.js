@@ -33,9 +33,38 @@ function limitsFor(vscode, overrides = {}) {
   };
 }
 
-function openDocuments(vscode) {
+// Store parsed symbols only. Each catalog still reads and verifies its own source,
+// resolves ownership, and receives independent records that callers can annotate.
+const recordCache = new Map();
+let recordCacheBytes = 0;
+function recordsForSource(loaded, filename) {
+  const {serialize, deserialize} = require('node:v8');
+  const key = filename, previous = recordCache.get(key);
+  if (previous) {
+    recordCache.delete(key);
+    if (previous.hash === loaded.snapshot.hash) {
+      recordCache.set(key, previous);
+      return deserialize(previous.data);
+    }
+    recordCacheBytes -= previous.data.length;
+  }
+  const records = collectRecords(loaded.text, filename);
+  if (loaded.snapshot.bytes > 512 * 1024) return records;
+  const data = serialize(records);
+  if (data.length > 2 * 1024 * 1024) return records;
+  recordCache.set(key, { hash: loaded.snapshot.hash, data });
+  recordCacheBytes += data.length;
+  while (recordCache.size > 96 || recordCacheBytes > 8 * 1024 * 1024) {
+    const oldest = recordCache.keys().next().value;
+    recordCacheBytes -= recordCache.get(oldest).data.length;
+    recordCache.delete(oldest);
+  }
+  return records;
+}
+
+function openDocuments(vscode, defsOnly = false) {
   const output = new Map();
-  for (const document of vscode.workspace.textDocuments || []) if (document.fileName) {
+  for (const document of vscode.workspace.textDocuments || []) if (document.fileName && (!defsOnly || /\.def$/i.test(document.fileName))) {
     output.set(normalized(document.fileName), document);
     const real = canonical(document.fileName); if (real) output.set(normalized(real), document);
   }
@@ -60,7 +89,7 @@ function parsedAssignedCode(def, text) {
     if (!files) return { ok: true, code: output, hash: hash(source) };
     const resolve = entry => entry ? path.resolve(path.dirname(def), unquote(entry)) : '';
     for (const entry of files.entries || []) {
-      if (!/^st(?:common|\d*)$/i.test(entry.key || '')) continue;
+      if (!/^(?:st(?:common|\d*)|common)$/i.test(entry.key || '')) continue;
       const filename = require('./character_dependency_model').assignedPath(def, entry.value, entry.key); if (filename) output.push(filename);
     }
     for (const entry of [value(files, 'cmd', ''), value(files, 'cns', '')]) { const filename = resolve(entry); if (filename) output.push(filename); }
@@ -79,20 +108,29 @@ function canonical(filename) {
 }
 
 function authorityRoots(vscode, filename, scope) {
+  // These lookups share one synchronous ownership check. Edits and file moves
+  // between checks must always be visible to the next caller.
+  const searched = new Set(), games = new Map();
+  const gameFor = seed => {
+    if (!games.has(seed)) games.set(seed, require('./character_context').gameRoot(seed));
+    return games.get(seed);
+  };
   const roots = new Map(), failures = [], add = value => {
     if (!value) return;
     let candidate = path.resolve(value);
+    if (searched.has(candidate)) return;
+    searched.add(candidate);
     try { if (fs.statSync(candidate).isFile()) candidate = path.dirname(candidate); } catch (_) { failures.push(`Declared ownership root cannot be read: ${candidate}`); return; }
-    const game = require('./character_context').gameRoot(candidate);
+    const game = gameFor(candidate);
     if (game && (normalized(candidate) === normalized(game) || normalized(candidate).startsWith(`${normalized(game)}${path.sep}`)) && fs.existsSync(path.join(game, 'chars'))) candidate = path.join(game, 'chars');
     const real = canonical(candidate); if (real) roots.set(normalized(real), real); else failures.push(`Declared ownership root cannot be resolved: ${candidate}`);
   };
-  add(require('./character_context').gameRoot(filename));
-  add(require('./character_context').gameRoot(scope?.def || ''));
+  add(gameFor(filename));
+  add(gameFor(scope?.def || ''));
   add(scope?.root); add(scope?.templateBase);
   for (const value of scope?.projectRoots || []) add(value);
   for (const folder of vscode.workspace.workspaceFolders || []) add(folder.uri?.fsPath);
-  for (const document of vscode.workspace.textDocuments || []) if (/\.def$/i.test(document.fileName || '')) { add(document.fileName); add(require('./character_context').gameRoot(document.fileName)); }
+  for (const document of vscode.workspace.textDocuments || []) if (/\.def$/i.test(document.fileName || '')) { add(document.fileName); add(gameFor(document.fileName)); }
   let folder = path.dirname(path.resolve(filename));
   for (let level = 0; level < 5; level += 1) {
     try { if (fs.readdirSync(folder).some(value => /\.def$/i.test(value))) add(folder); } catch (_) {}
@@ -183,9 +221,10 @@ async function exactFunctionOwner(vscode, filename, preliminaryScope, limits) {
   if (roots.length > limits.ownerDefs) return { owner: '', complete: false, candidates: [], roots, reason: 'The ownership root bound was reached.' };
   const indexed = await indexedDomainDefs(vscode, roots, limits);
   if (!indexed.complete) return { owner: '', complete: false, candidates: [], roots, reason: indexed.reason };
-  for (const value of indexed.defs) add(value);
+  // The index already resolved these paths when it checked the ownership domain.
+  for (const value of indexed.defs) allDefs.set(normalized(value), value);
   if (preliminaryScope?.def) add(preliminaryScope.def);
-  const open = openDocuments(vscode), dirty = [];
+  const open = openDocuments(vscode, true), dirty = [];
   for (const document of vscode.workspace.textDocuments || []) if (/\.def$/i.test(document.fileName || '')) add(document.fileName);
   if (allDefs.size > limits.ownerDefs) return { owner: '', complete: false, candidates: [], roots, reason: 'The ownership DEF bound was reached.' };
   const owners = new Map((indexed.assignments?.get(normalized(target)) || []).map(value => [normalized(value), value]));
@@ -243,7 +282,7 @@ async function buildZssFunctionCatalog(vscode, seed, service = require('./map_re
     totalBytes += ownerSource.snapshot.bytes;
     if (ownerSource.snapshot.bytes > limits.fileBytes) limitations.push(`${path.basename(ownership.owner)} exceeds the per-file owner-DEF limit.`);
     else {
-      const records = collectRecords(ownerSource.text, ownership.owner);
+      const records = recordsForSource(ownerSource, ownership.owner);
       recordCount += (records.maps?.length || 0) + (records.constants?.length || 0);
       entries.push({ uri: ownerSource.document?.uri || vscode.Uri.file(ownership.owner), filename: ownership.owner, version: ownerSource.snapshot.version, dirty: ownerSource.snapshot.dirty, hash: ownerSource.snapshot.hash, bytes: ownerSource.snapshot.bytes, records, text: ownerSource.text, sourceKind: 'owner-def' });
     }
@@ -258,7 +297,7 @@ async function buildZssFunctionCatalog(vscode, seed, service = require('./map_re
       const classified = document || { fileName: assignedFile, uri: vscode.Uri.file(assignedFile), languageId: '' };
       const grammar=textGrammar(classified,service.context);if(!['zss','ikemen-cns'].includes(grammar))continue;
       assigned.push(assignedFile);
-      const records = collectRecords(text, assignedFile);
+      const records = recordsForSource(loaded, assignedFile);
       recordCount += (records.functions?.length || 0) + (records.calls?.length || 0) + (records.maps?.length || 0) + (records.constants?.length || 0) + (records.resources?.length || 0);
       if (recordCount > limits.records) { limitations.push('The assigned ZSS symbol/call limit was exceeded.'); break; }
       entries.push({ uri: document?.uri || vscode.Uri.file(assignedFile), filename: assignedFile, version: loaded.snapshot.version, dirty: loaded.snapshot.dirty, hash: loaded.snapshot.hash, bytes, records, text, grammar });

@@ -22,8 +22,10 @@ const STATE_TRANSFER_PROVENANCE = Object.freeze({
 });
 
 function grammarFor(filename, languageId = '') {
-  if (languageId === 'ikemen-cns' || /\.(?:cns|cmd|st)$/i.test(String(filename || ''))) return 'cns';
-  return 'zss';
+  if (/\.zss$/i.test(String(filename || ''))) return 'zss';
+  if (/\.(?:cns|cmd|st)$/i.test(String(filename || ''))) return 'cns';
+  if (/\.txt$/i.test(String(filename || ''))) return 'cns';
+  return languageId === 'ikemen-cns' ? 'cns' : 'zss';
 }
 
 function maskSource(text, grammar) {

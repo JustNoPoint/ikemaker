@@ -142,7 +142,7 @@ async function configureAssociations(context) {
   if (process.platform !== 'win32') return vscode.window.showInformationMessage('Windows file-opening integration is available on Windows desktop only.');
   const action = await vscode.window.showQuickPick([
     { label: 'Register file types…', description: 'Choose IKEMEN formats and add Open with IKEMaker' },
-    { label: 'Register a project input extension…', description: 'For a named input format such as HDBZ .mfg' },
+    { label: 'Register a project input extension…', description: 'For a project input format such as .mfg' },
     { label: 'Open Windows Default Apps', description: 'Choose which registered formats open in IKEMaker on double-click' },
     { label: 'Remove IKEMaker entries', description: 'Undo IKEMaker’s Windows file-opening registration' }
   ], { title: 'IKEMaker Windows File Opening' });

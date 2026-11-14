@@ -131,13 +131,13 @@ function loadGlyphCatalog(seed, options = {}) {
   const motifInfo = resolvedMotif(seed, options); if (motifInfo.state !== 'resolved') return { ...motifInfo, entries: [], tokens: [] };
   const baseFile = path.join(motifInfo.root, 'data', 'system.base.def'), motifDoc = parseDef(readText(motifInfo.motif), motifInfo.motif);
   const baseDoc = fileExists(baseFile) ? parseDef(readText(baseFile), baseFile) : null;
-  const merged = new Map(), baseEntries = baseDoc ? glyphEntries(baseDoc, limits) : [], motifEntries = glyphEntries(motifDoc, limits);
-  for (const item of baseEntries) merged.set(item.token, { ...item, inherited: true });
-  for (const item of motifEntries) merged.set(item.token, { ...item, inherited: false });
-  const mappingFile = motifEntries.length ? motifInfo.motif : baseEntries.length ? baseFile : motifInfo.motif;
   const motifFiles = sections(motifDoc, 'Files')[0], baseFiles = baseDoc && sections(baseDoc, 'Files')[0];
   const glyphReference = value(motifFiles, 'glyphs', '') || value(baseFiles, 'glyphs', 'glyphs.sff');
   const archiveFile = resolveMotifAsset(glyphReference, motifInfo.motif, motifInfo.root, fileExists);
+  const merged = new Map(), baseEntries = baseDoc ? glyphEntries(baseDoc, limits) : archiveFile ? glyphEntries(parseDef(require('./movelist_default_glyphs')), limits) : [], motifEntries = glyphEntries(motifDoc, limits);
+  for (const item of baseEntries) merged.set(item.token, { ...item, inherited: true });
+  for (const item of motifEntries) merged.set(item.token, { ...item, inherited: false });
+  const mappingFile = motifEntries.length ? motifInfo.motif : baseDoc && baseEntries.length ? baseFile : motifInfo.motif;
   const canCache = !options.readText && !options.readArchive && !options.readFile && !options.parseArchive && !options.archiveInfo && !options.spriteUri && !options.exists && !options.stat && !options.limits;
   const cacheKey = canCache ? [fileIdentity(motifInfo.motif), fileIdentity(baseDoc ? baseFile : ''), fileIdentity(archiveFile)].join('|') : '';
   if (cacheKey && catalogCache.has(cacheKey)) return catalogCache.get(cacheKey);
@@ -173,14 +173,14 @@ function loadGlyphCatalog(seed, options = {}) {
       const uri = uriCache.get(spriteKey), emittedBytes = byteLength(uri);
       if (publicPreviewBytes + emittedBytes > limits.previewBytes) throw new Error('Glyph preview payload exceeds the safe display budget. The source token remains editable.');
       publicPreviewBytes += emittedBytes;
-      return { ...item, state: 'ready', src: uri, width: sprite.width, height: sprite.height };
+      return { ...item, state: 'ready', src: uri, width: sprite.width, height: sprite.height, axisX: sprite.axisX || 0, axisY: sprite.axisY || 0 };
     }
     catch (error) { return { ...item, state: 'unresolved', reason: error.message }; }
   });
   const result = {
     state: entries.some((item) => item.state === 'ready') ? 'ready' : 'unresolved', root: motifInfo.root, config: motifInfo.config,
     motif: motifInfo.motif, configured: motifInfo.configured, baseFile: baseDoc ? baseFile : '', mappingFile, glyphReference, archiveFile,
-    archiveError, entries, tokens: entries.map((item) => item.token).sort((a, b) => b.length - a.length || a.localeCompare(b))
+    usesEmbeddedDefaults: !baseDoc && baseEntries.length > 0, archiveError, entries, tokens: entries.map((item) => item.token).sort((a, b) => b.length - a.length || a.localeCompare(b))
   };
   if (cacheKey) {
     catalogCache.set(cacheKey, result);
@@ -295,10 +295,10 @@ function glyphWarnings(text, catalog = {}) {
       if (segment.kind === 'text') continue;
       const item = segment.kind === 'glyph' ? known.get(segment.token) : null;
       if (item?.state === 'ready') continue;
-      let kind = 'unmapped-token', message = `${segment.token} is not mapped by the resolved [Glyphs] table. IKEMEN may stop loading later movelist content when a referenced glyph is missing.`;
+      let kind = 'unmapped-token', message = `${segment.token} is not mapped by the resolved [Glyphs] table. IKEMEN displays the unmapped text literally.`;
       if (item) {
-        if (/sprite .* missing/i.test(item.reason || '')) { kind = 'missing-sprite'; message = `${segment.token} maps to missing sprite ${(item.sprite || []).join(',')}. IKEMEN may stop loading later movelist content.`; }
-        else if (/archive .* was not found/i.test(item.reason || '')) { kind = 'missing-archive'; message = `${segment.token} is mapped, but glyph archive ${catalog.glyphReference || ''} is missing. IKEMEN may stop loading movelist content.`; }
+        if (/sprite .* missing/i.test(item.reason || '')) { kind = 'missing-sprite'; message = `${segment.token} maps to missing sprite ${(item.sprite || []).join(',')}. IKEMEN skips this glyph and may shift later segments by the previous segment width.`; }
+        else if (/archive .* was not found/i.test(item.reason || '')) { kind = 'missing-archive'; message = `${segment.token} is mapped, but glyph archive ${catalog.glyphReference || ''} is missing. Mapped glyphs cannot be drawn.`; }
         else { kind = 'preview-unavailable'; message = `${segment.token} is mapped, but its preview is unavailable: ${item.reason || 'unknown preview failure'}. This does not by itself prove an engine loading failure.`; }
       }
       issues.push({ kind, line: lineIndex, start: segment.start, end: segment.end, token: segment.token, message });

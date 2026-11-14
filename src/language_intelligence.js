@@ -119,7 +119,7 @@ function luaAuthoringInsert(entry) {
 function luaCompletionModels({ linePrefix = '', experience = 'learning', api = [] }) {
   if (!/(?:^|[=,(]|\breturn\s+|\bthen\s+|\band\s+|\bor\s+|\bnot\s+|\.)\s*[A-Za-z0-9_.]*$/i.test(linePrefix)) return [];
   return api.filter((entry) => entry.kind !== 'hook').map((entry) => ({
-    kind: 'luaFunction', label: entry.name, detail: `IKEMEN 1.0 Lua · ${entry.category}`,
+    kind: 'luaFunction', label: entry.name, detail: `${entry.documentationLabel || 'IKEMEN 1.0 Lua'} · ${entry.category}`,
     documentation: entry.description, insertText: callableInsert(entry), experience
   }));
 }
@@ -128,7 +128,7 @@ function luaHoverModel({ word, experience = 'learning', api = [] }) {
   const entry = catalogMap(api).get(String(word || '').toLowerCase());
   if (!entry) return null;
   return {
-    kind: entry.kind, title: entry.signature || entry.name, summary: entry.description,
+    kind: entry.kind, title: entry.signature || entry.name, summary: entry.description, documentationLabel: entry.documentationLabel,
     explanation: experience === 'learning'
       ? `Parameters: ${entry.parameters || 'none documented'}. Returns: ${entry.returns || 'none documented'}. Category: ${entry.category}.`
       : '',

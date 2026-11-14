@@ -1,6 +1,7 @@
 'use strict';
 
-const { paletteRgba, resolvedPalette, rgbaPng } = require('./sff_reader');
+const { paletteRgba, resolvedPalette, rgbaPng, spriteIndexPlane } = require('./sff_reader');
+const { canonicalSffV2Layout } = require('./sff_v2_layout');
 
 function byte(value, fallback = 0) {
   const number = Number(value);
@@ -97,23 +98,56 @@ function paletteReplacementPlan(archive, paletteIndex, candidate) {
   const index = Number(paletteIndex), palette = archive && archive.palettes && archive.palettes[index];
   if (!palette) throw new Error(`Palette ${paletteIndex} does not exist.`);
   if (palette.dataSize === 0) throw new Error(`Palette ${palette.group},${palette.number} is linked to palette index ${palette.link}. Replace its stored source palette instead.`);
-  if (palette.colors !== 256 || palette.dataSize < 1024) throw new Error(`Palette ${palette.group},${palette.number} is not a writable 256-color SFF palette.`);
-  const colors = normalizeColors(candidate), comparison = comparePaletteColors(paletteRgba(archive, index), colors);
+  const count = palette.colors;
+  if (archive.header.legacy || !Number.isInteger(count) || count < 1 || count > 256 || palette.dataSize < count * 4) {
+    throw new Error("The palette has no writable SFF v2 color table of its declared size.");
+  }
   const offset = archive.header.literalDataOffset + palette.dataOffset;
-  if (offset < 0 || offset + 1024 > archive.buffer.length) throw new Error('Palette data is outside the SFF file.');
+  if (offset < 0 || offset + palette.dataSize > archive.buffer.length) throw new Error('Palette data is outside the SFF file.');
+  const colors = normalizeColors(candidate);
+  const comparison = comparePaletteColors(paletteRgba(archive, index), colors);
+  const outside = comparison.changedIndices.find(slot => slot >= count);
+  if (outside !== undefined) {
+    throw new Error(`Palette ${palette.group},${palette.number} stores ${count} colors. Index ${outside} is outside its stored range.`);
+  }
   return { paletteIndex: index, palette, colors, offset, ...comparison };
 }
 
-function bufferWithPaletteReplacement(archive, paletteIndex, candidate) {
-  const plan = paletteReplacementPlan(archive, paletteIndex, candidate), output = Buffer.from(archive.buffer);
-  for (let index = 0; index < 256; index += 1) {
+function applyPaletteRgbPlan(output, plan) {
+  // A short palette can be immediately followed by another payload.
+  for (const index of plan.changedIndices) {
     const at = plan.offset + index * 4;
     output[at] = plan.colors[index][0];
     output[at + 1] = plan.colors[index][1];
     output[at + 2] = plan.colors[index][2];
-    // ACT does not carry alpha. Preserve the SFF's existing transparency data.
   }
-  return { buffer: output, plan };
+}
+
+function bufferWithPaletteReplacement(archive, paletteIndex, candidate) {
+  const plan = paletteReplacementPlan(archive, paletteIndex, candidate), output = Buffer.from(archive.buffer);
+  applyPaletteRgbPlan(output, plan);
+  const layout = canonicalSffV2Layout(output, archive.filename);
+  return { buffer: layout.buffer, plan, layoutRepaired: layout.repaired, layoutIssues: layout.issues };
+}
+
+// Highest stored palette index a physical indexed sprite uses. Linked
+// destinations resolve to their stored owner.
+function spriteMaximumIndex(archive, sprite) {
+  const plane = spriteIndexPlane(archive, sprite), indices = plane.indices || plane.pixels || plane;
+  let maximum = 0;
+  for (const value of indices) if (value > maximum) { maximum = value; if (maximum === 255) break; }
+  return maximum;
+}
+
+function paletteColorCount(archive, paletteIndex) {
+  const seen = new Set();
+  let palette = archive.palettes[paletteIndex];
+  while (palette && palette.dataSize === 0 && !seen.has(palette.index)) { seen.add(palette.index); palette = archive.palettes[palette.link]; }
+  if (!palette || !palette.dataSize) return 0;
+  // IKEMEN renders aliases from the stored owner's table. The alias header's
+  // declared count does not truncate that table (verified in stable/nightly).
+  // Keep the owner's declared and physically stored range as the safety bound.
+  return Math.min(Number(palette.colors) || 0, Math.floor(palette.dataSize / 4), 256);
 }
 
 function bufferWithPaletteAssignments(archive, spriteIndices, paletteIndex) {
@@ -129,8 +163,17 @@ function bufferWithPaletteAssignments(archive, spriteIndices, paletteIndex) {
     sprites.push(sprite);
   }
   const output = Buffer.from(archive.buffer), changed = sprites.filter((sprite) => sprite.paletteIndex !== targetPalette);
+  // A reduced palette (for example 32 colors) cannot serve a sprite whose
+  // pixels use higher indexes: the engine would read past the stored colors.
+  const available = paletteColorCount(archive, targetPalette), target = archive.palettes[targetPalette];
+  const outOfRange = changed.map((sprite) => ({ sprite, maximum: spriteMaximumIndex(archive, sprite) })).filter((item) => item.maximum >= available);
+  if (outOfRange.length) {
+    const sample = outOfRange.slice(0, 3).map((item) => `${item.sprite.group},${item.sprite.number} uses index ${item.maximum}`).join('; ');
+    throw new Error(`Palette ${target.group},${target.number} stores ${available} color${available === 1 ? '' : 's'}, but ${outOfRange.length} selected sprite${outOfRange.length === 1 ? '' : 's'} use higher palette indexes (${sample}${outOfRange.length > 3 ? '; …' : ''}). No file was changed. Remap those sprites first or choose a palette with enough colors.`);
+  }
   for (const sprite of changed) output.writeUInt16LE(targetPalette, archive.header.firstSpriteHeaderOffset + sprite.index * 28 + 24);
-  return { buffer: output, paletteIndex: targetPalette, changedIndices: changed.map((sprite) => sprite.index), changedCount: changed.length };
+  const layout = canonicalSffV2Layout(output, archive.filename);
+  return { buffer: layout.buffer, paletteIndex: targetPalette, changedIndices: changed.map((sprite) => sprite.index), changedCount: changed.length, layoutRepaired: layout.repaired, layoutIssues: layout.issues };
 }
 
 function paletteById(archive, group, number) {
@@ -191,6 +234,7 @@ function auditPaletteSetup(archive, profile = 'none') {
 }
 
 module.exports = {
+  applyPaletteRgbPlan,
   normalizeColors,
   paletteRole,
   comparePaletteColors,
@@ -202,6 +246,8 @@ module.exports = {
   paletteReplacementPlan,
   bufferWithPaletteReplacement,
   bufferWithPaletteAssignments,
+  spriteMaximumIndex,
+  paletteColorCount,
   paletteScopedSprites,
   auditPaletteSetup
 };

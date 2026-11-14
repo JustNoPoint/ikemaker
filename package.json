@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.79.500",
+  "version": "0.79.536",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -89,6 +89,7 @@
     "onCommand:snd.browseLists",
     "onCommand:ikemen.palette.toggleBrowser",
     "onCommand:ikemen.palette.openCompanion",
+    "onCommand:ikemen.palette.reviewUnusedPalettes",
     "onCommand:ikemen.visualBrowser.open",
     "onCommand:ikemen.palette.focusWorkshopTool",
     "onCommand:sff.openAssembly",
@@ -184,6 +185,7 @@
     "onCommand:ikemen.palettePlayer.open",
     "onCommand:ikemen.palettePlayer.organize",
     "onCommand:ikemen.palettePlayer.finishStaged",
+    "onCommand:ikemen.fontLab.open",
     "onCommand:ikemen.shader.openWorkshop",
     "onCommand:ikemen.productionWorkflow.open",
     "onCommand:ikemen.productionWorkflow.editProfile",
@@ -297,7 +299,7 @@
         "extensions": [
           ".air"
         ],
-        "configuration": "./language-configuration.json"
+        "configuration": "./air-language-configuration.json"
       },
       {
         "id": "ikemen-cns",
@@ -307,7 +309,8 @@
           "CNS"
         ],
         "extensions": [
-          ".cns"
+          ".cns",
+          ".mfg"
         ],
         "configuration": "./cns-language-configuration.json"
       },
@@ -462,9 +465,23 @@
       {
         "language": "zss",
         "path": "./snippets/zss.json"
+      },
+      {
+        "language": "ikemen-cns",
+        "path": "./snippets/cns.json"
       }
     ],
     "commands": [
+      {
+        "command": "ikemen.cns.renumberSelectedTriggers",
+        "title": "Renumber CNS Triggers",
+        "enablement": "!isWeb && !editorReadonly && editorHasSelection"
+      },
+      {
+        "command": "ikemen.cns.fillTriggerNumbersDown",
+        "title": "Fill Trigger Numbers Down",
+        "enablement": "!isWeb && !editorReadonly && editorHasSelection"
+      },
       {
         "command": "ikemen.relatedWork.open",
         "title": "IKEMEN: Open Related Work"
@@ -690,6 +707,11 @@
         "icon": "$(file-media)"
       },
       {
+        "command": "ikemen.palette.reviewUnusedPalettes",
+        "title": "IKEMaker: Review Unused Embedded Palettes…",
+        "icon": "$(list-selection)"
+      },
+      {
         "command": "ikemen.palette.openCompanion",
         "title": "IKEMaker: Open Palette Workshop Browser",
         "icon": "$(list-selection)"
@@ -708,6 +730,11 @@
         "command": "ikemen.palette.resumeScratch",
         "title": "IKEMaker: Resume Retained Palette Draft",
         "icon": "$(history)"
+      },
+      {
+        "command": "ikemen.fontLab.open",
+        "title": "IKEMaker: Open Font Lab",
+        "icon": "$(symbol-text)"
       },
       {
         "command": "ikemen.shader.openWorkshop",
@@ -855,12 +882,14 @@
       },
       {
         "command": "zss.goToLine",
-        "title": "ZSS: Go to Line",
+        "title": "Go to Line…",
+        "category": "IKEMaker",
         "icon": "$(go-to-file)"
       },
       {
         "command": "zss.toggleLineComment",
-        "title": "ZSS: Comment / Uncomment",
+        "title": "Comment / Uncomment Lines",
+        "category": "IKEMaker",
         "icon": "$(comment)"
       },
       {
@@ -1035,6 +1064,10 @@
         "icon": "$(folder-opened)"
       },
       {
+        "command": "ikemen.assets.open",
+        "title": "IKEMEN: Open Asset in Current / New Tab…"
+      },
+      {
         "command": "ikemen.character.close",
         "title": "IKEMEN: Close Character…",
         "icon": "$(close)"
@@ -1136,12 +1169,17 @@
         "icon": "$(book)"
       },
       {
+        "command": "ikemen.code.chooseLanguage",
+        "title": "IKEMaker: Set Coding Language",
+        "icon": "$(code)"
+      },
+      {
         "command": "zssNavigator.refresh",
-        "title": "ZSS Navigator: Refresh"
+        "title": "Code Navigator: Refresh"
       },
       {
         "command": "zssNavigator.reveal",
-        "title": "ZSS Navigator: Reveal Symbol"
+        "title": "Code Navigator: Reveal Symbol"
       },
       {
         "command": "zssControllers.search",
@@ -1834,6 +1872,32 @@
       {
         "command": "ikemen.storyboard.openStart",
         "title": "IKEMaker: Storyboard Workspace — Start"
+      },
+      {
+        "command": "ikemen.viewer.actionsSearch",
+        "title": "IKEMaker: Action Search"
+      },
+      {
+        "command": "ikemen.viewer.toggleBrowser",
+        "title": "IKEMaker: Toggle Viewer Browser"
+      },
+      {
+        "command": "ikemen.viewer.focus",
+        "title": "IKEMaker: Focus Viewer"
+      },
+      {
+        "command": "ikemen.viewer.keyboardShortcuts",
+        "title": "IKEMaker: Keyboard shortcuts"
+      },
+      {
+        "command": "ikemen.links.show",
+        "title": "Show Linked Code…",
+        "category": "IKEMaker"
+      },
+      {
+        "command": "ikemen.links.selection",
+        "title": "Link Selected Code to IKeMaker…",
+        "category": "IKEMaker"
       }
     ],
     "viewsContainers": {
@@ -1896,11 +1960,6 @@
       },
       {
         "command": "air.focusActionsBrowser",
-        "key": "alt+left",
-        "when": "editorTextFocus && ikemen.airSourceReturnAvailable"
-      },
-      {
-        "command": "air.focusActionsBrowser",
         "key": "escape",
         "when": "editorTextFocus && ikemen.airSourceReturnAvailable && !suggestWidgetVisible && !renameInputVisible && !findInputFocussed && !inSnippetMode && !quickInputVisible"
       },
@@ -1908,6 +1967,21 @@
         "command": "ikemen.entity.previous",
         "key": "ctrl+alt+pageup",
         "when": "ikemen.entitySwitchReady"
+      },
+      {
+        "command": "ikemen.viewer.actionsSearch",
+        "key": "alt+a",
+        "when": "ikemen.viewerShortcutAvailable && (editorTextFocus || (webviewFocus && activeWebviewPanelId =~ /^(mainThreadWebview-)?ikem(en|aker)/))"
+      },
+      {
+        "command": "ikemen.viewer.toggleBrowser",
+        "key": "alt+shift+b",
+        "when": "ikemen.viewerShortcutAvailable && (editorTextFocus || (webviewFocus && activeWebviewPanelId =~ /^(mainThreadWebview-)?ikem(en|aker)/))"
+      },
+      {
+        "command": "ikemen.viewer.focus",
+        "key": "alt+shift+v",
+        "when": "ikemen.viewerShortcutAvailable && (editorTextFocus || (webviewFocus && activeWebviewPanelId =~ /^(mainThreadWebview-)?ikem(en|aker)/))"
       }
     ],
     "submenus": [
@@ -2101,6 +2175,15 @@
           "command": "zss.wrap.targetGuard",
           "when": "ikemen.activeTextKind == zss && editorHasSelection && ikemen.activeTextWritable",
           "group": "3_wrap@4"
+        },
+        {
+          "command": "ikemen.links.show",
+          "group": "1_edit@3"
+        },
+        {
+          "command": "ikemen.links.selection",
+          "when": "editorHasSelection && ikemen.activeTextWritable",
+          "group": "1_edit@4"
         }
       ],
       "ikemen.text.preview": [
@@ -2308,6 +2391,10 @@
       ],
       "editor/title": [
         {
+          "command": "ikemen.fontLab.open",
+          "group": "ikemaker@20"
+        },
+        {
           "command": "air.focusActionsBrowser",
           "when": "ikemen.airSourceReturnAvailable",
           "group": "navigation@0"
@@ -2354,6 +2441,11 @@
         }
       ],
       "explorer/context": [
+        {
+          "command": "ikemen.assets.open",
+          "when": "resourceExtname == .sff || resourceExtname == .air || resourceExtname == .snd",
+          "group": "navigation@0.1"
+        },
         {
           "command": "ikemen.helperLab.open",
           "when": "(resourceExtname == .def || resourceExtname == .zss || resourceExtname == .cns || resourceExtname == .cmd || resourceExtname == .txt) && ikemen.interfaceMode != player",
@@ -2437,6 +2529,11 @@
       ],
       "view/title": [
         {
+          "command": "ikemen.fontLab.open",
+          "when": "view == ikemen.characterWorkbenches || view == ikemen.tools || view == zssNavigator || view == zssStateControllers || view == zssRegistry",
+          "group": "ikemaker@20"
+        },
+        {
           "command": "ikemen.workbench.create",
           "when": "(view == ikemen.characterWorkbenches) && ikemen.interfaceMode != player",
           "group": "navigation@1"
@@ -2445,6 +2542,11 @@
           "command": "ikemen.workbench.refresh",
           "when": "(view == ikemen.characterWorkbenches) && ikemen.interfaceMode != player",
           "group": "navigation@2"
+        },
+        {
+          "command": "ikemen.code.chooseLanguage",
+          "when": "view == zssNavigator && ikemen.interfaceMode != player",
+          "group": "navigation@1"
         },
         {
           "command": "zssNavigator.refresh",
@@ -2525,6 +2627,16 @@
         }
       ],
       "editor/context": [
+        {
+          "command": "ikemen.cns.renumberSelectedTriggers",
+          "when": "!isWeb && editorHasSelection && !editorReadonly && (editorLangId == ikemen-cns || (editorLangId == plaintext && resourceExtname =~ /[.]txt$/i))",
+          "group": "1_modification@1"
+        },
+        {
+          "command": "ikemen.cns.fillTriggerNumbersDown",
+          "when": "!isWeb && editorHasSelection && !editorReadonly && (editorLangId == ikemen-cns || (editorLangId == plaintext && resourceExtname =~ /[.]txt$/i))",
+          "group": "1_modification@2"
+        },
         {
           "submenu": "ikemen.text.context",
           "when": "ikemen.activeTextSupported && config.ikemenZss.textToolbar.enabled && config.ikemenZss.textToolbar.contextMenus",
@@ -3632,6 +3744,12 @@
           "scope": "window",
           "description": "Show one nested IKEMaker right-click menu in supported text editors instead of many unrelated root commands."
         },
+        "ikemenZss.cmdFiles.detectBatchScripts": {
+          "type": "boolean",
+          "default": true,
+          "scope": "window",
+          "description": "Open .cmd files that are clearly Windows batch scripts (for example starting with @echo off) in the Batch language instead of as IKEMEN command files. Files with [Command], [Statedef] or command = lines are never switched."
+        },
         "ikemenZss.textToolbar.companion.followActiveEditor": {
           "type": "boolean",
           "default": true,
@@ -3807,10 +3925,21 @@
           "scope": "resource",
           "description": "Project-configurable suggested SFF group for native Dialogue portraits. Indices 0-19 are presented as reaction slots; this is a workflow convention, not an IKEMEN requirement."
         },
+        "ikemen.codingLanguage": {
+          "type": "string",
+          "scope": "resource",
+          "enum": [
+            "auto",
+            "cns",
+            "zss"
+          ],
+          "default": "auto",
+          "description": "Preferred character code syntax for HitDef, Helper Lab, spatial and trajectory authoring, Throw Maker and Dialogue copy. Auto follows the HitDef source or the assigned character state files. Applying edits always uses the destination file syntax."
+        },
         "zssNavigator.showWorkspaceFiles": {
           "type": "boolean",
           "default": true,
-          "description": "Show all workspace ZSS files below the active file in ZSS Navigator."
+          "description": "Show workspace character code files below the active file in Code Navigator."
         },
         "ikemenZss.mapPrefix": {
           "type": "string",
@@ -3938,6 +4067,11 @@
           "default": true,
           "scope": "resource",
           "description": "Enable conservative, read-only ZSS and CNS syntax-hygiene diagnostics. Individual rules can be controlled below."
+        },
+        "ikemenZss.diagnostics.syntax.debugFloods": {
+          "type": "boolean",
+          "default": true,
+          "description": "Warn about potentially absent entities and fractional values written to integer character variables."
         },
         "ikemenZss.diagnostics.syntax.missingSemicolons": {
           "type": "boolean",

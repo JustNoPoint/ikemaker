@@ -62,7 +62,9 @@ async function run(vscode){
   if(configured==='off')return vscode.window.showInformationMessage('Comment Assistance is disabled for this workspace. Change IKEMaker › Comment Assistance: Mode to Manual to use it.');
   const editor=vscode.window.activeTextEditor,document=editor?.document;
   if(!document||!SUPPORTED.has(document.languageId))return vscode.window.showInformationMessage('Open a ZSS, CNS, or Lua source file before using comment assistance.');
-  const chosen=await vscode.window.showQuickPick(ACTIONS,{title:'Comment Assistance',placeHolder:'Choose one explicit, previewed comment operation.'});if(!chosen)return false;
+  const choices=editor.selection.isEmpty?ACTIONS:[...ACTIONS,{id:'link',label:'Link selected code to IKeMaker…'}];
+  const chosen=await vscode.window.showQuickPick(choices,{title:'Comment Assistance',placeHolder:'Choose one explicit, previewed comment operation.'});if(!chosen)return false;
+  if(chosen.id==='link')return vscode.commands.executeCommand('ikemen.links.selection');
   const hasSelection=!editor.selection.isEmpty;
   if(chosen.id==='selection'&&!hasSelection)return vscode.window.showInformationMessage('Select the code to explain, then run Comment Assistance again.');
   let purpose='';

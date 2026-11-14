@@ -1,9 +1,9 @@
 'use strict';
 
 const { createHash } = require('crypto');
-const triggerCatalog = require('../data/triggers.json');
+const triggerCatalog = require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
 const {argumentSlot,argumentSummary}=require('./trigger_argument_model');
-const luaCatalog = require('../data/lua-api.json');
+const {luaCatalogFor,luaApiSignatureHelp}=require('./lua_target_catalog');
 const { completionModels, hoverModel, luaCompletionModels, luaHoverModel } = require('./language_intelligence');
 const { commandReferenceAtPosition } = require('./command_reference_model');
 const { functionCallAtPosition, functionCallAtDocumentPosition, functionDefinitions, symbolAt, referencesFor: symbolReferencesFor, definitionsFor: symbolDefinitionsFor } = require('./zss_navigation');
@@ -43,7 +43,7 @@ function markdown(vscode, model) {
   value.appendMarkdown(`### ${model.title}\n\n`);
   if (model.summary) value.appendMarkdown(`${model.summary}\n\n`);
   if (model.explanation) value.appendMarkdown(`**Learning note:** ${model.explanation}\n\n`);
-  value.appendMarkdown('Bundled IKEMEN 1.0 documentation.');
+  value.appendMarkdown(model.documentationLabel || 'Bundled IKEMEN 1.0 documentation.');
   if (model.url) value.appendMarkdown(` [Official online reference](${model.url})`);
   return value;
 }
@@ -173,14 +173,14 @@ function luaFunctionHover(vscode,symbol,catalog){
 function luaFunctionSignatureHelp(call,catalog){
   const definitions=luaDefinitionsFor(catalog,call?.name,call?.line);if(!definitions.length)return undefined;const signatures=definitions.map(definition=>({label:`${definition.name}(${(definition.params||[]).join(', ')})`,documentation:`AUTHORED Lua · ${definition.imported?'exact direct require':'current source'} · ${uriLabel(definition.uri)}:${definition.line+1}. Dynamic parameters have no declared types or invented defaults.`,parameters:(definition.params||[]).map(parameter=>({label:parameter,documentation:definition.parameterDocs?.[parameter]||(`${parameter==='...'?'Authored variable argument list':`Authored parameter ${parameter}`}.`)}))}));const maximum=Math.max(0,...signatures.map(signature=>signature.parameters.length-1)),active=definitions.some(definition=>definition.varargs)&&call.activeParameter>maximum?maximum:Math.min(call.activeParameter,maximum);return{signatures,activeSignature:0,activeParameter:active};
 }
-function expressionCallAtPosition(line,character){
+function expressionCallAtPosition(line,character,options={}){
   const source=String(line||''),limit=Math.max(0,Math.min(Number(character)||0,source.length)),stack=[];let quote='';
-  for(let index=0;index<limit;index+=1){const value=source[index];if(quote){if(value===quote&&source[index-1]!=='\\')quote='';continue;}if(value==='"'||value==="'"){quote=value;continue;}if(value==='#')break;if(value==='('){const before=source.slice(0,index),match=/([A-Za-z_][A-Za-z0-9_.]*)\s*$/.exec(before);stack.push({name:match?.[1]||'',open:index,activeParameter:0,depth:0});for(const parent of stack.slice(0,-1))parent.depth+=1;}else if(value===')'){stack.pop();for(const parent of stack)parent.depth=Math.max(0,parent.depth-1);}else if(value===','&&stack.length&&stack.at(-1).depth===0)stack.at(-1).activeParameter+=1;}
+  for(let index=0;index<limit;index+=1){const value=source[index];if(quote){if(value===quote&&source[index-1]!=='\\')quote='';continue;}if(value==='"'||value==="'"){quote=value;continue;}if(value==='#'||options.semicolonComments&&value===';')return null;if(value==='('){const before=source.slice(0,index),match=/([A-Za-z_][A-Za-z0-9_.]*)\s*$/.exec(before);stack.push({name:match?.[1]||'',open:index,activeParameter:0,depth:0});for(const parent of stack.slice(0,-1))parent.depth+=1;}else if(value===')'){stack.pop();for(const parent of stack)parent.depth=Math.max(0,parent.depth-1);}else if(value===','&&stack.length&&stack.at(-1).depth===0)stack.at(-1).activeParameter+=1;}
   const call=[...stack].reverse().find(value=>value.name);return call||null;
 }
-function triggerSignatureHelp(call,triggers=triggerCatalog){
+function triggerSignatureHelp(call,triggers=triggerCatalog,capabilities={}){
   if(!call?.name)return undefined;const entry=(triggers||[]).find(value=>String(value.name||'').toLowerCase()===call.name.toLowerCase()),signature=String(entry?.signature||'');if(!entry||!signature.includes('(')||!signature.includes(')'))return undefined;
-  const parameters=signature.slice(signature.indexOf('(')+1,signature.lastIndexOf(')')).split(',').map(value=>value.trim()).filter(Boolean),activeParameter=Math.min(call.activeParameter,Math.max(0,parameters.length-1));return{signatures:[{label:signature,documentation:`${entry.description||'Bundled documented IKEMEN expression.'} ${argumentSummary(entry)} Source: ${entry.source||'bundled IKEMEN documentation'}.`,parameters:parameters.map((parameter,position)=>{const slot=argumentSlot(entry,position);return{label:parameter,documentation:slot?`${slot.meaning||`Documented ${entry.name} argument: ${slot.name}.`} Expected: ${slot.type}.${slot.choices.length?` Known values: ${slot.choices.map(choice=>`${choice.value} — ${choice.meaning||choice.type}`).join('; ')}.`:''}${slot.allowExpression?' An editable expression may also be entered.':''}`:`Documented ${entry.name} argument: ${parameter}. IKEMaker does not choose its value.`};})}],activeSignature:0,activeParameter};
+  const parameters=signature.slice(signature.indexOf('(')+1,signature.lastIndexOf(')')).split(',').map(value=>value.trim()).filter(Boolean),activeParameter=Math.min(call.activeParameter,Math.max(0,parameters.length-1));return{signatures:[{label:signature,documentation:`${entry.description||'Bundled documented IKEMEN expression.'} ${argumentSummary(entry,capabilities)} Source: ${entry.source||'bundled IKEMEN documentation'}.`,parameters:parameters.map((parameter,position)=>{const slot=argumentSlot(entry,position,capabilities);return{label:parameter,documentation:slot?`${slot.meaning||`Documented ${entry.name} argument: ${slot.name}.`} Expected: ${slot.type}.${slot.choices.length?` Known values: ${slot.choices.map(choice=>`${choice.value} — ${choice.meaning||choice.type}`).join('; ')}.`:''}${slot.allowExpression?' An editable expression may also be entered.':''}`:`Documented ${entry.name} argument: ${parameter}. IKEMaker does not choose its value.`};})}],activeSignature:0,activeParameter};
 }
 
 function functionCatalog(provider, document) {
@@ -387,7 +387,7 @@ function registerLanguageProviders(vscode, context, getControllers, getCommandCa
       const lineText = document.lineAt(position.line).text, linePrefix = lineText.slice(0, position.character);
       if (document.languageId !== 'lua') {
         const destination = stateDestinationContext(document.getText(), document.fileName, document.languageId, position.line, position.character, { capabilities: getCapabilities(document.uri) });
-        if (destination) return stateCatalog(getStateCatalog, document).then(catalog => stateCompletions(vscode, destination, catalog));
+        if (destination) return stateCatalog(getStateCatalog, document).then(catalog => requestCurrent(request,document,token)?stateCompletions(vscode, destination, catalog):[]);
         const commandReference = commandReferenceAtPosition(lineText, position.character, { semicolonComments: document.languageId === 'ikemen-cns' });
         if (commandReference) {
           const commandPrefix = lineText.slice(commandReference.start, position.character);
@@ -405,7 +405,7 @@ function registerLanguageProviders(vscode, context, getControllers, getCommandCa
         const stateTypeContext=stateTypeValueCompletionContext(document.getText(),position.line,position.character,getCapabilities(document.uri));if(stateTypeContext)return stateTypeValueCompletions(vscode,stateTypeContext,position.line);
         const scoped=scopedNameCompletionContext(document.getText(),document.fileName||document.uri?.fsPath||'source.zss',position.line,position.character);if(scoped)return scopedNameCompletions(vscode,scoped);
         const asset = assetReferenceContext(document.getText(), document.fileName || document.uri?.fsPath || 'source.zss', position.line, position.character);
-        if (asset) return assetCatalog(getAssetCatalog, document).then(catalog => assetCompletions(vscode, asset, catalog, position.line));
+        if (asset) return assetCatalog(getAssetCatalog, document).then(catalog => requestCurrent(request,document,token)?assetCompletions(vscode, asset, catalog, position.line):[]);
         const callCapabilities=requestCapabilities,call = boundedFunctionCallContext(document, position, callCapabilities);
         if (call) {
           call.line = position.line;
@@ -413,11 +413,11 @@ function registerLanguageProviders(vscode, context, getControllers, getCommandCa
         }
       }
       if(document.languageId==='lua'){
-        const luaContext=luaCompletionContext(document.getText(),position.line,position.character);if(luaContext)return guardedLuaFunctionCatalog(request,document,token,catalog=>{const user=luaFunctionCompletions(vscode,luaContext,catalog),userNames=new Set(user.map(item=>String(item.label).toLowerCase())),bundled=luaCompletionModels({linePrefix,experience:experienceFor(vscode,document),api:luaCatalog}).filter(model=>!userNames.has(String(model.label).toLowerCase())).map((model,index)=>makeCompletion(vscode,model,index));return[...user,...bundled];},[]);
+        const luaContext=luaCompletionContext(document.getText(),position.line,position.character);if(luaContext)return guardedLuaFunctionCatalog(request,document,token,catalog=>{const user=luaFunctionCompletions(vscode,luaContext,catalog),userNames=new Set(user.map(item=>String(item.label).toLowerCase())),bundled=luaCompletionModels({linePrefix,experience:experienceFor(vscode,document),api:luaCatalogFor(requestCapabilities)}).filter(model=>!userNames.has(String(model.label).toLowerCase())).map((model,index)=>makeCompletion(vscode,model,index));return[...user,...bundled];},[]);
       }
       const catalogs = document.languageId === 'lua' ? null : codingCatalogs(document);
       const models = document.languageId === 'lua' ? luaCompletionModels({
-        linePrefix, experience: experienceFor(vscode, document), api: luaCatalog
+        linePrefix, experience: experienceFor(vscode, document), api: luaCatalogFor(requestCapabilities)
       }) : completionModels({
         text: document.getText(), line: position.line, linePrefix,
         languageId: document.languageId, experience: experienceFor(vscode, document),
@@ -444,7 +444,7 @@ function registerLanguageProviders(vscode, context, getControllers, getCommandCa
         const resource=resourceHover(vscode,document,position);if(resource)return resource;
         if(document.languageId==='zss'){const dataSymbol=projectDataSymbolAt(document,position),capabilities=requestCapabilities;if(dataSymbol)return guardedFunctionCatalog(request,document,token,capabilities,catalog=>catalog.complete?projectDataHover(vscode,dataSymbol,catalog.entries,capabilities):undefined,undefined);}
         const symbol=stateSymbolAt(document.getText(),document.fileName||document.uri?.fsPath||'',document.languageId,position.line,position.character,{capabilities:getCapabilities(document.uri)});
-        if(symbol)return stateCatalog(getStateCatalog,document).then(catalog=>stateReferenceHover(vscode,symbol,catalog));
+        if(symbol)return stateCatalog(getStateCatalog,document).then(catalog=>requestCurrent(request,document,token)?stateReferenceHover(vscode,symbol,catalog):undefined);
       }
       if (document.languageId === 'zss') {
         const callCapabilities=requestCapabilities,call = boundedFunctionCallContext(document, position, callCapabilities);
@@ -454,13 +454,13 @@ function registerLanguageProviders(vscode, context, getControllers, getCommandCa
         }
       }
       if(document.languageId==='lua'){
-        const symbol=luaSymbolAt(document.getText(),position.line,position.character);if(symbol)return guardedLuaFunctionCatalog(request,document,token,catalog=>luaFunctionHover(vscode,symbol,catalog)||(()=>{const range=new vscode.Range(symbol.line,symbol.start,symbol.line,symbol.end),model=luaHoverModel({word:symbol.name,experience:experienceFor(vscode,document),api:luaCatalog});return model?new vscode.Hover(markdown(vscode,model),range):undefined;})(),undefined);
+        const symbol=luaSymbolAt(document.getText(),position.line,position.character);if(symbol)return guardedLuaFunctionCatalog(request,document,token,catalog=>luaFunctionHover(vscode,symbol,catalog)||(()=>{const range=new vscode.Range(symbol.line,symbol.start,symbol.line,symbol.end),model=luaHoverModel({word:symbol.name,experience:experienceFor(vscode,document),api:luaCatalogFor(requestCapabilities)});return model?new vscode.Hover(markdown(vscode,model),range):undefined;})(),undefined);
       }
       const range = document.getWordRangeAtPosition(position, /[A-Za-z_][A-Za-z0-9_.]*/);
       if (!range) return undefined;
       const catalogs = document.languageId === 'lua' ? null : codingCatalogs(document);
       const model = document.languageId === 'lua' ? luaHoverModel({
-        word: document.getText(range), experience: experienceFor(vscode, document), api: luaCatalog
+        word: document.getText(range), experience: experienceFor(vscode, document), api: luaCatalogFor(requestCapabilities)
       }) : hoverModel({
         word: document.getText(range), text: document.getText(), line: position.line,
         languageId: document.languageId, experience: experienceFor(vscode, document),
@@ -471,17 +471,17 @@ function registerLanguageProviders(vscode, context, getControllers, getCommandCa
   };
   const signatures = {
     provideSignatureHelp(document, position, token) {
-      if(document.languageId==='lua'){if(token?.isCancellationRequested)return undefined;const capabilities=getCapabilities(document.uri),request=beginRequest('signature',document,capabilities),call=luaCallAtDocumentPosition(document.getText(),position.line,position.character);return call?.name?guardedLuaFunctionCatalog(request,document,token,catalog=>luaFunctionSignatureHelp(call,catalog),undefined):undefined;}
-      if (document.languageId !== 'zss') return undefined;
-      if(token?.isCancellationRequested)return undefined;const capabilities=getCapabilities(document.uri),request=beginRequest('signature',document,capabilities),call = boundedFunctionCallContext(document, position, capabilities);
+      if(document.languageId==='lua'){if(token?.isCancellationRequested)return undefined;const capabilities=getCapabilities(document.uri),request=beginRequest('signature',document,capabilities),call=luaCallAtDocumentPosition(document.getText(),position.line,position.character);return call?.name?guardedLuaFunctionCatalog(request,document,token,catalog=>luaFunctionSignatureHelp(call,catalog)||luaApiSignatureHelp(call,capabilities),undefined):undefined;}
+      if (!['zss','ikemen-cns'].includes(document.languageId)) return undefined;
+      if(token?.isCancellationRequested)return undefined;const capabilities=getCapabilities(document.uri),request=beginRequest('signature',document,capabilities),call = document.languageId==='zss'?boundedFunctionCallContext(document, position, capabilities):null;
       if(call?.name&&call.hasArguments)return guardedFunctionCatalog(request,document,token,capabilities,catalog=>catalog.complete?functionSignatureHelp(call,catalog.entries,capabilities):undefined,undefined);
-      return triggerSignatureHelp(expressionCallAtPosition(document.lineAt(position.line).text,position.character),codingCatalogs(document).triggers);
+      const catalogs=codingCatalogs(document);return triggerSignatureHelp(expressionCallAtPosition(document.lineAt(position.line).text,position.character,{semicolonComments:document.languageId==='ikemen-cns'}),catalogs.triggers,catalogs.capabilities);
     }
   };
   context.subscriptions.push(
     vscode.languages.registerCompletionItemProvider(selector, completions, ':', '=', '(', ',', '"', ' ', '.', '$'),
     vscode.languages.registerHoverProvider(hoverSelector, hovers),
-    vscode.languages.registerSignatureHelpProvider([{ language: 'zss' },{ language:'lua' }], signatures, '(', ',')
+    vscode.languages.registerSignatureHelpProvider([{ language: 'zss' },{ language:'ikemen-cns' },{ language:'lua' }], signatures, '(', ',')
   );
 }
 

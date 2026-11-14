@@ -13,6 +13,7 @@ const { assertSffV21Mixed: assertSffV21Png8 } = require('./sff_v21_mixed_strict_
 
 const SHA256 = /^[0-9a-f]{64}$/i;
 const ACTIVE_INSPECTION_LIMIT = 256 * 1024 * 1024;
+const { assertTemporaryRecovery } = require('./sff_creator_temporary_recovery');
 const INPUT_KEYS = Object.freeze(['backupBasename', 'expectedApprovalReceiptHash', 'expectedCandidateByteHash', 'expectedCandidateDispatchReceiptHash', 'expectedPersistedReceiptArtifactByteHash', 'expectedPersistedReceiptHash', 'expectedPersistenceValidationHash', 'expectedRequestHash', 'expectedSourceSnapshotHash', 'expectedSourceValidationHash', 'expectedSpecificationHash', 'persistedReceiptArtifactBytes', 'persistenceInput']);
 const PERSISTED_KEYS = Object.freeze(['activeArchive', 'activeArchiveModified', 'adoptionAllowed', 'approvalReceiptHash', 'byteEqualityRequired', 'candidateByteHash', 'candidateByteLength', 'candidateDispatchReceiptArtifactByteHash', 'candidateDispatchReceiptHash', 'candidatePersisted', 'capabilitySnapshotHash', 'directoryFsync', 'directoryFsyncAfterCleanup', 'directoryFsyncAfterPublish', 'dispatchReceiptHash', 'fileFsync', 'logicalHash', 'parentDirectoryFsync', 'persistedByteHash', 'persistedByteLength', 'persistenceValidation', 'persistenceValidationHash', 'relativeCandidateFilename', 'requestHash', 'schema', 'selection', 'semanticComparisonHash', 'sourceSnapshotHash', 'sourceValidationHash', 'specificationHash', 'stagingDirectory', 'version', 'writesCommitted']);
 const WINDOWS_DEVICE = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/i;
@@ -97,7 +98,7 @@ function compareModels(activeInspection, candidateInspection) {
 }
 
 function createCreatorAdoptionPlan(rawInput = {}) {
-  const input = exactKeys(rawInput, INPUT_KEYS, 'Creator adoption-plan input'), persistenceInput = input.persistenceInput;
+  const input = exactKeys(rawInput, rawInput && !utilTypes.isProxy(rawInput) && Object.hasOwn(rawInput,'recovery') ? [...INPUT_KEYS, 'recovery'] : INPUT_KEYS, 'Creator adoption-plan input'), persistenceInput = input.persistenceInput;
   const persistenceKeys = ['activeArchivePath', 'candidateBytes', 'candidateDispatchInput', 'candidateDispatchReceiptArtifactBytes', 'candidateFilename', 'expectedApprovalReceiptHash', 'expectedCandidateByteHash', 'expectedCandidateDispatchReceiptArtifactByteHash', 'expectedCandidateDispatchReceiptHash', 'expectedRequestHash', 'expectedSourceSnapshotHash', 'expectedSpecificationHash', 'protectedRoots', 'stagingParent'];
   exactKeys(persistenceInput, persistenceKeys, 'persistenceInput');
   const rederived = dispatchCreatorApprovedCandidate(persistenceInput.candidateDispatchInput), saved = decodeStrictJsonArtifact(input.persistedReceiptArtifactBytes, 'Persisted Creator candidate receipt'), receipt = saved.parsed;
@@ -120,8 +121,10 @@ function createCreatorAdoptionPlan(rawInput = {}) {
   if (pathKey(active.realpath) !== pathKey(receipt.activeArchive.realpath) || !sameIdentity({ dev: active.identity.device, ino: active.identity.inode }, receipt.activeArchive.identity)) throw new Error('Active archive path or identity drifted from SFF-14 authority.');
   const activeDriftedSincePersistence = active.byteHash !== receipt.activeArchive.byteHash || active.byteLength !== receipt.activeArchive.byteLength;
   const activeInspection = inspectActive(active.bytes), comparison = compareModels(activeInspection, candidateInspection), backupName = safeBackupName(input.backupBasename), activeDirectory = path.dirname(active.realpath);
-  const backupPath = path.join(activeDirectory, backupName), replacementTempPath = path.join(activeDirectory, `.ikemaker-install-${expected.candidateHash.slice(0, 16)}.sff.partial`), caseFold = ['win32', 'darwin'].includes(process.platform), inventory = new Set(fs.readdirSync(activeDirectory).map((name) => caseFold ? name.toLowerCase() : name));
-  const backupCollision = inventory.has(caseFold ? backupName.toLowerCase() : backupName), tempName = path.basename(replacementTempPath), replacementTempCollision = inventory.has(caseFold ? tempName.toLowerCase() : tempName);
+  if(Object.hasOwn(input,'recovery')&&!input.recovery)throw new Error('Recovery descriptor is required when supplied.');
+  const backupDirectory = input.recovery ? assertTemporaryRecovery(input.recovery, active.realpath) : activeDirectory;
+  const backupPath = path.join(backupDirectory, backupName), replacementTempPath = path.join(activeDirectory, `.ikemaker-install-${expected.candidateHash.slice(0, 16)}.sff.partial`), caseFold = ['win32', 'darwin'].includes(process.platform), inventory = new Set(fs.readdirSync(activeDirectory).map((name) => caseFold ? name.toLowerCase() : name));
+  const backupCollision = fs.readdirSync(backupDirectory).some(name => (caseFold ? name.toLowerCase() : name) === (caseFold ? backupName.toLowerCase() : backupName)), tempName = path.basename(replacementTempPath), replacementTempCollision = inventory.has(caseFold ? tempName.toLowerCase() : tempName);
   const risks = [];
   if (activeDriftedSincePersistence) risks.push('active-archive-drifted-since-persistence');
   if (activeInspection.status !== 'recognized-supported-profile') risks.push(`active-inspection-${activeInspection.status}`);
@@ -136,7 +139,7 @@ function createCreatorAdoptionPlan(rawInput = {}) {
     active: { path: active.path, realpath: active.realpath, identity: active.identity, byteHash: active.byteHash, byteLength: active.byteLength, fingerprintAtPersistence: receipt.activeArchive, driftedSincePersistence: activeDriftedSincePersistence, inspection: { status: activeInspection.status, targetId: activeInspection.targetId, recognizedVersion: activeInspection.recognizedVersion, successfulProfiles: activeInspection.successes, errors: activeInspection.errors } },
     comparison, summary: comparison.totals, risks: [...new Set(risks)].sort(), blockers: [...new Set(blockers)].sort(),
     proposedPaths: { backupPath, replacementTempPath, destinationPath: active.realpath, backupExists: backupCollision, replacementTempExists: replacementTempCollision },
-    rollback: { sourceByteHash: active.byteHash, proposedInstalledByteHash: candidate.byteHash, rollbackTargetByteHash: active.byteHash },
+    rollback: { ...(input.recovery ? { recovery: input.recovery } : {}), sourceByteHash: active.byteHash, proposedInstalledByteHash: candidate.byteHash, rollbackTargetByteHash: active.byteHash },
     eligibleForReview: true, standardAdoptionEligible: blockers.length === 0 && risks.length === 0, requiresElevatedReview: risks.length > 0, reviewRequired: true, humanReviewComplete: false,
     backupCreated: false, replacementCommitted: false, activeArchiveModified: false, adoptionAllowed: false, byteEqualityRequired: false
   };

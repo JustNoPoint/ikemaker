@@ -69,7 +69,7 @@ function owningCharacterDefs(seed, preferred = '') {
     return assigned && path.resolve(assigned).toLowerCase() === path.resolve(targetFile).toLowerCase();
   }) : [];
   if (owners.length) return owners.map((item) => item.filename).sort((a, b) => a.localeCompare(b));
-  if (['.cmd', '.inp', '.jnp', '.dat'].includes(extension)) return [];
+  if (['.cmd', '.inp', '.jnp', '.mfg', '.dat'].includes(extension)) return [];
   if (configuredContext && (configuredContext.commandFile || configuredContext.movelistFile)) return [configuredContext.filename];
   return contexts.map((item) => item.filename).sort((a, b) => a.localeCompare(b));
 }

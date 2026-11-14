@@ -12,7 +12,7 @@ const { readIndexedPng8, canonicalizeEmbeddedPng8 } = require('./sff_png8_source
 
 const SIGNATURE = Buffer.from('ElecbyteSpr\0', 'latin1');
 const VERSION_21 = Buffer.from([0, 1, 0, 2]);
-const HEADER_SIZE = 64;
+const HEADER_SIZE = 512;
 const PALETTE_HEADER_SIZE = 16;
 const SPRITE_HEADER_SIZE = 28;
 const FORMAT_PNG8 = 10;
@@ -101,6 +101,7 @@ function assertCanonicalSpecification(specification) {
   }
   if (!Array.isArray(specification.sprites)) fail('the full-rebuild profile requires a reviewed sprite list.');
   if (!Array.isArray(specification.palettes)) fail('the full-rebuild profile requires a reviewed palette list.');
+  require('./sff_png8_optimization').assertLegacyOptimization(specification);
   if (specification.sprites.length && !specification.palettes.length) fail('every PNG8 sprite requires an explicit 256-color SFF palette.');
   if (!specification.sprites.length && specification.palettes.length) fail('the narrow profile permits a completely empty archive, but not an unproven palette-only archive.');
 }
@@ -198,6 +199,7 @@ function prepareSprites(specification, options, paletteState) {
     // make the built-in comparison profile narrower than the reviewed contract.
     const sourcePngByteHash = byteHash;
     png = canonicalizeEmbeddedPng8(png, { maxPixels: options.maxPixels });
+    png = require('./sff_png8_optimization').optimizedPng8(png, specification, { maxPixels: options.maxPixels });
     const embeddedPngByteHash = sha256(png);
     const assigned = paletteForSprite(sprite, label, paletteState);
     const dataSize = checkedAdd(4, png.length, `${label} stored payload size`);

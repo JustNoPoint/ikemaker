@@ -68,6 +68,8 @@ function registerZssFunctionDiagnostics(vscode, context, getCatalog, getOptions 
     const key = keyFor(document), generation = scheduledGeneration === undefined ? (generations.get(key) || 0) + 1 : scheduledGeneration;
     if (scheduledGeneration === undefined) generations.set(key, generation);
     const version = document.version, text = document.getText(), textHash = hash(text);
+    const records=collectRecords(text,document.fileName);
+    if (!records.calls.length) { collection.set(document.uri, []); return []; }
     let catalog;
     try { catalog = await getCatalog(document); } catch (_) { catalog = null; }
     if (!current(document, key, generation, version, textHash)) return [];
@@ -91,7 +93,7 @@ function registerZssFunctionDiagnostics(vscode, context, getCatalog, getOptions 
       return [];
     }
     let findings = [];
-    try { findings = functionCallFindings(catalog, collectRecords(text, document.fileName), getOptions(document) || {}); } catch (_) {}
+    try { findings = functionCallFindings(catalog, records, getOptions(document) || {}); } catch (_) {}
     if (!current(document, key, generation, version, textHash)) return [];
     const diagnostics = findings.slice(0, MAX_DIAGNOSTICS_PER_DOCUMENT).map(finding => findingDiagnostic(vscode, document, finding));
     collection.set(document.uri, diagnostics);
@@ -110,7 +112,6 @@ function registerZssFunctionDiagnostics(vscode, context, getCatalog, getOptions 
   const dependency = options.isDependency || (document => isZss(document) || /\.(?:def|cns|cmd|st|inp|jnp|txt)$/i.test(document?.fileName || ''));
   const invalidateAuthority = document => { if (dependency(document)) options.invalidateAuthority?.(); };
   const disposables = [
-    collection,
     vscode.workspace.onDidOpenTextDocument(document => { invalidateAuthority(document); if (dependency(document)) refreshOpenZss(); else schedule(document); }),
     vscode.workspace.onDidChangeTextDocument(event => { invalidateAuthority(event.document); if (dependency(event.document)) refreshOpenZss(); }),
     vscode.workspace.onDidSaveTextDocument(document => { invalidateAuthority(document); if (dependency(document)) refreshOpenZss(); }),
@@ -124,7 +125,16 @@ function registerZssFunctionDiagnostics(vscode, context, getCatalog, getOptions 
     if (!event?.affectsConfiguration || event.affectsConfiguration('ikemenZss')) refreshOpenZss();
   }));
   if (typeof options.onDidInvalidate === 'function') disposables.push(options.onDidInvalidate(() => { options.invalidateAuthority?.(); refreshOpenZss(); }));
-  const lifecycle = { dispose() { disposed = true; for (const timer of timers.values()) clearTimeout(timer); timers.clear(); generations.clear(); for (const watcher of rootWatchers.values()) watcher.dispose?.(); rootWatchers.clear(); collection.clear?.(); } };
+  const lifecycle = { dispose() {
+    if (disposed) return;
+    disposed = true;
+    for (const timer of timers.values()) clearTimeout(timer);
+    timers.clear();
+    generations.clear();
+    for (const watcher of rootWatchers.values()) watcher.dispose?.();
+    rootWatchers.clear();
+    collection.dispose();
+  } };
   disposables.push(lifecycle); context.subscriptions.push(...disposables);
   for (const document of vscode.workspace.textDocuments || []) schedule(document);
   return { collection, update, schedule, refreshOpenZss, ensureAuthorityWatchers, dispose: () => lifecycle.dispose() };

@@ -1,9 +1,12 @@
 'use strict';
 
 function blankSff(version = '2.1') {
-  const buffer = Buffer.alloc(64); buffer.write('ElecbyteSpr\0', 0, 'latin1');
-  buffer[12] = 0; buffer[13] = 0; buffer[14] = version === '2.0' ? 0 : 1; buffer[15] = 2;
-  buffer.writeUInt32LE(64, 36); buffer.writeUInt32LE(0, 40); buffer.writeUInt32LE(64, 44); buffer.writeUInt32LE(0, 48); buffer.writeUInt32LE(64, 52); buffer.writeUInt32LE(64, 60);
+  // Every SFF v2 header is 512 bytes (offset 64 is the TDATA length). Version
+  // and compatible-version bytes match Elecbyte's: v2.01 = 00 01 00 02.
+  const buffer = Buffer.alloc(512); buffer.write('ElecbyteSpr\0', 0, 'latin1');
+  const bytes = version === '2.0' ? [0, 0, 0, 2] : [0, 1, 0, 2];
+  Buffer.from(bytes).copy(buffer, 12); Buffer.from(bytes).copy(buffer, 24);
+  buffer.writeUInt32LE(512, 36); buffer.writeUInt32LE(0, 40); buffer.writeUInt32LE(512, 44); buffer.writeUInt32LE(0, 48); buffer.writeUInt32LE(512, 52); buffer.writeUInt32LE(512, 60);
   return buffer;
 }
 

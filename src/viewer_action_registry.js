@@ -15,7 +15,7 @@ const INTERNAL_COMMANDS = Object.freeze(new Set([
 ]));
 const EDIT_COMMANDS = Object.freeze(new Set([
   'zss.toggleLineComment',
-  'ikemen.comments.assist',
+  'ikemen.comments.assist', 'ikemen.links.selection',
   'ikemen.triggers.browseInsert',
   'ikemen.triggers.editArguments',
   'ikemen.functions.browseInsert',

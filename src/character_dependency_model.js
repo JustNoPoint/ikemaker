@@ -5,11 +5,11 @@ const path = require('path');
 const { parseDef, unquote } = require('./def_model');
 const { collectRecords } = require('./analyzer');
 
-const FILE_EXTENSIONS = new Set(['.def', '.sff', '.air', '.snd', '.zss', '.cns', '.inp', '.cmd', '.jnp', '.act', '.dat', '.txt', '.json', '.csv', '.lua']);
-const CODE_EXTENSIONS = new Set(['.zss', '.cns', '.inp', '.cmd', '.jnp']);
+const FILE_EXTENSIONS = new Set(['.def', '.sff', '.air', '.snd', '.zss', '.cns', '.st', '.inp', '.cmd', '.jnp', '.act', '.dat', '.txt', '.json', '.csv', '.lua']);
+const CODE_EXTENSIONS = new Set(['.zss', '.cns', '.st', '.inp', '.cmd', '.jnp']);
 
 function kindFor(filename) {
-  return ({ '.def': 'Definition', '.sff': 'Sprites', '.air': 'Animation', '.snd': 'Sound', '.act': 'Palette', '.lua': 'Lua', '.zss': 'Code', '.cns': 'Code', '.inp': 'Commands', '.cmd': 'Legacy Commands', '.jnp': 'Commands' })[path.extname(filename).toLowerCase()] || 'Data';
+  return ({ '.def': 'Definition', '.sff': 'Sprites', '.air': 'Animation', '.snd': 'Sound', '.act': 'Palette', '.lua': 'Lua', '.zss': 'Code', '.cns': 'Code', '.st': 'Code', '.inp': 'Commands', '.cmd': 'Legacy Commands', '.jnp': 'Commands' })[path.extname(filename).toLowerCase()] || 'Data';
 }
 
 function referencedPath(owner, input) {
@@ -28,27 +28,22 @@ function inferredGameRoot(owner) {
   }
 }
 
-// MUGEN and IKEMEN do not resolve stcommon like an ordinary character-owned
-// file.  The compiler searches the character path, game root/motif paths, and
-// data/. IKEMEN also retries legacy CNS names with ".zss" appended. Preserve
-// the normal character-relative result when none of those engine paths exists
-// so genuinely missing assignments still remain visible.
+// State compilation searches every original path before retrying .zss paths.
+// The command input loader has no .zss retry, so a missing CMD stays missing.
 function assignedPath(owner, input, key = '', io = fs) {
   const rawValue = unquote(String(input || '').trim()).trim();
   let local = referencedPath(owner, input);
   if (!local && /^cmd$/i.test(String(key || '').trim()) && rawValue && !rawValue.includes(',') && path.extname(rawValue)) {
     local = path.resolve(path.dirname(owner), rawValue.replace(/[\\/]/g, path.sep));
   }
-  if (!local || !/^(?:cmd|stcommon)$/i.test(String(key || '').trim())) return local;
+  const role = String(key || '').trim();
+  if (!local || !/^(?:cmd|st(?:common|\d*))$/i.test(role)) return local;
   const raw = rawValue.replace(/[\\/]/g, path.sep);
   const root = inferredGameRoot(owner);
   const candidates = [local];
   if (root) candidates.push(path.resolve(root, raw), path.resolve(root, 'data', raw));
-  const withZssFallback = [];
-  for (const candidate of candidates) {
-    withZssFallback.push(candidate);
-    if (!/\.zss$/i.test(candidate)) withZssFallback.push(`${candidate}.zss`);
-  }
+  const withZssFallback = [...candidates];
+  if (!/^cmd$/i.test(role)) for (const candidate of candidates) if (!/\.zss$/i.test(candidate)) withZssFallback.push(`${candidate}.zss`);
   for (const candidate of withZssFallback) {
     try { if (io.existsSync(candidate)) return candidate; } catch (_) {}
   }

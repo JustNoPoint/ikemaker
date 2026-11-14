@@ -5,12 +5,12 @@ const MAX_RESIZE_ATTEMPTS = 20;
 const WIDTH_TOLERANCE = 18;
 
 function style() {
-  return `html,body{max-width:100%;overflow-x:hidden}.ikemaker-companion-browser{max-width:100%;min-width:0;overflow-x:hidden}.ikemaker-companion-browser :where(main,section,article,details,.panel,.browser-content,.content,.pane,.list,.references,.collisions,.tools,.tabs,.actions){min-width:0;max-width:100%}.ikemaker-companion-browser :where(.bar,.tools,.tabs,.actions,.filters,.manage,.file-nav){flex-wrap:wrap;white-space:normal;overflow-x:hidden}.ikemaker-companion-browser :where(.bar,.tools,.tabs,.manage,.file-nav,#actionControls){flex-shrink:0}.ikemaker-companion-browser :where(button,input,select,textarea){max-width:100%}.ikemaker-companion-browser :where(p,li,dd,.status,.muted,.purpose,.mode-help){overflow-wrap:break-word;word-break:normal}.ikemaker-companion-browser :where(.path-token,.code-token,code,pre,[data-exact-token]){overflow-wrap:anywhere}.ikemaker-companion-browser :where(.list,.references,.collisions,.content,.browser-content){overflow-x:hidden}`;
+  return require('./toolbar_accessibility_fallback').style()+`html,body{max-width:100%;overflow-x:hidden}.ikemaker-companion-browser{max-width:100%;min-width:0;overflow-x:hidden}.ikemaker-companion-browser :where(main,section,article,details,.panel,.browser-content,.content,.pane,.list,.references,.collisions,.tools,.tabs,.actions){min-width:0;max-width:100%}.ikemaker-companion-browser :where(.bar,.tools,.tabs,.actions,.filters,.manage,.file-nav){flex-wrap:wrap;white-space:normal;overflow-x:hidden}.ikemaker-companion-browser :where(.bar,.tools,.tabs,.manage,.file-nav,#actionControls){flex-shrink:0}.ikemaker-companion-browser :where(button,input,select,textarea){max-width:100%}.ikemaker-companion-browser :where(p,li,dd,.status,.muted,.purpose,.mode-help){overflow-wrap:break-word;word-break:normal}.ikemaker-companion-browser :where(.path-token,.code-token,code,pre,[data-exact-token]){overflow-wrap:anywhere}.ikemaker-companion-browser :where(.list,.references,.collisions,.content,.browser-content){overflow-x:auto}.ikemaker-companion-browser :where(table,pre,.provider-rows,.palette-workshop){max-width:100%;overflow-x:auto}@media(max-width:420px){.ikemaker-companion-browser :where(.filters,.providers,.comparison-columns,.results.combined .card,.layout,.palette-catalog,.palette-preview){grid-template-columns:minmax(0,1fr)!important}}`;
 }
 
 function clientScript(minimumWidth = MINIMUM_BROWSER_WIDTH) {
   const width = Math.max(320, Math.min(800, Number(minimumWidth) || MINIMUM_BROWSER_WIDTH));
-  return `(()=>{const minimum=${width};let timer=0;const report=()=>vscode.postMessage({type:'companionBrowserViewport',width:Math.max(0,Math.round(document.documentElement.clientWidth||innerWidth||0)),minimum});addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(report,80)});addEventListener('message',event=>{if(event.data?.type==='companionBrowserMeasure')report()});requestAnimationFrame(()=>{report();vscode.postMessage({type:'companionBrowserReady'})})})();`;
+  return require('./viewer_shortcuts').nativeClientScript('vscode')+`(()=>{const minimum=${width};let timer=0;const report=()=>vscode.postMessage({type:'companionBrowserViewport',width:Math.max(0,Math.round(document.documentElement.clientWidth||innerWidth||0)),minimum});addEventListener('resize',()=>{clearTimeout(timer);timer=setTimeout(report,80)});addEventListener('message',event=>{if(event.data?.type==='companionBrowserMeasure')report()});requestAnimationFrame(()=>{report();vscode.postMessage({type:'companionBrowserReady'})})})();`+require('./viewer_control_search').browserScript();
 }
 
 function createMinimumWidthController(panel, commands, minimumWidth = MINIMUM_BROWSER_WIDTH, options = {}) {
@@ -28,7 +28,7 @@ function createMinimumWidthController(panel, commands, minimumWidth = MINIMUM_BR
   const resize = async command => {
     pending = true; attempts += 1;
     try {
-      panel?.reveal?.(panel.viewColumn, false);
+      panel?.reveal?.(panel.viewColumn, true);
       await commands?.executeCommand?.(command);
     } catch (_) {
       attempts = MAX_RESIZE_ATTEMPTS;

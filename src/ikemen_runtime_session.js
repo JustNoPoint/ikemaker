@@ -40,7 +40,7 @@ async function launch(spec, options = {}) {
 async function restart(options = {}) {
   if (!active || !alive(active.pid, options.signal || process.kill)) {
     active = null;
-    throw new Error('No IKEMEN session launched by IKEMaker is currently running. Start Normal, Infinite Quick VS, or Training first.');
+    throw new Error('No IKEMEN session launched by IKEMaker is currently running. Start a game or storyboard preview first.');
   }
   const spec = { executable: active.executable, args: [...active.args], cwd: active.cwd, mode: active.mode };
   await stop(active, options);

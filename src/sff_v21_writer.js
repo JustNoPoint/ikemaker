@@ -13,7 +13,7 @@ const { SFF_BUILD_SPECIFICATION_VERSION, specificationHash } = require('./sff_bu
 
 const SIGNATURE = Buffer.from('ElecbyteSpr\0', 'latin1');
 const VERSION_21 = Buffer.from([0, 1, 0, 2]);
-const HEADER_SIZE = 64, PALETTE_HEADER_SIZE = 16, SPRITE_HEADER_SIZE = 28;
+const HEADER_SIZE = 512, PALETTE_HEADER_SIZE = 16, SPRITE_HEADER_SIZE = 28;
 const FORMATS = Object.freeze({ png8: 10, png24: 11, png32: 12 });
 const DEPTHS = Object.freeze({ png8: 8, png24: 24, png32: 32 });
 const KINDS = Object.freeze({ png8: 'indexed8', png24: 'rgb24', png32: 'rgba32' });
@@ -34,6 +34,7 @@ function assertSpecification(spec) {
   if (String(spec.target?.sffVersion) !== '2.1') fail('only SFF 2.1 is supported.');
   if (String(spec.specificationHash || '').toLowerCase() !== specificationHash(spec)) fail('specification hash is missing or does not match the reviewed content.');
   if (!Array.isArray(spec.sprites) || !Array.isArray(spec.palettes)) fail('reviewed sprite and palette lists are required.');
+  require('./sff_png8_optimization').assertLegacyOptimization(spec);
 }
 
 function preparePalettes(spec) {
@@ -74,7 +75,7 @@ function prepareSprites(spec, options, palettes) {
     if (format === 'png8') {
       let decoded; try { decoded = readIndexedPng8(png, { maxPixels: options.maxPixels }); } catch (error) { fail(`${label} is not accepted PNG8: ${error.message}`); }
       if (decoded.width !== width || decoded.height !== height) fail(`${label} PNG dimensions do not match its review.`);
-      decodedHash = decoded.decodedHash; decodedLength = width * height; png = canonicalizeEmbeddedPng8(png, { maxPixels: options.maxPixels });
+      decodedHash = decoded.decodedHash; decodedLength = width * height; png = canonicalizeEmbeddedPng8(png, { maxPixels: options.maxPixels }); png = require('./sff_png8_optimization').optimizedPng8(png, spec, { maxPixels: options.maxPixels });
     } else {
       let decoded; try { decoded = decodePng(png, { maximumPixels: options.maxPixels || 100000000, maximumDimension: 65535 }); } catch (error) { fail(`${label} is not accepted true-color PNG: ${error.message}`); }
       const expectedType = format === 'png24' ? 2 : 6;

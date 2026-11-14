@@ -3,9 +3,10 @@
 // Browser entry point. Keep this file self-contained: VS Code web extension
 // hosts provide only the `vscode` require shim and do not expose Node modules.
 const vscode = require('vscode');
-const PACKAGE_VERSION = '0.79.500';
+const PACKAGE_VERSION = '0.79.535';
 
 const FALLBACK_COMMANDS = [
+  'ikemen.palette.reviewUnusedPalettes', 'ikemen.quickTransfer', 'sff.quickTransfer', 'air.quickTransfer', 'snd.quickTransfer', 'ikemen.assets.open', 'ikemen.viewer.toggleBrowser',
   'snd.selectPreviousVisible', 'snd.selectNextVisible', 'ikemen.stage.openCode',
   'ikemen.scaleReview.run', 'ikemen.scaleReview.toggleMonitoring', 'ikemen.scaleReview.configureConventions', 'ikemen.scaleReview.exportConventions', 'ikemen.scaleReview.importConventions',
   'ikemen.palette.createTemplate', 'ikemen.palette.openCompanion', 'ikemen.visualBrowser.open',
@@ -13,7 +14,7 @@ const FALLBACK_COMMANDS = [
   'ikemen.authoring.saveScenario', 'ikemen.authoring.recordScenarioResult', 'ikemen.authoring.launchScenario', 'ikemen.authoring.setConditionValues',
   'sff.browseLists', 'snd.browseLists', 'air.browseLists', 'snd.openBatchIntake',
   'ikemen.extensionUpdates.restoreBackup', 'ikemen.updates.checkAll', 'ikemen.updates.configureFrequency',
-  'ikemen.trajectory.openAssist', 'ikemen.palette.createScratch', 'ikemen.palette.resumeScratch', 'ikemen.shader.openWorkshop', 'ikemen.comments.assist', 'ikemen.triggers.browseInsert', 'ikemen.triggers.editArguments', 'ikemen.functions.browseInsert', 'ikemen.statedef.create', 'ikemen.authoring.explainCurrentBlock', 'zssControllers.reviewChange', 'zssControllers.clearChangeGroup', 'ikemen.authoring.openCurrentSymbol', 'ikemen.authoring.browseVariables', 'ikemen.authoring.browseLocals', 'ikemen.authoring.browseRedirects', 'ikemen.authoring.browseControllerUses', 'ikemen.authoring.browseTriggerUses', 'ikemen.authoring.browseConstants', 'ikemen.authoring.browseCommands', 'ikemen.authoring.browseStates', 'ikemen.authoring.browseHelpers', 'ikemen.authoring.browseResources', 'air.focusActionsBrowser', 'air.closeSourceAndReturn', 'ikemen.codeStructure.focusCurrent', 'ikemen.quickLaunch.openSetup', 'ikemen.reviewRetryLoadOnError', 'ikemen.air.openSelectedAnimationReference',
+  'ikemen.trajectory.openAssist', 'ikemen.palette.createScratch', 'ikemen.palette.resumeScratch', 'ikemen.shader.openWorkshop', 'ikemen.fontLab.open', 'ikemen.links.show','ikemen.links.selection','ikemen.comments.assist', 'ikemen.triggers.browseInsert', 'ikemen.triggers.editArguments', 'ikemen.functions.browseInsert', 'ikemen.statedef.create', 'ikemen.authoring.explainCurrentBlock', 'zssControllers.reviewChange', 'zssControllers.clearChangeGroup', 'ikemen.authoring.openCurrentSymbol', 'ikemen.authoring.browseVariables', 'ikemen.authoring.browseLocals', 'ikemen.authoring.browseRedirects', 'ikemen.authoring.browseControllerUses', 'ikemen.authoring.browseTriggerUses', 'ikemen.authoring.browseConstants', 'ikemen.authoring.browseCommands', 'ikemen.authoring.browseStates', 'ikemen.authoring.browseHelpers', 'ikemen.authoring.browseResources', 'air.focusActionsBrowser', 'air.closeSourceAndReturn', 'ikemen.codeStructure.focusCurrent', 'ikemen.quickLaunch.openSetup', 'ikemen.reviewRetryLoadOnError', 'ikemen.air.openSelectedAnimationReference',
   'air.assignClsn2HitReactionRegion', 'air.batchApplyClsn2', 'air.createNew', 'air.deleteSelectedFromViewer', 'air.generateGuardProximityHelper', 'air.openActionLog', 'air.refreshActionLog', 'air.openAnimationPreview', 'air.openDockingWorkspaceExperimental', 'air.toggleBrowser',
   'ikemen.authoringBridge.install', 'ikemen.animationStandards.open', 'ikemen.authoringBridge.openGuide',
   'cns.scaleSelectedSizebox', 'cns.createNew', 'inp.createNew', 'cmd.createNew', 'ikemen.character.createNew', 'ikemen.character.open', 'ikemen.character.close', 'ikemen.stage.close', 'ikemen.context.closeCurrent', 'ikemen.characterDependencies.open', 'ikemen.characterHealth.open', 'ikemen.cnsConverter.open', 'ikemen.cnsConverter.character', 'ikemen.relatedWork.open', 'ikemen.navigation.openDefinition', 'ikemen.viewer.openReference', 'ikemen.viewer.back', 'ikemen.viewer.forward', 'ikemen.launchGame', 'ikemen.launchMirrorCurrent', 'ikemen.launchTrainingConfigured', 'ikemen.launchTrainingCurrent', 'ikemen.restartRunning', 'ikemen.mutations.openHistory', 'ikemen.openControls',
@@ -281,7 +282,147 @@ function registerPlaceholderEditor(context, viewType, kind) {
   }, { webviewOptions: { retainContextWhenHidden: true }, supportsMultipleEditorsPerDocument: false }));
 }
 
+// Portable selected-line trigger edits mirror the desktop source-only behavior.
+function parseControllers(lines) {
+  const controllers = [];
+  let controller;
+  for (let line=0;line<lines.length;line++) {
+    const raw=lines[line], section=/^\s*\[\s*([^\]]+)\]/.exec(raw);
+    if (section) {
+      controller=/^state(?:\s|,|$)/i.test(section[1]) ? {header:{line,start:raw.indexOf('['),length:section[0].trimStart().length},groups:new Map(),triggerRows:[],rows:[],typed:false} : null;
+      if (controller) controllers.push(controller);
+      continue;
+    }
+    if (!controller) continue;
+    if (/^\s*type\s*=\s*[a-z_]/i.test(raw)) controller.typed=true;
+    const match=/^(\s*)(trigger(all|\d+))\s*=/i.exec(raw);
+    if (!match) continue;
+    const row={line,start:match[1].length,length:match[2].length};
+    if (match[3].toLowerCase()==='all') {
+      controller.shared ||= row;
+      controller.triggerRows.push(row);
+      continue;
+    }
+    row.number=Number(match[3]);
+    if (row.number<1 || row.number>65536) continue;
+    controller.rows.push(row);
+    controller.triggerRows.push(row);
+    if (!controller.groups.has(row.number)) controller.groups.set(row.number,row);
+  }
+  return controllers;
+}
+
+function renumberChanges({groups, triggerRows}, lines) {
+  const numbers = [...groups.keys()].sort((a, b) => a - b);
+  const mapping = new Map(numbers.map((number, index) => [number, index + 1]));
+  // Stable sorting appends late shared guards after existing ones and keeps AND conditions in source order.
+  const ordered = [...triggerRows].sort((a, b) => (a.number ?? 0) - (b.number ?? 0));
+  const edits = [];
+  for (const [index, source] of ordered.entries()) {
+    const target = triggerRows[index];
+    const raw = lines[source.line];
+    const renumber = source.number !== undefined && mapping.get(source.number) !== source.number;
+    const digits = source.start + 7;
+    if (source === target) {
+      if (renumber) edits.push({line: target.line, start: digits, length: source.length - 7, text: String(mapping.get(source.number))});
+      continue;
+    }
+    const text = renumber ? raw.slice(0, digits) + mapping.get(source.number) + raw.slice(source.start + source.length) : raw;
+    edits.push({line: target.line, start: 0, length: lines[target.line].length, text});
+  }
+  return edits;
+}
+
+function selectionIncludesLine({start, end}, line) {
+  return line >= start.line && (line < end.line || (line === end.line && end.character > 0));
+}
+
+async function applyTriggerChanges(vscode, editor, changes) {
+  const applied = await editor.edit(builder => {
+    for (const change of changes) {
+      builder.replace(new vscode.Range(change.line, change.start, change.line, change.start + change.length), change.text);
+    }
+  });
+  if (!applied) return vscode.window.showInformationMessage('The source changed. Select the trigger lines and try again.');
+}
+
+// BEGIN GENERATED cns_trigger_fill_plan.js
+function planTriggerFillDown(controllers, selections) {
+  const byLine = new Map();
+  const selected = (selections || []).filter(selection => !selection.isEmpty);
+  const includes = (selection, line) => line >= selection.start.line &&
+    (line < selection.end.line || line === selection.end.line && selection.end.character > 0);
+  for (const selection of selected) {
+    for (const {rows} of controllers) {
+      let group = 1;
+      for (const row of rows) {
+        if (!includes(selection, row.line)) continue;
+        if (row.number !== 1) {
+          group = row.number;
+        } else if (group !== 1) {
+          const change = {line:row.line,start:row.start+7,length:row.length-7,text:String(group)};
+          const prior = byLine.get(row.line);
+          if (prior && prior.text !== change.text) return {changes:[],conflict:true};
+          byLine.set(row.line, change);
+        }
+      }
+    }
+  }
+  return {changes:[...byLine.values()],conflict:false};
+}
+// END GENERATED cns_trigger_fill_plan.js
+
+function registerPortableTriggerFixes(context) {
+  context.subscriptions.push(vscode.commands.registerCommand('ikemen.cns.fillTriggerNumbersDown', () => {
+    const editor = vscode.window.activeTextEditor;
+    const doc = editor?.document;
+    if (!doc || (doc.languageId !== 'ikemen-cns')) {
+      return vscode.window.showInformationMessage('Open a CNS state source to fill trigger numbers down.');
+    }
+    const {changes,conflict} = planTriggerFillDown(parseControllers(doc.getText().split(/\r?\n/)),editor.selections);
+    if (conflict) return vscode.window.showInformationMessage('Overlapping selections give this trigger different numbers. Select one complete range and try again.');
+    if (!changes.length) return vscode.window.showInformationMessage('Select a numbered trigger and the trigger1 lines below it to fill down.');
+    return applyTriggerChanges(vscode, editor, changes);
+  }));
+  context.subscriptions.push(vscode.commands.registerCommand('ikemen.cns.renumberSelectedTriggers', async () => {
+    const editor = vscode.window.activeTextEditor;
+    const doc = editor?.document;
+    if (!doc || (doc.languageId !== 'ikemen-cns')) {
+      return vscode.window.showInformationMessage('Open a CNS state source to renumber its triggers.');
+    }
+    const selections = editor.selections.filter(selection => !selection.isEmpty);
+    const includesLine = line => selections.some(selection => selectionIncludesLine(selection, line));
+    const changes = [];
+    let found = false;
+    const lines = doc.getText().split(/\r?\n/);
+    for (const controller of parseControllers(lines)) {
+      if (!controller.rows.some(row => includesLine(row.line))) continue;
+      found = true;
+      const edits = renumberChanges(controller, lines);
+      if (!edits.length) continue;
+      if (!controller.rows.every(row => includesLine(row.line))) {
+        return vscode.window.showInformationMessage('Select all numbered trigger lines in the controller, including repeated groups.');
+      }
+      if (edits.some(edit => !includesLine(edit.line))) {
+        return vscode.window.showInformationMessage('Include the misplaced triggerall lines in your selection to move them above the numbered triggers.');
+      }
+      changes.push(...edits);
+    }
+    if (!changes.length) return vscode.window.showInformationMessage(found
+      ? 'The selected trigger groups are already consecutive.'
+      : 'Select the numbered trigger lines in a CNS controller.');
+    return applyTriggerChanges(vscode, editor, changes);
+  }));
+}
+
 async function activate(context) {
+  registerPortableTriggerFixes(context);
+  context.subscriptions.push(
+    vscode.commands.registerCommand('ikemen.code.chooseLanguage',()=>vscode.commands.executeCommand('workbench.action.editor.changeLanguageMode')),
+    vscode.commands.registerCommand('ikemen.viewer.actionsSearch',()=>vscode.commands.executeCommand('ikemen.textActions.open')),
+    vscode.commands.registerCommand('ikemen.viewer.focus',()=>vscode.commands.executeCommand('workbench.action.focusActiveEditorGroup')),
+    vscode.commands.registerCommand('ikemen.viewer.keyboardShortcuts',async()=>{const doc=await vscode.workspace.openTextDocument({language:'markdown',content:'# Browser keyboard shortcuts\n\nUse normal VS Code editor shortcuts for navigation, saving, and comments.\n\nIKEMaker: Action Search opens portable Text Editor Actions. Focus Viewer returns to the active editor group. Viewer/browser switching and visual asset shortcuts require the desktop build.'});return vscode.window.showTextDocument(doc,{preview:false});})
+  );
   const controllerCatalog = await readCatalog(context), triggerCatalog = await readCatalog(context, 'triggers.json'), luaCatalog = await readCatalog(context, 'lua-api.json'), controllers = new WebControllerProvider(controllerCatalog);
   if (typeof vscode.window.createStatusBarItem === 'function') {
     const alignment = vscode.StatusBarAlignment ? vscode.StatusBarAlignment.Left : undefined;
@@ -402,4 +543,4 @@ async function activate(context) {
 }
 
 function deactivate() {}
-module.exports = { baselineEntry, baselineCatalog, insertController, activate, deactivate, controllerName, controllerSnippet, signatureSnippet, portableStructure, portableAudit };
+module.exports = { parseControllers,renumberChanges,planTriggerFillDown,registerPortableTriggerFixes,baselineEntry, baselineCatalog, insertController, activate, deactivate, controllerName, controllerSnippet, signatureSnippet, portableStructure, portableAudit };

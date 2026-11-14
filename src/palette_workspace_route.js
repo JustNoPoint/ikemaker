@@ -1,6 +1,8 @@
 'use strict';
+const { indexed } = require('./palette_sprite_associations');
 
 function integer(value) {
+  if (value === null || value === undefined || value === '' || typeof value === 'boolean') return null;
   const number = Number(value);
   return Number.isInteger(number) && number >= 0 ? number : null;
 }
@@ -27,32 +29,50 @@ function exactPalette(archive, requested) {
   return { physicalIndex: palette.index, group: palette.group, number: palette.number };
 }
 
+function attachedPalette(archive, spriteSelection) {
+  const sprite = spriteSelection && archive?.sprites?.[spriteSelection.physicalIndex];
+  if (!sprite || !indexed(archive, sprite)) return null;
+  const palette = archive?.palettes?.[sprite.paletteIndex];
+  return palette ? { physicalIndex: palette.index, group: palette.group, number: palette.number } : null;
+}
+
+function initialPaletteSelection(archive, current) {
+  if (current?.sprite?.physicalIndex !== null && current?.sprite?.physicalIndex !== undefined) return null;
+  if (current?.palette?.physicalIndex !== null && current?.palette?.physicalIndex !== undefined) return null;
+  const first = archive?.sprites?.[0] || null;
+  const sprite = first ? { physicalIndex:first.index,group:first.group,number:first.number } : null;
+  const palette = attachedPalette(archive,sprite) || (!first && archive?.palettes?.[0] ? {physicalIndex:archive.palettes[0].index,group:archive.palettes[0].group,number:archive.palettes[0].number} : null);
+  return {sprite,palette};
+}
+
 function resolvePaletteWorkspaceRoute(archive, options = {}) {
   const requested = options.selection || {};
   const sprite = exactSprite(archive, requested.sprite || options.spriteSelection);
-  let palette = exactPalette(archive, requested.palette || options.paletteSelection);
-  if (!palette && sprite) {
-    const owner = archive?.palettes?.[archive.sprites[sprite.physicalIndex]?.paletteIndex];
-    if (owner) palette = { physicalIndex: owner.index, group: owner.group, number: owner.number };
-  }
+  const explicitPalette = exactPalette(archive, requested.palette || options.paletteSelection);
+  const attached = attachedPalette(archive, sprite);
+  const palette = explicitPalette || attached;
   const hasRequestedSelection = Boolean(requested.sprite || requested.palette || options.spriteSelection || options.paletteSelection);
+  const selectionRejected = Boolean((requested.sprite || options.spriteSelection) && !sprite || (requested.palette || options.paletteSelection) && !explicitPalette);
+  const previewOverride = Boolean(sprite && explicitPalette && (!attached || attached.physicalIndex !== explicitPalette.physicalIndex));
   return {
-    selection: hasRequestedSelection ? { sprite, palette } : null,
+    selection: hasRequestedSelection && !selectionRejected ? { sprite, palette } : null,
     context: {
       ...(options.section ? { section: String(options.section) } : {}),
+      ...(sprite && palette ? { paletteSpriteMode: previewOverride ? 'preview-current' : 'associated' } : {}),
       ...(Object.prototype.hasOwnProperty.call(options, 'origin') ? { origin: options.origin || null } : {}),
       ...(Object.prototype.hasOwnProperty.call(options, 'returnContext') ? { returnContext: options.returnContext || null } : {})
     },
-    selectionRejected: hasRequestedSelection && !sprite && !palette
+    selectionRejected
   };
 }
 
 function applyPaletteWorkspaceRoute(service, filename, archive, options = {}) {
   const route = resolvePaletteWorkspaceRoute(archive, options), patch = {};
+  if(route.selectionRejected)throw Error('The SFF sprite or palette selection changed. Refresh the viewer and choose it again.');
   if (Object.keys(route.context).length) patch.context = route.context;
   if (route.selection) patch.selection = route.selection;
   const session = Object.keys(patch).length ? service.mutate(filename, patch) : service.snapshot(filename);
   return { session, selectionRejected: route.selectionRejected };
 }
 
-module.exports = { exactSprite, exactPalette, resolvePaletteWorkspaceRoute, applyPaletteWorkspaceRoute };
+module.exports = { exactSprite, exactPalette, attachedPalette, initialPaletteSelection, resolvePaletteWorkspaceRoute, applyPaletteWorkspaceRoute };

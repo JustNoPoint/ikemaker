@@ -14,3 +14,18 @@ function Get-IkemakerReleaseDirectory([string]$SourceRoot) {
     }
     return Join-Path (Split-Path -Parent $SourceRoot) 'releases'
 }
+
+function Assert-IkemakerLuaCompanion([string]$Source) {
+    if (-not (Test-Path -LiteralPath $Source -PathType Leaf) -or
+        (Get-Item -LiteralPath $Source).Length -ne 11080310 -or
+        (Get-IkemakerFileSha256 $Source) -ne 'C0A7489AD58358DDF2590F6782C94FA9308076B73AAA30B456932373B0D8CB28') {
+        throw 'Supply the reviewed Windows x64 Lua Language Server 3.19.1 VSIX listed in SOURCE-BUILD.md.'
+    }
+}
+
+function Get-IkemakerFileSha256([string]$Source) {
+    $algorithm = [Security.Cryptography.SHA256]::Create()
+    $stream = [IO.File]::OpenRead($Source)
+    try { return [BitConverter]::ToString($algorithm.ComputeHash($stream)).Replace('-', '') }
+    finally { $stream.Dispose(); $algorithm.Dispose() }
+}

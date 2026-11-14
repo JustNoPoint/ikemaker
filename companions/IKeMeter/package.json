@@ -1,0 +1,15 @@
+{
+  "name": "ikemeter",
+  "version": "0.0.1-interactive-candidate",
+  "private": true,
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "os": [
+    "win32"
+  ],
+  "description": "Local Windows tester; requires PowerShell 7 and a separately supplied pinned IKEMEN GO runtime. Python 3 is optional for reload reproduction."
+}

@@ -563,7 +563,7 @@ function validMoveBodyMessage(message) {
   try{if(JSON.stringify(message).length>300000)return false;}catch{return false;}
   const schemas={
     moveFormDraft:[['defPath','sourceId','draft'],[]],moveCodeDraft:[['defPath','sectionId','draft'],[]],moveIntegrationContext:[[],['sourceId','frameIndex','componentReference']],refresh:[[],[]],
-    createMoveVariant:[[],['reference','sourceId','sourceHash']],selectDirectComponent:[['reference'],[]],saveDirectStateSource:[['reference'],[]],editDirectComponent:[['reference'],[]],openDirectComponent:[['reference'],[]],openDirectDiagnostic:[['reference','line'],[]],openSpecialistComponent:[['reference'],[]],openComponentAir:[['reference'],[]],openComponentAirAction:[['reference','action'],[]],previewComponentAirAction:[['reference','action','requestId'],[]],previewStateControllerCreate:[['reference','kind','targetState','action','resourceId'],[]],applyStateControllerCreate:[['token'],[]],discardStateControllerCreate:[['token'],[]],openProjectileAirRoute:[['route'],[]],openStateAnimationRoute:[['route'],[]],openStateChangeAnimationRoute:[['route'],[]],openStatePlaySoundRoute:[['route'],[]],openProjectileResourceRoute:[['route'],[]],openProjectileStateRoute:[['route'],[]],openHelperStateRoute:[['route'],[]],navigateHelperStateRoute:[['route'],[]],navigateHelperComponent:[['direction'],['reference','token']],openStateTransitionRoute:[['route'],[]],openFunctionCallRoute:[['route'],[]],openCommandUsageRoute:[['route'],[]],openProjectSymbolRoute:[['route'],[]],previewProjectileEdit:[['reference','values'],[]],applyProjectileEdit:[['token'],[]],discardProjectileEdit:[['reference'],[]],openBehaviorMaps:[['reference'],[]],openComponentKnowledge:[['reference'],[]],openComponentStructure:[['reference'],[]],openComponentRecommendations:[['reference'],[]],openComponentLifecycleSite:[['reference','siteId','fingerprint'],[]],initializeHelperMap:[['reference'],[]],
+    createMoveVariant:[[],['reference','sourceId','sourceHash']],selectDirectComponent:[['reference'],[]],openVariantReference:[['reference','linkId','target'],[]],saveDirectStateSource:[['reference'],[]],editDirectComponent:[['reference'],[]],openDirectComponent:[['reference'],[]],openDirectDiagnostic:[['reference','line'],[]],openSpecialistComponent:[['reference'],[]],openComponentAir:[['reference'],[]],openComponentAirAction:[['reference','action'],[]],previewComponentAirAction:[['reference','action','requestId'],[]],previewStateControllerCreate:[['reference','kind','targetState','action','resourceId'],[]],applyStateControllerCreate:[['token'],[]],discardStateControllerCreate:[['token'],[]],openProjectileAirRoute:[['route'],[]],openStateAnimationRoute:[['route'],[]],openStateChangeAnimationRoute:[['route'],[]],openStatePlaySoundRoute:[['route'],[]],openHelperStateRoute:[['route'],[]],navigateHelperStateRoute:[['route'],[]],navigateHelperComponent:[['direction'],['reference','token']],openStateTransitionRoute:[['route'],[]],openFunctionCallRoute:[['route'],[]],openCommandUsageRoute:[['route'],[]],openProjectSymbolRoute:[['route'],[]],previewProjectileEdit:[['reference','values'],[]],applyProjectileEdit:[['token'],[]],discardProjectileEdit:[['reference'],[]],openBehaviorMaps:[['reference'],[]],openComponentKnowledge:[['reference'],[]],openComponentStructure:[['reference'],[]],openComponentRecommendations:[['reference'],[]],openComponentLifecycleSite:[['reference','siteId','fingerprint'],[]],initializeHelperMap:[['reference'],[]],
     overviewAttack:[['reference'],[]],overviewProfile:[['reference'],[]],overviewProblem:[['reference'],[]],
     moveBehaviorCreateOverride:[['state'],[]],moveCommandTriggerRecipes:[[],[]],moveTestAgain:[[],[]],moveOverview:[[],['sourceId','frameIndex']],airWorkspace:[[],['sourceId','frameIndex']],throwCreator:[[],[]],linkedCode:[['sourceId'],[]],open:[['file','sourceId'],['suffix']],launch:[[],[]],
     apply:[['defPath','sourceId','name','suffix','base','value'],[]],applyProfile:[['requestId','sourceId','index','filename','line','name','base','sourceHash','value','draftRevision','draftBase','draftSourceHash'],[]],importAirTiming:[['sourceId'],[]],frameTimingMenu:[['sourceId','element'],[]],copyFields:[['sourceId','suffixes'],['values']],
@@ -977,7 +977,7 @@ async function handle(message) {
   if(!validMoveBodyMessage(message))return;
   if(message.type.startsWith('moveLabThrow')){const owner=session;return moveLabThrowHandoff.handleRich(owner,message,{isCurrent:()=>session===owner&&!owner.disposed,documents:vscode.workspace.textDocuments||[],read:currentTextSync,source:()=>resolveDisplaySource(owner),open:reference=>vscode.commands.executeCommand('ikemen.throwCreator.open',vscode.Uri.file(owner.assets.defPath),{handshake:reference}),openSource:link=>require('./viewer_navigation').openViewerSource(link.filename,link.line,require('./viewer_navigation').currentPoint(owner.assets.defPath,'code',{},owner.panel))});}
   if(message.type==='moveBehaviorCreateOverride'){const owner=currentOwner,assets=owner.assets;return require('./move_behavior_navigation').createOverride(owner,message.state,{api:vscode,isCurrent:()=>session===owner&&owner.assets===assets});}
-  if(message.type==='moveCommandTriggerRecipes'){if(session!==currentOwner||currentOwner.disposed||currentOwner.panel?.active===false)return;return vscode.commands.executeCommand('ikemen.moveLab.commandTriggerRecipes',vscode.Uri.file(currentOwner.assets.defPath));}
+  if(message.type==='moveCommandTriggerRecipes'){if(session!==currentOwner||currentOwner.disposed||currentOwner.panel?.active===false)return;const owner=currentOwner,source=await resolveDisplaySource(owner).catch(()=>null);if(session!==owner||owner.disposed)return;return vscode.commands.executeCommand('ikemen.moveLab.commandTriggerRecipes',vscode.Uri.file(owner.assets.defPath),source?.filename?{file:source.filename,line:source.line}:undefined);}
   if(message.type==='moveFormDraft'){
     if(!session?.draftDefs.has(message.defPath?.toLowerCase())||typeof message.sourceId!=='string'||!message.draft||typeof message.draft!=='object')return;
     await formDrafts.stage(draftKey(message.defPath,message.sourceId),message.draft);return;
@@ -1046,7 +1046,7 @@ async function handle(message) {
     const token=require('crypto').randomUUID();owner.helperMapPlans.set(token,{token,componentReference:latest.component.reference,entryId:latestEntry.id,entryIdentity:picked.identity,plan:latestPlan});
     owner.model=latest.current;return owner.panel.webview.postMessage({type:'helperMapDraft',reference:latest.component.reference,token,mapName:latestEntry.name,operation:latestPlan.operation,text:latestPlan.after});
   }
-  if (message.type === 'selectDirectComponent'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic'||message.type==='openSpecialistComponent'||message.type==='openComponentAir'||message.type==='openComponentAirAction'||message.type==='previewComponentAirAction') {
+  if (message.type === 'selectDirectComponent'||message.type === 'openVariantReference'||message.type === 'editDirectComponent'||message.type === 'openDirectComponent'||message.type === 'openDirectDiagnostic'||message.type==='openSpecialistComponent'||message.type==='openComponentAir'||message.type==='openComponentAirAction'||message.type==='previewComponentAirAction') {
     if(message.type==='selectDirectComponent'&&refreshAssets(owner)===assets){
       const selected=validComponentReference(message.reference,{components:pool(owner.model)},assets.defPath);
       const dirtyDef=(vscode.workspace.textDocuments||[]).some(doc=>doc.isDirty&&identity(doc.fileName)===identity(assets.defPath));
@@ -1058,6 +1058,28 @@ async function handle(message) {
     const current = await shellModelFor(assets); if(session!==owner||owner.assets!==assets)return;
     const component=validComponentReference(message.reference,{components:pool(current)},assets.defPath);
     if(!component)return vscode.window.showWarningMessage('That direct component changed or moved. Refresh Moves / Overview and choose it again.');
+    if(message.type==='openVariantReference'){
+      const navigation=component.kind==='state'?component.variantNavigation:null;
+      if(!navigation||navigation.linkId!==message.linkId||typeof message.target!=='string'||!['original-state','original-action','variant-action','sprites','sounds','constants'].includes(message.target))return vscode.window.showWarningMessage('That variant reference changed. Refresh Move Lab and choose it again.');
+      if(message.target==='sprites'||message.target==='sounds'){
+        const filename=message.target==='sprites'?assets.sff:assets.snd,command=message.target==='sprites'?'sff.openViewer':'snd.openViewer';
+        if(!filename||!fs.existsSync(filename))return vscode.window.showWarningMessage('That shared resource is not assigned or is unavailable.');
+        return vscode.commands.executeCommand(command,vscode.Uri.file(filename));
+      }
+      if(message.target==='constants')return assets.constants&&fs.existsSync(assets.constants)?openSourceLocation(owner,assets.constants):vscode.window.showWarningMessage('The shared constants source is unavailable.');
+      if(message.target==='original-state'){
+        const filename=navigation.source,assigned=(assets.code||[]).find(file=>identity(file)===identity(filename));
+        if(!assigned||!fs.existsSync(assigned)||!Number.isSafeInteger(navigation.originalState))return vscode.window.showWarningMessage('The original StateDef is outside assigned code or unavailable.');
+        const declarations=require('./state_transfer_model').parseStateSource(await currentText(assigned),assigned).declarations.filter(item=>!item.dynamic&&item.value===navigation.originalState);
+        if(declarations.length!==1)return vscode.window.showWarningMessage('The original StateDef is missing or ambiguous. Refresh the assigned source.');
+        return openSourceLocation(owner,assigned,declarations[0].line);
+      }
+      const action=message.target==='original-action'?navigation.originalAction:navigation.copiedAction;
+      if(!Number.isSafeInteger(action)||!assets.air||!fs.existsSync(assets.air))return vscode.window.showWarningMessage('That AIR action is unavailable in the assigned source.');
+      const actions=require('./air_preview_model').parseAir(await currentText(assets.air)).filter(item=>item.number===action);
+      if(actions.length!==1)return vscode.window.showWarningMessage('That AIR action is missing or ambiguous. Refresh the assigned source.');
+      return vscode.commands.executeCommand('air.openAnimationPreview',vscode.Uri.file(assets.air),{action});
+    }
     if(message.type==='selectDirectComponent'){
       decorateProjectileModel(owner,current);
       owner.model=current;owner.shell=true;

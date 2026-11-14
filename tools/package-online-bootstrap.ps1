@@ -15,7 +15,7 @@ $luaVersion = '3.19.1'
 if ([string]::IsNullOrWhiteSpace($VsixPath)) { $VsixPath = Join-Path $releaseDirectory ("ikemen-zss-tools-{0}.vsix" -f $version) }
 if (-not (Test-Path -LiteralPath $VsixPath)) { & (Join-Path $PSScriptRoot 'package-vsix.ps1') -OutputPath $VsixPath | Out-Null }
 if ([string]::IsNullOrWhiteSpace($LuaVsixPath)) { $LuaVsixPath = Join-Path $root ("third_party\Lua-Language-Server-{0}-win32-x64.vsix" -f $luaVersion) }
-if ($IncludeLuaLanguageServer -and -not (Test-Path -LiteralPath $LuaVsixPath)) { throw "Official Lua Language Server VSIX is missing: $LuaVsixPath" }
+if ($IncludeLuaLanguageServer) { Assert-IkemakerLuaCompanion $LuaVsixPath }
 if ([string]::IsNullOrWhiteSpace($OutputPath)) { $suffix = if ($IncludeLuaLanguageServer) { '-With-LuaLS' } else { '' }; $OutputPath = Join-Path $releaseDirectory ("IKEMaker-{0}-Windows-Online-Bootstrap{1}.zip" -f $version, $suffix) }
 $OutputPath = [System.IO.Path]::GetFullPath($OutputPath)
 New-Item -ItemType Directory -Path (Split-Path -Parent $OutputPath) -Force | Out-Null

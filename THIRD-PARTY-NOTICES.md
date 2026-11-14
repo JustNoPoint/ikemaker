@@ -32,3 +32,9 @@ and original-source links are preserved. MUGEN documentation is copyright
 Elecbyte; IKEMEN documentation belongs to its contributors. The manifest records
 source URLs and capture date. Local copies have navigation/formatting changes
 for offline reading; they are not an official documentation release.
+
+## Shader Workshop
+
+The bundled @webgpu/glslang 0.0.15 WebAssembly compiler is distributed with its license in bin/shader-compiler/LICENSE.txt (https://github.com/KhronosGroup/glslang). The sprite fragment templates include MIT-licensed IKEMEN GO shader code and carry the upstream copyright notice (https://github.com/ikemen-engine/Ikemen-GO).
+
+Windows OpenGL validation uses Khronos glslangValidator 11.7.0 distributed by glslang-validator-prebuilt-predownloaded 0.0.2. Its license accompanies the compiler.

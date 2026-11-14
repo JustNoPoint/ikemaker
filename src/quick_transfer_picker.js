@@ -19,7 +19,9 @@ function transferClient() {
     return opt;
   }
   function status() {
-    el('count').textContent = marked.size + ' selected · ' + queue.size + ' queued';
+    const hidden = [...marked].filter(index => !matches.includes(index)).length;
+    el('count').textContent = marked.size + ' selected · ' + hidden + ' hidden by filter · ' + queue.size + ' queued';
+    el('add').textContent = 'Add ' + marked.size + ' marked items →';
     el('add').disabled = !marked.size;
     el('remove').disabled = !el('queue').selectedOptions.length;
     el('review').disabled = !queue.size;
@@ -113,6 +115,7 @@ function transferClient() {
   }
   el('targetId').oninput=()=>el('targetId').setCustomValidity('');
   el('targetId').onchange=setMapping;el('policy').onchange=setMapping;
+  el('clearAll').onclick = () => { marked.clear(); drawSource(); };
   for (const action of ['all','invert','clear']) el(action).onclick = () => {
     for (const index of matches) {
       if (action === 'clear' || (action === 'invert' && marked.has(index))) marked.delete(index);
@@ -159,17 +162,18 @@ function pickerHtml(options) {
   const endpoint = file => '<span class="file" title="'+escape(file)+'">'+escape(sameName?file:path.basename(file))+'</span>';
   return '<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>'+
     '*{box-sizing:border-box}body{font:var(--vscode-font-size) var(--vscode-font-family);color:var(--vscode-foreground);background:var(--vscode-editor-background);margin:0;padding:12px}h1{font-size:1.15rem;margin:0 0 10px}main{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}section{min-width:0}.file{font-weight:normal;overflow-wrap:anywhere;color:var(--vscode-descriptionForeground)}label{display:block;font-weight:600;margin-bottom:4px}input,select,button{font:inherit;color:inherit}input[type=search],select{background:var(--vscode-input-background);border:1px solid var(--vscode-input-border,var(--vscode-panel-border));width:100%;padding:4px}select{height:clamp(8rem,30vh,22rem)}button{background:var(--vscode-button-secondaryBackground);color:var(--vscode-button-secondaryForeground);border:1px solid transparent;padding:4px 8px}button:disabled{opacity:.55}button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--vscode-focusBorder)}.bar,footer{display:flex;flex-wrap:wrap;align-items:center;gap:5px;margin:6px 0}.bar label{margin:0;font-weight:normal}footer{position:sticky;bottom:0;background:var(--vscode-editor-background);padding:7px 0;border-top:1px solid var(--vscode-panel-border)}#count{margin-right:auto}#review{background:var(--vscode-button-background);color:var(--vscode-button-foreground)}figure{display:flex;gap:8px;align-items:center;margin:8px 0}img{width:clamp(100px,18vw,200px);height:clamp(80px,18vh,150px);object-fit:contain;image-rendering:pixelated;background:var(--vscode-sideBar-background)}[hidden]{display:none!important}@media(max-width:540px){main{grid-template-columns:1fr}select{height:8rem}}'+
-    '</style></head><body><h1>'+escape(kind.toUpperCase())+' Quick Transfer</h1><main><section><label for="source">Source · '+endpoint(source)+'</label><input type="search" id="search" placeholder="Filter source" aria-label="Filter source"><select multiple id="source" aria-label="Source items"></select><div class="bar"><button id="all">Select all</button><button id="invert">Invert</button><button id="clear">Clear</button><label><input type="checkbox" id="sort">Sort</label></div><div class="bar" id="paging"><button id="prev">Previous</button><span id="range"></span><button id="next">Next</button></div><button id="add">Add to queue →</button></section><section><label for="queue">Destination queue · '+endpoint(destination)+'</label><select multiple id="queue"></select><div class="bar"><button id="remove">Remove selected</button></div><div id="mapping" hidden><label '+(mapping.allowTargetId?'':'hidden')+'>Destination ID <input id="targetId" placeholder="Keep source ID"></label><label '+(mapping.policies.length?'':'hidden')+'>On conflict <select id="policy" style="height:auto">'+mapping.policies.map(p=>'<option value="'+escape(p)+'">'+escape(({ask:'Ask during review',skip:'Skip',replace:'Replace','next-free':'Use next free ID'})[p]||p)+'</option>').join('')+'</select></label></div></section></main>'+
+    '</style></head><body><h1>'+escape(kind.toUpperCase())+' Quick Transfer</h1><main><section><label for="source">Source · '+endpoint(source)+'</label><input type="search" id="search" placeholder="Filter source" aria-label="Filter source"><select multiple id="source" aria-label="Source items"></select><div class="bar"><button id="all">Select all</button><button id="invert">Invert</button><button id="clear">Clear matching</button><button id="clearAll">Clear all selections</button><label><input type="checkbox" id="sort">Sort</label></div><div class="bar" id="paging"><button id="prev">Previous</button><span id="range"></span><button id="next">Next</button></div><button id="add">Add to queue →</button></section><section><label for="queue">Destination queue · '+endpoint(destination)+'</label><select multiple id="queue"></select><div class="bar"><button id="remove">Remove selected</button></div><div id="mapping" hidden><label '+(mapping.allowTargetId?'':'hidden')+'>Destination ID <input id="targetId" placeholder="Keep source ID"></label><label '+(mapping.policies.length?'':'hidden')+'>On conflict <select id="policy" style="height:auto">'+mapping.policies.map(p=>'<option value="'+escape(p)+'">'+escape(({ask:'Ask during review',skip:'Skip',replace:'Replace','next-free':'Use next free ID'})[p]||p)+'</option>').join('')+'</select></label></div></section></main>'+
     (options.spriteImport?'<label><input id="importSprites" type="checkbox"> Import sprites <small>(include attached palettes and update frame IDs)</small></label>':'')+
     (hasPreview?'<figure><img id="image" hidden alt="Selected sprite preview"><figcaption id="caption"></figcaption></figure>':'')+
     (options.getAudio?'<div class="bar"><button id="listen">Audition sound</button><audio id="audio" controls preload="none"></audio><span id="soundStatus" role="status"></span></div>':'')+
-    '<footer><span id="count" role="status"></span><button id="review">Review transfer…</button><button id="cancel">Cancel</button></footer><script type="application/json" id="transfer-data">'+data+'</script><script>('+transferClient.toString()+')()</script></body></html>';
+    '<footer><span id="count" role="status"></span><button id="review">Review transfer…</button><button id="cancel">Cancel</button></footer><script type="application/json" id="transfer-data">'+data+'</script><script>('+transferClient.toString()+')()</script><script>'+require('./viewer_control_search').browserScript()+'</script></body></html>';
 }
 
 async function pickTransferRows(options) {
   const {rows,kind} = options;
   if (!rows.length) { await vscode.window.showInformationMessage('The source contains no transferable items.'); return; }
   const panel=vscode.window.createWebviewPanel('ikemakerQuickTransfer',kind.toUpperCase()+' Quick Transfer',vscode.ViewColumn.Active,{enableScripts:true,retainContextWhenHidden:true});
+  require('./viewer_group').trackViewerPanel(panel);
   return new Promise(resolve=>{
     let done=false, latest=0;
     const finish=(value,close)=>{if(done)return; done=true;resolve(value);if(close)panel.dispose();};

@@ -3,7 +3,7 @@ const panels=new Set();
 const valid=mode=>['player','simple','workspace'].includes(mode);
 function css(mode){
   return require('./interface_capabilities').commandStyle(mode)+(mode==='player'
-    ? '.launch-controls,[data-tab=other],[data-view=creator],[data-view=dialogue],#layout,#code,#systemCode,#selectCode,#selectCode2,#createArc,#menuModes{display:none!important}.player-navigation{display:inline-flex;flex-wrap:wrap;gap:4px}'
+    ? 'body:not(:has(.workspace-header)) .launch-controls,[data-tab=other],[data-view=creator],[data-view=dialogue],#layout,#code,#systemCode,#selectCode,#selectCode2,#createArc,#menuModes{display:none!important}body:has(.workspace-header) :is([data-universal-slot="project"],[data-universal-slot="stage"],[data-universal-slot="sprites"],[data-universal-slot="animations"],[data-universal-slot="commands"],[data-universal-slot="states"],[data-universal-slot="sounds"],[data-universal-slot="code-structure"]){display:none!important}.player-navigation{display:inline-flex;flex-wrap:wrap;gap:4px}'
     : '.player-navigation{display:none!important}');
 }
 function html(){return '<style data-ikemen-mode-style>'+css(require('./interface_mode').current())+'</style>';}

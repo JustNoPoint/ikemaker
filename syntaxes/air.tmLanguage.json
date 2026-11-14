@@ -3,10 +3,24 @@
   "name": "IKEMEN AIR",
   "scopeName": "source.ikemen-air",
   "patterns": [
-    { "include": "#comments" },
-    { "include": "#actions" },
-    { "include": "#collision-boxes" },
-    { "include": "#numbers" }
+    {
+      "include": "#comments"
+    },
+    {
+      "include": "#actions"
+    },
+    {
+      "include": "#keywords"
+    },
+    {
+      "include": "#collision-boxes"
+    },
+    {
+      "include": "#frame-flags"
+    },
+    {
+      "include": "#numbers"
+    }
   ],
   "repository": {
     "comments": {
@@ -23,9 +37,15 @@
           "name": "meta.action.ikemen-air",
           "match": "(?i)(\\[\\s*Begin\\s+Action\\s+)(-?\\d+)(\\s*\\])",
           "captures": {
-            "1": { "name": "keyword.control.action.begin.ikemen-air" },
-            "2": { "name": "entity.name.section.action.ikemen-air" },
-            "3": { "name": "keyword.control.action.end.ikemen-air" }
+            "1": {
+              "name": "keyword.control.action.begin.ikemen-air"
+            },
+            "2": {
+              "name": "entity.name.section.action.ikemen-air"
+            },
+            "3": {
+              "name": "keyword.control.action.end.ikemen-air"
+            }
           }
         }
       ]
@@ -47,6 +67,38 @@
         {
           "name": "constant.numeric.ikemen-air",
           "match": "(?<![A-Za-z_])[-+]?(?:\\d+\\.?(?:\\d*)?|\\.\\d+)(?![A-Za-z_])"
+        }
+      ]
+    },
+    "keywords": {
+      "patterns": [
+        {
+          "name": "keyword.control.animation.ikemen-air",
+          "match": "(?i)^\\s*loopstart\\b"
+        },
+        {
+          "name": "keyword.control.animation.ikemen-air",
+          "match": "(?i)^\\s*interpolate\\s+(?:offset|scale|angle|blend)\\b"
+        },
+        {
+          "name": "meta.copy-action.ikemen-air",
+          "match": "(?i)^\\s*(copy\\s+action)\\s+(-?\\d+)",
+          "captures": {
+            "1": {
+              "name": "keyword.control.animation.ikemen-air"
+            },
+            "2": {
+              "name": "entity.name.section.action.ikemen-air"
+            }
+          }
+        }
+      ]
+    },
+    "frame-flags": {
+      "patterns": [
+        {
+          "name": "storage.modifier.frame.ikemen-air",
+          "match": "(?i)(?<=,)\\s*(?:hv|vh|h|v|as\\d+d\\d+|a1|a|s)(?=\\s*(?:,|;|$))"
         }
       ]
     }

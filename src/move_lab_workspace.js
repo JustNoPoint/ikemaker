@@ -367,6 +367,10 @@ async function invokeMoveLabRoute(owner, message) {
   if (!route || route.generation !== owner.generation) return false;
   if (route.kind === 'tool' && MOVE_LAB_COMMANDS.has(route.command)) {
     const uri=vscode.Uri.file(owner.defPath);
+    // Command recipes receive the selected code file/line as their destination (StateNo is inferred there).
+    if (route.command === 'ikemen.moveLab.commandTriggerRecipes') {
+      return vscode.commands.executeCommand(route.command, uri, owner.source?.filename ? { file: owner.source.filename, line: owner.source.line } : undefined);
+    }
     if (owner.source && ['ikemen.hitDef.openEditor','ikemen.positionCamera.open'].includes(route.command)) {
       return vscode.commands.executeCommand(route.command,uri,{sourceSelection:{filename:owner.source.filename,line:owner.source.line}});
     }
