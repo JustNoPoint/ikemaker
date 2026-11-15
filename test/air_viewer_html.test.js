@@ -15,8 +15,8 @@ const { viewerHtml, airRestoreStatusHtml, inferCharacterFiles, existingAirSource
 const { workspaceExperience } = require('../src/experience_model');
 Module._load = originalLoad;
 const viewerSource = fs.readFileSync(path.join(__dirname, '../src/air_viewer.js'), 'utf8');
-const normalizedAppearance = normalizeCollisionAppearancePreference({ opacity: 2, lineWidth: 20, scaleWithZoom: true, colors: { clsn1: '#ABCDEF', clsn1Default: 'bad', clsn2: '#123456', clsn2Default: '#654321', push: '#00ff00' } });
-assert.deepStrictEqual({ opacity: normalizedAppearance.opacity, lineWidth: normalizedAppearance.lineWidth, scaleWithZoom: normalizedAppearance.scaleWithZoom, colors: normalizedAppearance.colors }, { opacity: 1, lineWidth: 8, scaleWithZoom: true, colors: { clsn1: '#abcdef', clsn1Default: '#ffd84a', clsn2: '#123456', clsn2Default: '#654321', push: '#00ff00' } });
+const normalizedAppearance = normalizeCollisionAppearancePreference({ opacity: 2, lineWidth: 20, scaleWithZoom: true, colors: { clsn1: '#ABCDEF', clsn1Default: 'bad', clsn2: '#123456', clsn2Default: '#654321', push: '#00ff00', selected: '#ffffff', active: '#ffffff' } });
+assert.deepStrictEqual({ opacity: normalizedAppearance.opacity, lineWidth: normalizedAppearance.lineWidth, scaleWithZoom: normalizedAppearance.scaleWithZoom, colors: normalizedAppearance.colors }, { opacity: 1, lineWidth: 8, scaleWithZoom: true, colors: { clsn1: '#abcdef', clsn1Default: '#ffd84a', clsn2: '#123456', clsn2Default: '#654321', push: '#00ff00', selected: '#ffffff', active: '#ffffff' } });
 assert.strictEqual(decodeCollisionAppearancePreference({ schema: 'wrong', version: 99, value: normalizedAppearance }).configured, false, 'unknown stored appearance schemas safely fall back instead of breaking AIR startup');
 const restoreLoading = airRestoreStatusHtml('Restoring AIR viewer…', 'Loading exact source state.');
 const restoreFailure = airRestoreStatusHtml('AIR viewer could not be restored', 'Close and reopen.', true);
@@ -52,6 +52,11 @@ try {
 } finally { fs.rmSync(sharedFx, { recursive: true, force: true }); }
 
 const html = viewerHtml({ title: 'Anim.air', airPath: 'Anim.air', sffPath: 'Sprite.sff', palettes: [{ index: 0, group: 1, number: 1 }], actions: [{ number: 0, line: 1, loopStart: 0, frames: [{ group: 0, index: 0, x: 0, y: 0, time: 1, flags: '', line: 2, clsn1: [], clsn2: [], clsn1Source: 'none', clsn2Source: 'none', clsn1Line: null, clsn2Line: null }] }] });
+assert(html.includes('if(model.openLayerWorkspace)layerWorkspaceLauncher.open()'),'AIR initial render opens the layer drawer only when requested');
+assert(html.includes("event.data?.type==='openLayerWorkspace')layerWorkspaceLauncher.open()"),'AIR reuse message opens the existing layer drawer');
+for (const id of ['airMoveStart','airMoveEnd','airMovePosition','airMoveAt']) assert(html.includes(`id="${id}"`), `AIR frame movement exposes ${id}`);
+assert(html.includes("type:'moveFrameBlock'") && html.includes('requestAnimationFrame(edgeTick)') && html.includes('selectedIndices'), 'the generated AIR client routes marked elements through one reviewed move with held-edge drag scrolling');
+assert(html.includes('if(Array.isArray(m.selectedIndices))for(const index of m.selectedIndices)selectedFrames.add(index)'), 'the selected AIR block remains marked after the atomic edit');
 assert(html.includes('compactActionScroll.onchange=')&&html.includes('compactFrameScroll.onchange='), 'discrete AIR action/frame sliders commit once after drag');
 assert(html.includes('Connected AIR') && html.includes("type:'openConnectedAir'"), 'AIR exposes connected animation files through an explicit selector');
 assert(html.includes('option.disabled=item.available===false')&&html.includes("readout.setAttribute('aria-live','polite')")&&html.includes("unavailable?' · '+unavailable.reason"),'unavailable connected AIR assignments expose their reason visibly and through a live status instead of only a disabled option tooltip');
@@ -85,12 +90,14 @@ assert(html.includes('appearance.colors.clsn1Default') && html.includes('appeara
 assert(html.includes('Parsed AIR collision preview') && html.includes('Pre-runtime target projection') && html.includes("type:'openCollisionBrowser'"), 'the main AIR viewer labels the preview honestly and uses one compact handoff into the shared collision browser');
 assert(!html.includes('data-panel="rulesPanel">Rules</button>'), 'the legacy broad Rules workflow is not a visible main-viewer tab');
 assert(indexedHtml.includes("collisionMode:'properties'"), 'the exact indexed collision action hands off to the shared compact Properties subview');
+assert.equal((html.match(/id="followSpritePalette"/g)||[]).length,1,'one discoverable Follow checkbox shares the existing palette toolbar');
+assert.match(html, /id="followSpritePalette" type="checkbox" checked> Follow Sprite Palette/);
 assert(html.includes('class="launch-controls"'), 'AIR must retain the shared viewer toolbar before its client bindings initialize');
 assert(html.includes('data-universal-slot="animations"'), 'AIR must retain connected-viewer navigation in its canonical primary slot');
 assert(html.includes('data-ikemen-destination="sff" id="openSff"'));
 assert(html.includes("document.getElementById('openSff').onclick="), 'Open SFF must retain its AIR viewer click binding');
-assert(html.includes("vscode.postMessage({type:'shaderPreview',action:action.number,frameIndex})"), 'AIR Shader Workshop action sends only host-resolved selection coordinates');
-assert(html.includes("manualPaletteIndex=null,onionDepth=Math.max(0,Math.min(2,Number(saved.onionDepth)||0))") && html.indexOf('onionDepth=Math.max') < html.indexOf('function saveAirView'), 'onion-skin state must be declared before startup persistence and initial AIR rendering');
+assert(html.includes("vscode.postMessage({type:'shaderPreview',action:action.number,frameIndex,palettes:followSpritePalette?null:Object.fromEntries(action.frames.map(f=>[f.group,paletteValue(f.group,false)]))})"), 'AIR Shader Workshop sends the selected action, frame and explicit palette choices');
+assert(html.includes("onionDepth=Math.max(0,Math.min(2,Number(saved.onionDepth)||0))") && html.indexOf('onionDepth=Math.max') < html.indexOf('function saveAirView'), 'onion-skin state must be declared before startup persistence and initial AIR rendering');
 assert(html.includes('data-ikemen-destination="palette" id="palFx"'));
 assert(html.includes('data-ikemen-destination="code" id="airSource"'));
 assert(html.includes("selectedActions:new Set") || html.includes('selectedActions:[...selectedActions]'));
@@ -110,8 +117,8 @@ assert(html.includes('event.shiftKey&&actionAnchor!==null'));
 assert(html.includes("type:'actionThumbnails'"));
 assert(html.includes("type:'batchClsn2'"), 'visual AIR bulk Clsn2 must use its own source-bound host request');
 assert(html.includes("type:'batchFrameProperties'"), 'marked AIR element properties must use their own reviewed host request');
-assert(html.includes('onionDepth?{action:action.number,frameIndex,depth:onionDepth}:null'), 'onion skin requests are bounded to the current action and element');
-assert(html.includes("filter(e=>e.onion)"), 'onion frames render separately from the current element and optional sprite layers');
+assert(html.includes("globalThis.ikemenTickOnion.mode()==='elements')?{action:action.number,frameIndex,depth:onionDepth}:null"), 'element onion requests remain bounded to the current action and element and are suppressed in tick mode');
+assert(html.includes("filter(e=>e.onion&&(!globalThis.ikemenTickOnion||globalThis.ikemenTickOnion.mode()==='elements'))"), 'authored onion layers render separately and stop immediately when tick mode is chosen');
 assert(html.includes('pendingGuardPassed:true'), 'visual AIR bulk Clsn2 must pass the shared pending-edit guard first');
 assert(html.includes('actionText:action.sourceText'), 'visual AIR bulk Clsn2 must send the displayed action snapshot for host validation');
 assert(!html.includes("getElementById('batchClsn2').onclick=()=>vscode.postMessage({type:'command',command:'air.batchApplyClsn2'})"), 'visual bulk Clsn2 must not borrow the active text editor command');
@@ -246,6 +253,7 @@ const frameSelectionContext = {
   action: { frames: [{}, {}, {}] }, frameIndex: 0, playing: true, edit: { dirty: false },
   collisionViewerEditEpoch: 0, collisionEditPreparePending: { request: 1 },
   navigationAllowed: () => true,
+  visualClock: { sync(action, index, playing, reset) { assert.strictEqual(index, 2); assert.strictEqual(playing, false); assert.strictEqual(reset, true); } },
   document: { getElementById(id) { return frameSelectionElements.get(id); } },
   canvas: { classList: { remove() {} } },
   clearCollisionEditReview() { frameSelectionCalls.revoke += 1; }, renderCollisionOwnership() {}, renderStrip() { frameSelectionCalls.strip += 1; }, requestFrame() { frameSelectionCalls.request += 1; }, schedule() { frameSelectionCalls.schedule += 1; }
@@ -335,7 +343,7 @@ assert(html.includes("type:'reviewCollisionEdit'") && html.includes("type:'apply
 assert(html.includes("actionOccurrence:0,elementIndex:frameIndex,groupKey:edit.kind,slot,operation"), 'the collision review request carries only exact one-box selection and operation evidence');
 assert(!html.includes("type:'reviewCollisionEdit',boxes:"), 'the collision request never sends a client-owned box array');
 assert(html.includes("summary.textContent=") && html.includes("before.textContent=") && html.includes("replacement.textContent="), 'collision review excerpts are rendered only as text');
-assert(html.includes('AIR · Learning'));
+assert(html.includes('AIR · Expanded explanations'));
 assert(html.includes('<details open><summary><b>What am I editing?</b>'));
 assert(html.includes('class="guided-workflow"'));
 assert(html.includes('details class="task-recipes" open'));
@@ -345,7 +353,7 @@ assert(html.includes('data-workflow-action="panel:collisionPanel"'));
 assert(html.includes("closest('[data-workflow-action]')"));
 assert(!html.includes('Advanced shortcuts'));
 const advancedHtml = viewerHtml({ title: 'Anim.air', airPath: 'Anim.air', sffPath: '', palettes: [], actions: [], experience: workspaceExperience('air', 'advanced') });
-assert(advancedHtml.includes('AIR · Advanced'));
+assert(advancedHtml.includes('AIR · Compact explanations'));
 assert(!advancedHtml.includes('<details open><summary><b>What am I editing?</b>'));
 assert(advancedHtml.includes('class="guided-workflow"'));
 assert(advancedHtml.includes('details class="task-recipes"'));
@@ -369,7 +377,7 @@ assert(html.includes("document.getElementById('airOffsetUp').onclick"), 'AIR off
 assert(html.includes("document.getElementById('quickAddClsn1').onclick"), 'AIR Clsn1 quick action should have a live handler');
 assert(html.includes("indexLabel.after(compactOffsetRow)") && html.includes("compactOffsetRow.append(offsetPad,offsetXLabel,offsetYLabel)"), 'offset pad and X/Y fields should share one row directly after Group/Index');
 assert(html.includes('#compactOffsetRow>label:nth-of-type(1){grid-row:1}') && html.includes('#compactOffsetRow>label:nth-of-type(2){grid-row:2}'), 'X/Y offset fields should stack beside the arrow pad');
-assert(html.includes("interpolationTools.after(compactCollisionTools,compactReferenceTools)"), 'collision and connector actions should follow interpolation controls');
+assert(html.includes("interpolationTools.after(compactCollisionTools,document.getElementById('compactFrameTools'),compactReferenceTools)"), 'frame actions should sit between collision actions and connected code');
 assert(html.includes('.clsn1-tool{border-color:#e34b52') && html.includes('.clsn1-default-tool{border-color:#d8b928') && html.includes('.clsn2-tool{border-color:#377fd2') && html.includes('.clsn2-default-tool{border-color:#9562d8') && html.includes('.push-tool{border-color:#35a966') && html.includes('.dummy-tool{border:1px dotted #b8bec7'), 'collision family actions need stable color plus glyph semantics');
 assert(html.includes("showPushControl.checked=saved.showPush===undefined?true") && html.includes("frame Size override") && html.includes("preview pose unless exact state evidence proves it"), 'effective push display should default on, persist, and disclose provenance limits');
 assert(html.includes("document.getElementById('quickDummy').hidden=!model.dummyCollision.enabled"), 'Dummy action should be capability-gated');
@@ -450,7 +458,7 @@ assert(airViewerSource.includes("message.type === 'applyFollowingFrameProperties
 assert(html.includes('input[type=number]::-webkit-inner-spin-button') && html.includes('opacity:1'), 'AIR numeric spinner arrows remain visible without hover');
 assert(html.includes("compact.textContent=active?'◉'+onionDepth:'◉'") && html.includes("data-air-proxy=\"onion\""), 'compact onion-skin control mirrors the authoritative Off/1/2 preview state');
 for(const id of ['airCompactActionTools','compactFrameTools','compactActionNavigation','compactFrameNavigation'])assert(html.includes(`id="${id}"`),`missing organized AIR compact control row ${id}`);
-assert(html.includes('#airCompactActionTools{order:0}#compactFrameTools{order:1}'),'whole-animation and selected-frame actions stay together above the selection sliders');
+assert(html.includes('#airCompactActionTools{order:0}#compactFrameTools{order:7}'),'whole-animation actions stay first and selected-frame actions follow collision tools');
 assert(html.includes('#airCompactActionTools button,#compactFrameTools button:not([hidden])'),'AIR whole-animation and frame action rows share fixed compact button sizing');
 for(const label of ['Revert selected AIR frame fields','Add one AIR frame after the selected frame','Duplicate the selected AIR frame','Move the selected AIR frame earlier','Move the selected AIR frame later','Delete the selected AIR frame','Open the selected AIR frame in source'])assert(html.includes(`aria-label="${label}"`),`missing compact AIR frame action ${label}`);
 assert(html.includes('Duplicate the entire selected AIR animation')&&html.includes('Duplicate only the selected frame, not the whole animation'),'AIR hover help distinguishes whole-animation and frame-only duplicate actions');

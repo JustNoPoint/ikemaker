@@ -1291,6 +1291,27 @@ and plays the selected entry. Selection, marks, loop, and volume are retained.
 Single sounds or a marked batch can be exported as WAV, and a configured audio
 editor such as Audacity can be launched on an extracted working copy.
 
+Use **Project → Save IKeMaker Workspace…** to bookmark open entities and their
+media viewers. A clean viewer also records the selected sprite, sound, or AIR
+action and frame. Save unfinished edits in their own editors. Choose
+**Project → Restore IKeMaker Workspace…** to reopen the saved files. You can
+move the workspace file and its assets together if you keep their relative paths.
+
+To cut a long voice recording into individual lines, choose **Sounds → Split Voice WAV…**
+and open the WAV. The default minimum pause is 350 ms. Increase it if a pause
+inside a line causes an unwanted cut. If a quiet line is missing, lower the
+silence threshold. If background noise joins separate lines, raise it until
+the gap is detected. Audition a quiet take before exporting the whole batch.
+The default edge padding keeps 25 ms
+before and after each take. Set padding to zero to trim to the detected edges.
+Audition the clips, merge adjacent takes, split at a source time, or reject a take.
+**Save Cut Session** keeps those decisions for later. Choose the SND group and
+starting index, then export the reviewed batch as numbered WAVs and a manifest.
+Only kept takes receive indices. For example, starting at 90 and rejecting
+the middle of three takes gives the first take index 90 and the last take 91,
+even when you export them in separate batches.
+Open the splitter from the destination SND viewer to import that batch into its archive.
+
 Playback inspection is non-destructive. Click the waveform or use the precise
 seek slider; Space/K toggles playback, J/L moves one second, Left/Right moves
 50 ms, and Home/End moves to the boundaries. A/B audition points show the exact

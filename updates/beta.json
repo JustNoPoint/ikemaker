@@ -3,6 +3,25 @@
   "productId": "ikemaker",
   "releases": [
     {
+      "version": "0.79.541",
+      "channel": "beta",
+      "publishedAt": "2026-11-15T04:20:12Z",
+      "compatibleEditor": {
+        "min": "1.85.0",
+        "max": ""
+      },
+      "notes": [
+        "Linked SFF/AIR layers, sprite sheet intake, and palette improvements.",
+        "Batch voice cuts and sound naming, Font Lab, and the floating Command Browser.",
+        "HitDef attack selection and draggable spark placement, plus Text Editor and entity tab fixes."
+      ],
+      "package": {
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.541/ikemen-zss-tools-0.79.541.vsix",
+        "sha256": "27ec52ecc2bda8d200044c4886a7bfbe3a438075f9c9cb78e6ba368733083f1a",
+        "bytes": 26803727
+      }
+    },
+    {
       "version": "0.79.500",
       "channel": "beta",
       "publishedAt": "2026-11-08T11:51:29Z",
