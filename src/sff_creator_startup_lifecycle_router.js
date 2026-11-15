@@ -62,13 +62,28 @@ function buildRouter(deps) { return function routeCreatorSffLifecycleOnStartup(r
   for (const key of LOCATOR_KEYS) { if (typeof rawLocator[key] !== 'string' || !rawLocator[key]) fail(`lifecycleVaultLocator.${key} must be a non-empty string.`); locator[key] = rawLocator[key]; }
   for (const key of ['expectedLatestCheckpointHash', 'expectedManifestArtifactByteHash', 'expectedManifestAuthorityHash', 'expectedManifestHash', 'expectedOperationId']) if (!SHA.test(locator[key])) fail(`${key} must be a lowercase SHA-256 hash.`);
   const before = deps.readSnapshot(b1(locator)), beforeHash = hashCanonical(before.authority), lifecycle = before.authority.lifecycleState; let routed, status, command, phase, underlyingHash, restartHash = null, historyHash = null, currentStateHash = null, outcomeReceiptHash = null, journalChainHash = null, freshReviewRequirements = [];
-  if (lifecycle === 'Executing') {
+  if (locator.manifestArtifactName === require('./sff_creator_builtin_recovery_runtime').APPROVED) {
+    if(lifecycle !== 'RestartRecoveryRequired') fail('approved recovery lifecycle drifted.');
+    routed = require('./sff_creator_builtin_recovery_runtime').createRecoveryRuntime({readSnapshot:deps.readSnapshot}).readApprovedRecovery(locator);
+    status=routed.status; command='execute-approved-recovery-cleanup'; phase='RecoveryApproved'; underlyingHash=hashCanonical(routed);
+    freshReviewRequirements=['revalidate-retained-sff19b-approval-before-sff19c'];
+  } else if (lifecycle === 'Executing') {
     if (![INTENT, RESULT].includes(locator.manifestArtifactName)) fail('Executing locator does not select a fixed phase root.'); routed = validateExecutionRoute(deps.routeExecution({ executingPhaseVaultLocator: locator }), before.authority); underlyingHash = hashCanonical(routed); phase = routed.phase;
     if (routed.status === 'retry-may-be-offered') { status = 'execution-retry-may-be-offered'; command = 'execute-approved-intent'; }
     else if (routed.status === 'restart-recovery-required') { status = 'restart-recovery-review-required'; command = 'review-restart-recovery'; restartHash = routed.restartRecoveryPlanHash; freshReviewRequirements = ['rerun-sff19a-current-state-plan', 'create-fresh-sff19b-human-approval']; }
     else if (routed.status === 'manual-recovery-required') { status = 'manual-recovery-required'; command = 'inspect-manual-recovery'; restartHash = routed.restartRecoveryPlanHash; }
     else if (routed.status === 'result-captured-continuation') { status = 'classification-required'; command = 'classify-captured-result'; }
     else fail('existing Executing startup router returned an unsupported status.');
+  } else if (lifecycle === 'TerminalNeedsHistory' && locator.manifestArtifactName === require('./sff_creator_recovery_history_input').TERMINAL) {
+    routed = require('./sff_creator_recovery_history_input').readRecoveryTerminal(before,locator);
+    underlyingHash = hashCanonical(routed);
+    phase = 'RecoveryCompleted';
+    status = 'history-review-required';
+    command = 'review-history-reconciliation';
+    historyHash = routed.auxiliaryPlanHash;
+    currentStateHash = routed.auxiliaryPlan.currentStateHash;
+    outcomeReceiptHash = routed.classificationPlan.outcomeReceiptHash;
+    journalChainHash = routed.classificationPlan.journalChainHash;
   } else if (CLASSIFIED.has(lifecycle)) {
     if (locator.manifestArtifactName !== CLASSIFICATION) fail('classified lifecycle locator does not select the fixed classification root.'); routed = validateClassification(deps.verifyClassification(locator), before.authority, locator); underlyingHash = routed.verificationHash; phase = 'ResultClassified'; currentStateHash = routed.currentStateHash; outcomeReceiptHash = routed.outcomeReceiptHash; journalChainHash = routed.journalChainHash;
     if (lifecycle === 'TerminalNeedsHistory') { status = 'history-review-required'; command = 'review-history-reconciliation'; historyHash = routed.historyReconciliationPlanHash; }

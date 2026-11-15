@@ -100,6 +100,7 @@
     "onCommand:air.createNew",
     "onCommand:snd.createNew",
     "onCommand:snd.openViewer",
+    "onCommand:snd.splitVoiceWav",
     "onCommand:snd.selectPreviousVisible",
     "onCommand:snd.selectNextVisible",
     "onCommand:sff.buildApprovedManifest",
@@ -1041,6 +1042,10 @@
         "title": "SND: Open Sound Archive Workspace"
       },
       {
+        "command": "snd.splitVoiceWav",
+        "title": "IKeMaker: Split Voice WAV into Clips"
+      },
+      {
         "command": "snd.selectPreviousVisible",
         "title": "SND: Select Previous Visible Sound"
       },
@@ -1062,6 +1067,14 @@
         "command": "ikemen.character.open",
         "title": "IKEMEN: Open Character…",
         "icon": "$(folder-opened)"
+      },
+      {
+        "command": "ikemen.media.saveSession",
+        "title": "IKeMaker: Save Workspace..."
+      },
+      {
+        "command": "ikemen.media.loadSession",
+        "title": "IKeMaker: Restore Workspace..."
       },
       {
         "command": "ikemen.assets.open",
@@ -3851,7 +3864,7 @@
           "default": false,
           "scope": "resource",
           "description": "Create compact hidden backups before direct visual-editor and generated-profile writes.",
-          "deprecationMessage": "Automatic backups have been removed. Use Make Backup instead."
+          "deprecationMessage": "Use ikemenZss.backupVersions to keep previous versions automatically, or use Make Backup for a manual copy."
         },
         "ikemenZss.mutationHistory": {
           "type": "boolean",
@@ -4303,7 +4316,7 @@
           "type": "boolean",
           "default": false,
           "description": "Create timestamped backups before direct SFF or manifest edits. Disable only when external version control or another backup system is authoritative.",
-          "deprecationMessage": "Automatic backups have been removed. Use Make Backup instead."
+          "deprecationMessage": "Use ikemenZss.backupVersions to keep previous versions automatically, or use Make Backup for a manual copy."
         },
         "ikemenZss.sffNamingProfile": {
           "type": "string",
@@ -4343,7 +4356,7 @@
         "ikemenZss.ffmpegPath": {
           "type": "string",
           "default": "ffmpeg",
-          "description": "FFmpeg executable used for non-destructive SFF image resize, crop, rotation, channel, and aligned-export tools."
+          "description": "Path to FFmpeg for sprite and animation tools, stage audio, and SND processing. Process Audio uses it for pitch, tempo, speed, sample rate, bit depth, and batch downsampling."
         },
         "ikemenZss.imageMagickPath": {
           "type": "string",
@@ -4371,7 +4384,7 @@
           "type": "boolean",
           "default": false,
           "description": "Create timestamped backups before sound profile, CommonFX DEF, manifest, or SND rebuild changes.",
-          "deprecationMessage": "Automatic backups have been removed. Use Make Backup instead."
+          "deprecationMessage": "Use ikemenZss.backupVersions to keep previous versions automatically, or use Make Backup for a manual copy."
         },
         "ikemenZss.paletteLibraryPath": {
           "type": "string",
@@ -4482,6 +4495,314 @@
           "default": "simple",
           "scope": "window",
           "description": "Choose the IKEMaker interface. New users are asked on first use; change anytime with IKEMaker: Change Mode."
+        },
+        "ikemenZss.viewer.crosshair": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "style": "full",
+            "color": "",
+            "width": 1
+          },
+          "additionalProperties": false,
+          "properties": {
+            "style": {
+              "type": "string",
+              "enum": [
+                "full",
+                "short",
+                "dashed",
+                "none"
+              ],
+              "default": "full"
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^$|^#[0-9a-fA-F]{6}$",
+              "default": ""
+            },
+            "width": {
+              "type": "number",
+              "minimum": 0.5,
+              "maximum": 8,
+              "default": 1
+            }
+          },
+          "description": "SFF and AIR canvas crosshair. Empty color preserves each viewer’s default. Reopen the viewer after changing this setting. This changes the guide only."
+        },
+        "ikemenZss.viewer.switchTabOnOpen": {
+          "type": "boolean",
+          "scope": "resource",
+          "default": true,
+          "description": "Focus SFF, AIR and SND viewer tabs when opening an asset. Turn off to open a new background tab and keep the current tab selected. Explicit navigation and automatic preview requests keep their own focus behavior."
+        },
+        "ikemenZss.viewer.syncSpriteSelection": {
+          "type": "boolean",
+          "scope": "resource",
+          "default": false,
+          "description": "Synchronize sprite selection between clean SFF viewer tabs for the same unchanged archive. Transfer tabs and tabs with pending edits retain their selection."
+        },
+        "ikemenZss.viewer.sffAppearance": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "fontScale": 100,
+            "buttonScale": 100,
+            "gapScale": 100,
+            "cornerRadius": 0,
+            "separators": true
+          },
+          "additionalProperties": false,
+          "properties": {
+            "fontScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "buttonScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "gapScale": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 200
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "separators": {
+              "type": "boolean"
+            }
+          },
+          "description": "SFF viewer text/control size, gaps, corners and separators. Reopen this viewer to apply. Percentages default to100 and preserve existing styling."
+        },
+        "ikemenZss.viewer.airAppearance": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "fontScale": 100,
+            "buttonScale": 100,
+            "gapScale": 100,
+            "cornerRadius": 0,
+            "separators": true
+          },
+          "additionalProperties": false,
+          "properties": {
+            "fontScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "buttonScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "gapScale": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 200
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "separators": {
+              "type": "boolean"
+            }
+          },
+          "description": "AIR viewer text/control size, gaps, corners and separators. Reopen this viewer to apply. Percentages default to100 and preserve existing styling."
+        },
+        "ikemenZss.viewer.sndAppearance": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "fontScale": 100,
+            "buttonScale": 100,
+            "gapScale": 100,
+            "cornerRadius": 0,
+            "separators": true
+          },
+          "additionalProperties": false,
+          "properties": {
+            "fontScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "buttonScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "gapScale": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 200
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "separators": {
+              "type": "boolean"
+            }
+          },
+          "description": "SND viewer text/control size, gaps, corners and separators. Reopen this viewer to apply. Percentages default to100 and preserve existing styling."
+        },
+        "ikemenZss.viewer.sffCanvasBackground": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "mode": "default",
+            "color": "#303030",
+            "checkerColor": "#505050",
+            "tileSize": 20,
+            "imagePath": "",
+            "scaleWithZoom": false,
+            "followPan": false
+          },
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "default",
+                "flat",
+                "checker",
+                "image"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "checkerColor": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "tileSize": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 128
+            },
+            "imagePath": {
+              "type": "string"
+            },
+            "scaleWithZoom": {
+              "type": "boolean"
+            },
+            "followPan": {
+              "type": "boolean"
+            }
+          },
+          "description": "SFF configured proof background. Local PNG path is absolute or relative to the asset file; limit16MB/16millionpixels. Reopen viewer, then choose Configured background. Default retains existing proof choices."
+        },
+        "ikemenZss.viewer.airCanvasBackground": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "mode": "default",
+            "color": "#303030",
+            "checkerColor": "#505050",
+            "tileSize": 20,
+            "imagePath": "",
+            "scaleWithZoom": false,
+            "followPan": false
+          },
+          "additionalProperties": false,
+          "properties": {
+            "mode": {
+              "type": "string",
+              "enum": [
+                "default",
+                "flat",
+                "checker",
+                "image"
+              ]
+            },
+            "color": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "checkerColor": {
+              "type": "string",
+              "pattern": "^#[0-9a-fA-F]{6}$"
+            },
+            "tileSize": {
+              "type": "number",
+              "minimum": 8,
+              "maximum": 128
+            },
+            "imagePath": {
+              "type": "string"
+            },
+            "scaleWithZoom": {
+              "type": "boolean"
+            },
+            "followPan": {
+              "type": "boolean"
+            }
+          },
+          "description": "AIR configured proof background. Local PNG path is absolute or relative to the asset file; limit16MB/16millionpixels. Reopen viewer, then choose Configured background. Default retains existing proof choices."
+        },
+        "ikemenZss.viewer.paletteAppearance": {
+          "scope": "resource",
+          "type": "object",
+          "default": {
+            "fontScale": 100,
+            "buttonScale": 100,
+            "gapScale": 100,
+            "cornerRadius": 0,
+            "separators": true
+          },
+          "additionalProperties": false,
+          "properties": {
+            "fontScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "buttonScale": {
+              "type": "number",
+              "minimum": 75,
+              "maximum": 200
+            },
+            "gapScale": {
+              "type": "number",
+              "minimum": 50,
+              "maximum": 200
+            },
+            "cornerRadius": {
+              "type": "number",
+              "minimum": 0,
+              "maximum": 20
+            },
+            "separators": {
+              "type": "boolean"
+            }
+          },
+          "description": "Palette Workshop text/control size, gaps, corners and separators. Reopen Palette Workshop to apply. Default values preserve existing styling."
+        },
+        "ikemenZss.backupVersions": {
+          "scope": "resource",
+          "type": "integer",
+          "default": 0,
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Number of previous versions to keep per file in .ikemen-tools/backups after direct media saves and external builds. Set to 0 to turn backups off."
+        },
+        "ikemenZss.mediaRecoverySnapshots": {
+          "scope": "resource",
+          "type": "boolean",
+          "default": false,
+          "description": "Keep pending SFF axis edits and Process Audio drafts in extension storage, up to 32 MB per file and tool. Reopening the same file offers Restore or Discard. A changed source can only discard the old draft."
         }
       }
     }

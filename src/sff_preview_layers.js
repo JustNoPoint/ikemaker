@@ -4,7 +4,7 @@ const {
   editPreviewLayers,orderedPreviewLayers,movePreviewLayer
 } = require('./preview_layers_model');
 
-function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, layerList, moveLayer, launcher, compactFields) {
+function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, layerList, moveLayer, launcher, compactFields,sharedClient) {
   let composition = normalizePreviewLayers(model.previewLayers),
     drag = null,
     xHeld = false;
@@ -70,7 +70,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
   const status = document.createElement('p');
   status.className = 'muted';
   status.setAttribute('role', 'status');
-  status.textContent = 'Project preview only. Hold X and drag, or use arrows, to move selected layers.';
+  status.textContent = 'Project preview only. Drag the sprite, or use arrows, to move selected layers.';
   pane.append(status);
   const blendNote = document.createElement('p');
   blendNote.className = 'muted';
@@ -88,6 +88,8 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
       input.value = String(layer('layer' + slot).order - baseOrder);
     }
   };
+  const shared=sharedClient(model.sharedLayout,()=>composition, ()=>selected?selected.group+','+selected.number:null,m=>vscode.postMessage({...m,bindingGeneration:model.bindingGeneration}),()=>{renderLayerControls();requestLayers()},()=>persistComposition());
+  shared.listen();
   const persistComposition = () => {
     vscode.setState(Object.assign({}, vscode.getState() || {}, {
       previewLayers: composition
@@ -95,11 +97,11 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     vscode.postMessage({
       type: 'savePreviewLayers',
       bindingGeneration: model.bindingGeneration,
-      value: composition
+      value: composition,bankEdits:shared.changed()
     })
   };
   const editSelectedLayers = patch => {
-    if(Object.hasOwn(patch,'order')){const rank=Math.max(0,Math.min(4,Math.round(Number(patch.order)))),others=[...composition.layers].sort((a,b)=>a.order-b.order).filter(item=>item.id!==composition.primary);composition=moveLayer(composition,composition.primary,others[rank]?.id||null);persistComposition();renderLayerControls();requestLayers();redraw();controls.order?.focus();return;}
+    if(Object.hasOwn(patch,'order')){shared.rank(composition.primary,Math.max(0,Math.min(4,Math.round(Number(patch.order)))));return;}
 
     composition = editPreviewLayers(composition, composition.selected, patch);
     persistComposition();
@@ -234,15 +236,20 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     airButton.disabled = runtimeButton.disabled;
     list.textContent = '';
     const changed=()=>{persistComposition();renderLayerControls();requestLayers();redraw()};
-    layerList(list,composition,{
+    layerList(list,shared.state(),{
       caption:spriteCaption,options:spriteOptions,
       select:(id,multiple)=>{composition=normalizePreviewLayers({...composition,primary:id,selected:multiple?(composition.selected.includes(id)?composition.selected.filter(value=>value!==id):[...composition.selected,id]):[id]});changed()},
       toggle:(id,visible)=>{const item=layer(id);if(visible)item.enabled=true;item.visible=visible;changed()},
-      order:(id,order)=>{composition=normalizePreviewLayers({...composition,layers:composition.layers.map(item=>item.id===id?{...item,order}:item)});changed()},
-      move:(id,before)=>{composition=moveLayer(composition,id,before);changed()},
+      order:(id,order)=>shared.rank(id,order),
+      move:(id,before)=>shared.move(id,before),
       runtime:(id,patch)=>{composition=normalizePreviewLayers({...composition,layers:composition.layers.map(item=>item.id===id?{...item,...patch}:item)});changed()}
     });
     const item = primaryLayer();
+    if(item.enabled && item.id!=='base' && item.source.kind==='bank' && !model.transfer){
+      const repair=document.createElement('button');repair.textContent='Index bank to base palettes…';
+      repair.onclick=()=>{if(!dirtyAxes.size&&!pendingSpriteNames.size)vscode.postMessage({type:'sffAction',action:'indexLayerBank',bank:item.source.bank,selectedIndex:selected?.index,bindingGeneration:model.bindingGeneration});else status.textContent='Save pending sprite edits before converting.'};
+      list.append(repair);
+    }
     compactFields(fields,'previewLayer_',(key,delta)=>editSelectedLayers({[key]:primaryLayer()[key]+delta}),item);
     sourcePicker.value = item.source.kind === 'bank' ? String(item.source.bank) : 'sprite';
     sourcePicker.disabled = item.id === 'base';
@@ -298,6 +305,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     requestLayers()
   };
   requestLayers = () => {
+    if(shared.needsList())renderLayerControls();
     syncNativeLayerOrder();
     for(const button of list.querySelectorAll('[data-preview-layer-focus]')){const item=layer(button.dataset.previewLayerFocus);const caption=spriteCaption(item);if(button.textContent!==caption){button.updateLayerCaption(caption);}}
     spriteImageAuthority.invalidate('layer');
@@ -307,14 +315,14 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
       for (let slot = 1; slot <= 4; slot++) {
         const item = layer('layer' + slot);
         document.getElementById('layerEnabled' + slot).checked = item.enabled && item.visible;
-        if (!item.enabled || !item.visible) continue;
+        if (!item.enabled || !item.visible || item.source.kind==='bank' && (selected.group<0 || selected.group>=10000 || selected.group+item.source.bank*10000>65535)) continue;
         const matches = model.sprites.filter(sprite => sprite.group === (item.source.kind === 'bank' ? selected.group + item.source.bank * 10000 : item.source.group) && sprite.number === (item.source.kind === 'bank' ? selected.number : item.source.index));
         if (matches.length !== 1) continue;
         layerSprites.set(slot, matches[0]);
         requestSpriteImage(matches[0], {
           layerSlot: slot,
           layerFor: selected.index
-        })
+        }, selected, item.followBasePalette)
       }
     redraw()
   };
@@ -322,7 +330,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     item,
     sprite: item.id === 'base' ? selected : layerSprites.get(Number(item.id.slice(5))),
     image: item.id === 'base' ? image : layerImages.get(Number(item.id.slice(5)))
-  })).filter(item => item.sprite && item.image).sort((a, b) => a.item.order - b.item.order);
+  })).filter(item => item.sprite && item.image).sort((a, b) => shared.order().indexOf(a.item.id) - shared.order().indexOf(b.item.id));
 
   function layerTransformMatrix(item) {
     const angle = item.angle * Math.PI / 180,
@@ -393,6 +401,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     }
     resetSpriteScrollbars();
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    if (document.getElementById('proofBackground')?.value === 'configured') paintConfiguredBackground();
     if (document.getElementById('axisLayer').value === 'behind') drawAxis();
     if (onionImage && onionSprite && document.getElementById('onionSkin').checked) {
       ctx.save();
@@ -459,7 +468,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     if (event.button !== 0) return;
     const p = canvasPoint(event),
       target = drawableLayers().reverse().find(item => item.item.opacity > 0 && layerContainsPoint(item, p));
-    if (xHeld && target) {
+    if ((xHeld || !pane.hidden) && target) {
       if (!composition.selected.includes(target.item.id)) {
         composition.selected = event.ctrlKey ? [...composition.selected, target.item.id] : [target.item.id];
         composition.primary = target.item.id;
@@ -565,9 +574,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
         status.textContent = 'Draw order must be a whole number from -4 through 4 relative to Base.';
         return;
       }
-      layer('layer' + slot).order = layer('base').order + relative;
-      composition = normalizePreviewLayers(composition);
-      persistComposition();
+      shared.rank('layer'+slot,Math.max(0,Math.min(4,shared.order().indexOf('base')+relative)));
       renderLayerControls();
       requestLayers()
     }
@@ -591,13 +598,16 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
   });
   canvas.oncontextmenu = event => {
     event.preventDefault();
-    list.querySelector('button')?.focus()
+    if (globalThis.ikemenSffShowMatchingMenu) globalThis.ikemenSffShowMatchingMenu(event, () => list.querySelector('button')?.focus());
+    else list.querySelector('button')?.focus()
   };
   canvas.addEventListener('keydown', event => {
     if (globalThis.ikemenSffPreviewMode === false) return;
     if (event.key === 'ContextMenu' || event.shiftKey && event.key === 'F10') {
       event.preventDefault();
-      list.querySelector('button')?.focus()
+      const bounds = canvas.getBoundingClientRect();
+      if (globalThis.ikemenSffShowMatchingMenu) globalThis.ikemenSffShowMatchingMenu({clientX:bounds.left+20,clientY:bounds.top+20}, () => list.querySelector('button')?.focus());
+      else list.querySelector('button')?.focus()
     }
   });
   const previewHandlers = Object.fromEntries(['onpointerdown', 'onpointermove', 'onpointerup', 'onpointercancel', 'oncontextmenu'].map(key => [key, canvas[key]]));
@@ -608,7 +618,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
     document.getElementById('axisMoveTarget').closest('.options').hidden = globalThis.ikemenSffPreviewMode;
     mode.textContent = globalThis.ikemenSffPreviewMode ? 'Edit saved sprite axes' : 'Return to preview layers';
     syncNativeLayerOrder();
-    status.textContent = globalThis.ikemenSffPreviewMode ? 'Project preview only. Hold X and drag to move selected layers.' : 'Native SFF axis editing. Hold X and drag; use the source context menu to choose saved sprites. Save / Auto Save applies.';
+    status.textContent = globalThis.ikemenSffPreviewMode ? 'Project preview only. Drag to move selected layers.' : 'Native SFF axis editing. Hold X and drag; use the source context menu to choose saved sprites. Save / Auto Save applies.';
     redraw()
   };
   document.getElementById('refreshLayers').onclick = () => requestLayers();
@@ -642,7 +652,7 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
 function clientScript() {
   // The serialized editor closes over the normalizer; bind it in the webview
   // realm rather than relying on the extension host's CommonJS scope.
-  return '(' + installSffPreviewLayers.toString() + ')(' + normalizePreviewLayers.toString() + ',(normalizePreviewLayers=>(' + editPreviewLayers.toString() + '))(' + normalizePreviewLayers.toString() + '),' + require('./preview_layer_list').clientSource() + ',((normalizePreviewLayers,orderedPreviewLayers)=>(' + movePreviewLayer.toString() + '))(' + normalizePreviewLayers.toString() + ',' + orderedPreviewLayers.toString() + '),' + require('./preview_layer_list').launcherSource() + ',' + require('./preview_layer_list').compactSource() + ');';
+  return '(' + installSffPreviewLayers.toString() + ')(' + normalizePreviewLayers.toString() + ',(normalizePreviewLayers=>(' + editPreviewLayers.toString() + '))(' + normalizePreviewLayers.toString() + '),' + require('./preview_layer_list').clientSource() + ',((normalizePreviewLayers,orderedPreviewLayers)=>(' + movePreviewLayer.toString() + '))(' + normalizePreviewLayers.toString() + ',' + orderedPreviewLayers.toString() + '),' + require('./preview_layer_list').launcherSource() + ',' + require('./preview_layer_list').compactSource() + ',' + require('./shared_layer_client').sharedLayerClient.toString() + ');';
 }
 module.exports = {
   clientScript

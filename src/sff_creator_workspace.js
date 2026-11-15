@@ -1372,7 +1372,16 @@ function pendingSeed(root, draft) {
 }
 
 async function stageDraft(root, draft, admittedSourceBuffers = null) {
-  const safe = safeDraft(draft, admittedSourceBuffers);
+  let safe = safeDraft(draft, admittedSourceBuffers);
+  const stored = drafts.read(draftKey(root));
+  if (lifecycleContinuations && stored?.target?.expectedFingerprint &&
+      safe.target?.fingerprint && stored.target.expectedFingerprint !== safe.target.fingerprint) {
+    const retained = await require('./sff_creator_own_result_draft').resolveOwnResultDraft({
+      key: draftKey(root), stored, current: safe,
+      normalize: value => safeDraft(value, admittedSourceBuffers), continuations: lifecycleContinuations
+    });
+    if (retained.reconciled) safe = retained.draft;
+  }
   if (safe.replacementRuleAcceptances.length || safe.workshopReturns.length || safe.paletteAdaptationAcceptances.length) revalidateRetainedReplacementRuleAcceptance(root, safe);
   await drafts.stage(draftKey(root), safe);
   const seed = pendingSeed(root, safe), service = pendingChanges.current();
@@ -1940,7 +1949,8 @@ async function openCreator(uri, request = {}) {
   const state = applyState(recovered);
   if (recovered.sources.length || recovered.deletedSpriteIdentities.length) await pendingChanges.current().upsert(pendingSeed(root, recovered));
   const panel = trackViewerPanel(vscode.window.createWebviewPanel('ikemenSffCreator', 'SFF Creator', preferredViewerColumn(vscode.ViewColumn.Active), { enableScripts: true, retainContextWhenHidden: true }));
-  sessions.set(key, panel); panel.returnToViewerOnComplete = request?.returnToViewerOnComplete === true; panel.forwardedSheetSourcePath = request?.sheetSourcePath || ''; panel.pendingSheetThumbnails = request?.openSheetThumbnails === true; panel.webview.html = require('./webview_policy').protect(html({ draft: recovered, plan: state.plan || { rows: [], ready: [], conflicts: [], skipped: [], summary: {} }, applyState: { enabled: state.enabled, reason: state.reason }, writerPreference: writerPreference.snapshot() }), panel.webview.cspSource);
+  sessions.set(key, panel); panel.returnToViewerOnComplete = request?.returnToViewerOnComplete === true; panel.forwardedSheetSourcePath = request?.sheetSourcePath || ''; panel.pendingSheetThumbnails = request?.openSheetThumbnails === true;
+  const initialCreatorHtml = require('./webview_policy').protect(html({ draft: recovered, plan: state.plan || { rows: [], ready: [], conflicts: [], skipped: [], summary: {} }, applyState: { enabled: state.enabled, reason: state.reason }, writerPreference: writerPreference.snapshot() }), panel.webview.cspSource);
   const writerAttachment = writerPreference.attach(panel);
   require('./viewer_close').support(panel, { isBusy: () => false, keepDraft: () => drafts.flush() });
   const retainedBinding = recovered.replacementRuleAcceptances?.[0]?.provenance?.binding || recovered.workshopReturns?.[0]?.provenance?.binding || recovered.paletteAdaptationAcceptances?.[0]?.provenance?.binding, creatorGeneration = Number.isSafeInteger(Number(retainedBinding?.creatorGeneration)) ? Number(retainedBinding.creatorGeneration) : Date.now();
@@ -1993,8 +2003,11 @@ async function openCreator(uri, request = {}) {
     const drift = continuation?.status === 'draft-drift-review-required';
     const startupStatus = continuation?.startup?.status || continuation?.status || '';
     const recoveryStatus = require('./sff_creator_recovery_notice').recoveryNotice(continuation?.temporaryRecovery || continuation?.startup?.temporaryRecovery);
-    if(recoveryStatus)message=[message,recoveryStatus].filter(Boolean).join(' ');
+
     const ambiguous = /manual|uncertain|restart-recovery-required/.test(startupStatus);
+    if (ambiguous || startupStatus === 'restart-recovery-review-required')
+      message = require('./sff_creator_recovery_notice').blockedLifecycleNotice({...continuation, ...continuation?.startup, status:startupStatus});
+    if (recoveryStatus) message = [message,recoveryStatus].filter(Boolean).join(' ');
     await panel.webview.postMessage({ type: 'productionLifecycleState', available: Boolean(continuation && continuation.status !== 'no-continuation' && !drift), disabled: ambiguous, drift, action: drift ? 'Review Drift / Detach Lock' : productionLifecycleAction(startupStatus), message: message || (drift ? 'The draft changed after this operation was retained. Continuing is locked. Detach releases only this draft lock; the lifecycle recovery record and project files remain unchanged.' : continuation?.operationId ? `Retained IKEMaker operation ${continuation.operationId.slice(0, 12)}… · ${startupStatus}.` : ''), error: drift || ambiguous });
   };
   panel.webview.onDidReceiveMessage(message => Promise.resolve().then(async () => {
@@ -2061,7 +2074,7 @@ async function openCreator(uri, request = {}) {
         }
         return;
       }
-      await lifecyclePresentation({ ...continuation, temporaryRecovery: result.temporaryRecovery, status: 'restart-review-required', startup: { ...(continuation.startup || {}), status: result.status }, continuationLocator: result.continuationLocator || continuation.continuationLocator, operationId: result.operationId || continuation.operationId }, result.status === 'review-deferred' || /deferred/.test(result.status) ? 'Review deferred. The exact operation and draft remain retained.' : 'One explicit lifecycle step completed and was retained. Continue when ready.'); return;
+      await lifecyclePresentation({ ...continuation, temporaryRecovery: result.temporaryRecovery, status: 'restart-review-required', startup: { ...(continuation.startup || {}), restartRecoveryPlan:result.restartRecoveryPlan, stableObservationError:result.stableObservationError, status: result.status }, continuationLocator: result.continuationLocator || continuation.continuationLocator, operationId: result.operationId || continuation.operationId }, result.status === 'review-deferred' || /deferred/.test(result.status) ? 'Review deferred. The exact operation and draft remain retained.' : 'One explicit lifecycle step completed and was retained. Continue when ready.'); return;
       } finally { productionOperationBusy = false; }
     }
     if (message?.type === 'detachProductionLifecycle') {
@@ -2218,8 +2231,10 @@ async function openCreator(uri, request = {}) {
       const picked = await vscode.window.showOpenDialog({ title: 'Choose the existing SFF to extend', canSelectFiles: true, canSelectFolders: false, canSelectMany: false, filters: { 'SFF archives': ['sff'] } });
       if (!picked?.[0]) return;
       const current = safeDraft(drafts.read(key) || recovered), target = targetFromFile(picked[0].fsPath);
+      const keepPalette = sameResolvedPath(current.target?.path,target.path) &&
+        target.palettes.some(item => item.id === current.addedSpritePaletteId);
       current.target = target; current.existingIdentities = target.identities;
-      current.addedSpritePaletteId = target.palettes.find(item => item.id === '1,1')?.id || target.palettes[0]?.id || '';
+      if (!keepPalette) current.addedSpritePaletteId = target.palettes.find(item => item.id === '1,1')?.id || target.palettes[0]?.id || '';
       await postState(current, `Target reviewed: ${target.name} · ${target.spriteCount} sprites · ${target.paletteCount} palettes.`); return;
     }
     if (message.type === 'clearTarget') {
@@ -2998,10 +3013,14 @@ async function openCreator(uri, request = {}) {
     }
     if (message.type === 'apply') { const staged = await stageDraft(root, message.draft); const result = await pendingChanges.current().execute(staged.entry.id, 'apply'); if (result?.resolved) { invalidateSavedRules(defaultDraft()); await panel.webview.postMessage({ type: 'state', draft: defaultDraft(), plan: { rows: [], ready: [], conflicts: [], skipped: [] }, applyState: { enabled: false, reason: 'Choose at least one PNG source.' }, savedRuleReview: null, nearestColorReview: null, message: `Reviewed package ready: ${result.packageRoot}` }); } }
   }).catch(error => { vscode.window.showErrorMessage(error.message); return panel.webview.postMessage({ type: 'error', message: error.message }); }));
+  // Install host message handlers before loading scripts that announce client readiness.
+  panel.webview.html = initialCreatorHtml;
   panel.onDidDispose(() => { panelDisposed = true; writerAttachment.dispose(); ruleAuthority.revoke(); paletteAdaptationAuthority.revoke(); if (sessions.get(key) === panel) sessions.delete(key); if (replacementRuleSessions.get(key)?.invalidate === invalidateSavedRules) replacementRuleSessions.delete(key); });
   if (lifecycleContinuations) {
     try {
-      const continuation = await lifecycleContinuations.resume({ draftKey: key, currentDraftRevision: lifecycleDraftRevision(recovered) });
+      const {continuation} = await require('./sff_creator_own_result_draft').resolveOwnResultDraft({
+        key, stored: drafts.read(key), current: recovered, normalize: safeDraft, continuations: lifecycleContinuations
+      });
       await lifecyclePresentation(continuation, continuation.status === 'restart-review-required' ? `Built-in operation ${continuation.operationId.slice(0, 12)}… is retained at ${continuation.startup.status}. Choose Continue; reopening never auto-advances a mutation stage.` : '');
     } catch (error) { await panel.webview.postMessage({ type: 'error', message: `Built-in lifecycle continuation could not be verified: ${error.message}` }); }
   }
@@ -3040,7 +3059,11 @@ function register(context) {
   productionLifecycle = createCreatorProductionWorkspaceCoordinator({
     runtime: builtInLifecycleRuntime,
     continuations: lifecycleContinuations,
-    pickCertification: binding => pickCreatorCertificationEvidence(vscode, { targetId: binding.targetId, backendId: binding.backendId }),
+    pickCertification: binding => {
+      const bundled=require('./sff_bundled_certification').resolveBundledSffCertification(binding.targetId,binding.backendId);
+      if (bundled.available) return {freshCapabilityRequest:bundled.capabilityRequest};
+      return pickCreatorCertificationEvidence(vscode, {targetId:binding.targetId,backendId:binding.backendId});
+    },
     probeReplacement: probeCreatorReplacementCapability,
     ui: { target: createVscodeTargetReviewUi(vscode), adoption: createVscodeAdoptionReviewUi(vscode), layout: createVscodeLayoutReviewUi(vscode), execution: createVscodeExecutionStartUi(vscode), history: createVscodeHistoryReviewUi(vscode) }
   });

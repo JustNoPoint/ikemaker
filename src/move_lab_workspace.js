@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const vscode = require('vscode');
-const { chooseCharacterDef, nearestCharacterDef } = require('./character_picker');
+const { chooseCharacterDef } = require('./character_picker');
 const { buildMoveLabModel, validAttackReference } = require('./move_lab_model');
 const { moveEditorColumn } = require('./move_editor_column');
 const { trackViewerPanel } = require('./viewer_group');
@@ -472,7 +472,7 @@ async function handleMoveLabMessage(owner, message) {
   return false;
 }
 async function openMoveLab(seed, options = {}) {
-  let defPath = nearestCharacterDef(seed?.fsPath || vscode.window.activeTextEditor?.document.fileName || '');
+  let defPath = require('./character_command_target').commandCharacter(seed?.fsPath || vscode.window.activeTextEditor?.document.fileName || '',options?.ownerDef);
   if (!defPath) defPath = await chooseCharacterDef(seed, { title: 'Move Lab — Choose Character' });
   if (!defPath) return;
   if (!options?.preset && (options?.legacyIntegration === true || options?.integration === 'legacy-auto')) {

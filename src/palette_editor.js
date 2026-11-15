@@ -130,6 +130,21 @@ function bufferWithPaletteReplacement(archive, paletteIndex, candidate) {
   return { buffer: layout.buffer, plan, layoutRepaired: layout.repaired, layoutIssues: layout.issues };
 }
 
+function bufferWithPaletteRgbaReplacement(archive, paletteIndex, candidate) {
+  if (require('./sff_reader').friendlyVersion(archive.header.version) !== '2.1') throw new Error('Saving palette alpha requires SFF 2.1. SFF 2.0 stores a reserved fourth byte; use RGB edits there.');
+  const plan = paletteReplacementPlan(archive, paletteIndex, candidate), before = paletteRgba(archive, paletteIndex);
+  plan.changedIndices = plan.colors.map((color, index) => color.some((value, channel) => value !== before[index][channel]) ? index : -1).filter(index => index >= 0);
+  if (plan.changedIndices.some(index => index >= plan.palette.colors)) throw new Error('An RGBA change falls outside the stored palette.');
+  if (plan.colors[0][3] !== before[0][3]) throw new Error('Transparent slot 0 alpha stays locked.');
+  plan.changedCount = plan.changedIndices.length;
+  plan.alphaChangedIndices = plan.changedIndices.filter(index => plan.colors[index][3] !== before[index][3]);
+  plan.exact = plan.changedCount === 0;
+  const output = Buffer.from(archive.buffer);
+  for (const index of plan.changedIndices) for (let channel = 0; channel < 4; channel++) output[plan.offset + index * 4 + channel] = plan.colors[index][channel];
+  const layout = canonicalSffV2Layout(output, archive.filename);
+  return { buffer: layout.buffer, plan, layoutRepaired: layout.repaired, layoutIssues: layout.issues };
+}
+
 // Highest stored palette index a physical indexed sprite uses. Linked
 // destinations resolve to their stored owner.
 function spriteMaximumIndex(archive, sprite) {
@@ -245,6 +260,7 @@ module.exports = {
   paletteSwatchPng,
   paletteReplacementPlan,
   bufferWithPaletteReplacement,
+  bufferWithPaletteRgbaReplacement,
   bufferWithPaletteAssignments,
   spriteMaximumIndex,
   paletteColorCount,

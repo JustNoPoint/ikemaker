@@ -377,7 +377,9 @@ class PaletteWorkspaceController {
         let plane;
         try { plane=truecolorEdit.exactPlane(archive,sprite); }
         catch (error) { state.post({type:'paletteLiveInteraction',model:{available:false,pixelKind:sprite.dataSize===0?'linked-truecolor':'unsupported-truecolor',reason:error.message,sprite:{physicalIndex:sprite.index,group:sprite.group,number:sprite.number,colorDepth:sprite.colorDepth,width:sprite.width,height:sprite.height},sourcePhysicalIndex:sprite.dataSize===0&&Number.isInteger(sprite.link)&&archive.sprites[sprite.link]?sprite.link:null,spriteCount:archive.sprites.length,paletteCount:archive.palettes.length}});return; }
-        state.post({type:'paletteLiveInteraction',model:{available:true,pixelKind:plane.kind,sourceFormat:plane.sourceFormat,pixelPickToken:plane.token,rgbaPlane:plane.rgba.toString('base64'),dataUri:spriteDataUri(archive,sprite),sprite:{physicalIndex:sprite.index,group:sprite.group,number:sprite.number,colorDepth:sprite.colorDepth,width:sprite.width,height:sprite.height},spriteCount:archive.sprites.length,paletteCount:archive.palettes.length,previewDirty:Boolean(session.preview?.dirty),reason:plane.kind==='rgba32'?'Exact RGBA editing preserves each pixel alpha byte.':'Exact RGB editing preserves the sprite as PNG24; alpha is fixed at 255.'}});return;
+        const origin=session.context?.origin;
+        const reviewEdges=origin?.surface==='sff-layer-pixel-review'&&origin.index===sprite.index&&origin.archiveHash===hash(archive.buffer)&&Array.isArray(origin.edges)?origin.edges.filter(i=>Number.isInteger(i)&&i>=0&&i<sprite.width*sprite.height):[];
+        state.post({type:'paletteLiveInteraction',model:{available:true,reviewEdges,pixelKind:plane.kind,sourceFormat:plane.sourceFormat,pixelPickToken:plane.token,rgbaPlane:plane.rgba.toString('base64'),dataUri:spriteDataUri(archive,sprite),sprite:{physicalIndex:sprite.index,group:sprite.group,number:sprite.number,colorDepth:sprite.colorDepth,width:sprite.width,height:sprite.height},spriteCount:archive.sprites.length,paletteCount:archive.palettes.length,previewDirty:Boolean(session.preview?.dirty),reason:plane.kind==='rgba32'?'Exact RGBA editing preserves each pixel alpha byte.':'Exact RGB editing preserves the sprite as PNG24; alpha is fixed at 255.'}});return;
       }
       const palette=exactPalette(archive,session.selection.palette);
       const paletteAssociations=paletteSpriteAssociations.associations(archive,session.selection.palette);if (!sprite) {state.post({type:'paletteLiveInteraction',model:{available:false,reason:'No associated indexed sprite is selected. Use Preview on current sprite to recover your prior preview.',paletteAssociations,spriteCount:archive.sprites.length,paletteCount:archive.palettes.length,palette:{...paletteIdentityDisplay(archive,palette),physicalIndex:palette.index,group:palette.group,number:palette.number},previewDirty:Boolean(session.preview?.dirty),interaction:interactionModel.normalizeInteraction(session.interaction)}});return;}if(sprite.group !== Number(session.selection.sprite.group) || sprite.number !== Number(session.selection.sprite.number)) throw new Error('The selected physical sprite changed. Select and review it again.');
@@ -516,7 +518,7 @@ class PaletteWorkspaceController {
     }
     return this.locked(state, async () => {
     const action = message.type === 'workspaceAction' ? message.action : message.type === 'control' ? message.id : message.type;
-    if(action==='createScratch'){await vscode.commands.executeCommand('ikemen.palette.createScratch');return true}
+    if(action==='createFromImages'){await this.createFromImages();return true}if(action==='createScratch'){await vscode.commands.executeCommand('ikemen.palette.createScratch');return true}
     if(action==='openWorkspace'){await vscode.commands.executeCommand('ikemen.palette.openWorkspace');return true}
     if(action==='templateEditExisting'){
       const restored=this.restorePrimaryTemplateSession(state),templateFilename=restored.authority.filename,authority=restored.authority,collective=collectiveIntake.readCollectivePaths([templateFilename]),panel=await this.openSourceWorkspace(vscode.Uri.file(templateFilename),{section:'template',origin:{surface:'palette-template-edit',targetSff:state.filename,primaryTemplateRecordId:restored.record?.recordId||restored.session.family.template?.priorPrimaryRecordId||''}}),sourceSession=paletteWorkspaceService().sourceSnapshot(templateFilename),patch=this.collectivePatch(sourceSession,collective,false);paletteWorkspaceService().promoteCollective(templateFilename,collective.evidence,patch);const next=paletteWorkspaceService().mutateSource(templateFilename,{organizer:{...sourceSession.organizer,templateEditAuthority:authority,templateEditMode:true}});if(panel)this.postCollective(panel,next);return true;
@@ -851,13 +853,172 @@ class PaletteWorkspaceController {
     return false;
   }); }
   async scratchSaveAs(draftId){const state=this.scratchService.snapshot(draftId),picked=await vscode.window.showSaveDialog({title:'Save lossless IKEMaker palette document',defaultUri:state.destination?.filename?vscode.Uri.file(state.destination.filename):undefined,filters:{'IKEMaker palette document':['ikpalette.json']}});if(!picked)return null;let filename=path.resolve(picked.fsPath);if(!/\.ikpalette\.json$/i.test(filename))filename+='.ikpalette.json';const replaceEvidence=fs.existsSync(filename)?scratchEvidence(filename):null;if(replaceEvidence){const answer=await vscode.window.showWarningMessage(`Replace ${path.basename(filename)}?`,{modal:true,detail:`This replaces only the lossless palette document at:\n${filename}\n\nThe retained draft and any SFF remain unchanged until the verified save completes.`},'Replace Existing File');if(answer!=='Replace Existing File')return null;}return this.scratchService.save(draftId,filename,{replace:Boolean(replaceEvidence),replaceEvidence});}
-  async scratchExportAct(draftId){const state=this.scratchService.snapshot(draftId),eligibility=scratchDocument.actAlphaLossEligibility(state.document);if(!eligibility.eligible)throw new Error(`ACT export would lose alpha at ${eligibility.lossyIndexes.length} palette index${eligibility.lossyIndexes.length===1?'':'es'} (${eligibility.lossyIndexes.slice(0,12).join(', ')}${eligibility.lossyIndexes.length>12?'…':''}). Set those entries to alpha 255 or keep the lossless .ikpalette.json document.`);const picked=await vscode.window.showSaveDialog({title:'Export RGB palette as ACT',filters:{'Adobe color table':['act']}});if(!picked)return null;let filename=path.resolve(picked.fsPath);if(!/\.act$/i.test(filename))filename+='.act';const observed=fs.existsSync(filename)?fs.readFileSync(filename):Buffer.alloc(0);transactionalWrite(fs,filename,paletteAct(state.document.colors),mutationOptions(filename,'palette-scratch-export-act',{expectedHash:hash(observed),allowExisting:true}));this.scratchService.status(draftId,`Exported ACT copy: ${filename}`);return filename;}
+  async scratchImportText() {
+    const picked=await vscode.window.showOpenDialog({title:'Import palette into a new draft',filters:{'Palette files':['pal','rgba','act','png','pcx']},canSelectMany:false});
+    if(!picked?.length)return;
+    return this.importPaletteFile(picked[0].fsPath);
+  }
+  async importPaletteFile(filename,options={}) {
+    const size=fs.statSync(filename).size;
+    let input, actSource;
+    if(/\.(pal|rgba)$/i.test(filename)) {
+      if(size>32768)throw Error('Palette text exceeds 32 KB.');
+      input=require('./palette_text_format').parsePaletteText(fs.readFileSync(filename));
+    }else{
+      if(!/\.(act|png|pcx)$/i.test(filename))throw Error('Unsupported palette format.');
+      if(size>64*1024*1024)throw Error('Palette file exceeds 64 MB.');
+      const bytes=fs.readFileSync(filename);
+      if(/\.pcx$/i.test(filename)){
+        input=require('./palette_pcx').readPalette(bytes);
+      }else if(/\.png$/i.test(filename)){
+        input=pngPaletteRgba(bytes,{padTo256:false});
+      }else{
+        const order=vscode.workspace.getConfiguration('ikemenZss',vscode.Uri.file(filename)).get('actPaletteOrder',INDEX_ORDER);
+        input=readAct(bytes,order);
+        actSource={bytes:bytes.toString('base64'),order};
+        const count=bytes.length===772?bytes.readUInt16BE(768):256;
+        const effectiveCount=count||256,transparent=bytes.length===772?bytes.readUInt16BE(770):0;
+        if(count>256||transparent!==65535&&transparent>=effectiveCount)throw Error('Invalid ACT count or transparent-index trailer.');
+        if(effectiveCount<256)input=input.slice(0,effectiveCount);
+      }
+    }
+    const colors=scratchDocument.defaultColors();
+    for(let i=1;i<input.length;i++)colors[i]=input[i];
+    const state=this.scratchService.create({name:path.parse(filename).name.slice(0,120),colors,textSource:{count:input.length,firstColor:input[0],...(actSource?{act:actSource}:{})}});
+    this.scratchService.status(state.document.draftId,'Imported '+input.length+' colors. Slot 0 is masked in the draft. Text export retains its original color.');
+    return this.openScratchWorkspace(null,{...options,importedFile:filename,draftId:state.document.draftId});
+  }
+  async scratchExportText(draftId) {
+    const state=this.scratchService.snapshot(draftId);
+    const choice=await vscode.window.showQuickPick([{label:'IKEMEN RGBA (all channels)',format:'rgba'},{label:'JASC PAL (RGB only)',format:'pal'}],{title:'Export palette text'});
+    if(!choice)return;
+    const doc=state.document, source=doc.textSource;
+    let count=source?.count||256;
+    for(let i=count;i<256;i++)if(doc.colors[i].some((v,c)=>v!==(c===3?255:0)))count=i+1;
+    const colors=doc.colors.slice(0,count);
+    if(source)colors[0]=source.firstColor;
+    if(choice.format==='pal'&&colors.some((c,i)=>c[3] !== (i===0?0:255))){
+      const answer=await vscode.window.showWarningMessage('JASC PAL stores RGB only. Export this copy without alpha?',{modal:true},'Export RGB');
+      if(answer!=='Export RGB')return;
+    }
+    const ext=choice.format;
+    const picked=await vscode.window.showSaveDialog({title:'Export '+count+' palette colors',filters:{'Palette file':[ext]}});
+    if(!picked)return;
+    const filename=picked.fsPath.toLowerCase().endsWith('.'+ext)?picked.fsPath:picked.fsPath+'.'+ext;
+    if(this.scratchService.snapshot(draftId).revision!==state.revision)throw Error('The palette changed during export. Review it again.');
+    const before=fs.existsSync(filename)?fs.readFileSync(filename):Buffer.alloc(0);
+    const bytes=require('./palette_text_format').writePaletteText(colors,ext);
+    transactionalWrite(fs,filename,bytes,mutationOptions(filename,'palette-scratch-export-text',{expectedHash:hash(before),allowExisting:true}));
+    this.scratchService.status(draftId,'Exported '+count+' colors to '+filename);
+  }
+  async scratchExportPcx(draftId) {
+    const state=this.scratchService.snapshot(draftId);
+    const plan=require('./palette_pcx').prepareExport(state.document);
+    const details=['PCX stores 256 RGB entries; no alpha is stored. On palette import, index0 is treated as transparent and all other entries are opaque. Original mask RGB is retained.'];
+    if(plan.padded)details.push(plan.padded+' unused entries will be padded black; PCX cannot retain a short palette count.');
+    if(plan.alphaLoss.length)details.push('Alpha changes at indexes: '+plan.alphaLoss.join(', ')+'. Use indexed PNG or RGBA for lossless alpha.');
+    const answer=await vscode.window.showWarningMessage('Export an indexed PCX palette copy?',{modal:true,detail:details.join('\n')},'Export RGB PCX');
+    if(answer!=='Export RGB PCX')return null;
+    const picked=await vscode.window.showSaveDialog({title:'Export indexed palette swatch PCX',filters:{'Indexed palette PCX':['pcx']}});
+    if(!picked)return null;
+    if(this.scratchService.snapshot(draftId).revision!==state.revision)throw Error('The palette changed during export. Review it again.');
+    const filename=/\.pcx$/i.test(picked.fsPath)?picked.fsPath:picked.fsPath+'.pcx';
+    const observed=fs.existsSync(filename)?fs.readFileSync(filename):Buffer.alloc(0);
+    transactionalWrite(fs,filename,plan.bytes,mutationOptions(filename,'palette-scratch-export-pcx',{expectedHash:hash(observed),allowExisting:true}));
+    if(!fs.readFileSync(filename).equals(plan.bytes))throw Error('Exported palette PCX failed reopen verification.');
+    require('./palette_pcx').readPalette(fs.readFileSync(filename));
+    this.scratchService.status(draftId,'Exported 256-entry RGB PCX palette copy: '+filename);
+    return filename;
+  }
+  async scratchExportPng(draftId) {
+    const state=this.scratchService.snapshot(draftId);
+    const bytes=require('./palette_standalone_export').palettePng(state.document);
+    const picked=await vscode.window.showSaveDialog({title:'Export indexed palette swatch PNG',filters:{'Indexed palette PNG':['png']}});
+    if(!picked)return null;
+    if(this.scratchService.snapshot(draftId).revision!==state.revision)throw Error('The palette changed during export. Review it again.');
+    const filename=/\.png$/i.test(picked.fsPath)?picked.fsPath:picked.fsPath+'.png';
+    const observed=fs.existsSync(filename)?fs.readFileSync(filename):Buffer.alloc(0);
+    transactionalWrite(fs,filename,bytes,mutationOptions(filename,'palette-scratch-export-png',{expectedHash:hash(observed),allowExisting:true}));
+    if(!fs.readFileSync(filename).equals(bytes))throw Error('Exported palette PNG failed reopen verification.');
+    this.scratchService.status(draftId,'Exported indexed palette PNG with original mask RGB and exact alpha: '+filename);
+    return filename;
+  }
+  async scratchExportAct(draftId) {
+    const state=this.scratchService.snapshot(draftId);
+    const codec=require('./palette_standalone_export');
+    const layout=await vscode.window.showQuickPick(codec.actLayouts(state.document),{title:'Export ACT palette layout'});
+    if(!layout)return null;
+    const result=codec.paletteAct(state.document,layout);
+    if(result.padded){
+      const answer=await vscode.window.showWarningMessage('This ACT layout stores 256 RGB colors.',{modal:true,detail:result.padded+' unused entries will be padded black. Choose Modern ACT or indexed PNG to retain the short palette count.'},'Export Padded ACT');
+      if(answer!=='Export Padded ACT')return null;
+    }
+    const picked=await vscode.window.showSaveDialog({title:'Export RGB palette as ACT',filters:{'Adobe color table':['act']}});
+    if(!picked)return null;
+    if(this.scratchService.snapshot(draftId).revision!==state.revision)throw Error('The palette changed during export. Review it again.');
+    const filename=/\.act$/i.test(picked.fsPath)?picked.fsPath:picked.fsPath+'.act';
+    const observed=fs.existsSync(filename)?fs.readFileSync(filename):Buffer.alloc(0);
+    transactionalWrite(fs,filename,result.bytes,mutationOptions(filename,'palette-scratch-export-act',{expectedHash:hash(observed),allowExisting:true}));
+    if(!fs.readFileSync(filename).equals(result.bytes))throw Error('Exported ACT failed reopen verification.');
+    this.scratchService.status(draftId,'Exported ACT copy: '+filename);
+    return filename;
+  }
   async scratchAddToSff(draftId){const state=this.scratchService.snapshot(draftId),eligibility=scratchDocument.actAlphaLossEligibility(state.document);if(!eligibility.eligible)throw new Error('An SFF palette handoff uses ACT and cannot preserve alpha outside index 0. Resolve the reported alpha entries before continuing.');const picked=await vscode.window.showOpenDialog({title:'Choose the exact SFF that will receive the reviewed palette plan',canSelectMany:false,canSelectFiles:true,canSelectFolders:false,filters:{'SFF archive':['sff']}});if(!picked?.[0])return null;const sff=path.resolve(picked[0].fsPath),archive=readSff(sff),mode=await vscode.window.showQuickPick([{label:'Append palette',description:'Use the next free number in the selected group.',mode:'append'},{label:'Insert before a palette number',description:'Shift later palette numbers only after review.',mode:'insert'}],{title:'Place scratch palette in the SFF build plan'});if(!mode)return null;const groupText=await vscode.window.showInputBox({title:'Destination palette group',value:'1',validateInput:value=>/^\d+$/.test(String(value||''))&&Number(value)<=65535?undefined:'Enter a whole group number from 0 through 65535.'});if(groupText===undefined)return null;let beforeNumber=0;if(mode.mode==='insert'){const text=await vscode.window.showInputBox({title:'Insert before palette number',value:'1',validateInput:value=>/^\d+$/.test(String(value||''))&&Number(value)<=65535?undefined:'Enter a whole palette number from 0 through 65535.'});if(text===undefined)return null;beforeNumber=Number(text)}const root=path.join(path.dirname(sff),'.ikemen-tools','palette-scratch-sources'),source=path.join(root,`${state.document.draftId}-${state.document.semanticHash.slice(0,12)}.act`),request={group:Number(groupText),mode:mode.mode,beforeNumber,occupiedIds:archive.palettes.map(item=>`${item.group},${item.number}`),existingColors:archive.palettes.map(item=>({label:`Embedded ${item.group},${item.number}`,group:item.group,number:item.number,colors:paletteRgba(archive,item.index)}))};let approvedPreflight=null;const result=await reviewAndStageScratchPlan({sffFilename:sff,request,sourceFilename:source,sourceBytes:paletteAct(state.document.colors),name:state.document.name,tableOrder:INDEX_ORDER,confirm:async preflight=>{approvedPreflight=preflight;const detail=`${state.document.name} → ${preflight.assigned.map(item=>`${item.group},${item.number}`).join(', ')}. ${preflight.shifted.length} existing palette coordinate${preflight.shifted.length===1?'':'s'} will shift in the staged plan. The active SFF remains unchanged.`;return await vscode.window.showWarningMessage('Add this palette to the reviewed SFF build plan?',{modal:true,detail},'Stage Reviewed Plan')==='Stage Reviewed Plan';}});if(!result)return null;this.scratchService.status(draftId,`Staged reviewed palette ${approvedPreflight.assigned[0].group},${approvedPreflight.assigned[0].number} for ${path.basename(sff)}. The active SFF is unchanged.`);await this.openTargetWorkspace(vscode.Uri.file(sff),{origin:{surface:'palette-scratch',draftId}});return result;}
-  async handleScratch(draftId,message={}){if(message.type==='openPaletteWorkspace'){await vscode.commands.executeCommand('ikemen.palette.openWorkspace',undefined,{section:message.section});return true}if(message.type!=='scratchAction')return false;const state=this.scratchService.snapshot(draftId),action=String(message.action||'');if(Number(message.revision)!==state.revision)throw new Error('The palette draft changed. Review the refreshed values and try again.');if(action==='select'){this.scratchService.select(draftId,message.index);return true}if(action==='rename'){this.scratchService.rename(draftId,state.revision,message.name);return true}if(action==='color'){this.scratchService.color(draftId,state.revision,message.index,message.rgba);return true}if(action==='undo'){this.scratchService.undo(draftId,state.revision);return true}if(action==='redo'){this.scratchService.redo(draftId,state.revision);return true}if(action==='save'){if(!state.destination)return Boolean(await this.scratchSaveAs(draftId));this.scratchService.save(draftId,state.destination.filename);return true}if(action==='saveAs'){await this.scratchSaveAs(draftId);return true}if(action==='export'){await this.scratchExportAct(draftId);return true}if(action==='add'){await this.scratchAddToSff(draftId);return true}return false;}
+  async handleScratch(draftId,message={}){if(message.type==='openPaletteWorkspace'){await vscode.commands.executeCommand('ikemen.palette.openWorkspace',undefined,{section:message.section});return true}if(message.type!=='scratchAction')return false;const state=this.scratchService.snapshot(draftId),action=String(message.action||'');if(Number(message.revision)!==state.revision)throw new Error('The palette draft changed. Review the refreshed values and try again.');if(action==='importText'){await this.scratchImportText();return true}if(action==='exportText'){await this.scratchExportText(draftId);return true}if(action==='exportPng'){await this.scratchExportPng(draftId);return true}if(action==='exportPcx'){await this.scratchExportPcx(draftId);return true}if(action==='createFromImages'){await this.createFromImages();return true}if(action==='select'){this.scratchService.select(draftId,message.index);return true}if(action==='rename'){this.scratchService.rename(draftId,state.revision,message.name);return true}if(action==='color'){this.scratchService.color(draftId,state.revision,message.index,message.rgba);return true}if(action==='undo'){this.scratchService.undo(draftId,state.revision);return true}if(action==='redo'){this.scratchService.redo(draftId,state.revision);return true}if(action==='save'){if(!state.destination)return Boolean(await this.scratchSaveAs(draftId));this.scratchService.save(draftId,state.destination.filename);return true}if(action==='saveAs'){await this.scratchSaveAs(draftId);return true}if(action==='export'){await this.scratchExportAct(draftId);return true}if(action==='add'){await this.scratchAddToSff(draftId);return true}return false;}
+    async createFromImages() {
+        const picked = await vscode.window.showOpenDialog({
+            title: 'Create working palette from images',
+            canSelectMany: true,
+            canSelectFiles: true,
+            canSelectFolders: false,
+            filters: {
+                'PNG or PCX images': ['png', 'pcx']
+            }
+        });
+        if (!picked?.length) return;
+        const model = require('./palette_from_images');
+        if (picked.length > model.LIMITS.files) throw Error('Choose at most 32 images.');
+        let total = 0;
+        const files = picked.map(uri => {
+                const stat = fs.statSync(uri.fsPath);
+                total += stat.size;
+                if (!stat.isFile() || total > model.LIMITS.bytes) throw Error('Combined image files exceed 32 MB or contain a non-file.');
+                return {
+                    name: path.basename(uri.fsPath),
+                    bytes: fs.readFileSync(uri.fsPath)
+                }
+            });
+        let review = model.buildWorkingPalette(files,{reduction:'median'});
+        const panel = vscode.window.createWebviewPanel('ikemenPaletteFromImages', 'Create From Images · Review', await paletteWorkspaceColumn(), {
+                enableScripts: true
+            });
+    require('./viewer_group').trackViewerPanel(panel);
+        panel.webview.html = require('./webview_policy').protect(model.reviewHtml(review), panel.webview.cspSource);
+        let accepted = false;
+        panel.webview.onDidReceiveMessage(message => {
+            if(message?.type === 'mergePage' && !accepted && Number.isSafeInteger(message.page)){
+                panel.webview.html=require('./webview_policy').protect(model.reviewHtml(review,message.page),panel.webview.cspSource);
+                return;
+            }
+            if(message?.type === 'pcxTransparency' && !accepted){review=model.buildWorkingPalette(files,{pcxTransparentZero:message.transparentZero===true,reduction:review.reduction,maximum:review.maximum});panel.webview.html=require('./webview_policy').protect(model.reviewHtml(review),panel.webview.cspSource);return;}
+            if(message?.type === 'reviewReduction' && !accepted){try{review=model.buildWorkingPalette(files,{pcxTransparentZero:review.pcxTransparentZero,reduction:message.reduction,maximum:message.maximum});panel.webview.html=require('./webview_policy').protect(model.reviewHtml(review),panel.webview.cspSource);}catch(error){vscode.window.showErrorMessage(error.message);}return;}
+            if (message?.type !== 'createWorkingPalette' || accepted) return;
+            accepted = true;
+            const state = this.scratchService.create({
+                name: 'Palette from images',
+                colors: review.colors
+            });
+            panel.dispose();
+            this.openScratchWorkspace(null, {
+                draftId: state.document.draftId
+            }).catch(error => vscode.window.showErrorMessage(error.message));
+        });
+    }
+
   async resumeScratchWorkspace(){const items=this.scratchService.list(),picked=await vscode.window.showQuickPick(items.map(item=>({label:item.name,description:item.dirty?'Unsaved retained draft':item.destination||'Retained palette',detail:item.status,draftId:item.draftId})),{title:'Resume retained palette draft',placeHolder:items.length?'Choose an exact retained palette draft.':'No retained palette drafts are available.'});return picked?this.openScratchWorkspace(null,{draftId:picked.draftId}):undefined;}
   async focusTargetTool(uri,options={}){const filename=path.resolve(uri?.fsPath||uri?.path||'');if(!filename||!/[.]sff$/i.test(filename))return false;let panel=this.targetPanels.get(filename.toLowerCase());if(!panel){panel=await this.openTargetWorkspace(vscode.Uri.file(filename),{section:'live-edit',origin:{surface:'palette-companion'}})}if(!panel)return false;panel.reveal();await panel.webview.postMessage({type:'paletteCompanionFocusTool',focus:String(options.focus||'live-edit'),tool:String(options.tool||'')});return true;}
   async invokeCompanionControl(uri,action={}){const filename=path.resolve(uri?.fsPath||uri?.path||'');if(!filename||!/[.]sff$/i.test(filename))return false;let panel=this.targetPanels.get(filename.toLowerCase());if(!panel)panel=await this.openTargetWorkspace(vscode.Uri.file(filename),{section:'live-edit',origin:{surface:'palette-companion'}});if(!panel)return false;await panel.webview.postMessage({type:'paletteCompanionBridgeAction',action});return true;}
-  async openScratchWorkspace(uri,options={}){let state;if(options.draftId)state=this.scratchService.snapshot(options.draftId);else if(uri?.fsPath||uri?.path){const filename=path.resolve(uri.fsPath||uri.path);state=this.scratchService.openFile(filename)}else state=this.scratchService.create({name:options.name||'Untitled palette'});const draftId=state.document.draftId,targetColumn=await paletteWorkspaceColumn(),existing=this.scratchPanels.get(draftId);if(existing){this.closeOtherPalettePanels(existing);existing.reveal(existing.viewColumn||targetColumn,false);return existing}const seed=state.destination?.filename||`scratch:${draftId}`;if(!await assetWorkspace.beforeOpen(seed))return;this.closeOtherPalettePanels();const panel=vscode.window.createWebviewPanel('ikemenPaletteScratch',`${state.document.name} · Palette Workshop`,targetColumn,{enableScripts:true,retainContextWhenHidden:true});this.scratchPanels.set(draftId,panel);panel.webview.html=require('./webview_policy').protect(assetWorkspace.decorate(panel,seed,'palette',scratchHtml({state})),panel.webview.cspSource);const detach=this.scratchService.attach(draftId,`palette-scratch:${draftId}`,next=>{panel.title=`${next.document.name} · Palette Workshop`;panel.webview.postMessage({type:'paletteScratchState',state:next})});panel.webview.onDidReceiveMessage(message=>(async()=>{if(message?.type==='ikemaker.universal-toolbar.invoke'&&message?.slotId==='save'){await this.handleScratch(draftId,{type:'scratchAction',action:'save',revision:this.scratchService.snapshot(draftId).revision});return}if(message?.type==='assetWorkspaceReady'){await handleLaunchMessage(message,this.scratchService.snapshot(draftId).destination?.filename||'','palette',panel);await panel.webview.postMessage({type:'paletteScratchState',state:this.scratchService.snapshot(draftId)});return}if(await handleLaunchMessage(message,this.scratchService.snapshot(draftId).destination?.filename||'', 'palette',panel))return;await this.handleScratch(draftId,message)})().catch(error=>vscode.window.showErrorMessage(`Palette Workshop: ${error.message}`)));panel.onDidDispose(()=>{detach();if(this.scratchPanels.get(draftId)===panel)this.scratchPanels.delete(draftId)});return panel;}
+  async openScratchWorkspace(uri,options={}){let state;if(options.draftId)state=this.scratchService.snapshot(options.draftId);else if(uri?.fsPath||uri?.path){const filename=path.resolve(uri.fsPath||uri.path);state=this.scratchService.openFile(filename)}else state=this.scratchService.create({name:options.name||'Untitled palette'});const draftId=state.document.draftId,targetColumn=await paletteWorkspaceColumn(),existing=this.scratchPanels.get(draftId);if(existing){if(options.assetOpenMode!=='new')this.closeOtherPalettePanels(existing);existing.reveal(existing.viewColumn||targetColumn,false);return existing}const seed=state.destination?.filename||`scratch:${draftId}`;if(!await assetWorkspace.beforeOpen(seed,options))return;if(options.assetOpenMode!=='new')this.closeOtherPalettePanels();const panel=vscode.window.createWebviewPanel('ikemenPaletteScratch',`${state.document.name} · Palette Workshop`,targetColumn,{enableScripts:true,retainContextWhenHidden:true});this.scratchPanels.set(draftId,panel);assetWorkspace.setOpenDisposition(panel,options);assetWorkspace.trackStandalonePalette(panel,()=>this.scratchService.snapshot(draftId).destination?.filename||options.importedFile);panel.webview.html=require('./webview_policy').protect(assetWorkspace.decorate(panel,seed,'palette',scratchHtml({state,appearance:require('./viewer_appearance_preferences').read(vscode,'palette',state.destination?.filename||options.importedFile)})),panel.webview.cspSource);const detach=this.scratchService.attach(draftId,`palette-scratch:${draftId}`,next=>{panel.title=`${next.document.name} · Palette Workshop`;panel.webview.postMessage({type:'paletteScratchState',state:next})});panel.webview.onDidReceiveMessage(message=>(async()=>{if(message?.type==='ikemaker.universal-toolbar.invoke'&&message?.slotId==='save'){await this.handleScratch(draftId,{type:'scratchAction',action:'save',revision:this.scratchService.snapshot(draftId).revision});return}if(message?.type==='assetWorkspaceReady'){await handleLaunchMessage(message,this.scratchService.snapshot(draftId).destination?.filename||'','palette',panel);await panel.webview.postMessage({type:'paletteScratchState',state:this.scratchService.snapshot(draftId)});return}if(await handleLaunchMessage(message,this.scratchService.snapshot(draftId).destination?.filename||'', 'palette',panel))return;await this.handleScratch(draftId,message)})().catch(error=>vscode.window.showErrorMessage(`Palette Workshop: ${error.message}`)));panel.onDidDispose(()=>{detach();if(this.scratchPanels.get(draftId)===panel)this.scratchPanels.delete(draftId)});return panel;}
   async openSourceWorkspace(uri, options = {}) {
     const filename = path.resolve(uri?.fsPath || uri?.path || '');
     if (!filename || !fs.existsSync(filename)) return Promise.resolve();
@@ -890,7 +1051,7 @@ class PaletteWorkspaceController {
     session = service.rebindSourceContext(filename, options);
     for(const retained of session.collective?.copyHistory||[])verifyReceiptFile(retained.receiptFile,retained.receiptHash);
     if (!(session.organizer?.semanticEntries || []).length) { const state = this.sourceOrganizerState(filename, session), summary = /\.png$/i.test(filename) ? batchSummary(inspectImages([filename])) : { title: 'Exact ACT palette', detail: '256 RGB entries in the selected ACT table order.', safeToStage: true }; session = service.mutateSource(filename, { context: { section: options.section || session.context.section }, organizer: { importSummary: summary, semanticEntries: state.model.entries.map(({ id, category, label }) => ({ id, category, label })), durable: true } }); }
-    const panel = vscode.window.createWebviewPanel('ikemenPaletteWorkspace', `${path.basename(filename)} · Palette Workshop`, targetColumn, { enableScripts: true, retainContextWhenHidden: true }); this.sourcePanels.set(key, panel); panel.webview.html = require('./webview_policy').protect(assetWorkspace.decorate(panel,filename,'palette',sourceHtml({ session })), panel.webview.cspSource);
+    const panel = vscode.window.createWebviewPanel('ikemenPaletteWorkspace', `${path.basename(filename)} · Palette Workshop`, targetColumn, { enableScripts: true, retainContextWhenHidden: true }); this.sourcePanels.set(key, panel); panel.webview.html = require('./webview_policy').protect(assetWorkspace.decorate(panel,filename,'palette',sourceHtml({ appearance:require('./viewer_appearance_preferences').read(vscode,'palette',filename),session })), panel.webview.cspSource);
     const detach = service.attachSource(filename, `palette-source:${key}`, next => panel.webview.postMessage({ type: 'paletteWorkspaceSession', session: next }));
     panel.webview.onDidReceiveMessage(message => (async()=>{if(message?.type==='assetWorkspaceReady'){await handleLaunchMessage(message,filename,'palette',panel);if(this.sourcePanels.get(key)!==panel)return;const current=service.sourceSnapshot(filename);await panel.webview.postMessage({type:'paletteWorkspaceSession',session:current});if(current.context.kind==='collective-source')this.postCollective(panel,current,0);if(current.reduction?.operationId)this.postReduction(filename,panel,current);return}if(await handleLaunchMessage(message,filename,'palette',panel))return;if(this.queueCollectivePreview(filename,panel,message)||this.queueCollectiveFilter(filename,panel,message))return;await this.handleSource(filename,panel,message)})().catch(async error=>{if(message?.action==='reviewTemplateRegionExclusion')await panel.webview.postMessage({type:'paletteCollectiveRegionReviewFailed',message:error.message});if(message?.action==='applyTemplateRegionExclusion')await panel.webview.postMessage({type:'paletteCollectiveRegionApplyFailed',message:error.message});vscode.window.showErrorMessage(`Palette Workspace: ${error.message}`)}));
     panel.onDidDispose(() => { detach(); if (this.sourcePanels.get(key) === panel) this.sourcePanels.delete(key); }); if(session.reduction?.operationId)this.postReduction(filename,panel,session);return panel;
@@ -916,7 +1077,7 @@ class PaletteWorkspaceController {
     if(options.kind==='sff-unmatched-color'&&options.handoff?.issue){const review=syncConflictReview.fromUnmatchedColors({issues:[options.handoff.issue],sourceHash:options.handoff.scanHash,reducedMotion:options.handoff.reducedMotion});session=service.mutate(filename,{context:{origin:{surface:'sff-creator',kind:'unmatched-color',returnCommand:options.returnCommand||'',handoffHash:options.handoff.handoffHash,unmatchedHandoff:options.handoff},section:'index-migration'},family:{...session.family,template:{...session.family.template,conflictReview:review}}});}
     if(options.kind==='sff-needs-palette')session=adoptNeedsPalette();
     const palettes = archive.palettes.map(palette => ({ ...paletteIdentityDisplay(archive,palette), physicalIndex: palette.index, group: palette.group, number: palette.number, linked: palette.dataSize===0, dataSize: palette.dataSize, colors: paletteRgba(archive, palette.index) })),animations=require('./sff_viewer').nearbyAirAnimations(filename);
-    const panel = vscode.window.createWebviewPanel('ikemenPaletteWorkspace', `${path.basename(filename)} · Palette Workshop`, targetColumn, { enableScripts: true, retainContextWhenHidden: true }); this.targetPanels.set(key, panel); panel.webview.html = require('./webview_policy').protect(assetWorkspace.decorate(panel,filename,'palette',sourceHtml({ session, palettes, animations, buildPlan: paletteBuildPlanModel(filename, session) })), panel.webview.cspSource);
+    const panel = vscode.window.createWebviewPanel('ikemenPaletteWorkspace', `${path.basename(filename)} · Palette Workshop`, targetColumn, { enableScripts: true, retainContextWhenHidden: true }); this.targetPanels.set(key, panel); panel.webview.html = require('./webview_policy').protect(assetWorkspace.decorate(panel,filename,'palette',sourceHtml({ appearance:require('./viewer_appearance_preferences').read(vscode,'palette',filename),session, palettes, animations, buildPlan: paletteBuildPlanModel(filename, session) })), panel.webview.cspSource);
     const owner = this.attachSff(filename, message => {if(['paletteWorkspaceExactReturn','paletteWorkspaceOpenOrigin'].includes(message.type))return navigatePaletteWorkspaceReturn(filename,message).catch(error=>vscode.window.showWarningMessage('Palette return: '+error.message));return panel.webview.postMessage(message)}), detach = service.attach(filename, `palette-target:${key}`, next => {if(!owner.inlineActive())panel.webview.postMessage({ type: 'paletteWorkspaceSession', session: presentationSession(next) })});
     panel.webview.onDidReceiveMessage(message => (async()=>{if(message?.type==='paletteCompanionBridgeSnapshot'){require('./palette_workshop_browser').deliverBridge(filename,message.snapshot);return}if(message?.type==='assetWorkspaceReady'){await handleLaunchMessage(message,filename,'palette',panel);if(this.targetPanels.get(key)===panel)owner.replay();return}if(await handleLaunchMessage(message,filename,'palette',panel))return;if(message?.type==='returnNeedsPalette'){const current=service.snapshot(filename),handoff=needsPaletteHandoff.revalidate(current.context.needsPaletteHandoff);needsPaletteHandoff.clear(service,filename);await vscode.commands.executeCommand(handoff.returnContext.command,vscode.Uri.file(handoff.returnContext.targetPath));return}await owner.handle(message)})().catch(error => vscode.window.showErrorMessage(`Palette Workshop: ${error.message}`)));
     this.bindArchiveHistoryDisposal(panel,filename);panel.onDidDispose(() => { owner.dispose();detach();try{this.restoreCandidate({filename,selectedSourceIds:new Set()})}catch(_){/* Exact recovery remains persisted when authority changed. */}if (this.targetPanels.get(key) === panel) this.targetPanels.delete(key); });

@@ -6,7 +6,7 @@ const TEXT_MODE_KEY='ikemaker.textAutoSave.previousMode';
 let storage;
 function enabled(seed) {
   const vscode = require('vscode');
-  return vscode.workspace.getConfiguration('ikemenZss', seed ? vscode.Uri.file(seed) : undefined).get('autoSave', false);
+  return vscode.workspace.getConfiguration('ikemenZss', seed ? vscode.Uri.file(seed) : null).get('autoSave', false);
 }
 function textMode(seed){const vscode=require('vscode'),resource=seed?vscode.Uri.file(seed):undefined;return vscode.workspace.getConfiguration('files',resource).get('autoSave','off');}
 function textEnabled(seed){return textMode(seed)!=='off';}

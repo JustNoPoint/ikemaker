@@ -191,7 +191,11 @@ function actionId(action) { return action.id || `command.${action.command}`; }
 
 async function runAction(action, seed, vscode, navigation = require('./viewer_navigation'), ownerDef = '') {
   if (action?.viewer) return navigation.openConnected(seed?.fsPath || seed, action.viewer, undefined, undefined, undefined, ownerDef ? { def: path.resolve(ownerDef) } : undefined, { origin:'text' });
-  if (action?.command) return vscode.commands.executeCommand(action.command, seed);
+  if (action?.command) return vscode.commands.executeCommand(action.command, seed, ...labOwnerArgs(action.command,ownerDef));
+}
+
+function labOwnerArgs(command,ownerDef) {
+  return ownerDef && ['ikemen.hitDef.openEditor','ikemen.moveLab.open'].includes(command) ? [{ownerDef}] : [];
 }
 
 function primaryCommand(context) {
@@ -420,7 +424,31 @@ function companionHtml(context, actions, favorites, toolbarModel = textToolbarMo
       })()</script>
     </main>`:`<main class="navigation-browser"><p role="status">${escapeHtml(navigationState.unavailableReason||'No connected code files are available.')}</p></main>`;
   const restoreJson=JSON.stringify(navigationState.restore||null).replace(/</g,'\\u003c');
-  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${viewerToolbar.style()}:root{color-scheme:light dark}*{box-sizing:border-box}html,body{overflow:hidden}body{margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font:12px var(--vscode-font-family)}button,input{font:inherit;color:inherit}.launch-controls{display:flex;flex-direction:column;align-items:stretch;overflow:visible;border-bottom:1px solid var(--vscode-panel-border)}.launch-controls>.viewer-dropdown-toolbar{order:0}.launch-controls>.ikemaker-universal-toolbar{order:1}.viewer-dropdown>div{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-auto-columns:minmax(220px,max-content);width:max-content;max-width:calc(100vw - 16px);max-height:none!important;overflow:visible!important;padding:5px;font-size:var(--vscode-font-size,13px)}.viewer-dropdown>div>button{padding:6px 8px}.viewer-dropdown>div>hr{width:1px;height:100%;border:0;border-left:1px solid var(--vscode-menu-separatorBackground,var(--vscode-panel-border));margin:0 3px;grid-row:1 / span 3}.viewer-dropdown:nth-last-of-type(-n+4)>div{left:auto;right:0}.navigation-browser{padding:3px 8px 7px}.navigation-browser button{--tab-kind:var(--vscode-panel-border);background:color-mix(in srgb,var(--tab-kind) 10%,var(--vscode-button-secondaryBackground,var(--vscode-input-background)));border:1px solid color-mix(in srgb,var(--tab-kind) 72%,var(--vscode-panel-border));box-shadow:inset 0 2px var(--tab-kind);padding:4px 7px}.navigation-browser button[data-file-kind="def"]{--tab-kind:#4f9bd8}.navigation-browser button[data-file-kind="air"]{--tab-kind:#a77bd8}.navigation-browser button[data-file-kind="zss"],.navigation-browser button[data-file-kind="cns"],.navigation-browser button[data-file-kind="st"]{--tab-kind:#44a88d}.navigation-browser button[data-file-kind="cmd"],.navigation-browser button[data-file-kind="inp"],.navigation-browser button[data-file-kind="jnp"],.navigation-browser button[data-file-kind="dat"]{--tab-kind:#d19a55}.navigation-browser button[data-file-kind="lua"]{--tab-kind:#5c9dd5}.navigation-browser button:focus-visible,.navigation-browser input:focus-visible{outline:2px solid var(--vscode-focusBorder);outline-offset:1px}.navigation-browser button[aria-selected="true"]{border-color:var(--vscode-focusBorder);background:color-mix(in srgb,var(--tab-kind) 24%,var(--vscode-editor-background));color:var(--vscode-foreground)}.navigation-browser button small{display:block;color:var(--vscode-descriptionForeground);font-size:10px}.navigation-browser button[aria-selected="true"] small{color:inherit}.connected-nav{display:grid;grid-template-columns:58px minmax(80px,1fr) 58px 27px 27px minmax(80px,auto);gap:5px;align-items:center;margin:3px 0 5px}.connected-nav button{box-sizing:border-box;width:27px;height:27px;padding:0;box-shadow:none}.header-only-toggle{border-color:var(--vscode-focusBorder)!important}.header-only-toggle[aria-pressed="true"]{background:var(--vscode-list-activeSelectionBackground)!important;color:var(--vscode-list-activeSelectionForeground)!important}.tab-viewport{max-width:100%;overflow:hidden;scroll-behavior:smooth}.tabs{display:flex;flex-flow:row nowrap;gap:3px;width:max-content;min-width:100%}.tabs button{flex:0 0 auto;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tabs button:has(small:is(:not(:empty))){min-height:38px}@media(forced-colors:active){.navigation-browser button[aria-selected="true"],.header-only-toggle[aria-pressed="true"]{outline:2px solid CanvasText;outline-offset:1px}}</style></head><body><div class="launch-controls">${menus}${toolbar}<span class="viewer-toolbar-context" data-toolbar-context role="status" aria-live="polite"></span><span class="viewer-toolbar-options" data-mode="workspace" data-viewer-colors="on" data-toolbar-surface="code" hidden></span></div>${navigation}<script>const vscode=acquireVsCodeApi();const persistedRestore=${restoreJson};const priorState=vscode.getState?.()||{};vscode.setState({...priorState,restore:persistedRestore});${universalToolbarClientScript({vscodeVariable:'vscode'})}${viewerToolbar.clientScript()}const tabButtons=[...document.querySelectorAll('[data-connected-index]')],tabViewport=document.querySelector('.tab-viewport'),slider=document.getElementById('connected-slider');const reveal=index=>{const button=tabButtons[index];if(!button||!tabViewport)return;const left=Math.max(0,button.offsetLeft-(tabViewport.clientWidth-button.offsetWidth)/2);tabViewport.scrollTo({left,behavior:'smooth'})};const choose=index=>{if(!tabButtons.length)return;const bounded=(index+tabButtons.length)%tabButtons.length;reveal(bounded);vscode.postMessage({type:'select-connected',index:bounded})};tabButtons.forEach(button=>button.addEventListener('click',()=>choose(Number(button.dataset.connectedIndex))));document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>choose((Number(slider?.value)||1)-1+Number(button.dataset.move))));slider?.addEventListener('input',event=>choose(Number(event.target.value)-1));document.querySelector('.tabs')?.addEventListener('keydown',event=>{const at=tabButtons.indexOf(event.target);if(at<0)return;let next;if(event.key==='ArrowRight')next=Math.min(tabButtons.length-1,at+1);else if(event.key==='ArrowLeft')next=Math.max(0,at-1);else if(event.key==='Home')next=0;else if(event.key==='End')next=tabButtons.length-1;else return;event.preventDefault();tabButtons[next]?.focus();choose(next)});let headerFitSent=false;const reportHeaderFit=()=>{if(headerFitSent)return;requestAnimationFrame(()=>requestAnimationFrame(()=>{if(headerFitSent)return;const launch=document.querySelector('.launch-controls'),navigation=document.querySelector('.navigation-browser');if(!launch||!navigation)return;const top=Math.min(launch.getBoundingClientRect().top,navigation.getBoundingClientRect().top),bottom=Math.max(launch.getBoundingClientRect().bottom,navigation.getBoundingClientRect().bottom),contentHeight=Math.ceil(bottom-top),viewportHeight=Math.ceil(document.documentElement.clientHeight);if(Number.isFinite(contentHeight)&&Number.isFinite(viewportHeight)&&contentHeight>=60&&contentHeight<=600&&viewportHeight>=80&&viewportHeight<=3000){headerFitSent=true;vscode.postMessage({type:'fit-header-height',contentHeight,viewportHeight})}}))};document.fonts?.ready?.then(reportHeaderFit,reportHeaderFit);window.addEventListener('load',reportHeaderFit,{once:true});reportHeaderFit();requestAnimationFrame(()=>reveal(Math.max(0,tabButtons.findIndex(button=>button.getAttribute('aria-selected')==='true'))));${viewerCloseClientScript()}</script></body></html>`;
+  return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${viewerToolbar.style()}:root{color-scheme:light dark}*{box-sizing:border-box}html,body{overflow:hidden}body{margin:0;color:var(--vscode-foreground);background:var(--vscode-editor-background);font:12px var(--vscode-font-family)}button,input{font:inherit;color:inherit}.launch-controls{display:flex;flex-direction:column;align-items:stretch;overflow:visible;border-bottom:1px solid var(--vscode-panel-border)}.launch-controls>.viewer-dropdown-toolbar{order:0}.launch-controls>.ikemaker-universal-toolbar{order:1}.viewer-dropdown>div{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-auto-columns:minmax(220px,max-content);width:max-content;max-width:calc(100vw - 16px);max-height:none!important;overflow:visible!important;padding:5px;font-size:var(--vscode-font-size,13px)}.viewer-dropdown>div>button{padding:6px 8px}.viewer-dropdown>div>hr{width:1px;height:100%;border:0;border-left:1px solid var(--vscode-menu-separatorBackground,var(--vscode-panel-border));margin:0 3px;grid-row:1 / span 3}.viewer-dropdown:nth-last-of-type(-n+4)>div{left:auto;right:0}.navigation-browser{padding:3px 8px 7px}.navigation-browser button{--tab-kind:var(--vscode-panel-border);background:color-mix(in srgb,var(--tab-kind) 10%,var(--vscode-button-secondaryBackground,var(--vscode-input-background)));border:1px solid color-mix(in srgb,var(--tab-kind) 72%,var(--vscode-panel-border));box-shadow:inset 0 2px var(--tab-kind);padding:4px 7px}.navigation-browser button[data-file-kind="def"]{--tab-kind:#4f9bd8}.navigation-browser button[data-file-kind="air"]{--tab-kind:#a77bd8}.navigation-browser button[data-file-kind="zss"],.navigation-browser button[data-file-kind="cns"],.navigation-browser button[data-file-kind="st"]{--tab-kind:#44a88d}.navigation-browser button[data-file-kind="cmd"],.navigation-browser button[data-file-kind="inp"],.navigation-browser button[data-file-kind="jnp"],.navigation-browser button[data-file-kind="dat"]{--tab-kind:#d19a55}.navigation-browser button[data-file-kind="lua"]{--tab-kind:#5c9dd5}.navigation-browser button:focus-visible,.navigation-browser input:focus-visible{outline:2px solid var(--vscode-focusBorder);outline-offset:1px}.navigation-browser button[aria-selected="true"]{border-color:var(--vscode-focusBorder);background:color-mix(in srgb,var(--tab-kind) 24%,var(--vscode-editor-background));color:var(--vscode-foreground)}.navigation-browser button small{display:block;color:var(--vscode-descriptionForeground);font-size:10px}.navigation-browser button[aria-selected="true"] small{color:inherit}.connected-nav{display:grid;grid-template-columns:58px minmax(80px,1fr) 58px 27px 27px minmax(80px,auto);gap:5px;align-items:center;margin:3px 0 5px}.connected-nav button{box-sizing:border-box;width:27px;height:27px;padding:0;box-shadow:none}.header-only-toggle{border-color:var(--vscode-focusBorder)!important}.header-only-toggle[aria-pressed="true"]{background:var(--vscode-list-activeSelectionBackground)!important;color:var(--vscode-list-activeSelectionForeground)!important}.tab-viewport{max-width:100%;overflow:hidden;scroll-behavior:smooth}.tabs{display:flex;flex-flow:row nowrap;gap:3px;width:max-content;min-width:100%}.tabs button{flex:0 0 auto;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.tabs button:has(small:is(:not(:empty))){min-height:38px}@media(forced-colors:active){.navigation-browser button[aria-selected="true"],.header-only-toggle[aria-pressed="true"]{outline:2px solid CanvasText;outline-offset:1px}}</style></head><body><div class="launch-controls">${menus}${toolbar}<span class="viewer-toolbar-context" data-toolbar-context role="status" aria-live="polite"></span><span class="viewer-toolbar-options" data-mode="workspace" data-viewer-colors="on" data-toolbar-surface="code" hidden></span></div>${navigation}<script>const vscode=acquireVsCodeApi();const persistedRestore=${restoreJson};const priorState=vscode.getState?.()||{};vscode.setState({...priorState,restore:persistedRestore});
+    const headerBody=document.body;
+    let keepBottom=priorState.headerAtBottom===true,desiredTop=Number(priorState.headerScrollTop)||0;
+    let pointerDown=false,userScrollUntil=0;
+    headerBody.style.overflowAnchor='none';
+    const maxHeaderScroll=()=>Math.max(0,headerBody.scrollHeight-headerBody.clientHeight);
+    const restoreHeaderScroll=()=>{headerBody.scrollTop=keepBottom?maxHeaderScroll():Math.min(desiredTop,maxHeaderScroll())};
+    const allowHeaderScroll=()=>{userScrollUntil=performance.now()+350};
+    window.addEventListener('wheel',allowHeaderScroll,{passive:true,capture:true});
+    window.addEventListener('pointerdown',()=>{pointerDown=true;allowHeaderScroll()},true);
+    const releaseHeaderPointer=()=>{pointerDown=false};
+    window.addEventListener('pointerup',releaseHeaderPointer,true);
+    window.addEventListener('pointercancel',releaseHeaderPointer,true);
+    window.addEventListener('blur',releaseHeaderPointer);
+    window.addEventListener('keydown',allowHeaderScroll,true);
+    headerBody.addEventListener('scroll',()=>{
+      if(!pointerDown&&performance.now()>userScrollUntil){restoreHeaderScroll();return;}
+      desiredTop=headerBody.scrollTop;
+      keepBottom=maxHeaderScroll()>0&&desiredTop>=maxHeaderScroll()-1;
+      vscode.setState({...vscode.getState(),headerScrollTop:desiredTop,headerAtBottom:keepBottom});
+    },{passive:true});
+    restoreHeaderScroll();
+    const headerSizeObserver=new ResizeObserver(()=>{if(!pointerDown)restoreHeaderScroll()});
+    for(const element of [headerBody,...document.querySelectorAll('.launch-controls,.navigation-browser')])headerSizeObserver.observe(element);
+    ${universalToolbarClientScript({vscodeVariable:'vscode'})}${viewerToolbar.clientScript()}const tabButtons=[...document.querySelectorAll('[data-connected-index]')],tabViewport=document.querySelector('.tab-viewport'),slider=document.getElementById('connected-slider');const reveal=index=>{const button=tabButtons[index];if(!button||!tabViewport)return;const left=Math.max(0,button.offsetLeft-(tabViewport.clientWidth-button.offsetWidth)/2);tabViewport.scrollTo({left,behavior:'smooth'})};const choose=index=>{if(!tabButtons.length)return;const bounded=(index+tabButtons.length)%tabButtons.length;reveal(bounded);vscode.postMessage({type:'select-connected',index:bounded})};tabButtons.forEach(button=>button.addEventListener('click',()=>choose(Number(button.dataset.connectedIndex))));document.querySelectorAll('[data-move]').forEach(button=>button.addEventListener('click',()=>choose((Number(slider?.value)||1)-1+Number(button.dataset.move))));slider?.addEventListener('input',event=>choose(Number(event.target.value)-1));document.querySelector('.tabs')?.addEventListener('keydown',event=>{const at=tabButtons.indexOf(event.target);if(at<0)return;let next;if(event.key==='ArrowRight')next=Math.min(tabButtons.length-1,at+1);else if(event.key==='ArrowLeft')next=Math.max(0,at-1);else if(event.key==='Home')next=0;else if(event.key==='End')next=tabButtons.length-1;else return;event.preventDefault();tabButtons[next]?.focus();choose(next)});let headerFitSent=false;const reportHeaderFit=()=>{if(headerFitSent)return;requestAnimationFrame(()=>requestAnimationFrame(()=>{if(headerFitSent)return;const launch=document.querySelector('.launch-controls'),navigation=document.querySelector('.navigation-browser');if(!launch||!navigation)return;const top=Math.min(launch.getBoundingClientRect().top,navigation.getBoundingClientRect().top),bottom=Math.max(launch.getBoundingClientRect().bottom,navigation.getBoundingClientRect().bottom),contentHeight=Math.ceil(bottom-top),viewportHeight=Math.ceil(document.documentElement.clientHeight);if(Number.isFinite(contentHeight)&&Number.isFinite(viewportHeight)&&contentHeight>=60&&contentHeight<=600&&viewportHeight>=80&&viewportHeight<=3000){headerFitSent=true;vscode.postMessage({type:'fit-header-height',contentHeight,viewportHeight})}}))};document.fonts?.ready?.then(reportHeaderFit,reportHeaderFit);window.addEventListener('load',reportHeaderFit,{once:true});reportHeaderFit();${viewerCloseClientScript()}</script></body></html>`;
 }
 
 const rawCompanionHtml = companionHtml;
@@ -430,13 +458,13 @@ companionHtml = function (...args) {
     .replace('.viewer-dropdown>div{display:grid;grid-auto-flow:column;grid-template-rows:repeat(3,auto);grid-auto-columns:minmax(220px,max-content);width:max-content;max-width:calc(100vw - 16px);max-height:none!important;overflow:visible!important;padding:5px;font-size:var(--vscode-font-size,13px)}.viewer-dropdown>div>button{padding:6px 8px}.viewer-dropdown>div>hr{width:1px;height:100%;border:0;border-left:1px solid var(--vscode-menu-separatorBackground,var(--vscode-panel-border));margin:0 3px;grid-row:1 / span 3}','')
     .replace('const tabButtons=',dropdownLayoutClient+'const tabButtons=')
     .replace('if(organizationGeneration>0)button.addEventListener', 'button.addEventListener')
-    .replace(/const tabButtons=\[\.\.\.document\.querySelectorAll\('\[data-connected-index\]'\)\],tabViewport=.*?;let headerFitSent=false;/, "const selectedTab=document.querySelector('[data-connected-index][aria-selected=\"true\"]');requestAnimationFrame(()=>selectedTab?.scrollIntoView({block:'nearest',inline:'center'}));let headerFitSent=false;")
+    .replace(/const tabButtons=\[\.\.\.document\.querySelectorAll\('\[data-connected-index\]'\)\],tabViewport=.*?;let headerFitSent=false;/, "const selectedTab=document.querySelector('[data-connected-index][aria-selected=\"true\"]');requestAnimationFrame(()=>{const strip=selectedTab?.closest('.tab-viewport');if(strip)strip.scrollLeft+=selectedTab.getBoundingClientRect().left-strip.getBoundingClientRect().left-(strip.clientWidth-selectedTab.offsetWidth)/2});let headerFitSent=false;")
     .replace("document.addEventListener('click',event=>{if(!event.target.closest('[data-file-tab-menu]'))", "fileTabs.forEach((button,index)=>button.addEventListener('keydown',event=>{if(event.altKey||event.shiftKey||!['ArrowLeft','ArrowRight','Home','End'].includes(event.key))return;event.preventDefault();const target=event.key==='Home'?0:event.key==='End'?fileTabs.length-1:Math.max(0,Math.min(fileTabs.length-1,index+(event.key==='ArrowLeft'?-1:1)));fileTabs[target]?.focus();sendOrganization({type:'select-connected',index:Number(fileTabs[target]?.dataset.connectedIndex)})}));document.addEventListener('click',event=>{if(!event.target.closest('[data-file-tab-menu]'))");
 };
 
 function register(vscode, extensionContext) {
   configureViewerTopology(()=>({all:vscode.window.tabGroups?.all||[],active:vscode.window.tabGroups?.activeTabGroup||null}));
-  let panel=null,activeEditor=vscode.window.activeTextEditor,active={document:activeEditor?.document||null,classification:{supported:false,kind:'',role:'',writable:false}},bound={document:null,classification:{supported:false,kind:'',role:'',writable:false,label:'No supported text editor'},descriptor:null,contextEntry:null,contextModel:null},contextQueue=Promise.resolve(),connectedFiles=[],connectedIndex=0,workspaceNavigation=false,workspaceDescriptor=null,nativeColumn=activeEditor?.viewColumn,statusSignature='',statusTimer=null,layoutMode='text-attached',layoutGeneration=0,headerFitApplied=false,headerRepairing=false,groupRepairing=false,serializerRestoring=false,repairProtectedHeader=async()=>false,startupRepairTimer=null,airReturnRenderRequest=null,airReturnRenderGeneration=0,entityRetargetGeneration=0,entityRetargetLock=false,entityUnavailableReason='',currentFileOrganization={order:[],pinned:[],hidden:[]},dropdownLayoutState=null,dropdownLayoutQueue=Promise.resolve();
+  let panel=null,activeEditor=vscode.window.activeTextEditor,active={document:activeEditor?.document||null,classification:{supported:false,kind:'',role:'',writable:false}},bound={document:null,classification:{supported:false,kind:'',role:'',writable:false,label:'No supported text editor'},descriptor:null,contextEntry:null,contextModel:null},contextQueue=Promise.resolve(),connectedFiles=[],connectedIndex=0,workspaceNavigation=false,workspaceDescriptor=null,nativeColumn=activeEditor?.viewColumn,statusSignature='',statusTimer=null,layoutMode='text-attached',layoutGeneration=0,headerFitApplied=false,headerRepairing=false,serializerRestoring=false,repairProtectedHeader=async()=>false,startupRepairTimer=null,airReturnRenderRequest=null,airReturnRenderGeneration=0,entityRetargetGeneration=0,entityRetargetLock=false,entityUnavailableReason='',currentFileOrganization={order:[],pinned:[],hidden:[]},dropdownLayoutState=null,dropdownLayoutQueue=Promise.resolve();
   const settleAirReturnRender=(accepted=false)=>{const request=airReturnRenderRequest;if(!request)return false;airReturnRenderRequest=null;clearTimeout(request.timer);request.resolve(Boolean(accepted));return true;};
   const beginAirReturnRender=filename=>{settleAirReturnRender(false);const exact=path.resolve(filename),route=(()=>{try{return require('./air_docking_workspace').sourceHandoffDetails(exact);}catch(_){return null;}})(),origin=route?.origin||'';if(!route||route.available===false||!origin)return null;let resolve;const promise=new Promise(done=>{resolve=done}),request={token:crypto.randomBytes(24).toString('hex'),filename:exact.toLowerCase(),origin:String(origin).toLowerCase(),generation:++airReturnRenderGeneration,panel:null,resolve,promise,timer:null};request.timer=setTimeout(()=>{if(airReturnRenderRequest===request)settleAirReturnRender(false);},1500);airReturnRenderRequest=request;return request;};
   const config = () => vscode.workspace.getConfiguration('ikemenZss');
@@ -448,11 +476,11 @@ function register(vscode, extensionContext) {
   const uriKey=document=>String(document?.uri?.toString?.()||document?.uri?.fsPath||document?.fileName||'');
   const tabInputPath=tab=>tab?.input?.uri?.fsPath||tab?.input?.modified?.fsPath||tab?.input?.original?.fsPath||'';
   const nativeColumnFor=(candidate,avoidColumn=panel?.viewColumn)=>{
+    if(Number.isInteger(candidate)&&candidate>0&&candidate!==avoidColumn)return candidate;
     const connected=new Set(connectedFiles.map(file=>file.filename.toLowerCase()));
     for(const group of vscode.window.tabGroups?.all||[]){if(group?.viewColumn===avoidColumn)continue;if((group?.tabs||[]).some(tab=>{const filename=tabInputPath(tab);return filename&&connected.has(path.resolve(filename).toLowerCase());}))return group.viewColumn;}
     const visible=(vscode.window.visibleTextEditors||[]).find(editor=>editor?.viewColumn!==avoidColumn&&connected.has(path.resolve(editor?.document?.fileName||'.').toLowerCase()));
     if(Number.isInteger(visible?.viewColumn)&&visible.viewColumn>0)return visible.viewColumn;
-    if(Number.isInteger(candidate)&&candidate>0&&candidate!==avoidColumn)return candidate;
     return avoidColumn===vscode.ViewColumn?.One?2:1;
   };
   const canonicalLayout=async()=>{
@@ -491,41 +519,42 @@ function register(vscode, extensionContext) {
     try{await vscode.commands.executeCommand('vscode.setEditorLayout',restore);return true;}catch(_){return false;}
   }).catch(()=>false);
   const restoreDropdownLayout=()=>dropdownLayoutState===null?Promise.resolve(false):setDropdownLayout({open:false,contentHeight:0,viewportHeight:100});
-  const pruneHeaderSourceDuplicates=async()=>{
-    if(layoutMode==='restoring'||serializerRestoring||!panel||typeof vscode.window.tabGroups?.close!=='function')return false;
-    const headerGroup=(vscode.window.tabGroups.all||[]).find(group=>group?.viewColumn===panel.viewColumn),otherGroups=(vscode.window.tabGroups.all||[]).filter(group=>group?.viewColumn!==panel.viewColumn),connected=new Set(connectedFiles.map(file=>file.filename.toLowerCase()));
-    if(!headerGroup||!otherGroups.length)return false;
-    const visibleElsewhere=new Set(otherGroups.flatMap(group=>(group.tabs||[]).map(tab=>tabInputPath(tab)).filter(Boolean).map(filename=>path.resolve(filename).toLowerCase()))),duplicates=(headerGroup.tabs||[]).filter(tab=>{const filename=tabInputPath(tab);return filename&&connected.has(path.resolve(filename).toLowerCase())&&visibleElsewhere.has(path.resolve(filename).toLowerCase());});
-    if(!duplicates.length)return false;
-    try{await vscode.window.tabGroups.close(duplicates);return true;}catch(_){return false;}
-  };
   const reserveTextGroups=()=>{
     if(!panel){releaseViewerColumns(TEXT_GROUP_RESERVATION);return 0;}
-    const connected=new Set(connectedFiles.map(file=>file.filename.toLowerCase())),groups=vscode.window.tabGroups?.all||[],headerGroup=groups.find(group=>group?.viewColumn===panel.viewColumn),nativeGroups=groups.filter(group=>(group?.tabs||[]).some(tab=>{const filename=tabInputPath(tab);return filename&&connected.has(path.resolve(filename).toLowerCase());})),nativeGroup=groups.find(group=>group?.viewColumn===nativeColumn),columns=[headerGroup||panel.viewColumn,nativeGroup||nativeColumn,...nativeGroups];
-    return reserveViewerColumns(TEXT_GROUP_RESERVATION,columns);
+    const groups=vscode.window.tabGroups?.all||[],groupAt=column=>groups.find(group=>group.viewColumn===column)||column;
+    return reserveViewerColumns(TEXT_GROUP_RESERVATION,[groupAt(panel.viewColumn),groupAt(nativeColumn)]);
   };
-  const repairHeaderSourceTabs=async()=>{
-    if(groupRepairing||!panel)return false;
-    const headerGroup=(vscode.window.tabGroups?.all||[]).find(group=>group?.viewColumn===panel.viewColumn),connected=new Set(connectedFiles.map(file=>file.filename.toLowerCase())),misplaced=(headerGroup?.tabs||[]).map(tab=>tabInputPath(tab)).filter(filename=>filename&&connected.has(path.resolve(filename).toLowerCase()));
-    if(!misplaced.length)return false;
-    groupRepairing=true;
+  const parkInactiveSources=async(editor)=>{
+    const attached=panel,groups=vscode.window.tabGroups;
+    const groupAt=column=>groups?.all?.find(group=>group.viewColumn===column);
+    const upper=groupAt(attached?.viewColumn),lower=groupAt(editor?.viewColumn);
+    if(!attached||!upper||!lower||upper===lower||!editor?.document)return;
+    const source=tab=>tab?.input?.uri?.scheme==='file'&&!tab.input.viewType&&!tab.input.modified&&!tab.input.original?tab.input.uri.toString():'';
+    const selected=editor.document.uri.toString();
+    const current=()=>attached===panel&&groupAt(attached.viewColumn)===upper&&groupAt(editor.viewColumn)===lower&&source(lower.activeTab)===selected;
+    let parked=false;
     try{
-      const target=nativeColumnFor(nativeColumn,panel.viewColumn);nativeColumn=target;
-      for(const filename of misplaced){
-        const exact=path.resolve(filename).toLowerCase(),document=(vscode.workspace.textDocuments||[]).find(item=>!item.isClosed&&path.resolve(item.fileName||'.').toLowerCase()===exact)||await vscode.workspace.openTextDocument(vscode.Uri.file(filename));
-        await vscode.window.showTextDocument(document,{viewColumn:target,preview:false,preserveFocus:true});
+      for(const tab of [...lower.tabs]){
+        const uri=source(tab);
+        if(!uri||uri===selected)continue;
+        if(!current())return;
+        if(!upper.tabs.some(item=>source(item)===uri)){
+          const document=await vscode.workspace.openTextDocument(tab.input.uri);
+          if(!current())return;
+          await vscode.window.showTextDocument(document,{viewColumn:upper.viewColumn,preview:false,preserveFocus:true});
+          parked=true;
+        }
+        if(current()&&upper.tabs.some(item=>source(item)===uri)&&lower.tabs.includes(tab))await groups.close(tab,true);
       }
-      await pruneHeaderSourceDuplicates();
-      reserveTextGroups();
-      return true;
-    }catch(_){return false;}finally{groupRepairing=false;}
+      // Only remove a second handle to the document already focused below.
+      const duplicate=upper.tabs.find(tab=>source(tab)===selected);
+      if(duplicate&&current())await groups.close(duplicate,true);
+    }finally{if(parked&&attached===panel)attached.reveal(upper.viewColumn,true);}
   };
   const protectHeaderGroup=async()=>{
     if(layoutMode!=='text-attached'||!panel)return false;
     reserveTextGroups();
-    await repairHeaderSourceTabs();
     if(!config().get(HEADER_ONLY_SETTING,false))return false;
-    await pruneHeaderSourceDuplicates();
     const headerGroup=(vscode.window.tabGroups?.all||[]).find(group=>group?.viewColumn===panel.viewColumn),navigationTab=(headerGroup?.tabs||[]).find(tab=>tab?.input?.viewType==='ikemenTextCompanion'||/^IKEMaker Code Navigation(?:\s|·|$)/i.test(String(tab?.label||'')));
     if(!headerGroup||!navigationTab||headerGroup.activeTab===navigationTab)return false;
     panel.reveal?.(headerGroup.viewColumn,true);
@@ -577,6 +606,15 @@ function register(vscode, extensionContext) {
   };
   const configureConnected = options => {
     const files=Array.isArray(options?.files)?options.files.filter(file=>typeof file==='string'&&path.isAbsolute(file)).slice(0,512):[];
+    const contextKind=options?.context?.type||options?.context?.kind;
+    const singleDef=files.length===1&&/\.def$/i.test(files[0])?files[0]:'';
+    const ownerDef=contextKind==='character'?(options.context.ownerDef||options.context.ownerFile||files.find(file=>/\.def$/i.test(file))):
+      ((!contextKind||contextKind==='project')&&singleDef&&require('./character_picker').isCharacterDef(singleDef)?singleDef:'');
+    if(ownerDef&&fs.existsSync(ownerDef)){
+      const ownerDocument=(vscode.workspace.textDocuments||[]).find(doc=>!doc.isClosed&&doc.fileName?.toLowerCase()===ownerDef.toLowerCase());
+      const targets=require('./entity_target_resolver').resolveEntityTargets({kind:'character',ownerFile:ownerDef},{readOwnerText:()=>ownerDocument?.getText?.()});
+      files.push(...targets.code.filter(file=>file.available).map(file=>file.filename));
+    }
     workspaceNavigation=Array.isArray(options?.files);
     connectedFiles=[...new Map(files.map(filename=>[path.resolve(filename).toLowerCase(),{filename:path.resolve(filename),label:path.basename(filename)}])).values()];
     const suppliedContext=options?.context&&typeof options.context==='object'?options.context:{},contextRoot=typeof suppliedContext.root==='string'&&path.isAbsolute(suppliedContext.root)?path.resolve(suppliedContext.root):(connectedFiles[0]?path.dirname(connectedFiles[0].filename):'');
@@ -586,13 +624,15 @@ function register(vscode, extensionContext) {
     const activeName=activeEditor?.document?.fileName||'';connectedIndex=Math.max(0,connectedFiles.findIndex(item=>item.filename.toLowerCase()===path.resolve(activeName||'.').toLowerCase()));
     if(Number.isInteger(options?.viewColumn))nativeColumn=nativeColumnFor(options.viewColumn);
   };
+  let selectionRequest=0;
   const selectConnected = async (index,options={}) => {
     if(!connectedFiles.length)return false;
     const expectedEntityGeneration=entityRetargetGeneration;
+    const request=++selectionRequest;
     connectedIndex=(index+connectedFiles.length)%connectedFiles.length;
     const document=await vscode.workspace.openTextDocument(vscode.Uri.file(connectedFiles[connectedIndex].filename));
     if(expectedEntityGeneration!==entityRetargetGeneration||entityRetargetLock)return false;
-    nativeColumn=Number.isInteger(options.exactColumn)?options.exactColumn:options.forceWorkColumn===true?2:nativeColumnFor(nativeColumn);const editor=await vscode.window.showTextDocument(document,{viewColumn:nativeColumn,preview:false,preserveFocus:false});if(expectedEntityGeneration!==entityRetargetGeneration||entityRetargetLock||!editor||editor.document!==document||editor.viewColumn!==nativeColumn)return false;activeEditor=editor;active=stateForEditor(activeEditor);if(options.forceBind===true||config().get('textToolbar.companion.followActiveEditor',true))bind(activeEditor);else render();return true;
+    nativeColumn=Number.isInteger(options.exactColumn)?options.exactColumn:options.forceWorkColumn===true?2:nativeColumnFor(nativeColumn);const editor=await vscode.window.showTextDocument(document,{viewColumn:nativeColumn,preview:false,preserveFocus:false});if(expectedEntityGeneration!==entityRetargetGeneration||entityRetargetLock||!editor||editor.document!==document||editor.viewColumn!==nativeColumn)return false;await parkInactiveSources(editor);if(expectedEntityGeneration!==entityRetargetGeneration||entityRetargetLock||request!==selectionRequest)return false;activeEditor=editor;active=stateForEditor(activeEditor);if(options.forceBind===true||config().get('textToolbar.companion.followActiveEditor',true))bind(activeEditor);else render();return true;
   };
   const organizeConnected=async message=>{
     if(message.generation!==entityRetargetGeneration||entityRetargetLock||!connectedFiles.length)return false;
@@ -646,7 +686,6 @@ function register(vscode, extensionContext) {
     const retainedPanelPermissions=options.scopedLayout===true?require('./viewer_group').trackedPanels().filter(item=>item.viewColumn===requestedHeaderColumn).map(item=>require('./viewer_group').permitOwnedViewerColumn(item,panel,requestedHeaderColumn)):[];
     panel.onDidDispose(()=>{for(const permission of retainedPanelPermissions)permission.dispose();});
     reserveTextGroups();
-    Promise.resolve().then(pruneHeaderSourceDuplicates);
     supportViewerClose(panel,{readOnly:true});
     let activation;panel.onDidDispose(() => { activation?.dispose();if(dropdownLayoutState!==null)void restoreDropdownLayout();releaseViewerColumns(TEXT_GROUP_RESERVATION);if(airReturnRenderRequest?.panel===panel)settleAirReturnRender(false);if(statusTimer){clearTimeout(statusTimer);statusTimer=null;}if(startupRepairTimer){clearTimeout(startupRepairTimer);startupRepairTimer=null;}panel=null;renderedCompanionHtml='';if(!['visual-suspended','restoring'].includes(layoutMode))layoutMode='explicitly-closed'; });
     bind(activeEditor);
@@ -664,7 +703,7 @@ function register(vscode, extensionContext) {
       return{available:true,filename:document.fileName,identity:'exact-document',fingerprint:currentFingerprint,version:currentVersion,label:path.basename(document.fileName),access:'external-editor',mutationOwner:'native-text-editor',contextId:context.identity,selectionRevision:context.selectionRevision};
     }});
     const openExactSource=async()=>{const document=bound.document,context=bound.contextModel?.snapshot(),sourceFingerprint=document?.getText?fingerprint(document.getText()):'',sourceVersion=document?String(document.version??sourceFingerprint):'',request={uri:uriKey(document),version:sourceVersion,fingerprint:sourceFingerprint,contextId:context?.identity||'',selectionRevision:context?.selectionRevision??-1};nativeColumn=nativeColumnFor(nativeColumn);const result=await exactSources.open('text-companion.exact-source',request,()=>vscode.window.showTextDocument(document,{preview:false,viewColumn:nativeColumn}));if(!result.available)vscode.window.showInformationMessage(result.reason);return result;};
-    const execute=(command,withSeed=true)=>vscode.commands.executeCommand(command,...(withSeed&&bound.seed?[bound.seed]:[]));
+    const execute=(command,withSeed=true)=>vscode.commands.executeCommand(command,...(withSeed&&bound.seed?[bound.seed,...labOwnerArgs(command,bound.descriptor?.ownerDef)]:[]));
     const openTextConnected=async target=>{if(target==='air'){const returned=await require('./air_source_return').openAirSourceReturn(bound.document?.fileName||bound.seed,bound.descriptor?.ownerDef||'',{getDocuments:()=>vscode.workspace.textDocuments,inform:message=>vscode.window.showInformationMessage(message),open:(filename,options)=>require('./air_viewer').openAirPreview(vscode.Uri.file(filename),options)});if(returned.handled)return returned.opened;}return navigation.openConnected(bound.seed,target,undefined,undefined,undefined,bound.descriptor?.ownerDef?{def:path.resolve(bound.descriptor.ownerDef)}:undefined,{origin:'text'});};
     const handlers={
       close:async()=>{if(config().get(HEADER_ONLY_SETTING,false)){panel?.reveal?.(panel.viewColumn,true);return vscode.window.showInformationMessage('Code Navigation protects access to the text editor while native tabs are hidden. Turn off Header-Only Text Layout before closing it.');}return panel?.dispose();},new:async()=>execute(TOOLBAR_COMMANDS.new,false),open:async()=>execute(TOOLBAR_COMMANDS.open,false),project:async()=>execute(TOOLBAR_COMMANDS.project,false),help:async()=>execute(TOOLBAR_COMMANDS.help,false),settings:async()=>execute(TOOLBAR_COMMANDS.settings,false),'suite-switch':async()=>execute(TOOLBAR_COMMANDS['suite-switch'],false),
@@ -676,7 +715,7 @@ function register(vscode, extensionContext) {
     panel.webview.onDidReceiveMessage(async message => {
       if(message?.type==='ikemenBrowserShortcut')return require('./viewer_browser_shortcut').handle(message,bound.document?.fileName||'', 'text',panel,{api:vscode,classification:bound.classification});
       if(message?.type===MESSAGE_TYPE){try{await dispatcher.dispatch('companion.text-toolbar',message);}catch{}return;}
-      if(await viewerToolbar.handleCommand(message,bound.document?.fileName||'',panel))return;
+      if(await viewerToolbar.handleCommand(message,bound.document?.fileName||'',panel,bound.descriptor?.ownerDef))return;
       if(await viewerToolbar.handle(message,panel))return;
       if(!validBodyMessage(message))return;
       if(message.type==='fit-header-height')return fitHeaderLayout(message);
@@ -715,6 +754,27 @@ function register(vscode, extensionContext) {
   // Explicit Code Navigation attaches above its native source. Splitting this
   // region vertically preserves the source width and unrelated editor groups.
   const openAttachedCompanion=async(options={},toggleExisting=false)=>{
+    // A floating editor may already occupy column 2 even when the main
+    // window has just one pane. Create the lower pane before binding files.
+    if(!toggleExisting&&options.headerColumn===1&&options.viewColumn===2){
+      const layout=await vscode.commands.executeCommand('vscode.getEditorLayout');
+      const single=layout?.groups?.length===1&&!layout.groups[0].groups?.length;
+      if(single||attachedLayoutShape(layout)){
+        if(single)await vscode.commands.executeCommand('vscode.setEditorLayout',attachedTextLayout());
+        const attached=panel?openCompanion(options):attachCompanion(null,{...options,scopedLayout:true});
+        if(attached===panel&&panel&&connectedFiles.length){
+          panel.reveal(1,false);
+          await vscode.commands.executeCommand('workbench.action.focusFirstEditorGroup');
+          await vscode.commands.executeCommand('workbench.action.focusBelowGroup');
+          const lower=vscode.window.tabGroups.activeTabGroup;
+          if(lower&&lower.viewColumn!==panel.viewColumn){
+            const selected=connectedFiles.findIndex(file=>file.filename.toLowerCase()===options.selectedFile?.toLowerCase());
+            await selectConnected(selected>=0?selected:connectedIndex,{exactColumn:lower.viewColumn,forceBind:true});
+          }
+        }
+        return attached;
+      }
+    }
     if(panel)return toggleExisting?toggle(options):openCompanion(options);
     if(options.files||options.context||options.headerColumn||options.viewColumn)return attachCompanion(null,options);
     const editor=vscode.window.activeTextEditor,document=editor?.document,classification=classify(document,config());
@@ -723,7 +783,7 @@ function register(vscode, extensionContext) {
     const descriptor=contextDescriptor(document,classification,navigation),same=connectedFiles.some(file=>file.filename.toLowerCase()===path.resolve(document.fileName).toLowerCase());
     const files=Array.isArray(options.files)?options.files:same?connectedFiles.map(file=>file.filename):descriptor.files;
     const result=await resumeCompanion({...options,files,selectedFile:document.fileName,context:options.context||descriptor,originEditorGroup:group});
-    if(result?.attached===true&&result.panel===panel){const native=(vscode.window.visibleTextEditors||[]).find(item=>item.document===document);if(native)await require('./native_source_focus').showNativeSource(vscode,document,{viewColumn:native.viewColumn,preview:false,selection:editor.selection});}
+    if(result?.attached===true&&result.panel===panel){const native=(vscode.window.visibleTextEditors||[]).find(item=>item.document===document&&item.viewColumn===result.nativeColumn);if(native)await require('./native_source_focus').showNativeSource(vscode,document,{viewColumn:native.viewColumn,preview:false,selection:editor.selection});}
     return result?.panel||result;
   };
   const suspendForVisualViewer=async()=>{

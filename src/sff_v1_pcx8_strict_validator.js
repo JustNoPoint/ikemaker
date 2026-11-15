@@ -162,4 +162,4 @@ function assertSffV1Pcx8(buffer, specification = null, options = {}) {
   return report;
 }
 
-module.exports = { SFF_V1_PCX8_VALIDATOR_ID, SFF_V1_PCX8_VALIDATOR_VERSION, SFF_V1_PCX8_VALIDATOR_PROFILE, parseSffV1Pcx8, validateSffV1Pcx8, assertSffV1Pcx8 };
+module.exports = { SFF_V1_PCX8_VALIDATOR_ID, SFF_V1_PCX8_VALIDATOR_VERSION, SFF_V1_PCX8_VALIDATOR_PROFILE, parseSffV1Pcx8, validateSffV1Pcx8, assertSffV1Pcx8, decodePcxRleRows: decodeRleRows };

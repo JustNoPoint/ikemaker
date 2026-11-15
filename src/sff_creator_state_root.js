@@ -158,7 +158,11 @@ const sealCreatorStateRoot = makeSealer({ fsApi: fs, fault() {} });
 function createCreatorStateRootSealerForTest(dependencies = {}) { return makeSealer({ fsApi: dependencies.fsApi || fs, fault: dependencies.fault || (() => {}) }); }
 function sealCreatorStateRootFromContext(context, boundaries) {
   if (!context || typeof context !== 'object' || !context.globalStorageUri) fail('extension context with globalStorageUri is required.');
-  return sealCreatorStateRoot({ ...boundaries, globalStorageUri: { scheme: context.globalStorageUri.scheme, fsPath: context.globalStorageUri.fsPath } });
+  const uri = context.globalStorageUri;
+  // Desktop profiles can expose the local user-data directory via VS Code's provider.
+  const localProfile = uri.scheme === 'vscode-userdata' && !uri.authority && !uri.query && !uri.fragment;
+  if (!localProfile && uri.scheme !== 'file') fail('globalStorageUri must be an absolute file URI projection. VS Code supplied scheme '+String(uri.scheme)+'.');
+  return sealCreatorStateRoot({ ...boundaries, globalStorageUri: { scheme: localProfile ? 'file' : uri.scheme, fsPath: uri.fsPath } });
 }
 
 module.exports = { DIRECTORY_NAME, SCHEMA, SEAL_NAME, VERSION, createCreatorStateRootSealerForTest, sealCreatorStateRoot, sealCreatorStateRootFromContext };

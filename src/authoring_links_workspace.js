@@ -118,14 +118,78 @@ async function reveal(api,row){
   editor.selection=new api.Selection(position,position);
   editor.revealRange(new api.Range(position,position),api.TextEditorRevealType.InCenter);
 }
+function numberedLayerBanks(sprites){
+  const step=require('./costume_explod_model').BANK_GROUP_STEP;
+  const base=new Set(sprites.filter(s=>s.group>=0&&s.group<step).map(s=>s.group+','+s.number));
+  const banks=new Map();
+  for(const sprite of sprites){
+    const bank=Math.floor(sprite.group/step),group=sprite.group%step;
+    if(bank<1||bank>6||!base.has(group+','+sprite.number))continue;
+    if(!banks.has(bank))banks.set(bank,[]);
+    banks.get(bank).push({label:group+','+sprite.number+' → '+sprite.group+','+sprite.number,
+      reference:{group:sprite.group,number:sprite.number,physicalIndex:sprite.index}});
+  }
+  return [...banks].sort(([a],[b])=>a-b).map(([bank,poses])=>({
+    bank,label:'Sprite bank '+bank+' · +'+(bank*step),description:poses.length+' matching sprites',
+    detail:'Same-index pairs in the SFF. Select a pose to inspect its artwork.',poses
+  }));
+}
+async function nameBank(api,air,bank){
+  const doc=await api.workspace.openTextDocument(api.Uri.file(air));
+  if(doc.isDirty)return api.window.showWarningMessage('Save or revert the existing AIR edits before adding the bank reference.');
+  const version=doc.version;
+  const label=await api.window.showInputBox({title:'Save a layer reference in '+path.basename(air),prompt:'Layer name for bank '+bank+' (comment only)',validateInput:v=>v.trim()&&!/[\u0000-\u001f\u007f]/.test(v)&&v.length<=100?undefined:'Enter a name of 1–100 printable characters.'});
+  if(!label)return;
+  const step=require('./costume_explod_model').BANK_GROUP_STEP;
+  const text=doc.getText(),eol=text.includes('\r\n')?'\r\n':'\n';
+  const block=wrapBlock('; Sprite group = base group + '+(bank*step)+'; sprite index = base index.'+eol,{tool:'layer',id:'bank:'+bank,role:'sprite-bank',syntax:'air',label:label.trim()});
+  const plan=planUpdate(text,block);
+  if(plan.status==='unchanged')return;
+  if(doc.version!==version||doc.isDirty||plan.status!=='new')return api.window.showWarningMessage('The AIR or its layer reference changed. Reopen the review.');
+  const edit=new api.WorkspaceEdit();
+  edit.insert(doc.uri,doc.positionAt(text.length),(text&&!text.endsWith('\n')?eol:'')+eol+block);
+  if(!await api.workspace.applyEdit(edit)||!await doc.save())return api.window.showWarningMessage('The layer reference could not be saved. Check the AIR editor.');
+}
 async function show(api,seed){
   let file=seed?.fsPath||seed?.filename||(typeof seed==='string'?seed:null)||api.window.activeTextEditor?.document.fileName||await chooseFile(api);
   const ownerHint=seed?.ownerDef||seed?.context?.ownerDef;
   while(file){
     const rows=await inventory(api,file,ownerHint);if(!rows)return;
     const pending=require('./copied_layer_links').pending(rows.owner,rows).map(receipt=>({label:'Awaiting paste · '+receipt.label+' · '+receipt.role,description:'Character layer',detail:'Expected file: '+receipt.expected,receipt}));
-    const picked=await api.window.showQuickPick([...rows.map(rowItem),...pending,{label:'Locate pasted block in another file…',browse:true}],{title:rows.length||pending.length?'Show linked code':'No links found in these sources',matchOnDetail:true,matchOnDescription:true});
+    const layerReview=seed?.reviewLayer===true;
+    const visible=layerReview?rows.filter(row=>row.tool==='layer'):rows;
+    const assets=layerReview&&rows.owner&&resolveAssigned(rows.owner,liveText(api,rows.owner));
+    const sff=layerReview&&(syntax(file)==='sff'?file:assets?.sff);
+    let banks=[],hint='';
+    if(sff){
+      try{
+        banks=numberedLayerBanks(require('./sff_reader').readSff(sff).sprites);
+        for(const bank of banks){
+          const ref=visible.find(row=>row.role==='sprite-bank'&&row.id==='bank:'+bank.bank&&row.status==='reference'&&assets?.air&&key(row.file)===key(assets.air));
+          if(ref){bank.name=ref.label;bank.label=ref.label+' · '+bank.label;bank.named=true;}
+        }
+      }
+      catch(error){hint='Could not inspect '+path.basename(sff)+': '+error.message;}
+    }
+    if(layerReview&&!hint)hint=visible.some(r=>syntax(r.file)!=='air')?'Choose linked code, a generated AIR action, or a sprite bank.':'No tagged runtime block found. Review sprite matches or locate a code file.';
+    const title=layerReview?'Review existing layer · '+path.basename(rows.owner||file):rows.length||pending.length?'Show linked code':'No links found in these sources';
+    const items=seed?.loadBank?[...banks,...visible.map(rowItem),...pending]:[...visible.map(rowItem),...pending,...banks];
+    const picked=await api.window.showQuickPick([...items,{label:'Locate pasted block in another file…',browse:true}],{title,placeHolder:hint||undefined,matchOnDetail:true,matchOnDescription:true});
     if(!picked)return;
+    if(picked.poses){
+      const load=seed?.loadBank?[{label:'Load all '+picked.poses.length+' linked sprites',detail:'Follow the base sprite in SFF and AIR.',load:true}]:[];
+      const choices=assets?.air&&!picked.named?[{label:'Name this sprite bank…',detail:'Save a searchable reference comment in '+path.basename(assets.air),nameBank:true},...picked.poses]:picked.poses;
+      const pose=await api.window.showQuickPick([...load,...choices],{title:picked.label+' · base → layer sprite'});
+      if(!pose)continue;
+      if(pose.load){
+        try{const slot=require('./shared_character_layers').linkBank(sff,picked.bank,picked.name);
+          api.window.showInformationMessage((picked.name||picked.label)+' loaded in Layer '+slot.slice(5)+' · '+picked.poses.length+' linked sprites.');
+        }catch(error){api.window.showWarningMessage(error.message);}
+        return;
+      }
+      if(pose.nameBank){await nameBank(api,assets.air,picked.bank);continue;}
+      return api.commands.executeCommand('sff.openViewer',api.Uri.file(sff),api.window.tabGroups?.activeTabGroup?.viewColumn,pose.reference,{ownerDef:rows.owner});
+    }
     if(picked.row)return reveal(api,picked.row);
     if(picked.receipt){
       const locate=await api.window.showQuickPick([{label:'Locate pasted block in another file…',browse:true}],{title:'Awaiting paste · '+picked.receipt.role,placeHolder:'Expected file: '+picked.receipt.expected});

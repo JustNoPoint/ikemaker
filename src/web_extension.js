@@ -50,6 +50,7 @@ const FALLBACK_COMMANDS = [
   'sff.applyProjectIndexing', 'sff.buildApprovedManifest', 'sff.compareSprMake2WithBuiltIn', 'sff.cropArchive', 'sff.suggestAxes', 'sff.chooseImageEditor', 'sff.createMissingAxisCopies', 'sff.createNew', 'sff.createProjectBuildProfile', 'sff.generateBuildFiles', 'sff.openGroupLog', 'sff.refreshGroupLog',
   'sff.deleteSelectedFromViewer', 'sff.importLayerFolder', 'sff.openAliasRegistry', 'sff.openAssembly', 'sff.openBrowser', 'sff.toggleBrowser', 'sff.openAddSprites', 'sff.openCreator', 'sff.openProjectBuildProfile', 'sff.openRequirementsProfile', 'sff.openSprMakerText', 'sff.openViewer',
   'sff.reviewDismissedLayerWarnings', 'sff.reviewLayerParts', 'sff.reviewRedundantLayers', 'sff.reviewUnassignedSprites',
+  'snd.splitVoiceWav', 'ikemen.media.saveSession', 'ikemen.media.loadSession',
   'snd.chooseAudioEditor', 'snd.createNew', 'snd.deleteSelectedFromViewer', 'snd.openMakerText', 'snd.openViewer', 'zss.audit.currentFile', 'zss.audit.workspace', 'zss.openControllers',
   'zss.contextualRecommendations', 'zss.createNew', 'zss.openPalFxEditor', 'zss.openProjectData', 'zss.updates.checkDefNow', 'zss.updates.checkNow',
   'zss.updates.showLastReport', 'zss.wrap.ignoreHitPause', 'zss.wrap.ignoreHitPausePersistent', 'zss.wrap.persistent',

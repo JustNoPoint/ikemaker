@@ -1,0 +1,5 @@
+'use strict';
+function normalize(value={}){if(!value||typeof value!=='object')value={};const styles=['full','short','dashed','none'];return{style:styles.includes(value.style)?value.style:'full',color:/^#[0-9a-f]{6}$/i.test(value.color||'')?value.color.toLowerCase():'',width:Number.isFinite(Number(value.width))?Math.max(.5,Math.min(8,Number(value.width))):1};}
+function read(vscode,filename){return normalize(vscode.workspace?.getConfiguration?.('ikemenZss',filename&&vscode.Uri?.file?vscode.Uri.file(filename):undefined)?.get('viewer.crosshair',{}));}
+function drawCrosshair(ctx,width,height,x,y,preferences,fallbackColor){if(preferences.style==='none')return;ctx.save();ctx.strokeStyle=preferences.color||fallbackColor;ctx.lineWidth=preferences.width;ctx.setLineDash(preferences.style==='dashed'?[6,4]:[]);ctx.beginPath();if(preferences.style==='short'){ctx.moveTo(x-12,y);ctx.lineTo(x+12,y);ctx.moveTo(x,y-12);ctx.lineTo(x,y+12);}else{ctx.moveTo(x,0);ctx.lineTo(x,height);ctx.moveTo(0,y);ctx.lineTo(width,y);}ctx.stroke();ctx.restore();}
+module.exports={normalize,read,drawCrosshair};

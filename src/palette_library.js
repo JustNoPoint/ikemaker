@@ -55,8 +55,10 @@ function retainedPaletteActOrder(filename, actOrder) {
   return /\.png$/i.test(String(filename || '')) ? null : actOrder;
 }
 
-function pngPaletteRgba(buffer) {
+function pngPaletteRgba(buffer, {padTo256=true}={}) {
   if (!Buffer.isBuffer(buffer) || buffer.length < 8 || buffer.subarray(0, 8).toString('hex') !== '89504e470d0a1a0a') throw new Error('Palette PNG has an invalid signature.');
+  if(buffer.length<33||buffer.readUInt32BE(8)!==13||buffer.toString('ascii',12,16)!=='IHDR'||buffer[25]!==3)
+    throw new Error('Choose an indexed PNG to import its palette. Use Create From Images for truecolor artwork.');
   let offset = 8, rgb = null, alpha = null;
   while (offset + 12 <= buffer.length) {
     const size = buffer.readUInt32BE(offset), end = offset + 12 + size;
@@ -67,9 +69,11 @@ function pngPaletteRgba(buffer) {
     offset = end;
     if (type === 'IEND') break;
   }
-  if (!rgb || rgb.length < 3 || rgb.length % 3) throw new Error('Palette PNG is not indexed or has no valid PLTE color table.');
+  if (!rgb || rgb.length < 3 || rgb.length > 768 || rgb.length % 3) throw new Error('Palette PNG is not indexed or has no valid PLTE color table.');
+  if(alpha&&alpha.length>rgb.length/3)throw new Error('Palette PNG has more transparency entries than colors.');
   const colors = [];
-  for (let index = 0; index < 256; index += 1) colors.push(index * 3 + 2 < rgb.length ? [rgb[index * 3], rgb[index * 3 + 1], rgb[index * 3 + 2], alpha && index < alpha.length ? alpha[index] : 255] : [0, 0, 0, index === 0 ? 0 : 255]);
+  const count=padTo256?256:rgb.length/3;
+  for (let index = 0; index < count; index += 1) colors.push(index * 3 + 2 < rgb.length ? [rgb[index * 3], rgb[index * 3 + 1], rgb[index * 3 + 2], alpha && index < alpha.length ? alpha[index] : 255] : [0, 0, 0, index === 0 ? 0 : 255]);
   return colors;
 }
 

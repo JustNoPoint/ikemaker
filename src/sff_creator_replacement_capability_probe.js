@@ -1,4 +1,5 @@
 'use strict';
+const {reviewedPathKey} = require('./sff_creator_reviewed_path');
 
 const crypto = require('crypto');
 const fs = require('fs');
@@ -46,7 +47,7 @@ function makeProbe(dependencies) {
     const lexicalParent = path.resolve(input.activeDirectory), parentLstat = io.lstatSync(lexicalParent, { bigint: true });
     if (!parentLstat.isDirectory() || parentLstat.isSymbolicLink()) fail('activeDirectory must be a direct directory, not a link.');
     const parentRealpath = io.realpathSync.native ? io.realpathSync.native(lexicalParent) : io.realpathSync(lexicalParent), parentStat = io.statSync(parentRealpath, { bigint: true }), parentIdentity = identity(parentStat);
-    if (!parentStat.isDirectory() || path.resolve(parentRealpath) !== lexicalParent || !sameIdentity(parentLstat, parentIdentity)) fail('activeDirectory realpath or identity is ambiguous.');
+    if (!parentStat.isDirectory() || reviewedPathKey(parentRealpath) !== reviewedPathKey(lexicalParent) || !sameIdentity(parentLstat, parentIdentity)) fail('activeDirectory realpath or identity is ambiguous.');
 
     let probeDirectory = null;
     const diagnostics = [], checks = { renameToAbsentObserved: false, fileFsyncObserved: false, openHandleRenameObserved: false, directoryFsyncStatus: 'unsupported-by-platform' };
@@ -61,17 +62,25 @@ function makeProbe(dependencies) {
     function cleanup() {
       if (!probeDirectory) return;
       const probeLstat = io.lstatSync(probeDirectory, { bigint: true }), probeRealpath = io.realpathSync.native ? io.realpathSync.native(probeDirectory) : io.realpathSync(probeDirectory);
-      if (!probeLstat.isDirectory() || probeLstat.isSymbolicLink() || path.dirname(path.resolve(probeRealpath)) !== path.resolve(parentRealpath) || !path.basename(probeDirectory).startsWith('.ikemaker-replacement-probe-')) fail('owned probe directory identity became unsafe; cleanup stopped.');
+      if (!probeLstat.isDirectory() || probeLstat.isSymbolicLink() || reviewedPathKey(path.dirname(probeRealpath)) !== reviewedPathKey(parentRealpath) || !path.basename(probeDirectory).startsWith('.ikemaker-replacement-probe-')) fail('owned probe directory identity became unsafe; cleanup stopped.');
       const inventory = io.readdirSync(probeDirectory).sort();
       if (inventory.some(name => !FILES.includes(name))) fail(`owned probe directory contains foreign entries; cleanup stopped: ${inventory.filter(name => !FILES.includes(name)).join(', ')}.`);
       for (const name of inventory) { const target = file(name), stat = io.lstatSync(target, { bigint: true }); if (!stat.isFile() || stat.isSymbolicLink() || stat.nlink !== 1n) fail(`owned probe file ${name} became unsafe; cleanup stopped.`); io.unlinkSync(target); }
-      io.rmdirSync(probeDirectory); probeDirectory = null;
+      for (let attempt = 0;; attempt++) {
+        try { io.rmdirSync(probeDirectory); break; } catch (error) {
+          if (!['EBUSY', 'EPERM', 'EACCES'].includes(error.code) || attempt >= 6) throw error;
+          Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 25 * (attempt + 1));
+          const current = io.lstatSync(probeDirectory, {bigint:true});
+          if (!current.isDirectory() || current.isSymbolicLink() || !sameIdentity(current, identity(probeLstat)) || io.readdirSync(probeDirectory).length) throw error;
+        }
+      }
+      probeDirectory = null;
     }
 
     try {
       probeDirectory = io.mkdtempSync(path.join(parentRealpath, '.ikemaker-replacement-probe-'));
       const probeStat = io.lstatSync(probeDirectory, { bigint: true });
-      if (!probeStat.isDirectory() || probeStat.isSymbolicLink() || String(probeStat.dev) !== parentIdentity.device || path.dirname(path.resolve(probeDirectory)) !== path.resolve(parentRealpath)) fail('probe directory is not an isolated same-device child of activeDirectory.');
+      if (!probeStat.isDirectory() || probeStat.isSymbolicLink() || String(probeStat.dev) !== parentIdentity.device || reviewedPathKey(path.dirname(probeDirectory)) !== reviewedPathKey(parentRealpath)) fail('probe directory is not an isolated same-device child of activeDirectory.');
       deps.fault('after-probe-directory-created');
 
       checks.fileFsyncObserved = attempt('fileFsyncObserved', () => { exclusiveFile('file-fsync.bin', true); deps.fault('after-file-fsync'); });
@@ -100,7 +109,7 @@ function makeProbe(dependencies) {
       }
     } finally {
       let cleanupError = null; try { cleanup(); } catch (error) { cleanupError = error; }
-      let parentError = null; try { const finalLstat = io.lstatSync(lexicalParent, { bigint: true }), finalRealpath = io.realpathSync.native ? io.realpathSync.native(lexicalParent) : io.realpathSync(lexicalParent), finalStat = io.statSync(finalRealpath, { bigint: true }); if (finalLstat.isSymbolicLink() || finalRealpath !== parentRealpath || !sameIdentity(finalStat, parentIdentity)) fail('activeDirectory identity drifted during the probe.'); } catch (error) { parentError = error; }
+      let parentError = null; try { const finalLstat = io.lstatSync(lexicalParent, { bigint: true }), finalRealpath = io.realpathSync.native ? io.realpathSync.native(lexicalParent) : io.realpathSync(lexicalParent), finalStat = io.statSync(finalRealpath, { bigint: true }); if (finalLstat.isSymbolicLink() || reviewedPathKey(finalRealpath) !== reviewedPathKey(parentRealpath) || !sameIdentity(finalStat, parentIdentity)) fail('activeDirectory identity drifted during the probe.'); } catch (error) { parentError = error; }
       if (cleanupError || parentError) fail(`cleanup or parent revalidation failed${probeDirectory ? `; retained probe directory: ${probeDirectory}` : ''}.`, cleanupError || parentError);
     }
 

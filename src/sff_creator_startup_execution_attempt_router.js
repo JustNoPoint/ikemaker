@@ -1,6 +1,8 @@
 'use strict';
 
 const { types: { isProxy } } = require('util');
+const path = require('path');
+const { reviewedPathKey } = require('./sff_creator_reviewed_path');
 const { decodeStrictJsonArtifact } = require('./sff_strict_json_artifact');
 const { canonicalize, hashCanonical } = require('./sff_capability_report');
 const { readCreatorOperationVaultCheckpointSnapshot } = require('./sff_creator_operation_vault');
@@ -22,6 +24,11 @@ function closed(raw, keys, label) { if (!isPlain(raw) || Object.getOwnPropertySy
 function freeze(value) { if (value && typeof value === 'object' && !Object.isFrozen(value)) { for (const child of Object.values(value)) freeze(child); Object.freeze(value); } return value; }
 function cloneJson(value, label) { try { return JSON.parse(JSON.stringify(canonicalize(value, label))); } catch (error) { fail(`${label} is not closed JSON metadata: ${error.message}`); } }
 function exact(left, right) { return JSON.stringify(canonicalize(left, 'left')) === JSON.stringify(canonicalize(right, 'right')); }
+// Receipts retain the approved spelling; vault seals use canonical platform paths.
+function samePlatformPath(left, right) {
+  if (typeof left !== 'string' || typeof right !== 'string' || !path.isAbsolute(left) || !path.isAbsolute(right)) return false;
+  return reviewedPathKey(left) === reviewedPathKey(right);
+}
 function b1(locator) { return { operationDirectory: locator.operationDirectory, expectedOperationId: locator.expectedOperationId, expectedLatestCheckpointHash: locator.expectedLatestCheckpointHash, expectedVaultRoot: locator.expectedVaultRoot }; }
 function withoutFunction(value, functionName, label) { if (!isPlain(value)) fail(`${label} is not a plain result.`); const descriptors = Object.getOwnPropertyDescriptors(value); if (typeof descriptors[functionName]?.value !== 'function' || !descriptors[functionName].enumerable) fail(`${label} omitted its copy boundary.`); const out = {}; for (const [key, descriptor] of Object.entries(descriptors)) { if (key === functionName) continue; if (!descriptor.enumerable || !Object.hasOwn(descriptor, 'value') || typeof descriptor.value === 'function' || Buffer.isBuffer(descriptor.value) || ArrayBuffer.isView(descriptor.value)) fail(`${label} exposed non-JSON metadata.`); out[key] = cloneJson(descriptor.value, `${label}.${key}`); } return out; }
 function boundedError(error) { return { name: String(error?.name || 'Error').slice(0, 100), code: error?.code == null ? null : String(error.code).slice(0, 100), message: String(error?.message || error).slice(0, 1000) }; }
@@ -100,10 +107,10 @@ function buildRouter(deps) {
     const structuralBefore = { operationId: before.authority.operationId, workspaceId: before.authority.workspaceId, targetId: before.authority.targetId, backendId: before.authority.backendId, adapterId: before.authority.adapterId, activePath: before.authority.activePath, candidatePath: before.authority.candidatePath, historyRoot: before.authority.historyRoot, vaultRootSealHash: hashCanonical(before.authority.vaultRootSeal), workspaceRootSealHash: hashCanonical(before.authority.workspaceRootSeal), activeParentSealHash: hashCanonical(before.authority.activeParentSeal), candidateParentSealHash: hashCanonical(before.authority.candidateParentSeal), historyRootSealHash: hashCanonical(before.authority.historyRootSeal), semanticHeadRecordHash: before.authority.semanticHeadRecordHash, selectedManifestArtifactName: locator.manifestArtifactName, selectedManifestArtifactByteHash: locator.expectedManifestArtifactByteHash, selectedManifestHash: locator.expectedManifestHash, selectedManifestAuthorityHash: locator.expectedManifestAuthorityHash, snapshotAuthorityHash: hashCanonical(before.authority) };
     bindStructuralCommon(structural, structuralBefore, 'intent B1 authority');
     const retainedBefore = deps.verifyRetained(locator), retainedMetadata = withoutFunction(retainedBefore, 'copyExecutorInput', 'retained intent verification');
-    if (retainedMetadata.snapshotAuthorityHash !== structural.snapshotAuthorityHash || retainedMetadata.operationId !== structural.operationId || retainedMetadata.workspaceId !== structural.workspaceId || retainedMetadata.targetId !== structural.targetId || retainedMetadata.backendId !== structural.backendId || retainedMetadata.adapterId !== structural.adapterId || retainedMetadata.semanticHeadRecordHash !== structural.semanticHeadRecordHash || retainedMetadata.routeId !== structural.routeId || retainedMetadata.executionIntentReceipt?.active?.path !== structural.activePath || retainedMetadata.executionIntentReceipt?.candidate?.path !== structural.candidatePath) fail('retained intent verification does not bind the structural observation.');
+    if (retainedMetadata.snapshotAuthorityHash !== structural.snapshotAuthorityHash || retainedMetadata.operationId !== structural.operationId || retainedMetadata.workspaceId !== structural.workspaceId || retainedMetadata.targetId !== structural.targetId || retainedMetadata.backendId !== structural.backendId || retainedMetadata.adapterId !== structural.adapterId || retainedMetadata.semanticHeadRecordHash !== structural.semanticHeadRecordHash || retainedMetadata.routeId !== structural.routeId || !samePlatformPath(retainedMetadata.executionIntentReceipt?.active?.path, structural.activePath) || !samePlatformPath(retainedMetadata.executionIntentReceipt?.candidate?.path, structural.candidatePath)) fail('retained intent verification does not bind the structural observation.');
     const executorInput = retainedBefore.copyExecutorInput(), restartInput = deriveRestartInput(executorInput); let first, second;
-    try { first = { plan: deps.createPlan(restartInput), error: null }; } catch (error) { first = { plan: null, error: boundedError(error) }; }
-    try { second = { plan: deps.createPlan(restartInput), error: null }; } catch (error) { second = { plan: null, error: boundedError(error) }; }
+    try { first = { plan: deps.createPlan(restartInput, {completedVaultRoot:locator.expectedVaultRoot}), error: null }; } catch (error) { first = { plan: null, error: boundedError(error) }; }
+    try { second = { plan: deps.createPlan(restartInput, {completedVaultRoot:locator.expectedVaultRoot}), error: null }; } catch (error) { second = { plan: null, error: boundedError(error) }; }
     const retainedAfterResult = deps.verifyRetained(locator), retainedAfter = withoutFunction(retainedAfterResult, 'copyExecutorInput', 'retained intent re-verification'), after = deps.readSnapshot(b1(locator));
     if (!exact(before.authority, after.authority) || !exact(retainedMetadata, retainedAfter) || retainedMetadata.operationId !== structural.operationId || retainedMetadata.semanticHeadRecordHash !== structural.semanticHeadRecordHash) fail('vault or retained intent authority changed during restart observation.');
     const retainedHash = hashCanonical(retainedMetadata);

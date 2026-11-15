@@ -3,7 +3,7 @@ const fs=require('fs'),path=require('path'),crypto=require('crypto');
 const {transactionalWrite,hash}=require('./mutation_safety');
 const {sealedRoot,assertSafeAncestors,contained}=require('./palette_domain_registry');
 function location(filename,surface,root) {
-  if(!['sff','air'].includes(surface))throw Error('Unknown preview layer surface.');
+  if(!['sff','air','linked'].includes(surface))throw Error('Unknown preview layer surface.');
   root=sealedRoot(root||path.dirname(filename));
   if(!contained(root,path.resolve(filename)))throw Error('Preview layer asset is outside its owning project root.');
   const key=surface+':'+path.relative(root,path.resolve(filename)).replace(/\\/g,'/');

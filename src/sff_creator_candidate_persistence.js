@@ -139,7 +139,7 @@ function persistCandidate(input, destination) {
   const directory = destination.directory || path.join(parent.realpath, operationName), partial = path.join(directory, `.${expected.candidateByteHash}.partial`), finalPath = path.join(directory, filename);
   for (const candidatePath of [directory, partial, finalPath]) if (!within(candidatePath, parent.realpath)) throw new Error('Private candidate path escaped the reviewed staging parent.');
   if (destination.createDirectory) { if (fs.existsSync(directory)) throw new Error(`Private candidate operation already exists and will not be overwritten: ${directory}`); fs.mkdirSync(directory, { mode: 0o700 }); }
-  else if (path.resolve(destination.exactPath) !== path.resolve(finalPath)) throw new Error('Reserved candidate path does not exactly match the pre-authorized destination.');
+  else if (key(destination.exactPath) !== key(finalPath)) throw new Error('Reserved candidate path does not exactly match the pre-authorized destination.');
   if (fs.existsSync(finalPath)) throw new Error(`Reserved candidate path already exists and will not be overwritten: ${finalPath}`);
   let directoryCreated = destination.createDirectory, partialCreated = false, finalCreated = false, handle, fileFsync = 'not-completed', parentDirectoryFsync = 'not-completed', directoryFsyncAfterPublish = 'not-completed', directoryFsyncAfterCleanup = 'not-completed';
   try {
@@ -198,7 +198,7 @@ function persistCreatorCandidateToReservedPath(rawInput = {}) {
   const input = closedReservedInput(rawInput);
   if (typeof input.reservedCandidatePath !== 'string' || !path.isAbsolute(input.reservedCandidatePath)) throw new Error('reservedCandidatePath must be an absolute pre-authorized path.');
   const exactPath = path.resolve(input.reservedCandidatePath), parent = assertSafeExistingPath(path.dirname(exactPath), 'reservedCandidateRoot'), filename = safeFilename(path.basename(exactPath));
-  if (!/^[0-9a-f]{64}\.sff$/.test(filename) || path.resolve(parent.realpath, filename) !== exactPath) throw new Error('reservedCandidatePath must be the exact lowercase SHA-256 reservation basename in its direct candidate root.');
+  if (!/^[0-9a-f]{64}\.sff$/.test(filename) || key(path.join(parent.realpath, filename)) !== key(exactPath)) throw new Error('reservedCandidatePath must be the exact lowercase SHA-256 reservation basename in its direct candidate root.');
   return persistCandidate(input, { filename, parent, directory: parent.realpath, exactPath, createDirectory: false });
 }
 

@@ -1,7 +1,7 @@
 "use strict";
 
 // Preview composition only. Source frames and SFF axes remain owned by their editors.
-function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, moveLayer, compactFields) {
+function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, moveLayer, compactFields,sharedClient) {
   function initialState(value, legacy = []) {
     if (value) {
       return normalizePreviewLayers(value);
@@ -42,13 +42,15 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
   const stage=api.canvas.parentElement,split=document.createElement('div');split.className='air-preview-layer-split';stage.before(split);split.append(panel,stage);panel.style.cssText='width:230px;min-width:185px;max-width:48%;resize:horizontal;overflow:auto;flex:0 0 auto;padding:5px';stage.style.cssText+=';flex:1;min-width:0;min-height:0;position:relative';
   const byId = (id) => state.layers.find((layer) => layer.id === id),
     primary = () => byId(state.primary) || state.layers[0];
+  const shared=sharedClient(api.model().sharedLayout,()=>state, ()=>{const f=api.action()?.frames?.[api.index()];return f?f.group+','+f.index:null;},m=>api.post({...m,airPath:api.model().airPath,sffPath:api.model().sffPath}),()=>{render();api.draw();scheduleAnimation()},()=>persist());
+  shared.listen();
   function persist() {
     api.save({ previewLayers: state });
     api.post({
       type: "savePreviewLayers",
       airPath: api.model().airPath,
       sffPath: api.model().sffPath,
-      value: state,
+      value: state, bankEdits:shared.changed(),
     });
   }
   function select(id, multiple) {
@@ -65,7 +67,7 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
     api.draw();
   }
   function change(patch, absolute = false) {
-    if(Object.hasOwn(patch,'order')){const rank=Math.max(0,Math.min(4,Math.round(Number(patch.order)))),others=[...state.layers].sort((a,b)=>a.order-b.order).filter(layer=>layer.id!==state.primary);state=moveLayer(state,state.primary,others[rank]?.id||null);render();persist();api.draw();document.getElementById('previewLayerorder')?.focus();return;}
+    if(Object.hasOwn(patch,'order')){shared.rank(state.primary,Math.max(0,Math.min(4,Math.round(Number(patch.order)))));return;}
 
     state = absolute ? normalizePreviewLayers({
       ...state,
@@ -150,12 +152,12 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
     rows.textContent = "";
     fields.textContent = "";
     const changed=()=>{persist();render();api.draw();scheduleAnimation()};
-    layerList(rows,state,{
+    layerList(rows,shared.state(),{
       caption:item=>airCaption(item,item.enabled?currentPose(item):null),options:airOptions,
       select:(id,multiple)=>select(id,multiple),
       toggle:(id,visible)=>{const layer=byId(id);if(visible)layer.enabled=true;layer.visible=visible;changed()},
-      order:(id,order)=>{state=normalizePreviewLayers({...state,layers:state.layers.map(layer=>layer.id===id?{...layer,order}:layer)});changed()},
-      move:(id,before)=>{state=moveLayer(state,id,before);changed()},
+      order:(id,order)=>shared.rank(id,order),
+      move:(id,before)=>shared.move(id,before),
       runtime:(id,patch)=>{state=normalizePreviewLayers({...state,layers:state.layers.map(layer=>layer.id===id?{...layer,...patch}:layer)});changed()}
     });
     const p = primary();
@@ -331,7 +333,7 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
       const frame = api.action()
         ? api.visual.sample(api.action(), api.index(), api.elapsed())
         : null;
-      return frame && frame.group >= 0 && frame.index >= 0
+      return frame && frame.group >= 0 && frame.group < 10000 && frame.group+10000*source.bank<=65535 && frame.index >= 0
         ? { ...frame, group: frame.group + 10000 * (Number(source.bank) || 0) }
         : null;
     }
@@ -386,6 +388,8 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
     );
   }
   function draw(base, picture) {
+    if(shared.needsList()&&!rendering)render();
+    const order=shared.order();
     const entries = [];
     for (const layer of state.layers) {
       if (!layer.enabled) continue;
@@ -396,7 +400,7 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
       if (!frame || frame.group < 0 || frame.index < 0) continue;
       let entry = layer.id === "base" ? base : null;
       if (layer.id !== "base") {
-        const palette = api.palette(frame.group),
+        const palette = layer.followBasePalette ? api.basePalette() : null,
           key = frame.group + "," + frame.index + ":" + palette;
         entry = cache.get(key);
         if (!cache.has(key) && !pending.has(key)) {
@@ -417,7 +421,7 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
     }
     entries.sort(
       (a, b) =>
-        a.layer.order - b.layer.order ||
+        order.indexOf(a.layer.id) - order.indexOf(b.layer.id) ||
         state.layers.indexOf(a.layer) - state.layers.indexOf(b.layer),
     );
     visibleSprites = entries.filter(({ layer }) => layer.opacity > 0).map(({ layer, entry, frame }) => ({
@@ -506,7 +510,7 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
     "pointerdown",
     (event) => {
       if (
-        !document.getElementById("previewLayerDrag").checked ||
+        panel.hidden ||
         event.button !== 0
       )
         return;
@@ -586,7 +590,7 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
       const previewTarget =
         panel.contains(event.target) ||
         (event.target === api.canvas &&
-          document.getElementById("previewLayerDrag").checked);
+          !panel.hidden);
       if (!previewTarget || /INPUT|SELECT|TEXTAREA/.test(event.target.tagName))
         return;
       const delta = {
@@ -618,10 +622,11 @@ function runtime(api, normalizePreviewLayers, editPreviewLayers, layerList, move
     sourceGeneration++;
     cache.clear();
     pending.clear();
-    if (message.model?.airPath !== sourcePath) {
+    if (message.model?.airPath !== sourcePath || shared.key()!==message.model?.sharedLayout?.key) {
       cancelDrag();
       sourcePath = message.model?.airPath;
       state = initialState(message.model?.previewLayers);
+      shared.reset(message.model?.sharedLayout);
       clocks.clear();
       render();
       api.save({ previewLayers: state });
@@ -638,7 +643,7 @@ function install(page) {
     orderedPreviewLayers,movePreviewLayer,
   } = require("./preview_layers_model");
   const controls =
-    '<h3>Preview layers</h3><p class="muted">Top behind · bottom in front. Drag rows or Alt+Up/Down. Ctrl/Shift selects several.</p><div id="previewLayerRows"></div><button id="previewLayerSelectAll">Select enabled</button><button id="previewLayerFit">Fit visible layers</button><button id="previewLayerMakeAir" title="Copy the base action timing and use this layer’s matching sprites">Create layer animations…</button><button id="previewLayerReviewExisting" title="Open the existing runtime layer code and its linked AIR Actions">Review existing layer…</button><button id="previewLayerRuntime" title="Use a sprite bank for a body layer or an AIR action for a separately timed accessory">Use layer in game…</button><button id="previewLayerTimedEffect" title="Review selected animation layers as independently timed effects. Hidden layers can be included in runtime.">Use as timed effect - Explod Lab</button><datalist id="airPreviewBlendModes"><option value="inherit"><option value="normal"><option value="A"><option value="A1"><option value="S"><option value="SA"><option value="AS128D128"><option value="SS128D128"><option value="SAS64D32"></datalist><div id="previewLayerFields"></div><div class="row"><button id="previewLayerReset">Reset transform</button></div><label><input id="previewLayerDrag" type="checkbox">Drag selected layers on canvas</label><p id="previewLayerStatus" role="status"></p>';
+    '<h3>Preview layers</h3><p class="muted">Top behind · bottom in front. Drag rows or Alt+Up/Down. Ctrl/Shift selects several.</p><div id="previewLayerRows"></div><button id="previewLayerSelectAll">Select enabled</button><button id="previewLayerFit">Fit visible layers</button><button id="previewLayerMakeAir" title="Copy the base action timing and use this layer’s matching sprites">Create layer animations…</button><button id="previewLayerReviewExisting" title="Open the existing runtime layer code and its linked AIR Actions">Review existing layer…</button><button id="previewLayerRuntime" title="Use a sprite bank for a body layer or an AIR action for a separately timed accessory">Use layer in game…</button><button id="previewLayerTimedEffect" title="Review selected animation layers as independently timed effects. Hidden layers can be included in runtime.">Use as timed effect - Explod Lab</button><datalist id="airPreviewBlendModes"><option value="inherit"><option value="normal"><option value="A"><option value="A1"><option value="S"><option value="SA"><option value="AS128D128"><option value="SS128D128"><option value="SAS64D32"></datalist><div id="previewLayerFields"></div><div class="row"><button id="previewLayerReset">Reset transform</button></div><p id="previewLayerStatus" role="status"></p>';
   return page
     .replace(
       /<section class="panel" id="layerPanel">[\s\S]*?<\/section>/,
@@ -663,7 +668,7 @@ function install(page) {
     )
     .replace(
       "</script></body>",
-      `globalThis.ikemenPreviewLayers=(${runtime.toString()})({model:()=>model,action:()=>action,index:()=>frameIndex,elapsed:()=>visualClock.elapsed(),saved:()=>saved,save:saveAirView,post:message=>vscode.postMessage(message),draw,drawSprite,canvas,zoom:()=>zoom,playback:airPlayback,visual:airVisual,palette:group=>followSpritePalette?null:paletteValue(group)},${normalizePreviewLayers.toString()},(normalizePreviewLayers=>(${editPreviewLayers.toString()}))(${normalizePreviewLayers.toString()}),${require('./preview_layer_list').clientSource()},((normalizePreviewLayers,orderedPreviewLayers)=>(${movePreviewLayer.toString()}))(${normalizePreviewLayers.toString()},${orderedPreviewLayers.toString()}),${require('./preview_layer_list').compactSource()});const layerWorkspaceLauncher=${require('./preview_layer_list').launcherSource()}(document.getElementById('layerPanel'),draw);if(model.openLayerWorkspace)layerWorkspaceLauncher.open();window.addEventListener('message',event=>{if(event.data?.type==='openLayerWorkspace')layerWorkspaceLauncher.open()});draw();</script></body>`,
+      `globalThis.ikemenPreviewLayers=(${runtime.toString()})({model:()=>model,action:()=>action,index:()=>frameIndex,elapsed:()=>visualClock.elapsed(),saved:()=>saved,save:saveAirView,post:message=>vscode.postMessage(message),draw,drawSprite,canvas,zoom:()=>zoom,playback:airPlayback,visual:airVisual,basePalette:()=>paletteValue(current()?.group)??current()?.spritePaletteIndex??null},${normalizePreviewLayers.toString()},(normalizePreviewLayers=>(${editPreviewLayers.toString()}))(${normalizePreviewLayers.toString()}),${require('./preview_layer_list').clientSource()},((normalizePreviewLayers,orderedPreviewLayers)=>(${movePreviewLayer.toString()}))(${normalizePreviewLayers.toString()},${orderedPreviewLayers.toString()}),${require('./preview_layer_list').compactSource()},${require('./shared_layer_client').sharedLayerClient.toString()});const layerWorkspaceLauncher=${require('./preview_layer_list').launcherSource()}(document.getElementById('layerPanel'),draw);if(model.openLayerWorkspace)layerWorkspaceLauncher.open();window.addEventListener('message',event=>{if(event.data?.type==='openLayerWorkspace')layerWorkspaceLauncher.open()});draw();</script></body>`,
     );
 }
 function validateBinding(filename, sffPath, message) {

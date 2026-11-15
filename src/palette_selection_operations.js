@@ -34,9 +34,14 @@ function applyPreset(colors, indices, preset) {
   if (preset === 'invert') return mapSelected(colors, indices, (color) => [255 - color[0], 255 - color[1], 255 - color[2]]);
   throw new Error('Choose a palette transformation preset.');
 }
-function fillGradient(colors, indices) {
+function gradientByte(value) {
+  const floor = Math.floor(value), fraction = value - floor;
+  return byte(fraction === .5 ? (floor % 2 === 0 ? floor : floor + 1) : Math.round(value));
+}
+function fillGradient(colors, indices, channels = [true, true, true]) {
   const selected = normalizeIndices(indices); if (selected.length < 2) throw new Error('Select at least two indexes for a gradient.'); const output = normalizePalette(colors), first = output[selected[0]].slice(), last = output[selected[selected.length - 1]].slice();
-  selected.forEach((index, position) => { const amount = position / (selected.length - 1); output[index] = [0, 1, 2].map((channel) => byte(first[channel] + (last[channel] - first[channel]) * amount)).concat(output[index][3]); }); return output;
+  if (!channels.some(Boolean)) throw new Error('Choose at least one gradient channel.');
+  selected.forEach((index, position) => { const amount = position / (selected.length - 1); output[index] = [0, 1, 2, 3].map((channel) => channels[channel] && !(channel===3 && index===0) ? gradientByte(first[channel] + (last[channel] - first[channel]) * amount) : output[index][channel]); }); return output;
 }
 function swapSelected(colors, indices) { const selected = normalizeIndices(indices); if (selected.length !== 2) throw new Error('Select exactly two indexes to swap.'); const output = normalizePalette(colors), a = output[selected[0]].slice(0, 3), b = output[selected[1]].slice(0, 3); output[selected[0]].splice(0, 3, ...b); output[selected[1]].splice(0, 3, ...a); return output; }
 function reverseSelected(colors, indices) { const selected = normalizeIndices(indices); if (selected.length < 2) throw new Error('Select at least two indexes to reverse.'); const output = normalizePalette(colors), rgb = selected.map((index) => output[index].slice(0, 3)).reverse(); selected.forEach((index, position) => output[index].splice(0, 3, ...rgb[position])); return output; }
@@ -47,9 +52,32 @@ function selectionHtml() {
 }
 
 function selectionClientScript() {
-  const functions = [byte, normalizePalette, normalizeIndices, mapSelected, rgbToHsl, hslToRgb, adjustRgb, adjustHsl, applyPreset, fillGradient, swapSelected, reverseSelected, duplicateGroups].map((fn) => fn.toString()).join('\n');
+  const functions = [byte, normalizePalette, normalizeIndices, mapSelected, rgbToHsl, hslToRgb, adjustRgb, adjustHsl, applyPreset, gradientByte, fillGradient, swapSelected, reverseSelected, duplicateGroups].map((fn) => fn.toString()).join('\n');
   return `${functions}
   const paletteBatchSelection=new Set();let paletteBatchAnchor=null;
+  const paletteOperationsDialog=document.createElement('dialog');
+  paletteOperationsDialog.setAttribute('aria-label','Palette Index Operations');
+  paletteOperationsDialog.style.cssText='width:min(1050px,90vw);height:84vh;max-height:90vh;overflow:auto;background:var(--vscode-editor-background);color:var(--vscode-foreground);border:1px solid var(--vscode-panel-border);padding:14px';
+  const closePaletteOperations=document.createElement('button');closePaletteOperations.textContent='Close Palette Index Operations';closePaletteOperations.className='tool';closePaletteOperations.onclick=()=>paletteOperationsDialog.close();
+  const paletteOperationsHeading=document.createElement('h2');paletteOperationsHeading.textContent='Palette Index Operations';
+  paletteOperationsDialog.append(closePaletteOperations,paletteOperationsHeading);
+  const paletteOperationsPanel=document.getElementById('palettePanel');
+  paletteOperationsPanel.hidden=false;paletteOperationsPanel.classList.add('active');paletteOperationsDialog.append(paletteOperationsPanel);document.body.append(paletteOperationsDialog);
+  const openPaletteOperations=document.createElement('button');openPaletteOperations.id='openPaletteIndexOperations';openPaletteOperations.className='tool';openPaletteOperations.textContent='Palette Index Operations…';openPaletteOperations.title='Open a focused palette dialog for selected-color gradients, sort and sprite remap, combine, merge, links and duplicate cleanup.';
+  openPaletteOperations.onclick=()=>{paletteOperationsDialog.showModal();requestPaletteData(Number(document.getElementById('paletteSelect').value));};
+  document.getElementById('left1').prepend(openPaletteOperations);
+  queueMicrotask(()=>{
+    document.getElementById('left1').prepend(openPaletteOperations);
+    const focused=document.createElement('section');
+    focused.append(document.getElementById('paletteSelect'),document.getElementById('paletteInfo'),document.getElementById('paletteGrid'),document.getElementById('paletteColorIndex').closest('.palette-color-editor'),document.getElementById('savePaletteEdits').parentElement);
+    const rangeControls=document.createElement('div');rangeControls.className='palette-toolbar';
+    const rangeFields=['First selected slot','Last selected slot'].map((text,index)=>{const label=document.createElement('label'),input=document.createElement('input');input.type='number';input.min='0';input.max='255';input.value=index?'3':'1';input.setAttribute('aria-label',text);input.style.width='70px';label.append(document.createTextNode(text+' '),input);rangeControls.append(label);return input});
+    const selectRange=document.createElement('button');selectRange.className='tool';selectRange.textContent='Select Slot Range';selectRange.onclick=()=>{const first=Number(rangeFields[0].value),last=Number(rangeFields[1].value);if(!Number.isInteger(first)||!Number.isInteger(last)||first<0||last>255||first>last){operationError(new Error('Choose an ordered slot range from 0 through 255.'));return;}paletteBatchSelection.clear();for(let index=first;index<=last;index++)paletteBatchSelection.add(index);paletteBatchAnchor=first;renderPaletteBatchSelection();};rangeControls.append(selectRange);
+    const focusedGrid=focused.querySelector('#paletteGrid');focusedGrid.before(rangeControls);focusedGrid.style.maxWidth='512px';
+    const operations=document.getElementById('paletteSelectionStatus').closest('details');operations.open=true;focused.append(operations,document.getElementById('paletteStatus'));
+    document.body.append(paletteOperationsPanel);paletteOperationsPanel.hidden=true;paletteOperationsPanel.style.display='none';
+    paletteOperationsDialog.replaceChildren(closePaletteOperations,paletteOperationsHeading,focused);
+  });
   function paletteBatchIndices(){return normalizeIndices([...paletteBatchSelection])}
   function renderPaletteBatchSelection(){for(const swatch of document.querySelectorAll('#paletteGrid .palette-swatch'))swatch.classList.toggle('batch-selected',paletteBatchSelection.has(Number(swatch.dataset.index)));const indices=paletteBatchIndices(),status=document.getElementById('paletteSelectionStatus');status.textContent=indices.length+' index'+(indices.length===1?'':'es')+' selected'+(indices.length&&indices.length<12?' · '+indices.join(', '):'')}
   function previewPaletteOperation(colors,label){importedPaletteColors=colors.map(color=>color.slice());previewPaletteIndex=null;vscode.postMessage({type:'paletteDraft',colors:importedPaletteColors,label});showPalette(importedPaletteColors,label);renderPaletteBatchSelection();requestCurrentSprite();requestLayers();requestOnion()}
@@ -65,11 +93,36 @@ function selectionClientScript() {
   document.getElementById('paletteApplyRgb').onclick=()=>{try{previewPaletteOperation(adjustRgb(operationBase(),paletteBatchIndices(),{r:document.getElementById('paletteDeltaR').value,g:document.getElementById('paletteDeltaG').value,b:document.getElementById('paletteDeltaB').value}),'Selected-index RGB adjustment')}catch(error){operationError(error)}};
   document.getElementById('paletteApplyHsl').onclick=()=>{try{previewPaletteOperation(adjustHsl(operationBase(),paletteBatchIndices(),{h:document.getElementById('paletteDeltaH').value,s:document.getElementById('paletteDeltaS').value,l:document.getElementById('paletteDeltaL').value}),'Selected-index HSL adjustment')}catch(error){operationError(error)}};
   document.getElementById('paletteApplyPreset').onclick=()=>{try{previewPaletteOperation(applyPreset(operationBase(),paletteBatchIndices(),document.getElementById('palettePreset').value),'Selected-index '+document.getElementById('palettePreset').selectedOptions[0].textContent)}catch(error){operationError(error)}};
-  document.getElementById('paletteGradient').onclick=()=>{try{previewPaletteOperation(fillGradient(operationBase(),paletteBatchIndices()),'Selected-index gradient')}catch(error){operationError(error)}};
+  const gradientChannels=[0,1,2,3].map(channel=>{const label=document.createElement('label'),input=document.createElement('input');input.type='checkbox';input.checked=channel<3;input.disabled=channel===3&&model.version!=='2.1';input.setAttribute('aria-label','Gradient '+['Red','Green','Blue','Alpha'][channel]);label.append(input,document.createTextNode(['R','G','B','A'][channel]));if(input.disabled)label.title='Palette alpha gradients require SFF2.1. Older SFF versions support RGB gradients only.';document.getElementById('paletteGradient').before(label);return input});
+  const saveGradientRgba=document.createElement('button');saveGradientRgba.className='tool';saveGradientRgba.textContent='Save Reviewed RGBA Colors…';saveGradientRgba.disabled=model.version!=='2.1';saveGradientRgba.title=model.version==='2.1'?'Review RGB and alpha changes together; slot0 alpha stays locked.':'RGBA color writes require SFF2.1; use Save Color Edits for RGB.';document.getElementById('paletteGradient').after(saveGradientRgba);saveGradientRgba.onclick=()=>vscode.postMessage({type:'savePaletteRgbaEdits',paletteIndex:Number(document.getElementById('paletteSelect').value),colors:displayedPaletteColors});
+  document.getElementById('savePaletteEdits').textContent='Save RGB Color Edits…';
+  document.getElementById('savePaletteEdits').title='Save RGB only; existing alpha values stay unchanged. To save an alpha gradient in SFF2.1 use Save Reviewed RGBA Colors.';
+  document.getElementById('paletteGradient').title='Interpolate checked channels by selected index order. Slot0 alpha stays locked. Use the separate reviewed RGBA save for alpha changes.';
+  document.getElementById('paletteGradient').onclick=()=>{try{previewPaletteOperation(fillGradient(operationBase(),paletteBatchIndices(),gradientChannels.map(input=>input.checked)),'Selected-index gradient'+(gradientChannels[3].checked?' (RGBA; use reviewed RGBA save)':' (RGB)'))}catch(error){operationError(error)}};
   document.getElementById('paletteSwap').onclick=()=>{try{previewPaletteOperation(swapSelected(operationBase(),paletteBatchIndices()),'Two selected indexes swapped')}catch(error){operationError(error)}};
   document.getElementById('paletteReverseSelection').onclick=()=>{try{previewPaletteOperation(reverseSelected(operationBase(),paletteBatchIndices()),'Selected index order reversed')}catch(error){operationError(error)}};
   document.getElementById('paletteAnalyzeDuplicates').onclick=()=>{try{const groups=duplicateGroups(operationBase()),report=document.getElementById('paletteSelectionReport');report.textContent=groups.length?groups.slice(0,24).map(group=>'RGB '+group.rgb+' → indexes '+group.indices.join(', ')).join('\\n')+(groups.length>24?'\\n…and '+(groups.length-24)+' more group(s).':''):'No exact duplicate RGB entries were found.'}catch(error){operationError(error)}};
   window.paletteSelectionApi={indices:paletteBatchIndices,copyReferenceColors(colors,sourceIndices){const targets=paletteBatchIndices(),source=normalizeIndices(sourceIndices);if(!source.length)throw new Error('Select reference colors first.');if(!targets.length)throw new Error('Select target indexes first.');if(source.length!==targets.length&&source.length!==1)throw new Error('Select the same number of source and target indexes, or one source color for every target.');const output=normalizePalette(operationBase());targets.forEach((target,position)=>{const color=colors[source.length===1?source[0]:source[position]];output[target]=[byte(color[0]),byte(color[1]),byte(color[2]),output[target][3]]});previewPaletteOperation(output,'Copied '+source.length+' reference color selection into '+targets.length+' target index(es)')}};
+  const orderLabel=document.createElement('label');orderLabel.textContent='Sort order ';
+  const orderSelect=document.createElement('select');
+  orderSelect.add(new Option('Ascending','ascending'));orderSelect.add(new Option('Descending','descending'));
+  orderLabel.append(orderSelect);document.getElementById('paletteReverseSelection').after(orderLabel);
+  for(const [criterion,label] of [['hue','Sort Selected by Hue…'],['brightness','Sort Selected by Brightness…']]) {
+    const button=document.createElement('button');button.className='tool';button.textContent=label;
+    button.title='Review the selected colors in this order. Sprite indices follow the colors. Slot 0 stays locked.';
+    button.onclick=()=>vscode.postMessage({type:'sortPaletteSlots',paletteIndex:Number(document.getElementById('paletteSelect').value),slots:paletteBatchIndices().filter(index=>index!==0),criterion,descending:orderSelect.value==='descending'});
+    orderLabel.parentNode.insertBefore(button,orderLabel.nextSibling);
+  }
+  for(const [mode,label] of [['combine','Combine Into New…'],['merge','Merge and Update Sprites…']]) {
+    const button=document.createElement('button');button.className='tool';button.textContent=label;
+    button.onclick=()=>vscode.postMessage({type:'mergePaletteTables',mode});
+    document.getElementById('paletteAnalyzeDuplicates').after(button);
+  }
+  for(const [action,label] of [['duplicates','Find Duplicate Palettes…'],['unlink','Unlink Palettes…']]) {
+    const button=document.createElement('button');button.className='tool';button.textContent=label;
+    button.onclick=()=>vscode.postMessage({type:'paletteSharing',action});
+    document.getElementById('paletteAnalyzeDuplicates').after(button);
+  }
   renderPaletteBatchSelection();`;
 }
 

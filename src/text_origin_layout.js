@@ -34,8 +34,11 @@ async function prepareOriginTextLayout(api,originGroup,selectedFile,isCurrent=()
  const snapshots=before.map(group=>({group,tabs:[...(group.tabs||[])]}));
  const layout=await api.commands.executeCommand('vscode.getEditorLayout');
  const unchanged=()=>isCurrent()&&snapshots.every(({group,tabs})=>(api.window.tabGroups.all||[]).includes(group)&&tabs.length===(group.tabs||[]).length&&tabs.every((tab,index)=>group.tabs[index]===tab));
- if(!unchanged()||leafPaths(layout).length!==before.length)throw Error('The editor tabs changed while preparing the Text Editor. Nothing was closed.');
- const prepared=splitOriginLayout(layout,before.indexOf(originGroup)+1);
+ const visibleLeaves=leafPaths(layout).length;
+ if(!unchanged()||!visibleLeaves||visibleLeaves>before.length)throw Error('The editor tabs changed while preparing the Text Editor. Nothing was closed.');
+ // Floating groups are included in tabGroups.all but absent from the main grid.
+ const column=before.indexOf(originGroup)+1;
+ const prepared=column<=visibleLeaves?splitOriginLayout(layout,column):{headerColumn:column,nativeColumn:column+1};
  const document=(api.workspace.textDocuments||[]).find(item=>!item.isClosed&&key(item.fileName)===key(selectedFile))||await api.workspace.openTextDocument(api.Uri.file(selectedFile));
  if(!isCurrent()||document.isClosed||key(document.fileName)!==key(selectedFile))throw Error('The requested text source changed during the handoff.');
  const focused=await api.window.showTextDocument(document,{viewColumn:originGroup.viewColumn,preview:false,preserveFocus:false});
@@ -49,7 +52,7 @@ async function prepareOriginTextLayout(api,originGroup,selectedFile,isCurrent=()
  try{
  await api.commands.executeCommand('workbench.action.newGroupBelow');
  if(!await waitFor(()=>{const inserted=[...(api.window.tabGroups.all||[])].sort((a,b)=>a.viewColumn-b.viewColumn),exactInsertion=inserted.length===before.length+1&&snapshots.every(({group,tabs},index)=>inserted[index+(index>before.indexOf(originGroup)?1:0)]===group&&tabs.length===group.tabs.length&&tabs.every((tab,tabIndex)=>group.tabs[tabIndex]===tab));if(exactInsertion)insertedGroup=inserted[prepared.nativeColumn-1];return isCurrent()&&exactInsertion;}))throw Error('The attached text group did not open below the originating region. Existing tabs were retained.');
- await api.commands.executeCommand('vscode.setEditorLayout',prepared.layout);
+ if(prepared.layout)await api.commands.executeCommand('vscode.setEditorLayout',prepared.layout);
  let after;
  if(!await waitFor(()=>{after=[...(api.window.tabGroups.all||[])].sort((a,b)=>a.viewColumn-b.viewColumn);return isCurrent()&&after.length===before.length+1&&after[prepared.nativeColumn-1]===insertedGroup&&snapshots.every(({group,tabs},index)=>{const target=after[index+(index>before.indexOf(originGroup)?1:0)];return target===group&&tabs.length===target.tabs.length&&tabs.every((tab,tabIndex)=>target.tabs[tabIndex]===tab);});}))throw Error('The editor layout changed during the Text Editor handoff. Existing tabs were retained.');
  const header=after[prepared.headerColumn-1],native=after[prepared.nativeColumn-1];

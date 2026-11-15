@@ -261,7 +261,11 @@ function buildCharacterHealthModel(defPath, options = {}, io = fs) {
     const fileFindings = analyzeHealthFile(node.filename, text, options);
     files.push({ filename: node.filename, relative: node.relative, extension, text, hash: digest(text), findings: fileFindings.length }); findings.push(...fileFindings);
   }
-  return recount({ version: 1, profile: options.profile || 'ikemen-1.0', profileLabel: options.profileLabel || 'IKEMEN GO 1.0', defPath: path.resolve(defPath), character: dependency.character, dependency, files, findings, counts: {} });
+  const media = require('./media_health_model').auditMedia(defPath,io);
+  findings.push(...media.findings.map(finding));
+  for(const file of media.files)if(!files.some(existing=>path.resolve(existing.filename).toLowerCase()===path.resolve(file.filename).toLowerCase()))files.push(file);
+  for(const file of files)file.findings=findings.filter(item=>path.resolve(item.file).toLowerCase()===path.resolve(file.filename).toLowerCase()).length;
+  return recount({ media: { archives:media.archives, coverage:media.coverage, formats:media.formats }, version: 1, profile: options.profile || 'ikemen-1.0', profileLabel: options.profileLabel || 'IKEMEN GO 1.0', defPath: path.resolve(defPath), character: dependency.character, dependency, files, findings, counts: {} });
 }
 
 function commentLines(lines, start, end, reason) {

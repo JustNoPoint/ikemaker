@@ -29,15 +29,26 @@ function stereoWavToMono(source, inspectOnly = false) {
   const format = fmt.readUInt16LE(0), channels = fmt.readUInt16LE(2), bits = fmt.readUInt16LE(14);
   if (channels !== 2) throw Error(`requires stereo; this sound has ${channels} channel(s)`);
   if (format !== 1) throw Error(format === 0xFFFE ? 'WAVE_FORMAT_EXTENSIBLE is unsupported' : `WAV format ${format} is unsupported`);
-  if (fmt.length !== 16) throw Error('requires a standard 16-byte PCM format chunk');
+  if (fmt.length !== 16 && !(fmt.length === 18 && fmt.readUInt16LE(16) === 0)) throw Error('unsupported PCM format extension');
   if (![8, 16].includes(bits)) throw Error(`${bits}-bit PCM is unsupported; use 8 or 16 bit`);
   const width = bits / 8, rate = fmt.readUInt32LE(4), align = width * 2;
   if (!rate || fmt.readUInt16LE(12) !== align || fmt.readUInt32LE(8) !== rate * align || !data || data.length % align) {
     throw Error('invalid stereo PCM frame alignment or sample rate');
   }
   // Refuse channel-dependent auxiliary metadata rather than silently corrupting it.
-  const unsupported = chunks.find(chunk => !['fmt ', 'data', 'JUNK', 'LIST'].includes(chunk.id));
+  const unsupported = chunks.find(chunk => !['fmt ', 'data', 'JUNK', 'LIST', 'id3 ', 'DISP', '_PMX'].includes(chunk.id));
   if (unsupported) throw Error(`auxiliary WAV chunk ${JSON.stringify(unsupported.id)} is unsupported`);
+  for (const chunk of chunks.filter(item => item.id === '_PMX')) {
+    // Replace only the declared channel type. Keep packet encoding, padding and byte offsets.
+    const field = 'xmpDM:audioChannelType="Stereo"';
+    const at = chunk.bytes.indexOf(field, 8);
+    if (at < 0 || chunk.bytes.indexOf('audioChannelType', at + field.length) >= 0 ||
+        chunk.bytes.indexOf('audioChannelType', 8) !== at + 6) throw Error('unrecognized XMP channel declaration');
+    if (!inspectOnly) {
+      chunk.bytes = Buffer.from(chunk.bytes);
+      chunk.bytes.write('xmpDM:audioChannelType="Mono"  ', at, 'ascii');
+    }
+  }
   if (inspectOnly) return true;
   const mono = Buffer.alloc(data.length / 2);
   for (let offset = 0, out = 0; offset < data.length; offset += align, out += width) {

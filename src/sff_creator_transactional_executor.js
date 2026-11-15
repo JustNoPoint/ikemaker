@@ -28,15 +28,45 @@ function platformKey(value) { return process.platform === 'win32' || process.pla
 function syncDirectory(directory) { let handle; try { handle = fs.openSync(directory, fs.constants.O_RDONLY); fs.fsyncSync(handle); return 'completed'; } catch (error) { if (['EINVAL', 'EPERM', 'EISDIR', 'ENOTSUP', 'EACCES'].includes(error?.code)) return 'unsupported-by-platform'; throw error; } finally { if (handle !== undefined) fs.closeSync(handle); } }
 function writeExclusive(filename, bytes, mode = 0o600) { const handle = openNoFollow(filename, fs.constants.O_WRONLY | fs.constants.O_CREAT | fs.constants.O_EXCL, mode); try { let at = 0; while (at < bytes.length) { const written = fs.writeSync(handle, bytes, at, bytes.length - at, at); if (!written) throw new Error(`Write made no progress for ${filename}.`); at += written; } fs.fsyncSync(handle); } finally { fs.closeSync(handle); } }
 function readExact(filename, expectedLength, label) {
-  const before = fs.lstatSync(filename, { bigint: true }); if (before.isSymbolicLink() || !before.isFile()) throw new Error(`${label} must be a non-link regular file.`);
-  const handle = openNoFollow(filename, fs.constants.O_RDONLY); let opened, afterHandle, bytes;
-  try {
-    opened = fs.fstatSync(handle, { bigint: true }); if (!opened.isFile() || opened.size !== BigInt(expectedLength) || stableStat(before) !== stableStat(opened)) throw new Error(`${label} identity or length drifted before read.`);
-    bytes = Buffer.alloc(expectedLength); let at = 0; while (at < bytes.length) { const count = fs.readSync(handle, bytes, at, bytes.length - at, at); if (!count) throw new Error(`${label} ended early.`); at += count; }
-    afterHandle = fs.fstatSync(handle, { bigint: true }); if (stableStat(opened) !== stableStat(afterHandle)) throw new Error(`${label} changed while read.`);
-  } finally { fs.closeSync(handle); }
-  const after = fs.lstatSync(filename, { bigint: true }); if (after.isSymbolicLink() || stableStat(afterHandle) !== stableStat(after)) throw new Error(`${label} path changed while read.`);
-  return { bytes, identity: identity(opened), statFingerprint: stableStat(opened) };
+  const fields = stat => ({device:String(stat.dev),inode:String(stat.ino),size:String(stat.size),mtime:String(stat.mtimeNs ?? stat.mtimeMs),ctime:String(stat.ctimeNs ?? stat.ctimeMs),links:String(stat.nlink)});
+  const differences = (left,right) => Object.keys(left).filter(key=>left[key]!==right[key]);
+  const drift = (phase,left,right) => new Error(`${label} ${phase}; differing fields: ${differences(fields(left),fields(right)).join(', ') || 'file type'}; before=${JSON.stringify(fields(left))}; after=${JSON.stringify(fields(right))}.`);
+  let anchor=null, anchorHash=null;
+  for(let attempt=0;attempt<2;attempt++) {
+    const before=fs.lstatSync(filename,{bigint:true});
+    if(before.isSymbolicLink() || !before.isFile()) throw new Error(`${label} must be a non-link regular file.`);
+    if(before.size!==BigInt(expectedLength)) throw new Error(`${label} identity or length drifted before read; expected=${expectedLength}; observed=${before.size}.`);
+    if(anchor && differences(anchor,fields(before)).some(key=>key!=='ctime')) throw new Error(`${label} identity/content metadata changed during bounded re-observation; before=${JSON.stringify(anchor)}; after=${JSON.stringify(fields(before))}.`);
+    let handle,opened,after,bytes,reobserve=false;
+    const check = (phase,left,right) => {
+      const changed=differences(fields(left),fields(right));
+      if(!changed.length)return;
+      // Windows sync hydration may update change-time during the first read.
+      // Discard that observation and permit only one fully stable fresh read.
+      if(process.platform==='win32' && attempt===0 && changed.length===1 && changed[0]==='ctime') {anchor=fields(right);if(bytes)anchorHash=sha(bytes);reobserve=true;return;}
+      throw drift(phase,left,right);
+    };
+    try {
+      handle=openNoFollow(filename,fs.constants.O_RDONLY);
+      opened=fs.fstatSync(handle,{bigint:true});
+      if(!opened.isFile())throw drift('changed before read',before,opened);
+      check('identity or length drifted before read',before,opened);
+      if(!reobserve) {
+        bytes=Buffer.alloc(Number(opened.size));let offset=0;
+        while(offset<bytes.length){const count=fs.readSync(handle,bytes,offset,bytes.length-offset,offset);if(!count)throw new Error(`${label} ended early.`);offset+=count;}
+        after=fs.fstatSync(handle,{bigint:true});check('changed while read',opened,after);
+      }
+    } finally {if(handle!==undefined)fs.closeSync(handle);}
+    if(reobserve)continue;
+    const finalPath=fs.lstatSync(filename,{bigint:true});
+    if(finalPath.isSymbolicLink() || !finalPath.isFile())throw drift('path changed after read',after,finalPath);
+    check('path changed after read',after,finalPath);
+    if(reobserve)continue;
+    const byteHash=sha(bytes);
+    if(anchorHash && byteHash!==anchorHash)throw new Error(`${label} bytes changed during bounded metadata re-observation.`);
+    return {bytes,identity:identity(opened),statFingerprint:stableStat(opened)};
+  }
+  throw new Error(`${label} bounded metadata re-observation was exhausted.`);
 }
 function verifiedBytes(filename, expectedHash, expectedLength, expectedIdentity, label) { const loaded = readExact(filename, expectedLength, label); if (expectedIdentity && !sameIdentity({ dev: loaded.identity.device, ino: loaded.identity.inode }, expectedIdentity)) throw new Error(`${label} identity drifted.`); if (sha(loaded.bytes) !== expectedHash) throw new Error(`${label} byte hash drifted.`); return { ...loaded, path: filename, byteHash: expectedHash, byteLength: expectedLength }; }
 function strictHash(targetId, bytes) {

@@ -83,6 +83,7 @@ async function openBrowser(api, owner, seed, commands, select, entries = [], pic
   const fresh=!record;
   if (!record) {
     const panel = api.window.createWebviewPanel('ikemenCommandBrowser','Command Browser',api.ViewColumn.Active,{enableScripts:true,retainContextWhenHidden:true});
+    require('./viewer_group').trackViewerPanel(panel);
     record = {panel,readiness:require('./companion_browser_lifecycle').createBrowserReadinessController()};
     const width=companion.createMinimumWidthController(panel,api.commands,undefined,{floatingOnly:true,storage,preferenceKey:'ikemaker.companionBrowserWidth.v3.commands',resizeNative:resizeActiveAuxiliaryWindowBy});
     record.float=async()=>{

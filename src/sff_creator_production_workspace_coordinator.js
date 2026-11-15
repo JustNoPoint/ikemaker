@@ -22,6 +22,9 @@ function action(status) {
   if (status === 'adoption-approved-next-transition-unavailable') return 'Probe & Review Layout';
   if (status === 'execution-approved-next-transition-unavailable') return 'Confirm Execution Start';
   if (status === 'execution-intent-retained-executor-not-started' || status === 'execution-retry-may-be-offered' || status === 'retry-may-be-offered') return 'Execute Approved Intent';
+  if (status === 'restart-recovery-review-required') return 'Review Recovery Cleanup';
+  if (status === 'restart-recovery-approved-execution-required') return 'Clean Reviewed Recovery Artifacts';
+  if (status === 'recovery-history-review-required') return 'Review Recovery History';
   if (status === 'classification-required' || status === 'result-captured-continuation') return 'Classify Captured Result';
   if (status === 'history-approved-next-transition-unavailable') return 'Write Approved History & Complete';
   if (status === 'completed-authoritative' || status === 'completed-cleanup-recorded') return 'Finalize Completed Draft';
@@ -44,10 +47,16 @@ function createCreatorProductionWorkspaceCoordinator(dependencies = {}) {
   async function challenge(input, presented, adapter) {
     const review = presented.review;
     if (!review || !Array.isArray(review.rows) || !review.rows.length) fail(`${presented.status} has no explicit challenged rows.`);
-    for (let index = 0; index < review.rows.length; index += 1) {
-      const row = review.rows[index], accepted = await callable(adapter.confirmReviewRow, 'confirmReviewRow')(freeze({ stage: review.stage, id: row.id, label: row.id, summary: review.summary, position: index + 1, total: review.rows.length }));
-      if (accepted !== true) { runtime.cancelReview({ actionToken: review.actionToken, expectedHeadHash: review.expectedHeadHash }); return freeze({ status: 'review-deferred', operationId: presented.operationId, continuationLocator: presented.continuationLocator, continueAction: action(presented.status), resetDraft: false, draftCleared: false, writesAllowed: false }); }
-      runtime.acknowledgeReview({ actionToken: review.actionToken, expectedHeadHash: review.expectedHeadHash, confirmationId: row.id, challengeToken: row.challengeToken });
+    try {
+      for (let index = 0; index < review.rows.length; index += 1) {
+        const row = review.rows[index], accepted = await callable(adapter.confirmReviewRow, 'confirmReviewRow')(freeze({ stage: review.stage, id: row.id, label: row.id, summary: review.summary, risks: review.rows.filter(item => item.id.startsWith('risk:')).map(item => item.id.slice(5)), position: index + 1, total: review.rows.length }));
+        if (accepted !== true) { runtime.cancelReview({ actionToken: review.actionToken, expectedHeadHash: review.expectedHeadHash }); return freeze({ status: 'review-deferred', operationId: presented.operationId, continuationLocator: presented.continuationLocator, continueAction: action(presented.status), resetDraft: false, draftCleared: false, writesAllowed: false }); }
+        runtime.acknowledgeReview({ actionToken: review.actionToken, expectedHeadHash: review.expectedHeadHash, confirmationId: row.id, challengeToken: row.challengeToken });
+      }
+    } catch (error) {
+      // Rendering failure grants no review authority and must not leave a live nonce.
+      try { runtime.cancelReview({actionToken:review.actionToken,expectedHeadHash:review.expectedHeadHash}); } catch (_) { /* Preserve the original failure. */ }
+      throw error;
     }
     return retain(input, runtime.recordReview({ actionToken: review.actionToken, expectedHeadHash: review.expectedHeadHash }));
   }
@@ -81,10 +90,12 @@ function createCreatorProductionWorkspaceCoordinator(dependencies = {}) {
     if (status === 'execution-approved-next-transition-unavailable') { const result = await confirmStartApprovedExecution({ runtime, ui: ui.execution, continuationLocator: presented.continuationLocator }); return result.continuationLocator && result.status !== 'approved-execution-start-deferred' ? retain(input, result) : freeze({ ...result, continueAction: action(status), draftCleared: false }); }
     if (status === 'execution-intent-retained-executor-not-started' || status === 'execution-retry-may-be-offered' || status === 'retry-may-be-offered') return retain(input, runtime.executeApprovedIntent({ continuationLocator: presented.continuationLocator }));
     if (status === 'classification-required' || status === 'result-captured-continuation') return retain(input, runtime.classifyExecutionResult({ continuationLocator: presented.continuationLocator }));
+    if (status === 'restart-recovery-review-required') { const result = await runtime.beginRecoveryReview({continuationLocator:presented.continuationLocator}, ui.layout); return result.status === 'review-deferred' ? freeze({...result,continueAction:'Continue Recovery',draftCleared:false}) : retain(input,result); }
+    if (status === 'restart-recovery-approved-execution-required') return retain(input, runtime.executeApprovedRecovery({continuationLocator:presented.continuationLocator}));
     if (status === 'history-reconciliation-review-required') return challenge(input, presented, ui.history);
     if (status === 'history-reconciliation-review-retained-next-transition-unavailable') return retain(input, await approveRetainedHistoryReview({ runtime, ui: ui.history, continuationLocator: presented.continuationLocator }));
     if (status === 'history-approved-next-transition-unavailable' || status === 'finalization-required' || status === 'completed-cleanup-required') return completeHistory(input, presented.continuationLocator);
-    if (status === 'completed-authoritative' || status === 'completed-cleanup-recorded') { if (presented.resetDraft !== true) return freeze({ ...presented, continueAction: action(status), draftCleared: false }); const finalized = await continuations.complete({ draftKey: input.draftKey, currentDraftRevision: input.currentDraftRevision, runtimeResetDraft: true }); return freeze({ ...presented, status: finalized.status, draftCleared: finalized.draftCleared, completed: finalized.completed }); }
+    if (status === 'completed-authoritative' || status === 'completed-cleanup-recorded') { if (presented.resetDraft !== true) return freeze({ ...presented, continueAction: action(status), draftCleared: false }); await retain(input, presented); const finalized = await continuations.complete({ draftKey: input.draftKey, currentDraftRevision: input.currentDraftRevision, runtimeResetDraft: true }); return freeze({ ...presented, status: finalized.status, draftCleared: finalized.draftCleared, completed: finalized.completed }); }
     return freeze({ ...presented, continueAction: action(status || ''), resetDraft: false, draftCleared: false });
   }
   return freeze({ continueOperation, start });

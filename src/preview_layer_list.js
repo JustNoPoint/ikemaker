@@ -65,6 +65,12 @@ function renderPreviewLayerList(container,state,callbacks){
  }
  const layer=state.layers.find(item=>item.id===state.primary);
  if(layer&&layer.id!=='base'){
+  const paletteLabel=document.createElement('label'),follow=document.createElement('input');
+  follow.type='checkbox';follow.checked=layer.followBasePalette!==false;
+  follow.dataset.layerPalette=layer.id;
+  follow.onchange=()=>callbacks.runtime(layer.id,{followBasePalette:follow.checked});
+  paletteLabel.title='Use the palette displayed on the base sprite. Clear to use this layer’s embedded palette.';
+  paletteLabel.append(follow,document.createTextNode('Follow sprite palette'));container.append(paletteLabel);
   const details=document.createElement('details'),summary=document.createElement('summary'),label=document.createElement('label'),independent=document.createElement('input'),priority=document.createElement('input');summary.textContent='Game rendering';details.append(summary);independent.type='checkbox';independent.checked=layer.runtimeRendering==='independent';independent.onchange=()=>callbacks.runtime(layer.id,{runtimeRendering:independent.checked?'independent':'grouped'});label.append(independent,document.createTextNode('Independent game layer (other sprites may interleave)'));priority.type='number';priority.step='1';priority.value=String(layer.runtimePriority);priority.disabled=!independent.checked;priority.setAttribute('aria-label','Independent game priority for '+layer.label);priority.title='Game sprite priority, separate from preview draw order';priority.onchange=()=>{if(priority.value.trim()&&Number.isInteger(Number(priority.value)))callbacks.runtime(layer.id,{runtimePriority:Number(priority.value)})};details.append(label,priority);
   for(const [key,caption] of [['castShadow','Cast stage shadow'],['showReflection','Show stage reflection']]){
    const row=document.createElement('label'),check=document.createElement('input');

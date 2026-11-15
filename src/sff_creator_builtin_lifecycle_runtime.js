@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { reviewedPathKey } = require('./sff_creator_reviewed_path');
 const { hashCanonical } = require('./sff_capability_report');
 const { canonicalize } = require('./sff_build_specification');
 const { captureTarget: captureTargetWithFs } = require('./sff_build_safety');
@@ -48,6 +49,7 @@ const CANDIDATE_MANIFEST_NAME = 'candidate-built-replay-manifest';
 const PERSISTED_MANIFEST_NAME = 'candidate-persisted-replay-manifest';
 const RESULT_CAPTURED_MANIFEST_NAME = 'executing-result-captured-route-manifest';
 const CLASSIFIED_MANIFEST_NAME = 'result-classification-route-manifest';
+const recoveryHistory=require('./sff_creator_recovery_history_input');
 const HISTORY_PLAN_NAME = 'sff18-history-reconciliation-plan';
 const SHA = /^[0-9a-f]{64}$/;
 const SUPPORTED = Object.freeze({
@@ -162,6 +164,10 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     discoverVault: dependencies.discoverVault || discoverCreatorOperationVaults
   };
 
+  const recoveryRuntime = require('./sff_creator_builtin_recovery_runtime').createRecoveryRuntime(api);
+  const beginRecoveryReview = (input, ui) => recoveryRuntime.beginRecoveryReview(input, ui);
+  const executeApprovedRecovery = input => recoveryRuntime.executeApprovedRecovery(input);
+
   function inspect(rawLocator) {
     const snapshot = api.readSnapshot(baseLocator(rawLocator)), authority = snapshot.authority;
     if (authority.operationId !== rawLocator.expectedOperationId || authority.semanticHeadRecordHash !== rawLocator.expectedLatestCheckpointHash) fail('continuation locator drifted from the exact retained head.');
@@ -169,7 +175,7 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     if (!manifestRow || !manifestAuthority || manifestRow.byteHash !== rawLocator.expectedManifestArtifactByteHash || manifestRow.authorityHash !== rawLocator.expectedManifestAuthorityHash || manifestAuthority.hash !== rawLocator.expectedManifestAuthorityHash) fail('continuation manifest authority is missing or drifted.');
     const manifest = JSON.parse(snapshot.readArtifactBytes(MANIFEST_NAME).toString('utf8'));
     const core = { ...manifest }; delete core.manifestHash;
-    if (manifest.schema !== 'ikemaker.sff-creator-builtin-runtime-target-review' || manifest.version !== 1 || hashCanonical(core) !== manifest.manifestHash || manifest.manifestHash !== rawLocator.expectedManifestHash || manifest.operationId !== authority.operationId || manifest.targetId !== authority.targetId || manifest.backendId !== authority.backendId || manifest.adapterId !== authority.adapterId || path.resolve(manifest.activePath) !== path.resolve(authority.activePath) || path.resolve(manifest.candidatePath) !== path.resolve(authority.candidatePath) || !within(manifest.buildRoot, manifest.packageRoot)) fail('continuation manifest content drifted from retained operation authority.');
+    if (manifest.schema !== 'ikemaker.sff-creator-builtin-runtime-target-review' || manifest.version !== 1 || hashCanonical(core) !== manifest.manifestHash || manifest.manifestHash !== rawLocator.expectedManifestHash || manifest.operationId !== authority.operationId || manifest.targetId !== authority.targetId || manifest.backendId !== authority.backendId || manifest.adapterId !== authority.adapterId || reviewedPathKey(manifest.activePath) !== reviewedPathKey(authority.activePath) || reviewedPathKey(manifest.candidatePath) !== reviewedPathKey(authority.candidatePath) || !within(manifest.buildRoot, manifest.packageRoot)) fail('continuation manifest content drifted from retained operation authority.');
     const active = captureTargetWithFs(fs, manifest.activePath);
     if (!active.exists || String(active.hash).toLowerCase() !== manifest.activeTargetByteHash) fail('active SFF drifted while target review was paused.');
     return { snapshot, manifest };
@@ -253,23 +259,31 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
 
   function inspectRetainedHistoryReview(rawLocator) {
     const snapshot = api.readSnapshot(baseLocator(rawLocator)), authority = snapshot.authority;
+    const recovery=rawLocator.manifestArtifactName===recoveryHistory.TERMINAL;
+    let manifest,historyPlan;
+    if(recovery){
+      const checked=recoveryHistory.readRecoveryTerminal(snapshot,rawLocator);
+      manifest=JSON.parse(snapshot.readArtifactBytes(recoveryHistory.TERMINAL).toString('utf8'));
+      historyPlan=checked.auxiliaryPlan;
+    }else{
     if (authority.lifecycleState !== 'TerminalNeedsHistory' || authority.operationId !== rawLocator.expectedOperationId || authority.semanticHeadRecordHash !== rawLocator.expectedLatestCheckpointHash || rawLocator.manifestArtifactName !== CLASSIFIED_MANIFEST_NAME) fail('retained history reconciliation review locator drifted.');
     const manifestRow = authority.artifacts.find(row => row.name === CLASSIFIED_MANIFEST_NAME), manifestNamed = authority.artifactAuthorities.find(row => row.name === CLASSIFIED_MANIFEST_NAME);
     if (!manifestRow || !manifestNamed || manifestRow.byteHash !== rawLocator.expectedManifestArtifactByteHash || manifestRow.authorityHash !== rawLocator.expectedManifestAuthorityHash || manifestNamed.hash !== rawLocator.expectedManifestAuthorityHash) fail('retained classification manifest authority is missing or drifted.');
-    const manifestBytes = snapshot.readArtifactBytes(CLASSIFIED_MANIFEST_NAME), manifest = JSON.parse(manifestBytes.toString('utf8')), manifestCore = { ...manifest }; delete manifestCore.manifestHash;
+    const manifestBytes = snapshot.readArtifactBytes(CLASSIFIED_MANIFEST_NAME), parsedManifest = JSON.parse(manifestBytes.toString('utf8')), manifestCore = { ...parsedManifest }; manifest=parsedManifest; delete manifestCore.manifestHash;
     if (manifest.schema !== 'ikemaker.sff-creator-result-classification-route-manifest' || manifest.version !== 1 || manifest.classification !== 'TerminalNeedsHistory' || manifest.lifecycleState !== 'TerminalNeedsHistory' || sha(manifestBytes) !== manifestRow.byteHash || hashCanonical(manifestCore) !== manifest.manifestHash || manifest.manifestHash !== rawLocator.expectedManifestHash || manifest.auxiliaryPlanArtifactName !== HISTORY_PLAN_NAME) fail('retained classification manifest content drifted.');
     for (const row of manifest.payloadInventory) {
       const found = (row.storage === 'artifact' ? authority.artifacts : authority.binaries).find(item => item.name === row.name);
       if (!found || found.byteHash !== row.byteHash || found.byteLength !== row.byteLength || found.authorityHash !== row.authorityHash) fail(`retained classification payload ${row.name} drifted.`);
     }
     for (const row of manifest.payloadAuthorities) if (authority.artifactAuthorities.find(item => item.name === row.name)?.hash !== row.hash) fail(`retained classification named authority ${row.name} drifted.`);
-    const historyBytes = snapshot.readArtifactBytes(HISTORY_PLAN_NAME), historyPlan = JSON.parse(historyBytes.toString('utf8')), historyCore = { ...historyPlan }; delete historyCore.planHash;
+    const historyBytes = snapshot.readArtifactBytes(HISTORY_PLAN_NAME), parsedHistory = JSON.parse(historyBytes.toString('utf8')), historyCore = { ...parsedHistory }; historyPlan=parsedHistory; delete historyCore.planHash;
     if (sha(historyBytes) !== manifest.auxiliaryPlanArtifactByteHash || historyPlan.planHash !== manifest.auxiliaryPlanHash || hashCanonical(historyCore) !== historyPlan.planHash || historyPlan.blockers?.length) fail('retained history reconciliation plan drifted or is blocked.');
+    }
     const planName = `production-review-${STAGES.HISTORY}-plan`, recordName = `production-review-${STAGES.HISTORY}-record`, planRow = authority.artifacts.find(row => row.name === planName), recordRow = authority.artifacts.find(row => row.name === recordName);
     if (!planRow || !recordRow) fail('retained history reconciliation review evidence is incomplete.');
     const planBytes = snapshot.readArtifactBytes(planName), plan = JSON.parse(planBytes.toString('utf8')), recordBytes = snapshot.readArtifactBytes(recordName), record = JSON.parse(recordBytes.toString('utf8')), recordCore = { ...record }; delete recordCore.recordHash;
     const reviewChild = authority.chain.at(-1), classifiedChild = authority.chain.at(-2), resultCaptured = authority.chain.at(-3);
-    if (!reviewChild || reviewChild.lifecycleState !== 'TerminalNeedsHistory' || !classifiedChild || classifiedChild.lifecycleState !== 'TerminalNeedsHistory' || reviewChild.previousCheckpointHash !== classifiedChild.recordHash || !resultCaptured || resultCaptured.lifecycleState !== 'Executing' || classifiedChild.previousCheckpointHash !== resultCaptured.recordHash || record.parentHeadHash !== classifiedChild.recordHash || manifest.parentHeadRecordHash !== resultCaptured.recordHash) fail('retained history reconciliation review is not the exact classified successor.');
+    if (!reviewChild || reviewChild.lifecycleState !== 'TerminalNeedsHistory' || !classifiedChild || classifiedChild.lifecycleState !== 'TerminalNeedsHistory' || reviewChild.previousCheckpointHash !== classifiedChild.recordHash || !resultCaptured || (!recovery && resultCaptured.lifecycleState !== 'Executing') || classifiedChild.previousCheckpointHash !== resultCaptured.recordHash || record.parentHeadHash !== classifiedChild.recordHash || manifest.parentHeadRecordHash !== resultCaptured.recordHash) fail('retained history reconciliation review is not the exact classified successor.');
     const expectedIds = [...HISTORY_CONFIRMATION_KEYS.map(id => `confirmation:${id}`), ...(plan.risks || []).map(id => `risk:${id}`)].sort();
     if (hashCanonical(plan) !== hashCanonical(historyPlan) || record.schema !== 'ikemaker.sff-creator-production-review-record' || record.version !== 1 || record.status !== 'reviewed-no-authority' || record.stage !== STAGES.HISTORY || record.operationId !== authority.operationId || record.planHash !== historyPlan.planHash || record.planArtifactByteHash !== sha(planBytes) || JSON.stringify(record.reviewedIds) !== JSON.stringify(expectedIds) || record.writesAllowed !== false || record.historyWriteAuthorityGranted !== false || hashCanonical(recordCore) !== record.recordHash) fail('retained challenged history reconciliation review drifted.');
     const mutationId = hashCanonical({ domain: 'ikemaker.sff-creator-production-review-retention', version: 1, operationId: record.operationId, stage: record.stage, parentHeadHash: record.parentHeadHash, planHash: record.planHash, planArtifactByteHash: sha(planBytes), reviewRecordHash: record.recordHash, reviewRecordArtifactByteHash: sha(recordBytes) }), planAuthority = hashCanonical({ domain: 'ikemaker.sff-creator-production-review-artifact-authority', version: 1, operationId: record.operationId, stage: record.stage, kind: 'plan', parentHeadHash: record.parentHeadHash, mutationId, artifactName: planName, artifactByteHash: sha(planBytes) }), recordAuthority = hashCanonical({ domain: 'ikemaker.sff-creator-production-review-artifact-authority', version: 1, operationId: record.operationId, stage: record.stage, kind: 'record', parentHeadHash: record.parentHeadHash, mutationId, artifactName: recordName, artifactByteHash: sha(recordBytes) });
@@ -281,11 +295,13 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
   function presentHistoryReview(rawLocator) {
     const snapshot = api.readSnapshot(baseLocator(rawLocator));
     if (retainedStageReview(snapshot, STAGES.HISTORY)) { const current = inspectRetainedHistoryReview(rawLocator); return freeze({ status: 'history-reconciliation-review-retained-next-transition-unavailable', operationId: current.snapshot.authority.operationId, continuationLocator: { ...rawLocator }, historyPlanHash: current.historyPlan.planHash, resetDraft: false, writesAllowed: false }); }
-    const classified = api.readClassification(rawLocator);
-    if (classified.classification !== 'TerminalNeedsHistory' || classified.auxiliaryPlanArtifactName !== HISTORY_PLAN_NAME) fail(`history reconciliation review is unavailable for ${classified.classification}.`);
+    const recovery=rawLocator.manifestArtifactName===recoveryHistory.TERMINAL;
+    const read=()=>recovery?recoveryHistory.readRecoveryTerminal(api.readSnapshot(baseLocator(rawLocator)),rawLocator):api.readClassification(rawLocator);
+    const classified=read();
+    if (classified.classification !== 'TerminalNeedsHistory' || classified.auxiliaryPlanArtifactName !== (recovery?recoveryHistory.PLAN:HISTORY_PLAN_NAME)) fail(`history reconciliation review is unavailable for ${classified.classification}.`);
     if (sessions.size >= 32) fail('too many explicit reviews are open; cancel or finish one first.');
     const planInput = { classificationManifestHash: classified.manifestHash, classificationPlanHash: classified.classificationPlanHash, historyPlanHash: classified.auxiliaryPlanHash, historyPlanArtifactByteHash: classified.auxiliaryPlanArtifactByteHash };
-    const host = api.reviewHost({ builders: { [STAGES.HISTORY]: current => { if (hashCanonical(current) !== hashCanonical(planInput)) fail('history reconciliation review plan input drifted.'); const replay = api.readClassification(rawLocator); if (replay.classification !== 'TerminalNeedsHistory' || replay.manifestHash !== planInput.classificationManifestHash || replay.classificationPlanHash !== planInput.classificationPlanHash || replay.auxiliaryPlanHash !== planInput.historyPlanHash || replay.auxiliaryPlanArtifactByteHash !== planInput.historyPlanArtifactByteHash) fail('retained result classification replay drifted.'); return replay.auxiliaryPlan; } }, expectedOperationId: snapshot.authority.operationId, expectedVaultRoot: rawLocator.expectedVaultRoot, operationDirectory: rawLocator.operationDirectory }), review = host.beginReview({ stage: STAGES.HISTORY, operationId: snapshot.authority.operationId, expectedHeadHash: snapshot.authority.semanticHeadRecordHash, planInput });
+    const host = api.reviewHost({ builders: { [STAGES.HISTORY]: current => { if (hashCanonical(current) !== hashCanonical(planInput)) fail('history reconciliation review plan input drifted.'); const replay = read(); if (replay.classification !== 'TerminalNeedsHistory' || replay.manifestHash !== planInput.classificationManifestHash || replay.classificationPlanHash !== planInput.classificationPlanHash || replay.auxiliaryPlanHash !== planInput.historyPlanHash || replay.auxiliaryPlanArtifactByteHash !== planInput.historyPlanArtifactByteHash) fail('retained result classification replay drifted.'); return replay.auxiliaryPlan; } }, expectedOperationId: snapshot.authority.operationId, expectedVaultRoot: rawLocator.expectedVaultRoot, operationDirectory: rawLocator.operationDirectory }), review = host.beginReview({ stage: STAGES.HISTORY, operationId: snapshot.authority.operationId, expectedHeadHash: snapshot.authority.semanticHeadRecordHash, planInput });
     sessions.set(review.actionToken, { host, kind: STAGES.HISTORY, locator: { ...rawLocator } });
     return freeze({ status: 'history-reconciliation-review-required', operationId: snapshot.authority.operationId, review, continuationLocator: { ...rawLocator }, historyPlanHash: classified.auxiliaryPlanHash, outcomeClass: classified.classificationPlan.outcomeClass, resetDraft: false, writesAllowed: false });
   }
@@ -538,7 +554,7 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     const receipt = api.commitHistoryApproval({ historyReviewPlanInput, historyReviewPlanArtifactBytes: Buffer.from(planned.artifactBytes), expectedHistoryReviewPlanArtifactByteHash: planned.artifactByteHash, expectedHistoryReviewPlanHash: planned.planHash });
     if (!['checkpoint-appended', 'checkpoint-already-appended'].includes(receipt.status)) return freeze({ status: receipt.status, operationId: receipt.operationId, continuationLocator: { ...input.continuationLocator }, approvalReceiptHash: planned.plan.historyApprovalReceiptHash, historyWriterInvoked: false, historyAppended: false, resetDraft: false, writesAllowed: false });
     const continuationLocator = freeze({ operationDirectory: input.continuationLocator.operationDirectory, expectedOperationId: input.continuationLocator.expectedOperationId, expectedLatestCheckpointHash: receipt.expectedChildCheckpointHash, expectedVaultRoot: input.continuationLocator.expectedVaultRoot, manifestArtifactName: receipt.manifestArtifactName, expectedManifestArtifactByteHash: receipt.manifestArtifactByteHash, expectedManifestHash: receipt.manifestHash, expectedManifestAuthorityHash: receipt.manifestAuthorityHash }), verified = api.readHistoryApproval(continuationLocator);
-    if (verified.predecessorHeadRecordHash !== current.snapshot.authority.semanticHeadRecordHash || verified.historyReconciliationPlanHash !== current.historyPlan.planHash || verified.outcomeReceiptHash !== current.manifest.outcomeReceiptHash) fail('retained HistoryReview approval child drifted from the challenged review and exact outcome evidence.');
+    if (verified.predecessorHeadRecordHash !== current.snapshot.authority.semanticHeadRecordHash || verified.historyReconciliationPlanHash !== current.historyPlan.planHash || verified.outcomeReceiptHash !== current.historyPlan.terminalReceiptHash) fail('retained HistoryReview approval child drifted from the challenged review and exact outcome evidence.');
     return freeze({ status: 'history-approved-next-transition-unavailable', lifecycleState: 'HistoryReview', operationId: receipt.operationId, continuationLocator, approvalReceiptHash: verified.historyApprovalReceiptHash, historyWriterInvoked: false, historyAppended: false, resetDraft: false, writesAllowed: false });
   }
   function completedContinuation(reviewLocator, completedCheckpointHash) {
@@ -594,6 +610,7 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     return freeze({ status: cleanupConfirmed ? 'completed-authoritative' : routed.status, lifecycleState: 'Completed', operationId: discovered.verified.operationId, continuationLocator: discovered.continuationLocator, completedVerificationHash: discovered.verified.verificationHash, ...(routed.temporaryRecovery ? {temporaryRecovery:routed.temporaryRecovery} : {}), historyApprovalReceiptHash: discovered.verified.historyApprovalReceiptHash, historyRecordHash: discovered.verified.historyRecordHash, historyWriterInvoked: true, historyAppended: true, capsuleCleanupCompleted: cleanupConfirmed, resetDraft: cleanupConfirmed, writesAllowed: false });
   }
   function resumeLifecycle(rawLocator) {
+    if (rawLocator?.manifestArtifactName === require('./sff_creator_builtin_recovery_runtime').APPROVED) return recoveryRuntime.readApprovedRecovery(rawLocator);
     if (rawLocator?.manifestArtifactName === MANIFEST_NAME) return present(rawLocator);
     if (rawLocator?.manifestArtifactName === APPROVED_MANIFEST_NAME) { const current = inspectApproved(rawLocator); return freeze({ status: 'projection-approved-next-transition-unavailable', operationId: current.snapshot.authority.operationId, continuationLocator: { ...rawLocator }, resetDraft: false, writesAllowed: false }); }
     if (rawLocator?.manifestArtifactName === REQUEST_MANIFEST_NAME) { const current = inspectRequestReady(rawLocator); return freeze({ status: 'request-ready-next-transition-unavailable', operationId: current.snapshot.authority.operationId, continuationLocator: { ...rawLocator }, resetDraft: false, writesAllowed: false }); }
@@ -604,6 +621,7 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     if (rawLocator?.manifestArtifactName === REVIEWED_LAYOUT_MANIFEST_NAME) return presentLayoutReview(rawLocator);
     if (rawLocator?.manifestArtifactName === REVIEWED_EXECUTION_APPROVAL_MANIFEST_NAME) { const current = verifyCreatorReviewedExecutionApprovedRouteFromVault(rawLocator); return freeze({ status: 'execution-approved-next-transition-unavailable', operationId: current.operationId, continuationLocator: { ...rawLocator }, approvalReceiptHash: current.approvalReceiptHash, adoptionReviewRetained: current.adoptionReviewRetained, layoutReviewRetained: current.layoutReviewRetained, resetDraft: false, writesAllowed: false }); }
     if ([REVIEWED_EXECUTING_INTENT_MANIFEST_NAME, RESULT_CAPTURED_MANIFEST_NAME].includes(rawLocator?.manifestArtifactName)) return inspectExecutionAttempt({ continuationLocator: rawLocator });
+    if(rawLocator?.manifestArtifactName===recoveryHistory.TERMINAL)return presentHistoryReview(rawLocator);
     if (rawLocator?.manifestArtifactName === CLASSIFIED_MANIFEST_NAME) {
       const snapshot = api.readSnapshot(baseLocator(rawLocator));
       if (retainedStageReview(snapshot, STAGES.HISTORY)) return presentHistoryReview(rawLocator);
@@ -614,7 +632,7 @@ function createCreatorBuiltInLifecycleRuntime(context, dependencies = {}) {
     if (rawLocator?.manifestArtifactName === 'history-review-route-manifest') { let verified; try { verified = api.readHistoryApproval(rawLocator); } catch (error) { const completed = resumeCompletedFromReview(rawLocator); if (completed) return completed; throw error; } const routed = api.routeLifecycleStartup({ lifecycleVaultLocator: rawLocator, classificationAppendReplayAuthority: null }); return freeze({ status: routed.status === 'history-write-required' ? 'history-approved-next-transition-unavailable' : routed.status, lifecycleState: 'HistoryReview', operationId: verified.operationId, continuationLocator: { ...rawLocator }, approvalReceiptHash: verified.historyApprovalReceiptHash, historyWriterInvoked: false, historyAppended: false, resetDraft: false, writesAllowed: false }); }
     return api.routeLifecycleStartup({ lifecycleVaultLocator: rawLocator, classificationAppendReplayAuthority: null });
   }
-  return freeze({ acknowledgeReview, approveAdoptionReview, approveHistoryReview, approveLayoutReview, approveTargetProjection, beginAdoptionReview, beginLayoutReview, buildCandidate, cancelReview, captureTarget: filename => captureTargetWithFs(fs, filename), classifyExecutionResult, completeApprovedHistory, executeApprovedIntent, inspectExecutionAttempt, persistCandidate, readApprovedExecution, readRetainedAdoptionPlan, readRetainedHistoryPlan, readRetainedLayoutPlan, readRetainedTargetPlan, recordReview, retainApprovedRequest, resumeLifecycle, startApprovedExecution, startLifecycle, verifyCompleted: api.verifyCompleted });
+  return freeze({ beginRecoveryReview, executeApprovedRecovery, acknowledgeReview, approveAdoptionReview, approveHistoryReview, approveLayoutReview, approveTargetProjection, beginAdoptionReview, beginLayoutReview, buildCandidate, cancelReview, captureTarget: filename => captureTargetWithFs(fs, filename), classifyExecutionResult, completeApprovedHistory, executeApprovedIntent, inspectExecutionAttempt, persistCandidate, readApprovedExecution, readRetainedAdoptionPlan, readRetainedHistoryPlan, readRetainedLayoutPlan, readRetainedTargetPlan, recordReview, retainApprovedRequest, resumeLifecycle, startApprovedExecution, startLifecycle, verifyCompleted: api.verifyCompleted });
 }
 
 function installCreatorBuiltInLifecycleRuntime(context) { installed = createCreatorBuiltInLifecycleRuntime(context); return installed; }
@@ -642,8 +660,10 @@ function startApprovedExecution(input) { return required().startApprovedExecutio
 function inspectExecutionAttempt(input) { return required().inspectExecutionAttempt(input); }
 function executeApprovedIntent(input) { return required().executeApprovedIntent(input); }
 function classifyExecutionResult(input) { return required().classifyExecutionResult(input); }
+function beginRecoveryReview(input, ui) { return required().beginRecoveryReview(input, ui); }
+function executeApprovedRecovery(input) { return required().executeApprovedRecovery(input); }
 function readRetainedHistoryPlan(input) { return required().readRetainedHistoryPlan(input); }
 function approveHistoryReview(input) { return required().approveHistoryReview(input); }
 function completeApprovedHistory(input) { return required().completeApprovedHistory(input); }
 
-module.exports = { APPROVED_MANIFEST_NAME, CANDIDATE_MANIFEST_NAME, MANIFEST_NAME, PERSISTED_MANIFEST_NAME, REQUEST_MANIFEST_NAME, acknowledgeReview, approveAdoptionReview, approveHistoryReview, approveLayoutReview, approveTargetProjection, beginAdoptionReview, beginLayoutReview, buildCandidate, cancelReview, classifyExecutionResult, completeApprovedHistory, createCreatorBuiltInLifecycleRuntime, installCreatorBuiltInLifecycleRuntime, captureTarget, executeApprovedIntent, inspectExecutionAttempt, persistCandidate, readApprovedExecution, readRetainedAdoptionPlan, readRetainedHistoryPlan, readRetainedLayoutPlan, readRetainedTargetPlan, recordReview, retainApprovedRequest, startApprovedExecution, startLifecycle, verifyCompleted, resumeLifecycle };
+module.exports = { beginRecoveryReview, executeApprovedRecovery, APPROVED_MANIFEST_NAME, CANDIDATE_MANIFEST_NAME, MANIFEST_NAME, PERSISTED_MANIFEST_NAME, REQUEST_MANIFEST_NAME, acknowledgeReview, approveAdoptionReview, approveHistoryReview, approveLayoutReview, approveTargetProjection, beginAdoptionReview, beginLayoutReview, buildCandidate, cancelReview, classifyExecutionResult, completeApprovedHistory, createCreatorBuiltInLifecycleRuntime, installCreatorBuiltInLifecycleRuntime, captureTarget, executeApprovedIntent, inspectExecutionAttempt, persistCandidate, readApprovedExecution, readRetainedAdoptionPlan, readRetainedHistoryPlan, readRetainedLayoutPlan, readRetainedTargetPlan, recordReview, retainApprovedRequest, startApprovedExecution, startLifecycle, verifyCompleted, resumeLifecycle };

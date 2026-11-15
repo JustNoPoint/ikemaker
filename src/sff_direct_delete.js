@@ -7,15 +7,16 @@ const fail=message=>{throw new Error(`SFF direct deletion: ${message}`)};
 function dialect(archive){const compatible=archive.buffer.subarray(24,28);if(compatible.equals(V20_COMPATIBLE)){if(archive.buffer.length<HEADER_V20_SIZE)fail('the SFF v2.0 header is truncated.');return{headerSize:HEADER_V20_SIZE,translatedLength:true,name:'v2.0'}}if(compatible.equals(V21_COMPATIBLE))return{headerSize:HEADER_V21_SIZE,translatedLength:true,name:'v2.1'};fail(`unsupported compatible-version bytes ${compatible.toString('hex')}.`)}
 function sourceOf(archive,sprite){const seen=new Set();let current=sprite;while(current&&current.dataSize===0){if(seen.has(current.index))fail(`sprite ${sprite.group},${sprite.number} has a circular image link.`);seen.add(current.index);current=archive.sprites[current.link]}if(!current||!current.dataSize)fail(`sprite ${sprite.group},${sprite.number} links to missing image data.`);return current}
 function payload(archive,row,label){const start=row.dataOffset,end=start+row.dataSize;if(!Number.isSafeInteger(start)||!Number.isSafeInteger(row.dataSize)||start<0||end>archive.buffer.length)fail(`${label} data is outside the archive.`);return archive.buffer.subarray(start,end)}
-function buildArchive(archive,rows){
- const format=dialect(archive),paletteTable=format.headerSize,spriteTable=paletteTable+archive.palettes.length*PALETTE_HEADER_SIZE,literalData=spriteTable+rows.length*SPRITE_HEADER_SIZE,literalParts=[],translatedParts=[];let literalLength=0,translatedLength=0;
- const paletteRows=archive.palettes.map(palette=>{const absolute=archive.header.literalDataOffset+palette.dataOffset,row={...palette,data:palette.dataSize?payload(archive,{dataOffset:absolute,dataSize:palette.dataSize},`palette ${palette.group},${palette.number}`):null};if(row.data){row.relativeOffset=literalLength;literalParts.push(row.data);literalLength+=row.data.length}else row.relativeOffset=0;return row});
+function buildArchive(archive,rows,reviewedPalettes=null){
+ const palettes=reviewedPalettes||archive.palettes;
+ const format=dialect(archive),paletteTable=format.headerSize,spriteTable=paletteTable+palettes.length*PALETTE_HEADER_SIZE,literalData=spriteTable+rows.length*SPRITE_HEADER_SIZE,literalParts=[],translatedParts=[];let literalLength=0,translatedLength=0;
+ const paletteRows=palettes.map(palette=>{const absolute=archive.header.literalDataOffset+palette.dataOffset,row={...palette,data:reviewedPalettes?palette.data:(palette.dataSize?payload(archive,{dataOffset:absolute,dataSize:palette.dataSize},`palette ${palette.group},${palette.number}`):null)};row.dataSize=row.data?row.data.length:0;if(row.data){row.relativeOffset=literalLength;literalParts.push(row.data);literalLength+=row.data.length}else row.relativeOffset=0;return row});
  for(const row of rows){if(!row.data){row.relativeOffset=0;row.dataSize=0;continue}if(row.flags&1){row.relativeOffset=translatedLength;translatedParts.push(row.data);translatedLength+=row.data.length}else{row.relativeOffset=literalLength;literalParts.push(row.data);literalLength+=row.data.length}}
  const translatedData=literalData+literalLength,output=Buffer.alloc(translatedData+translatedLength);archive.buffer.copy(output,0,0,64);output.writeUInt32LE(spriteTable,36);output.writeUInt32LE(rows.length,40);output.writeUInt32LE(paletteTable,44);output.writeUInt32LE(paletteRows.length,48);output.writeUInt32LE(literalData,52);output.writeUInt32LE(literalLength,56);output.writeUInt32LE(translatedData,60);if(format.translatedLength)output.writeUInt32LE(translatedLength,64);
  paletteRows.forEach((row,index)=>{const at=paletteTable+index*PALETTE_HEADER_SIZE;output.writeUInt16LE(row.group,at);output.writeUInt16LE(row.number,at+2);output.writeUInt16LE(row.colors,at+4);output.writeUInt16LE(row.link,at+6);output.writeUInt32LE(row.relativeOffset,at+8);output.writeUInt32LE(row.dataSize,at+12)});
  rows.forEach((row,index)=>{const at=spriteTable+index*SPRITE_HEADER_SIZE;output.writeUInt16LE(row.group,at);output.writeUInt16LE(row.number,at+2);output.writeUInt16LE(row.width,at+4);output.writeUInt16LE(row.height,at+6);output.writeInt16LE(row.axisX,at+8);output.writeInt16LE(row.axisY,at+10);output.writeUInt16LE(row.link,at+12);output[at+14]=row.format;output[at+15]=row.colorDepth;output.writeUInt32LE(row.relativeOffset,at+16);output.writeUInt32LE(row.dataSize,at+20);output.writeUInt16LE(row.paletteIndex,at+24);output.writeUInt16LE(row.flags,at+26)});
  let at=literalData;for(const part of literalParts){part.copy(output,at);at+=part.length}at=translatedData;for(const part of translatedParts){part.copy(output,at);at+=part.length}
- let verified;try{if(format.name==='v2.0')require('./sff_v20_strict_validator').parseSffV20(output);verified=parseSffBuffer(output,archive.filename)}catch(error){fail(`the rewritten ${format.name} archive did not validate: ${error.message}`)}if(verified.sprites.length!==rows.length||verified.palettes.length!==archive.palettes.length)fail('the rewritten archive inventory did not validate.');
+ let verified;try{if(format.name==='v2.0')require('./sff_v20_strict_validator').parseSffV20(output);verified=parseSffBuffer(output,archive.filename)}catch(error){fail(`the rewritten ${format.name} archive did not validate: ${error.message}`)}if(verified.sprites.length!==rows.length||verified.palettes.length!==palettes.length)fail('the rewritten archive inventory did not validate.');
  for(let index=0;index<rows.length;index++){const before=rows[index],after=verified.sprites[index];for(const key of['group','number','width','height','axisX','axisY','link','format','colorDepth','paletteIndex','flags'])if(before[key]!==after[key])fail(`sprite ${before.group},${before.number} changed ${key} during validation.`);if(before.data&&!payload(verified,after,`verified sprite ${after.group},${after.number}`).equals(before.data))fail(`sprite ${before.group},${before.number} image bytes changed during validation.`)}
  return{buffer:output,archive:verified};
 }
@@ -37,4 +38,34 @@ function relayoutSffV2(archive){
  if(!archive||!Buffer.isBuffer(archive.buffer)||archive.header?.legacy)fail('SFF v1 has no v2 header layout to repair.');dialect(archive);
  const rows=archive.sprites.map(sprite=>({...sprite,oldIndex:sprite.index,newIndex:sprite.index,data:sprite.dataSize?payload(archive,sprite,`sprite ${sprite.group},${sprite.number}`):null}));return buildArchive(archive,rows);
 }
-module.exports={deleteSpritesFromSff,duplicateSpriteInSff,relayoutSffV2};
+// Rebuild reviewed edits while retaining physical order and authored identities.
+function rewriteSpriteRows(archive, rows) {
+ if (!Array.isArray(rows) || rows.length !== archive.sprites.length) fail('reviewed rewrites must retain every physical row.');
+ for (let index=0;index<rows.length;index++) if (rows[index].group!==archive.sprites[index].group || rows[index].number!==archive.sprites[index].number || rows[index].newIndex!==index) fail('reviewed rewrites cannot change sprite identity or physical order.');
+ return buildArchive(archive,rows);
+}
+// Interchange preserves existing row order and may append reviewed identities.
+function rewriteArchiveRows(archive, rows, palettes) {
+ if(archive.header.legacy)fail('SFF v1 must be converted before structural import.');
+ if(!rows.length||rows.length>65536||palettes.length>65536)fail('interchange needs 1–65536 sprites and at most 65536 palettes.');
+ for(const [input,original,label] of [[rows,archive.sprites,'sprite'],[palettes,archive.palettes,'palette']]){
+  if(input.length<original.length)fail(`interchange cannot remove existing ${label} rows.`);
+  const identities=new Set();
+  input.forEach((row,index)=>{
+   if(![row.group,row.number].every(value=>Number.isInteger(value)&&value>=0&&value<=65535))fail(`invalid ${label} identity.`);
+   const id=row.group+','+row.number;if(identities.has(id))fail(`duplicate ${label} identity ${id}.`);identities.add(id);
+   if(index<original.length&&(row.group!==original[index].group||row.number!==original[index].number))fail(`interchange changed existing ${label} order.`);
+   if(!row.data&&(!Number.isInteger(row.link)||row.link<0||row.link>=index))fail(`${label} links must point to an earlier physical owner.`);
+  });
+ }
+ rows.forEach(row=>{if(!Number.isInteger(row.paletteIndex)||(!palettes[row.paletteIndex]&&![24,32].includes(row.colorDepth)))fail('missing assigned palette.');});
+ return buildArchive(archive,rows,palettes);
+}
+function rewriteOrderedSpriteRows(archive,rows) {
+ if(archive.header.legacy)fail('convert SFF v1 before changing physical sprite order.');
+ if(rows.length!==archive.sprites.length)fail('sorting must retain every sprite.');
+ const seen=new Set();
+ rows.forEach((row,index)=>{const before=archive.sprites[row.oldIndex];if(!before||seen.has(row.oldIndex)||row.group!==before.group||row.number!==before.number)fail('sort is not an exact physical-row permutation.');seen.add(row.oldIndex);if(!row.data&&(!Number.isInteger(row.link)||row.link<0||row.link>=index))fail('sorted links must point to an earlier owner.');});
+ return buildArchive(archive,rows);
+}
+module.exports={deleteSpritesFromSff,duplicateSpriteInSff,relayoutSffV2,rewriteSpriteRows,rewriteArchiveRows,rewriteOrderedSpriteRows};

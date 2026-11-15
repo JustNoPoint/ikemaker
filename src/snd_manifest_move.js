@@ -28,4 +28,30 @@ function moveManifestRowsPatch(text, selectedIdentities, position) {
   return { ...patch, count: plan.count, startPosition: plan.start, before: identities, after: plan.order.map(index => identities[index]) };
 }
 
-module.exports = { moveManifestRowsPatch };
+// Keep each entry's leading and internal comments with its three data lines.
+// Header comments and trailing notes remain outside the sorted range.
+function sortManifestText(source) {
+  const manifest = soundBuild.parse(source);
+  const lines = source.match(/[^\r\n]*(?:\r\n|\n|$)/g).filter(Boolean);
+  const data = [];
+  for (let i = 0; i < lines.length; i++) {
+    const value = lines[i].trim();
+    if (value && !/^[;#]/.test(value)) data.push(i);
+  }
+  const before = manifest.entries.map(entry => entry.group + ',' + entry.index);
+  const order = manifest.entries.map((entry, index) => ({ ...entry, indexInSource: index }))
+    .sort((a, b) => a.group - b.group || a.index - b.index);
+  const after = order.map(entry => entry.group + ',' + entry.index);
+  if (order.every((entry, i) => i === entry.indexInSource)) return { text: source, before, after };
+  const endings = /(?:\r\n|\n)$/;
+  const blocks = manifest.entries.map((_, i) => lines.slice(data[i * 3] + 1, data[i * 3 + 3] + 1).join(''));
+  const sorted = order.map((entry, i) => blocks[entry.indexInSource].replace(endings, '') + (blocks[i].match(endings)?.[0] || ''));
+  const text = lines.slice(0, data[0] + 1).join('') + sorted.join('') + lines.slice(data.at(-1) + 1).join('');
+  const reopened = soundBuild.parse(text);
+  if (reopened.output !== manifest.output || reopened.entries.some((entry, i) =>
+    entry.source !== order[i].source || entry.group !== order[i].group || entry.index !== order[i].index) || reopened.entries.length !== order.length)
+    throw new Error('The sorted manifest could not be verified.');
+  return { text, before, after };
+}
+
+module.exports = { moveManifestRowsPatch, sortManifestText };

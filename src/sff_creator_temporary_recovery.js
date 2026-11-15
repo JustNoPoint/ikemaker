@@ -4,8 +4,10 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { hashCanonical } = require('./sff_capability_report');
+const { reviewedPathKey } = require('./sff_creator_reviewed_path');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const identity = stat => ({device:String(stat.dev), inode:String(stat.ino)});
+const sameReviewedPath = (left,right) => typeof left==='string'&&typeof right==='string'&&path.isAbsolute(left)&&path.isAbsolute(right)&&reviewedPathKey(left)===reviewedPathKey(right);
 function fail(message) { throw new Error(`SFF temporary recovery: ${message}`); }
 function directDirectory(filename) {
   const absolute=path.resolve(filename), stat=fs.lstatSync(absolute,{bigint:true});
@@ -32,15 +34,17 @@ function prepareTemporaryRecovery(storageRoot,operationId,activePath) {
   const directory=path.join(root,operationId), marker={schema:'ikemaker.sff-temporary-recovery-owner',version:1,operationId,activePath:path.resolve(activePath)};
   if(!fs.existsSync(directory)){fs.mkdirSync(directory,{mode:0o700});writeJson(path.join(directory,'owner.json'),marker);}
   const seal=directDirectory(directory), owner=readJson(path.join(directory,'owner.json'));
-  if(hashCanonical(owner)!==hashCanonical(marker))fail('private recovery ownership differs.');
-  return {mode:'temporary',operationId,activePath:marker.activePath,directory:seal,ownerHash:hashCanonical(marker)};
+  if(!owner||Object.keys(owner).sort().join(',')!=='activePath,operationId,schema,version'||owner.schema!==marker.schema||owner.version!==marker.version||owner.operationId!==operationId||!sameReviewedPath(owner.activePath,marker.activePath))fail('private recovery ownership differs.');
+  // Keep the original marker and its exact hash. A resume through the other
+  // spelling of the same Windows drive must not rewrite sealed authority.
+  return {mode:'temporary',operationId,activePath:owner.activePath,directory:seal,ownerHash:hashCanonical(owner)};
 }
 function assertTemporaryRecovery(recovery,activePath) {
-  if(!recovery||Object.keys(recovery).sort().join(',')!=='activePath,directory,mode,operationId,ownerHash'||recovery.mode!=='temporary'||recovery.activePath!==path.resolve(activePath)||!/^[a-f0-9]{64}$/.test(recovery.operationId))fail('reviewed recovery descriptor is invalid.');
+  if(!recovery||Object.keys(recovery).sort().join(',')!=='activePath,directory,mode,operationId,ownerHash'||recovery.mode!=='temporary'||!sameReviewedPath(recovery.activePath,path.resolve(activePath))||!/^[a-f0-9]{64}$/.test(recovery.operationId))fail('reviewed recovery descriptor is invalid.');
   const seal=directDirectory(recovery.directory.path);
   if(path.basename(seal.path)!==recovery.operationId||path.basename(path.dirname(seal.path))!=='sff-creator-recovery'||hashCanonical(seal)!==hashCanonical(recovery.directory))fail('private recovery directory identity drifted.');
   const marker=readJson(path.join(seal.path,'owner.json'));
-  if(hashCanonical(marker)!==recovery.ownerHash||marker.operationId!==recovery.operationId||marker.activePath!==recovery.activePath)fail('private recovery owner marker drifted.');
+  if(hashCanonical(marker)!==recovery.ownerHash||marker.operationId!==recovery.operationId||!sameReviewedPath(marker.activePath,recovery.activePath))fail('private recovery owner marker drifted.');
   return seal.path;
 }
 function exactFile(filename,hash,length,expectedIdentity) {
@@ -55,11 +59,24 @@ function recoveryAuthority(snapshot) {
   const layout=JSON.parse(snapshot.readArtifactBytes(row.name).toString('utf8'));
   if(!layout.rollback?.recovery)return null;
   const recovery=layout.rollback.recovery, directory=assertTemporaryRecovery(recovery,snapshot.authority.activePath);
-  if(recovery.operationId!==snapshot.authority.operationId||layout.paths.backupPath!==path.join(directory,'previous.sff')||layout.paths.destinationPath!==snapshot.authority.activePath)fail('completed recovery binding drifted.');
+  if(recovery.operationId!==snapshot.authority.operationId||!sameReviewedPath(layout.paths.backupPath,path.join(directory,'previous.sff'))||!sameReviewedPath(layout.paths.destinationPath,snapshot.authority.activePath))fail('completed recovery binding drifted.');
   const outcomeRow=snapshot.authority.artifacts.find(item=>item.name==='sff17d-execution-outcome-receipt');
   if(!outcomeRow)fail('completed recovery lacks sealed execution outcome.');
   const outcome=JSON.parse(snapshot.readArtifactBytes(outcomeRow.name).toString('utf8'));
-  if(outcome.status!=='committed'||outcome.terminalState!=='cleanup_complete'||outcome.cleanupIssues?.length||hashCanonical(outcome)!==snapshot.authority.terminalHistoryEvidence.terminalReceiptHash||outcome.backup?.path!==layout.paths.backupPath||outcome.installed?.path!==layout.paths.destinationPath)fail('temporary cleanup requires an exact clean committed outcome.');
+  // A completed rollback keeps its private old archive. It never authorizes the
+  // committed-install cleanup that removes that copy.
+  if(outcome.state==='rolled_back' && outcome.rollbackAttempted===true && outcome.rollbackSucceeded===true) {
+    if(!sameReviewedPath(outcome.backup?.path,layout.paths.backupPath) || !sameReviewedPath(outcome.active?.path,layout.paths.destinationPath) || outcome.active?.byteHash!==layout.active.byteHash || outcome.backup?.byteHash!==layout.active.byteHash) fail('completed rollback backup or restored archive binding drifted.');
+    const terminalHash=snapshot.authority.terminalHistoryEvidence?.terminalReceiptHash;
+    if(hashCanonical(outcome)!==terminalHash) {
+      const terminalRow=snapshot.authority.artifacts.find(item=>item.name==='sff19c-recovery-outcome-receipt');
+      if(!terminalRow)fail('completed rollback lacks its exact recovery terminal receipt.');
+      const terminal=JSON.parse(snapshot.readArtifactBytes(terminalRow.name).toString('utf8'));
+      if(hashCanonical(terminal)!==terminalHash || terminal.schema!=='ikemaker.sff-creator-restart-recovery-execution-receipt' || terminal.recoveryCompleted!==true || terminal.terminalState!=='recovery_complete' || terminal.selectedAction!=='cleanup-verified-terminal-artifacts' || terminal.operationId!==hashCanonical(layout) || !sameReviewedPath(terminal.destination?.activePath,layout.paths.destinationPath) || terminal.destination.expectedAfterAuthority!=='old-active' || terminal.destination.expectedAfterByteHash!==layout.active.byteHash || terminal.destination.expectedAfterByteLength!==layout.active.byteLength || terminal.backupModified!==false || terminal.activeArchiveModified!==false)fail('completed rollback recovery receipt drifted.');
+    }
+    return {layout,recovery,directory,outcome,retainedAfterRollback:true};
+  }
+  if(outcome.status!=='committed'||outcome.terminalState!=='cleanup_complete'||outcome.cleanupIssues?.length||hashCanonical(outcome)!==snapshot.authority.terminalHistoryEvidence.terminalReceiptHash||!sameReviewedPath(outcome.backup?.path,layout.paths.backupPath)||!sameReviewedPath(outcome.installed?.path,layout.paths.destinationPath))fail('temporary cleanup requires an exact clean committed outcome.');
   return {layout,recovery,directory,outcome};
 }
 function cleanupBinding(snapshot,authority) {
@@ -77,6 +94,12 @@ function currentTarget(binding,expectedIdentity) {
 }
 function observeTemporaryRecoveryProjection(snapshot) {
   const authority=recoveryAuthority(snapshot);if(!authority)return null;
+  if(authority.retainedAfterRollback) {
+    const {layout,outcome}=authority;
+    exactFile(layout.paths.backupPath,layout.active.byteHash,layout.active.byteLength,outcome.backup.identity);
+    const target={installed:{path:layout.paths.destinationPath,byteHash:layout.active.byteHash,byteLength:layout.active.byteLength}};
+    return {...currentTarget(target,outcome.active.identity),mode:'temporary',status:'retained-after-rollback',backupPath:layout.paths.backupPath,rollbackAvailable:true,cleanupRequired:false,receiptHash:snapshot.authority.terminalHistoryEvidence.terminalReceiptHash};
+  }
   const binding=cleanupBinding(snapshot,authority), intentPath=path.join(authority.directory,'cleanup-intent.json'), receiptPath=path.join(authority.directory,'cleanup-receipt.json');
   if(fs.existsSync(receiptPath)) {
     const receipt=validateCleanup(readJson(receiptPath),binding,'cleanup-complete');
@@ -104,7 +127,7 @@ function cleanupCompletedTemporaryRecovery(locator,options={}) {
   require('./sff_creator_saved_completed_verifier').verifySavedCreatorCompletedFromVault(locator);
   const snapshot=require('./sff_creator_operation_vault').readCreatorOperationVaultCheckpointSnapshot(locator), authority=recoveryAuthority(snapshot);
   if(!authority)return null;
-  const projection=readTemporaryRecoveryProjection(snapshot);if(projection.status==='cleaned')return projection;
+  const projection=readTemporaryRecoveryProjection(snapshot);if(projection.status==='cleaned'||projection.status==='retained-after-rollback')return projection;
   const binding=cleanupBinding(snapshot,authority), intentPath=path.join(authority.directory,'cleanup-intent.json'), receiptPath=path.join(authority.directory,'cleanup-receipt.json');
   let intent;
   if(fs.existsSync(intentPath))intent=validateCleanup(readJson(intentPath),binding,'cleanup-intent');

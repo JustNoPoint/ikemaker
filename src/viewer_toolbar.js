@@ -7,6 +7,8 @@ const { renderUniversalToolbar, universalToolbarStyle } = require('./universal_t
 
 const ACTIONS = Object.freeze(['back', 'forward', 'back-source', 'used-by', 'related', 'air', 'sff', 'snd', 'source', 'pinned', 'compare', 'game', 'versus', 'training', 'backup', 'autosave']);
 const BASE_MENU_COMMANDS = [
+  'snd.splitVoiceWav',
+  'ikemen.media.saveSession', 'ikemen.media.loadSession',
   'ikemen.links.show',
  'ikemen.viewer.keyboardShortcuts','ikemen.viewer.actionsSearch','ikemen.viewer.toggleBrowser','ikemen.viewer.focus',
   'sff.quickTransfer','air.quickTransfer','snd.quickTransfer',
@@ -103,6 +105,8 @@ const ASSET_SURFACES = Object.freeze(['sff', 'air', 'snd']);
 const PARITY_GROUPS = Object.freeze(['View', 'Palettes', 'Sprites', 'Animations', 'Sounds', 'Review', 'Build', 'Stage', 'Screenpack', 'Tools', 'Help']);
 const MENU_ORDER = Object.freeze(['Project','Edit','View','Palettes','Sprites','Animations','Sounds','Review','Build','Stage','Screenpack','Tools','Help','More']);
 const CONTEXT_FREE_COMMANDS = Object.freeze(new Set([
+  'snd.splitVoiceWav',
+  'ikemen.media.saveSession','ikemen.media.loadSession',
  'ikemen.viewer.keyboardShortcuts','ikemen.viewer.actionsSearch','ikemen.viewer.toggleBrowser','ikemen.viewer.focus',
   'workbench.action.files.newUntitledFile','workbench.action.files.openFile','workbench.action.closeActiveEditor','workbench.action.closeAllEditors','workbench.action.closeOtherEditors',
   'workbench.action.moveEditorToNewWindow','workbench.action.restoreEditorsToMainWindow',
@@ -193,6 +197,8 @@ function menuDefinitions(surface, options = {}) {
   if (asset) project.push({ label: `New ${surface.toUpperCase()}…`, command: asset[0] }, { label: `Open ${surface.toUpperCase()}…`, command: asset[1] });
   else if(surface==='palette')project.push({label:'New Palette…',command:'ikemen.palette.createScratch',id:'palette.project.new'},{label:'Open Palette or SFF Workspace…',command:'ikemen.palette.openWorkspace',id:'palette.project.open'});
   else project.push({ label: 'New text file', command: 'workbench.action.files.newUntitledFile' }, { label: 'Open file…', command: 'workbench.action.files.openFile' });
+  project.push({label:'Save IKeMaker Workspace…',command:'ikemen.media.saveSession',id:'shared.project.save-workspace'},
+    {label:'Restore IKeMaker Workspace…',command:'ikemen.media.loadSession',id:'shared.project.restore-workspace'});
   // SND is currently a reviewed build-manifest workflow, not a direct archive
   // writer. Avoid generic editor Save actions that imply otherwise.
   if (surface !== 'code') {
@@ -233,7 +239,9 @@ function menuDefinitions(surface, options = {}) {
       { label: 'Open connected SFF', action: 'sff' }, { label: 'Add Sprites…', command: 'sff.openAddSprites', seed: true }, { label: 'Advanced SFF Creator…', command: 'sff.openCreator', seed: true }, { label: 'Two-SFF Assembly…', command: 'sff.openAssembly', seed: true }
     ] },
     { label: 'Animations', items: [{ label: 'Open connected AIR', action: 'air' }] },
-    { label: 'Sounds', items: [{ label: 'Open connected SND', action: 'snd' }] },
+    { label: 'Sounds', items: [{ label: 'Open connected SND', action: 'snd' },
+      surface==='snd' ? {label:'Split Voice WAV…',element:'splitVoiceWav'} :
+        {label:'Split Voice WAV…',command:'snd.splitVoiceWav',crossSurface:true}] },
     { label: 'Review', items: [
       { label: 'Recovery Center / Change History…', command: 'ikemen.mutations.openHistory', seed: true }, { label: 'Preview Change Impact…', command: 'ikemen.impact.preview', seed: true },
       { label: 'Character Dependencies…', command: 'ikemen.characterDependencies.open', seed: true }, { label: 'Character Health…', command: 'ikemen.characterHealth.open', seed: true },
@@ -628,7 +636,7 @@ function waitForPanel(panel, timeout = 5000) {
     waiting.add(finish); readyWaiters.set(panel, waiting);
   });
 }
-async function handleCommand(message, seed, panel) {
+async function handleCommand(message, seed, panel, ownerDef = '') {
   if (message?.type === 'viewerToolbarCrossSurfaceResult') {
     if (!message.ok) require('vscode').window.showInformationMessage(message.reason || 'That action is not available in the connected viewer yet.');
     return true;
@@ -675,7 +683,7 @@ async function handleCommand(message, seed, panel) {
     const actualSeed=panelSeeds.get(panel)||seed;
     const vscode=require('vscode'),availability=resolveActionAvailability(item,{surface,seed:actualSeed,vscode,active:surfaceIsActive(surface,panel,vscode,actualSeed)});
     if(!availability.enabled)return true;
-    if(item.command){if(!MENU_COMMANDS.has(item.command))return true;await vscode.commands.executeCommand(item.command,...(['ikemen.stage.openWorkspace','ikemen.ui.openWorkspace','ikemen.storyboard.open'].includes(item.command)?[item.seed&&actualSeed?vscode.Uri.file(actualSeed):undefined,{contextHint:true}]:(item.seed&&actualSeed?[vscode.Uri.file(actualSeed)]:[])));return true;}
+    if(item.command){if(!MENU_COMMANDS.has(item.command))return true;if(ownerDef&&item.seed&&actualSeed&&['ikemen.hitDef.openEditor','ikemen.moveLab.open'].includes(item.command)){await vscode.commands.executeCommand(item.command,vscode.Uri.file(actualSeed),{ownerDef});return true;}await vscode.commands.executeCommand(item.command,...(['ikemen.stage.openWorkspace','ikemen.ui.openWorkspace','ikemen.storyboard.open'].includes(item.command)?[item.seed&&actualSeed?vscode.Uri.file(actualSeed):undefined,{contextHint:true}]:(item.seed&&actualSeed?[vscode.Uri.file(actualSeed)]:[])));return true;}
     if(item.targetSurface&&item.targetAction)return handleCommand({type:'viewerToolbarCrossSurface',source:surface,target:item.targetSurface,actionId:item.targetAction,requestId:'catalog',busy:false,safeToLeave:true},actualSeed,panel);
     if(item.action){const vscode=require('vscode'),commands={game:'ikemen.launchGame',versus:'ikemen.launchMirrorCurrent',training:'ikemen.launchTrainingCurrent'};if(commands[item.action]){await vscode.commands.executeCommand(commands[item.action]);return true;}if(item.action==='backup'){await require('./save_controls').handle({type:'ikemenMakeBackup'},actualSeed,panel);return true;}if(item.action==='related'){await require('./related_work').openRelatedWork(actualSeed?vscode.Uri.file(actualSeed):undefined,surface);return true;}if(['air','sff','snd','source'].includes(item.action)){await require('./viewer_navigation').openConnected(actualSeed,item.action,undefined,undefined,require('./viewer_navigation').currentPoint(actualSeed,surface,{},panel));return true;}if(item.action==='pinned'){await require('./viewer_sources').openSources(actualSeed,require('./viewer_navigation').currentPoint(actualSeed,surface,{},panel));return true;}if(item.action==='back-source'){await require('./viewer_navigation').backToSource(actualSeed,require('./viewer_navigation').currentPoint(actualSeed,surface,{},panel));return true;}if(item.action==='back'||item.action==='forward'){await require('./viewer_navigation').travelHistory(item.action==='back'?-1:1,require('./viewer_navigation').currentPoint(actualSeed,surface,{},panel));return true;}if(['used-by','compare'].includes(item.action))return true;}
     await panel?.webview?.postMessage({type:'viewerToolbarInvokeAction',actionId:item.id});return true;

@@ -34,6 +34,33 @@ function backupPath(filename, options = {}, id = token(options)) {
   return path.join(root, `${path.basename(filename)}.before-${cleanLabel(options.label)}-${stamp(options.now)}-${id}.bak`);
 }
 
+function backupLimit(options) {
+  return Number.isInteger(options.backupVersions) && options.backupVersions > 0 ? Math.min(100, options.backupVersions) : 0;
+}
+function retainBackup(fs, filename, before, options, id) {
+  const limit = backupLimit(options);
+  if (!limit || before === null) return '';
+  const identity = path.resolve(filename);
+  const bucket = hash(process.platform === 'win32' ? identity.toLowerCase() : identity);
+  const directory = path.join(mutationRoot(filename, options), '.ikemen-tools', 'backups', bucket);
+  fs.mkdirSync(directory, { recursive: true });
+  const previous = fs.readdirSync(directory)
+    .filter(name => /^\d{4}-.*\.bak$/.test(name))
+    .map(name => {
+      const generation = Number(/\.v(\d+)\.bak$/.exec(name)?.[1] || 0);
+      return {name, generation, stat: fs.lstatSync(path.join(directory,name))};
+    })
+    .filter(row => row.stat.isFile() && !row.stat.isSymbolicLink())
+    .sort((a,b) => a.generation-b.generation || a.stat.mtimeMs-b.stat.mtimeMs || a.name.localeCompare(b.name));
+  // Count save order independently of filesystem timestamp precision.
+  const generation = (previous.at(-1)?.generation || 0) + 1;
+  const output = path.join(directory, stamp(options.now) + '-' + cleanLabel(id) + '.v' + generation + '.bak');
+  fs.writeFileSync(output, before, { flag: 'wx' });
+  for (const row of previous.slice(0, Math.max(0, previous.length+1-limit)))
+    fs.unlinkSync(path.join(directory,row.name));
+  return output;
+}
+
 function journalPath(root) {
   return path.join(root, '.ikemen-tools', 'mutations.json');
 }
@@ -103,7 +130,11 @@ function transactionalWriteSet(fs, writes, options = {}) {
     throw error;
   }
   const cleanupFailures=[];
-  for (const item of prepared) {try {if(fs.existsSync(item.rollback))fs.unlinkSync(item.rollback);}catch(error){cleanupFailures.push({file:item.target,recovery:item.rollback,error:error.message});}}
+  for (const item of prepared) {
+    try { if(item.beforeHash!==item.afterHash)item.backup=retainBackup(fs,item.target,item.before,options,id); }
+    catch(error) { item.backupFailed=true; cleanupFailures.push({file:item.target,recovery:item.rollback,error:'Backup retention failed: '+error.message}); }
+  }
+  for (const item of prepared) {try {if(!item.backupFailed&&fs.existsSync(item.rollback))fs.unlinkSync(item.rollback);}catch(error){cleanupFailures.push({file:item.target,recovery:item.rollback,error:error.message});}}
   if(cleanupFailures.length){const warning=new Error('The new contents were saved successfully, but temporary recovery files could not be removed. Do not repeat the edit to fix cleanup. Retained originals:\n'+cleanupFailures.map(item=>item.recovery+' ('+item.error+')').join('\n'));warning.name='MutationCleanupError';warning.committed=true;warning.recoveryFailures=cleanupFailures;throw warning;}
   const entries = prepared.map((item) => {
     const root = mutationRoot(item.target, options);
@@ -151,10 +182,12 @@ function beginExternalMutation(fs, filename, options = {}) {
     complete() {
       if (finished) throw new Error('External mutation guard has already finished.');
       if (!fs.existsSync(target)) throw new Error(`The external builder did not create its expected output: ${target}`);
-      const after = fs.readFileSync(target), entry = {
+      const after = fs.readFileSync(target), afterHash=hash(after);
+      try { if(beforeHash!==afterHash)backup=retainBackup(fs,target,before,options,id); } catch(error) { error.committed=true; error.message='Output was saved, but backup retention failed: '+error.message; finished=true; throw error; }
+      const entry = {
         time: (options.now || new Date()).toISOString(), operation: options.label || 'external-build',
         file: path.relative(root, target).replace(/\\/g, '/'), bytes: after.length,
-        beforeHash, afterHash: hash(after), backup: backup ? path.relative(root, backup).replace(/\\/g, '/') : ''
+        beforeHash, afterHash, backup: backup ? path.relative(root, backup).replace(/\\/g, '/') : ''
       };
       const journal = options.journal !== true ? '' : appendJournal(fs, root, entry, options.maximumHistory || 200);
       finished = true; return { ...entry, filename: target, backup, journal };
@@ -167,6 +200,7 @@ function optionsFromConfig(vscode, filename, label, overrides = {}) {
   return {
     label,
     backup: false,
+    backupVersions: backupLimit({backupVersions:config.get('backupVersions',0)}),
     journal: config.get('mutationHistory', false),
     maximumHistory: config.get('mutationHistoryLimit', 200),
     ...overrides
@@ -177,7 +211,7 @@ function policyFromConfig(vscode, filename) {
   if (!vscode || !vscode.workspace || !vscode.Uri) return { backups: false, history: false, historyLimit: 200 };
   const config = vscode.workspace.getConfiguration('ikemenZss', vscode.Uri.file(filename));
   return {
-    backups: false,
+    backups: backupLimit({backupVersions:config.get('backupVersions',0)}) > 0,
     history: config.get('mutationHistory', false),
     historyLimit: config.get('mutationHistoryLimit', 200)
   };

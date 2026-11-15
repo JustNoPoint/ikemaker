@@ -3,6 +3,7 @@
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
+const { reviewedPathKey } = require('./sff_creator_reviewed_path');
 const { types: utilTypes } = require('util');
 const { decodeStrictJsonArtifact } = require('./sff_strict_json_artifact');
 const { canonicalize, hashCanonical } = require('./sff_capability_report');
@@ -40,7 +41,7 @@ function createCreatorExecutionLayoutPlan(rawInput = {}) {
   if (typeof capability.platform !== 'string' || typeof capability.arch !== 'string' || typeof capability.nodeVersion !== 'string' || typeof capability.filesystem.parentRealpath !== 'string' || typeof capability.filesystem.device !== 'string') throw new Error('Replacement capability environment binding is malformed.');
 
   const active = rederived.receipt.active, activeDirectory = path.dirname(active.realpath), directoryRealpath = fs.realpathSync.native(activeDirectory), directoryStat = fs.statSync(directoryRealpath, { bigint: true });
-  if (!directoryStat.isDirectory() || path.resolve(directoryRealpath) !== path.resolve(activeDirectory)) throw new Error('Approved active directory identity or realpath drifted.');
+  if (!directoryStat.isDirectory() || reviewedPathKey(directoryRealpath) !== reviewedPathKey(activeDirectory)) throw new Error('Approved active directory identity or realpath drifted.');
   const blockers = [], risks = ['external-path-race-not-excluded', 'non-atomic-two-rename-window'];
   if (!['win32', 'linux', 'darwin'].includes(process.platform)) blockers.push('replacement-platform-contract-unavailable');
   if (capability.platform !== process.platform || capability.arch !== process.arch || capability.nodeVersion !== process.version || platformKey(path.resolve(capability.filesystem.parentRealpath)) !== platformKey(path.resolve(directoryRealpath)) || String(capability.filesystem.device) !== String(directoryStat.dev)) blockers.push('replacement-capability-environment-drift');
@@ -59,10 +60,10 @@ function createCreatorExecutionLayoutPlan(rawInput = {}) {
   paths.journalPaths = Object.fromEntries(STATES.map((state, index) => [state, leaf(directoryRealpath, `.ikemaker-sff-${operationId}.journal.${String(index).padStart(2, '0')}-${state}.json`)]));
   const allPaths = [...Object.values(paths).filter((value) => typeof value === 'string'), ...Object.values(paths.journalPaths)], keys = allPaths.map(platformKey);
   if (new Set(keys).size !== keys.length) blockers.push('execution-path-alias');
-  for (const filename of allPaths) if (path.dirname(path.resolve(filename)) !== path.resolve([paths.backupPath,paths.backupPartialPath].includes(filename) ? recoveryDirectory : directoryRealpath)) blockers.push('execution-path-escaped-active-directory');
-  if (path.resolve(paths.destinationPath) !== path.resolve(active.realpath)) blockers.push('destination-path-drift');
+  for (const filename of allPaths) if (reviewedPathKey(path.dirname(filename)) !== reviewedPathKey([paths.backupPath,paths.backupPartialPath].includes(filename) ? recoveryDirectory : directoryRealpath)) blockers.push('execution-path-escaped-active-directory');
+  if (reviewedPathKey(paths.destinationPath) !== reviewedPathKey(active.realpath)) blockers.push('destination-path-drift');
   const inventory = fs.readdirSync(directoryRealpath).sort(), foldedInventory = new Set(inventory.map(platformKey)), observations = {};
-  for (const [name, filename] of Object.entries({ ...paths, ...paths.journalPaths })) if (typeof filename === 'string') { const isDestination = name === 'destinationPath'; const exists = (path.dirname(filename)===directoryRealpath ? foldedInventory : new Set(fs.readdirSync(path.dirname(filename)).map(platformKey))).has(platformKey(path.basename(filename))) || fs.existsSync(filename); observations[name] = { basename: path.basename(filename), exists }; if (isDestination ? !exists : exists) blockers.push(isDestination ? 'destination-missing' : `execution-path-exists:${name}`); }
+  for (const [name, filename] of Object.entries({ ...paths, ...paths.journalPaths })) if (typeof filename === 'string') { const isDestination = name === 'destinationPath'; const exists = (reviewedPathKey(path.dirname(filename))===reviewedPathKey(directoryRealpath) ? foldedInventory : new Set(fs.readdirSync(path.dirname(filename)).map(platformKey))).has(platformKey(path.basename(filename))) || fs.existsSync(filename); observations[name] = { basename: path.basename(filename), exists }; if (isDestination ? !exists : exists) blockers.push(isDestination ? 'destination-missing' : `execution-path-exists:${name}`); }
   const directoryObservation = { directoryRealpath, directoryIdentity: statIdentity(directoryStat), inventory, observations }, directoryObservationHash = hashCanonical(directoryObservation);
   const stateMachine = {
     id: 'ikemaker.sff-portable-two-rename-recovery', version: 1, states: STATES, transitions: TRANSITIONS,

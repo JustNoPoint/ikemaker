@@ -6,11 +6,14 @@ const openDispositions=new WeakMap();
 function setOpenDisposition(panel,options={}){if(pinnedTransfers.has(panel))return false;openDispositions.set(panel,{mode:['current','new'].includes(options.assetOpenMode)?options.assetOpenMode:'default',replacePanel:options.assetReplacePanel});return true;}
 function assertTransferSession(sessionId){if(typeof sessionId!=='string'||!sessionId.trim()||sessionId.length>256)throw new Error('Pinned asset Transfer requires its exact host-owned session.');}
 function pinTransfer(panel,sessionId){assertTransferSession(sessionId);if(!panel)throw new Error('Pinned asset Transfer requires its exact panel.');const existing=pinnedTransfers.get(panel);if(existing&&existing!==sessionId)throw new Error('An asset panel cannot change pinned Transfer ownership.');if(!existing&&panels.has(panel))throw new Error('Pin the Transfer endpoint before attaching its asset workspace.');pinnedTransfers.set(panel,sessionId);return true;}
-const key=file=>String(file||'').replace(/\\/g,'/').toLowerCase();
+function key(file) {
+ const value=String(file||'');
+ return process.platform==='win32'?value.replace(/\\/g,'/').toLowerCase():value;
+}
 function configure(api){vscode=api;}
 function compact(){const mode=vscode?.workspace.getConfiguration('ikemenZss').get('interfaceMode');return mode?mode!=='workspace':!vscode||vscode.workspace.getConfiguration('ikemenZss').get('simpleAssetInterface',true);}
 function multiple(){const mode=vscode?.workspace.getConfiguration('ikemenZss').get('interfaceMode');return mode?mode==='workspace':!vscode||vscode.workspace.getConfiguration('ikemenZss').get('multipleAssetWorkspaces',false);}
-async function capture(panel){
+async function capture(panel,onSnapshot){
  if(!panels.has(panel)||panels.get(panel).suspended)return true;
  const entry=panels.get(panel);
  captureFailures.delete(panel);
@@ -24,11 +27,11 @@ async function capture(panel){
   function unavailable(){
    if(settled)return;
    const snapshot=panels.get(panel)===entry && entry.captureWhenHidden?.();
-   if(snapshot){remember(entry,snapshot);finish(true);return;}
+   if(snapshot){remember(entry,snapshot);onSnapshot?.(snapshot);finish(true);return;}
    captureFailures.set(panel,'unresponsive');finish(false);
   }
   const timeout=setTimeout(unavailable,3000);
-  pending.set(id,{panel,entry,finish});
+  pending.set(id,{panel,entry,finish,onSnapshot});
   Promise.resolve(panel.webview.postMessage({type:'assetWorkspaceCapture',id})).then(sent=>{if(sent===false)unavailable();}).catch(unavailable);
  });
 
@@ -70,7 +73,11 @@ async function handle(message,panel){
  if(message?.type==='assetWorkspaceCaptured'){
   const request=pending.get(message.id);if(!request||request.panel!==panel)return true;
   if(request.entry!==panels.get(panel)){request.finish(false);return true;}
-  if(message.clean===true)remember(request.entry,{state:message.state,reference:message.reference,scroll:message.scroll,fields:message.fields});
+  if(message.clean===true){
+   const snapshot={state:message.state,reference:message.reference,scroll:message.scroll,fields:message.fields};
+   remember(request.entry,snapshot);
+   request.onSnapshot?.(snapshot);
+  }
   request.finish(message.clean===true);return true;
  }
  if(message?.type==='assetWorkspaceOptions'){await chooseMode();return true;}
@@ -88,7 +95,7 @@ async function activate(panel){
  for(const old of oldPanels){
   if(!panels.has(old))continue;
   if(old===panel||pinnedTransfers.has(old))continue;
-  if(!await capture(old)){const replacementClean=await capture(panel);if(replacementClean)panel.dispose();old.reveal(old.viewColumn,false);vscode.window.showInformationMessage(replacementClean?'The previous asset workspace has unfinished edits or is not responding. It was kept open.':'Both asset workspaces were kept open because edits or pending work could not be safely discarded. Save or revert before switching.');return true;}
+  if(!await capture(old)){const replacementClean=await capture(panel);if(replacementClean)panel.dispose();old.reveal(old.viewColumn,false);const unresponsive=captureFailures.get(old)==='unresponsive';vscode.window.showInformationMessage(replacementClean?(unresponsive?'The previous asset viewer did not respond. It was kept open. Wait for it to finish loading, then try switching again.':'The previous asset workspace has unfinished edits. It was kept open. Finish or revert them before switching.'):'Both asset workspaces were kept open because edits or pending work could not be safely discarded. Save or revert before switching.');return true;}
   if(panels.has(panel)){panel.reveal(old.viewColumn,false);old.dispose();}
  }
  current=panel;return true;
@@ -103,7 +110,118 @@ async function openAsset(resource){
  if(kind==='sff')return require('./sff_viewer').openSffViewer(uri,undefined,undefined,options);
  return require('./snd_viewer').openSndViewer(uri,undefined,undefined,undefined,options);
 }
-function register(context){context.subscriptions.push(vscode.commands.registerCommand('ikemen.configureAssetWorkspace',chooseMode),vscode.commands.registerCommand('ikemen.assets.open',openAsset));}
+const standalonePalettes=new WeakMap();
+function trackStandalonePalette(panel,getFile){standalonePalettes.set(panel,getFile);}
+function focusStandalonePalette(file){
+ for(const [panel,entry] of panels){
+  if(entry.suspended||key(standalonePalettes.get(panel)?.())!==key(file))continue;
+  panel.reveal(panel.viewColumn,false);
+  return panel;
+ }
+ return null;
+}
+async function saveMediaSession() {
+ const codec=require('./media_session'),fs=require('fs'),path=require('path');
+ const omitted=[],skipped=[],unsavedPalettes=[];
+ const pendingTabs=Array.from(panels,async ([panel,entry])=>{
+  if(entry.suspended||pinnedTransfers.has(panel)){skipped.push(path.basename(entry.file));return null;}
+  const palette=standalonePalettes.get(panel)?.();
+  if(palette)return {kind:'Palette',file:palette,active:panel.active};
+  if(standalonePalettes.has(panel)){unsavedPalettes.push(panel.title||'Untitled palette');return null;}
+  const kind={sff:'Sff',air:'Air',snd:'Snd'}[entry.kind];
+  if(!kind)return null;
+  const active=panel.active;
+  let selection;
+  const captured=await capture(panel,snapshot=>{selection=snapshot.reference;});
+  if(!captured)omitted.push(path.basename(entry.file));
+  return {kind,file:entry.file,active,selection:captured?selection:null};
+ });
+ const tabs=(await Promise.all(pendingTabs)).filter(Boolean);
+ const runtime=require('./entity_switch_runtime').currentEntitySwitchRuntime();
+ const entities=runtime?.coordinator.snapshot();
+ for(const entity of entities?.entities||[]){
+  if(path.extname(entity.ownerFile).toLowerCase()!=='.def')continue;
+  tabs.push({kind:'Def',file:entity.ownerFile,name:entity.label,active:!tabs.some(tab=>tab.active)&&entity.identity===entities.activeIdentity});
+ }
+ if(!tabs.length)return void vscode.window.showInformationMessage(unsavedPalettes.length?'Save the palette draft to a file before saving this workspace.':'Open a media viewer or entity to save a workspace.');
+ const uri=await vscode.window.showSaveDialog({title:'Save IKeMaker Workspace',filters:{'IKeMaker workspace':['imesession']}});
+ if(!uri)return;
+ const safety=require('./mutation_safety'),file=uri.fsPath;
+ const baseline=fs.existsSync(file)?fs.readFileSync(file):Buffer.alloc(0);
+ safety.transactionalWrite(fs,file,codec.encodeSession(file,tabs),{expectedHash:safety.hash(baseline),allowExisting:true});
+ const detail=omitted.length?' Selection unavailable for '+omitted.join(', ')+'.':'';
+ return void vscode.window.showInformationMessage('Saved '+tabs.length+' workspace '+(tabs.length===1?'tab.':'tabs.')+' Unsaved edits stay in their editors.'+detail+(unsavedPalettes.length?' Save these palette drafts to include them: '+unsavedPalettes.join(', ')+'.':'')+(skipped.length?' Skipped unavailable or transfer tabs: '+skipped.join(', ')+'.':''));
+}
+
+async function loadMediaSession() {
+ const fs=require('fs'),path=require('path');
+ const picked=await vscode.window.showOpenDialog({title:'Restore IKeMaker Workspace',canSelectMany:false,filters:{'IKeMaker workspace':['imesession']}});
+ if(!picked?.length)return;
+ const filename=picked[0].fsPath;
+ const issues=[];
+ let rows;
+ try{
+  if(fs.statSync(filename).size>1048576)throw Error('Workspace file exceeds 1 MB.');
+  rows=require('./media_session').decodeSession(filename,fs.readFileSync(filename),message=>issues.push(message),fs.existsSync);
+ }catch(error){
+  return void vscode.window.showWarningMessage('Could not restore '+path.basename(filename)+'. '+error.message);
+ }
+ async function requireViewer(opening){
+   const viewer=await opening;
+   if(!viewer)throw Error('Viewer did not open');
+   return viewer;
+ }
+ async function openRow(row){
+   if(row.kind==='Palette'){const retained=focusStandalonePalette(row.file);if(retained)return retained;}
+   if(!fs.statSync(row.file).isFile())throw Error('File unavailable');
+   const uri=vscode.Uri.file(row.file),options={assetOpenMode:'new',preserveFocus:false};
+   const ref=Object.keys(row.selection).length?row.selection:undefined;
+   if(row.kind==='Sff')return requireViewer(require('./sff_viewer').openSffViewer(uri,undefined,ref,options));
+   else if(row.kind==='Snd')return requireViewer(require('./snd_viewer').openSndViewer(uri,undefined,ref,undefined,options));
+   else if(row.kind==='Air'&&path.extname(row.file).toLowerCase()==='.air'){
+    return requireViewer(require('./air_viewer').openAirPreview(uri,{...options,action:ref?.group,frameIndex:ref?.frameIndex}));
+   }else if(row.kind==='Palette'){
+    const workshop=require('./palette_workspace_controller').paletteWorkspaceController();
+    if(/\.ikpalette\.json$/i.test(row.file))return requireViewer(workshop.openScratchWorkspace(uri,options));
+    else return requireViewer(workshop.importPaletteFile(row.file,options));
+   }else{
+    if(fs.statSync(row.file).size>4*1024*1024)throw Error('Definition exceeds 4 MB.');
+    const kind=require('./entity_switch_runtime').classifyDef(row.file,fs.readFileSync(row.file,'utf8'));
+    if(kind==='character'){
+     const targets=require('./entity_target_resolver').resolveEntityTargets({kind,ownerFile:row.file});
+     if(row.kind==='Air'){
+      if(!targets.air.available)throw Error('Character has no available AIR file.');
+      return requireViewer(require('./air_viewer').openAirPreview(vscode.Uri.file(targets.air.filename),{...options,ownerDefs:[row.file],action:ref?.group,frameIndex:ref?.frameIndex}));
+     }else if(targets.sff.available)return requireViewer(require('./sff_viewer').openSffViewer(vscode.Uri.file(targets.sff.filename),undefined,undefined,{...options,ownerDefs:[row.file]}));
+     else if(targets.air.available)return requireViewer(require('./air_viewer').openAirPreview(vscode.Uri.file(targets.air.filename),{...options,ownerDefs:[row.file]}));
+     else return vscode.commands.executeCommand('vscode.open',uri);
+    }else{
+     const command=kind==='storyboard'?'ikemen.storyboard.open':kind==='stage'?'ikemen.stage.openWorkspace':path.basename(row.file).toLowerCase()==='select.def'?'ikemen.selectDef.openWorkspace':'ikemen.ui.openWorkspace';
+     const options=command==='ikemen.selectDef.openWorkspace'?{requireExactRoster:true}:{};
+     return requireViewer(vscode.commands.executeCommand(command,uri,options));
+    }
+   }
+ }
+ let count=0, lastOpened, activeRow, activePanel;
+ for(const row of rows){
+  try{
+   const result=await openRow(row);
+   lastOpened=row;
+   if(row.active){activeRow=row;activePanel=result?.panel||result;}
+   count++;
+  }catch(error){issues.push(path.basename(row.file)+' ('+error.message+')');}
+ }
+ if(activeRow && activeRow!==lastOpened){
+  try{
+   if(typeof activePanel?.reveal==='function')activePanel.reveal(activePanel.viewColumn,false);
+   else await openRow(activeRow);
+  }catch(error){issues.push('Could not focus '+path.basename(activeRow.file)+' ('+error.message+')');}
+ }
+ const summary='Opened '+count+' workspace '+(count===1?'file.':'files.');
+ if(issues.length)return void vscode.window.showWarningMessage(summary+' Could not open '+issues.join(', '));
+ return void vscode.window.showInformationMessage(summary);
+}
+function register(context){context.subscriptions.push(vscode.commands.registerCommand('ikemen.media.saveSession',saveMediaSession),vscode.commands.registerCommand('ikemen.media.loadSession',loadMediaSession),vscode.commands.registerCommand('ikemen.configureAssetWorkspace',chooseMode),vscode.commands.registerCommand('ikemen.assets.open',openAsset));}
 function client(){
  if(document.body.dataset.simpleAssets==='true'){
   const toolbar=document.querySelector('body > header, body > .toolbar, body > .header');
@@ -129,4 +247,4 @@ function client(){
  vscode.postMessage({type:'assetWorkspaceReady',openNewTab:vscode.getState()?.assetOpenMode==='new',restoreTabs:vscode.getState()?.assetKeepTabsOnRestore===true});
  });
 }
-module.exports={configure,register,compact,multiple,beforeOpen,beforeReplace,pinTransfer,suspend,setOpenDisposition,openAsset,decorate,handle,clientScript:()=>`(${client.toString()})();`};
+module.exports={trackStandalonePalette,configure,register,compact,multiple,beforeOpen,beforeReplace,pinTransfer,suspend,setOpenDisposition,openAsset,decorate,handle,clientScript:()=>`(${client.toString()})();`};

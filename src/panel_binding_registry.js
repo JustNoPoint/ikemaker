@@ -10,20 +10,24 @@ class PanelBindingRegistry {
     this.byPanel = new WeakMap();
   }
 
-  claim(panel, target) {
+  claim(panel, target, options = {}) {
     if (!panel || (typeof panel !== 'object' && typeof panel !== 'function')) throw new TypeError('A panel object is required.');
     const key = this._key(target), occupied = this.byTarget.get(key);
-    if (occupied && occupied !== panel) return Object.freeze({ ok:false, reason:'target-occupied', panel:occupied, key });
+    if (occupied && occupied !== panel && !options.multiple && this.byPanel.get(panel)!==key) return Object.freeze({ ok:false, reason:'target-occupied', panel:occupied, key });
     const previous = this.byPanel.get(panel) || '';
-    if (previous && previous !== key && this.byTarget.get(previous) === panel) this.byTarget.delete(previous);
+    if (previous && previous !== key) this.release(panel);
     this.byTarget.set(key, panel); this.byPanel.set(panel, key);
+    if (!this.members) this.members = new Map();
+    if (!this.members.has(key)) this.members.set(key,new Set());
+    this.members.get(key).add(panel);
     return Object.freeze({ ok:true, key, previous });
   }
 
   release(panel) {
     const key = this.byPanel.get(panel);
     if (!key) return false;
-    if (this.byTarget.get(key) === panel) this.byTarget.delete(key);
+    this.members?.get(key)?.delete(panel);
+    if (this.byTarget.get(key) === panel) { const next=this.members?.get(key)?.values().next().value; if(next)this.byTarget.set(key,next);else this.byTarget.delete(key); }
     this.byPanel.delete(panel);
     return true;
   }

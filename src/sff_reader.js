@@ -174,6 +174,12 @@ function resolvedPalette(archive, paletteIndex, seen = new Set()) {
   return resolvedPalette(archive, palette.link, seen);
 }
 
+function usesFullCsMaster(archive, paletteIndex) {
+  const owner = resolvedPalette(archive, paletteIndex);
+  return Boolean(owner && archive.palettes.some(palette =>
+    palette.group === 1 && palette.number === 0 && resolvedPalette(archive, palette.index)?.index === owner.index));
+}
+
 function paletteRgba(archive, paletteIndex) {
   const palette = resolvedPalette(archive, paletteIndex);
   if (!palette) return null;
@@ -441,4 +447,4 @@ function spriteDataUri(archive, sprite, paletteOverride = null) { return `data:i
 
 function spriteOpaqueDataUri(archive,sprite){return 'data:image/png;base64,'+spritePng(archive,sprite,null,false,true).toString('base64');}
 
-module.exports = { resolvedSprite, spriteOpaqueDataUri, friendlyVersion, parseSffBuffer, readSff, resolvedPalette, paletteRgba, paletteAct, actRgba, spritePng, spriteIndexPlane, spriteDataUri, rle8, rle5, lz5, pcx8, rgbaPng, indexedPngWithSffPalette, indexedSourcePng };
+module.exports = { usesFullCsMaster, resolvedSprite, spriteOpaqueDataUri, friendlyVersion, parseSffBuffer, readSff, resolvedPalette, paletteRgba, paletteAct, actRgba, spritePng, spriteIndexPlane, spriteDataUri, rle8, rle5, lz5, pcx8, rgbaPng, indexedPngWithSffPalette, indexedSourcePng };

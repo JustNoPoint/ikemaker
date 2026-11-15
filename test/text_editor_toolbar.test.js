@@ -22,6 +22,7 @@ const doc = (fileName, languageId = 'plaintext', text = '', scheme = 'file') => 
 assert.strictEqual(toolbar.classify(doc('C:/chars/Ryu/normal.zss', 'zss'), config({})).kind, 'zss');
 assert.strictEqual(toolbar.classify(doc('C:/chars/Ryu/normal.st', 'ikemen-cns'), config({})).kind, 'st');
 assert.strictEqual(toolbar.classify(doc('C:/chars/Ryu/commands.dat'), config({})).kind, 'dat');
+assert.strictEqual(toolbar.classify(doc('C:/chars/Ryu/files/command.mfg', 'ikemen-cns'), config({})).kind, 'cmd', '.mfg command files classify as CMD so command tools and target checks apply');
 const lua = toolbar.classify(doc('C:/external/mods/gameplay.lua', 'lua', 'return {}'), config({}));
 assert.strictEqual(lua.supported, true, 'Lua participates by file type regardless of which Lua language extension owns the native editor');
 assert.strictEqual(lua.kind, 'lua');
@@ -144,7 +145,7 @@ const rosterModel = toolbar.textToolbarModel({ document: rosterDocument, classif
 assert.strictEqual(rosterModel.slots.find(slot => slot.id === 'palettes').enabled, false, 'roster DEF does not claim a palette route');
 
 const markup = toolbar.companionHtml(zss, toolbar.actionsFor(zss), [], characterModel, { files:[{ filename:'C:/chars/Ryu/Ryu.def', label:'Ryu.def', kind:'def', origin:'Character', status:['Unsaved','1 Warning'] },{ filename:'C:/chars/Ryu/normal.zss', label:'normal.zss', kind:'zss', origin:'Character', hidden:true }], mode:'tabs' });
-assert.strictEqual((markup.match(/data-universal-slot=/g) || []).length, SLOTS.length, 'the compact text header uses the same fixed-size universal icon row as every viewer');
+assert.strictEqual((markup.match(/class="ikemaker-universal-toolbar__button" data-universal-slot=/g) || []).length, SLOTS.length, 'the compact text header uses the same fixed-size universal icon row as every viewer');
 assert((markup.match(/data-toolbar-icon-action=/g) || []).length > 8, 'the compact text header retains small icon actions');
 assert.strictEqual((markup.match(/acquireVsCodeApi\(\)/g) || []).length, 1, 'companion owns one webview bridge');
 assert(markup.includes('flex-flow:row nowrap'));
@@ -165,7 +166,7 @@ assert(markup.includes('data-grouped-files-toggle')&&markup.includes("vscode.pos
 assert(markup.includes('display:block!important')&&markup.includes('max-height:min(70vh,620px)!important')&&markup.includes('overflow:auto!important'),'Code Navigation dropdowns use the shared bounded single-column viewer menu');
 assert(markup.includes('scroll-behavior:auto!important'),'slider dragging updates the tab viewport immediately instead of queuing smooth-scroll animations until release');
 assert(!markup.includes('connected-slider'),'the retired active-file range and its dead client query are absent');
-assert(markup.includes('data-toolbar-context')&&markup.includes("selectedTab?.scrollIntoView({block:'nearest',inline:'center'})"),'shared toolbar initialization remains complete and the selected tab is revealed without a duplicate selection handler');
+assert(markup.includes('data-toolbar-context')&&markup.includes('strip.scrollLeft+=selectedTab.getBoundingClientRect().left')&&!markup.includes('selectedTab?.scrollIntoView'),'shared toolbar initialization remains complete and the selected tab is revealed without a duplicate selection handler');
 assert(markup.includes("fileTabs[target]?.focus();sendOrganization({type:'select-connected',index:Number(fileTabs[target]?.dataset.connectedIndex)})"),'plain Arrow/Home/End navigation focuses and selects the exact visible tab through the generation-bound authoritative route');
 assert(markup.includes("menuAction(menu,'Hide'")&&markup.includes("menuAction(menu,'Unhide All'")&&markup.includes("class=\"hidden-tab-marker\""),'tab menus expose Hide and Unhide All while hidden runs retain a visible recovery marker');
 assert(markup.includes('data-hidden-identity=')&&markup.includes("identity:marker.dataset.hiddenIdentity,hidden:false"),'each compact recovery marker immediately restores its exact hidden tab');
@@ -208,6 +209,8 @@ assert.strictEqual(toolbar.fileKind('C:/chars/Ryu/Sf6Ryu.air'),'air');
 assert.strictEqual(toolbar.fileKind('C:/chars/Ryu/logic.lua'),'lua');
 assert.strictEqual(toolbar.fileKind('C:/chars/Ryu/legacy.txt','lua'),'lua','an open Lua-language document is never presented as a generic TXT tab');
 assert.strictEqual(toolbar.fileKindLabel('lua'),'Lua');
+assert.strictEqual(toolbar.fileKind('C:/chars/Ryu/files/command.mfg','ikemen-cns'),'cmd','.mfg tabs are labelled as command files');
+assert.strictEqual(toolbar.fileKind('C:/chars/Ryu/ai.inp','ikemen-cns'),'inp','INP tabs keep their own label instead of CNS');
 const luaTabMarkup=toolbar.companionHtml(zss,toolbar.actionsFor(zss),[],characterModel,{files:[{filename:'C:/chars/Ryu/legacy.txt',label:'legacy.txt',kind:toolbar.fileKind('C:/chars/Ryu/legacy.txt','lua'),languageId:'lua',origin:'Character'}],mode:'tabs'});
 assert(luaTabMarkup.includes('data-file-kind="lua"')&&luaTabMarkup.includes('Character · Lua')&&/aria-label="legacy\.txt · Character, Lua"/.test(luaTabMarkup),'connected/open Lua sources retain an explicit visible and accessible Lua tab identity even when the filename extension is generic');
 assert.strictEqual(toolbar.fileOrigin(path.resolve('C:/chars/Ryu/normal.zss'),{type:'character',root:path.resolve('C:/chars/Ryu')}),'Character');

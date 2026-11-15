@@ -65,7 +65,7 @@ function normalizeLockedIndexes(value) {
 }
 
 function payloadFrom(value, strictKeys = true) {
-  if (strictKeys) exactKeys(value, PAYLOAD_KEYS, 'document payload');
+  if (strictKeys) exactKeys(value, value.textSource ? [...PAYLOAD_KEYS,'textSource'] : PAYLOAD_KEYS, 'document payload');
   if (value.schema !== SCHEMA) fail(`schema must be ${SCHEMA}.`);
   if (value.version !== VERSION) fail(`version must be ${VERSION}.`);
   return {
@@ -74,8 +74,23 @@ function payloadFrom(value, strictKeys = true) {
     draftId: normalizeDraftId(value.draftId),
     name: normalizeName(value.name),
     colors: normalizeColors(value.colors),
+    ...(value.textSource ? {textSource:normalizeTextSource(value.textSource)} : {}),
     lockedIndexes: normalizeLockedIndexes(value.lockedIndexes)
   };
+}
+
+function normalizeTextSource(source) {
+  exactKeys(source,source.act?['count','firstColor','act']:['count','firstColor'],'palette text source');
+  if (!Number.isInteger(source.count) || source.count < 1 || source.count > 256) fail('invalid imported color count.');
+  let act;
+  if(source.act){
+    exactKeys(source.act,['bytes','order'],'ACT source');
+    if(!['index','reversed'].includes(source.act.order)||typeof source.act.bytes!=='string'||source.act.bytes.length>1032)fail('invalid ACT source metadata.');
+    const bytes=Buffer.from(source.act.bytes,'base64');
+    if(![768,772].includes(bytes.length)||bytes.toString('base64')!==source.act.bytes)fail('invalid retained ACT bytes.');
+    act={bytes:source.act.bytes,order:source.act.order};
+  }
+  return {count:source.count, firstColor:normalizeColor(source.firstColor,0),...(act?{act}:{})};
 }
 
 function canonicalPayload(payload) {
@@ -85,6 +100,7 @@ function canonicalPayload(payload) {
     draftId: payload.draftId,
     name: payload.name,
     colors: payload.colors,
+    ...(payload.textSource ? {textSource:payload.textSource} : {}),
     lockedIndexes: payload.lockedIndexes
   });
 }
@@ -96,7 +112,8 @@ function semanticHash(value) {
 
 function sealScratchPaletteDocument(value) {
   const keys = Object.keys(value || {}).filter((key) => key !== 'semanticHash');
-  if (keys.length !== PAYLOAD_KEYS.length || keys.sort().some((key, index) => key !== [...PAYLOAD_KEYS].sort()[index])) {
+  const expected = value?.textSource ? [...PAYLOAD_KEYS,'textSource'] : PAYLOAD_KEYS;
+  if (keys.length !== expected.length || keys.sort().some((key, index) => key !== [...expected].sort()[index])) {
     fail('document payload has missing or unsupported fields.');
   }
   const payload = payloadFrom(value, false);
@@ -104,7 +121,7 @@ function sealScratchPaletteDocument(value) {
 }
 
 function normalizeScratchPaletteDocument(value) {
-  exactKeys(value, DOCUMENT_KEYS, 'document');
+  exactKeys(value, value?.textSource ? [...DOCUMENT_KEYS,'textSource'] : DOCUMENT_KEYS, 'document');
   const payload = payloadFrom(value, false);
   if (typeof value.semanticHash !== 'string' || !/^[0-9a-f]{64}$/.test(value.semanticHash)) fail('semanticHash must be a lowercase SHA-256 digest.');
   const expected = semanticHash(payload);
@@ -118,7 +135,7 @@ function defaultColors() {
 
 function createScratchPaletteDocument(options = {}) {
   if (!isPlainObject(options)) fail('creation options must be an object.');
-  const supported = new Set(['draftId', 'name', 'colors']);
+  const supported = new Set(['draftId', 'name', 'colors','textSource']);
   if (Object.keys(options).some((key) => !supported.has(key))) fail('creation options contain unsupported fields.');
   return sealScratchPaletteDocument({
     schema: SCHEMA,
@@ -126,6 +143,7 @@ function createScratchPaletteDocument(options = {}) {
     draftId: options.draftId || crypto.randomUUID(),
     name: options.name == null ? DEFAULT_NAME : options.name,
     colors: options.colors == null ? defaultColors() : options.colors,
+    ...(options.textSource ? {textSource:options.textSource} : {}),
     lockedIndexes: [0]
   });
 }
@@ -147,6 +165,14 @@ function isScratchPaletteDirty(current, baseline) {
   const currentDocument = normalizeScratchPaletteDocument(current);
   const baselineDocument = normalizeScratchPaletteDocument(baseline);
   return currentDocument.semanticHash !== baselineDocument.semanticHash;
+}
+
+function actExportColors(value) {
+  const document = normalizeScratchPaletteDocument(value);
+  const colors = document.colors.map(color => color.slice());
+  // The working mask stays transparent; standalone files retain its original RGB.
+  if (document.textSource) colors[0] = document.textSource.firstColor.slice();
+  return colors;
 }
 
 function actAlphaLossEligibility(value) {
@@ -176,5 +202,6 @@ module.exports = {
   parseScratchPaletteDocument,
   serializeScratchPaletteDocument,
   isScratchPaletteDirty,
-  actAlphaLossEligibility
+  actAlphaLossEligibility,
+  actExportColors
 };

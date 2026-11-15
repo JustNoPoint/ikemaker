@@ -38,7 +38,7 @@ function build(deps) {
     const retained = savedAuthority.copyRestartAuthority();
     if (!isPlain(retained) || !Buffer.isBuffer(retained.executionLayoutApprovalReceiptArtifactBytes) || !isPlain(retained.expectedHashes)) fail('retained SFF17b restart authority is malformed.');
     const executorInput = { executionLayoutApprovalInput: {}, executionLayoutApprovalReceiptArtifactBytes: Buffer.from(retained.executionLayoutApprovalReceiptArtifactBytes), ...clone(retained.expectedHashes) }, restartInput = deps.deriveRestartInput(executorInput);
-    const first = deps.createRecoveryPlan(restartInput);
+    const first = deps.createRecoveryPlan(restartInput, {completedVaultRoot:locator.expectedVaultRoot});
     const blockers = Array.isArray(first.blockers) ? first.blockers : [], actions = Array.isArray(first.allowedActions) ? first.allowedActions : [], terminal = TERMINAL_OUTCOMES.has(saved.outcomeClass) && blockers.length === 0 && exact(actions, ['no-action-terminal']), safeRecovery = blockers.length === 0 && actions.length > 0 && actions.every(action => SAFE_RECOVERY_ACTIONS.has(action));
     let classification, reasons;
     if (terminal) { classification = 'TerminalNeedsHistory'; reasons = ['saved-terminal-outcome-and-current-terminal-state-agree']; }
@@ -50,7 +50,7 @@ function build(deps) {
       Object.assign(historyInput, { expectedHistoryRoot: historyRoot(beforeAuthority), terminalReceiptArtifactBytes: Buffer.from(savedEvidence.outcomeReceiptArtifactBytes), expectedTerminalReceiptArtifactByteHash: saved.outcomeReceiptArtifactByteHash, expectedTerminalReceiptHash: saved.outcomeReceiptHash });
       historyPlan = deps.createHistoryPlan(historyInput);
     }
-    const second = deps.createRecoveryPlan(restartInput);
+    const second = deps.createRecoveryPlan(restartInput, {completedVaultRoot:locator.expectedVaultRoot});
     if (!exact(first, second) || first.planHash !== second.planHash || first.currentStateHash !== second.currentStateHash || !exact(first.currentStateSeal, second.currentStateSeal) || first.currentStateSeal.journalChainHash !== second.currentStateSeal.journalChainHash || !exact(first.currentStateSeal.activeDirectory, second.currentStateSeal.activeDirectory) || !exact(first.currentStateSeal.candidateDirectory, second.currentStateSeal.candidateDirectory) || !exact(first.approvedExecutionPaths, second.approvedExecutionPaths)) fail('SFF19A observations changed across the required replay.');
     if (historyPlan !== null) {
       const destinationOnly = new Set(['history-final-case-collision', 'history-partial-case-collision', 'history-final-path-occupied', 'history-partial-path-occupied']), historyStateBlockers = historyPlan.blockers.filter(blocker => !destinationOnly.has(blocker));

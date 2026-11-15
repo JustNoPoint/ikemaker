@@ -6,4 +6,16 @@ function recoveryNotice(recovery) {
   if(recovery.rollbackAvailable===true)return`Recovery remains retained${recovery.backupPath?` at ${recovery.backupPath}`:''}.`;
   return'';
 }
-module.exports={recoveryNotice};
+function blockedLifecycleNotice(startup) {
+  const status = startup?.status || '';
+  if (status === 'restart-recovery-review-required') return 'Review the proposed recovery cleanup before continuing.';
+  if (!/manual|uncertain|restart-recovery-required/.test(status)) return '';
+  const reasons = startup.restartRecoveryPlan?.blockers || [];
+  const observation = startup.stableObservationError?.message;
+  const guidance = reasons.length || observation
+    ? 'Keep the recovery records and review the reported issue before continuing.'
+    : 'Keep the recovery records for inspection before starting another save.';
+  return [`Operation paused: ${status}.`, ...reasons, observation, guidance]
+    .filter(Boolean).join(' ');
+}
+module.exports={recoveryNotice,blockedLifecycleNotice};

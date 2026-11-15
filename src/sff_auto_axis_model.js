@@ -60,8 +60,9 @@ function referenceSuggestion(targetImage, referenceImage, referenceAxis, options
   for (let y = initial.y - maxOffset; y <= initial.y + maxOffset; y += coarse) for (let x = initial.x - maxOffset; x <= initial.x + maxOffset; x += coarse) test(x, y);
   if (coarse > 1) for (let y = best.axisY - 2; y <= best.axisY + 2; y += 1) for (let x = best.axisX - 2; x <= best.axisX + 2; x += 1) if (Math.abs(x - initial.x) <= maxOffset && Math.abs(y - initial.y) <= maxOffset) test(x, y);
   const alternative = candidates.filter(item => Math.abs(item.axisX - best.axisX) + Math.abs(item.axisY - best.axisY) > 2).sort((a, b) => b.score - a.score)[0], margin = Math.max(0, best.score - (alternative?.score || 0));
-  const confidence = Math.max(0, Math.min(1, best.score * Math.min(1, 0.55 + margin * 2.5))), label = confidence >= 0.78 ? 'high' : confidence >= 0.5 ? 'review' : 'low';
-  return Object.freeze({ axisX: best.axisX, axisY: best.axisY, confidence, confidenceLabel: label, method: 'reference-silhouette', evidence: { initial, maxOffset, bestScore: best.score, runnerUpScore: alternative?.score ?? null, runnerUpMargin: margin, referenceAxis: { axisX: referenceAxis.axisX, axisY: referenceAxis.axisY }, targetBounds: target.bounds, referenceBounds: reference.bounds } });
+  const searchBoundary = maxOffset > 0 && (Math.abs(best.axisX - initial.x) === maxOffset || Math.abs(best.axisY - initial.y) === maxOffset);
+  const confidence = Math.min(searchBoundary ? .49 : 1, Math.max(0, Math.min(1, best.score * Math.min(1, 0.55 + margin * 2.5)))), label = confidence >= 0.78 ? 'high' : confidence >= 0.5 ? 'review' : 'low';
+  return Object.freeze({ axisX: best.axisX, axisY: best.axisY, confidence, confidenceLabel: label, method: 'reference-silhouette', evidence: { initial, maxOffset, searchBoundary, bestScore: best.score, runnerUpScore: alternative?.score ?? null, runnerUpMargin: margin, referenceAxis: { axisX: referenceAxis.axisX, axisY: referenceAxis.axisY }, targetBounds: target.bounds, referenceBounds: reference.bounds } });
 }
 
 function weightedMedian(items, value) {
