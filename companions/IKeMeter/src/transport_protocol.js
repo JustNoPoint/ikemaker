@@ -2,7 +2,7 @@
 
 const crypto = require('node:crypto');
 
-const ALLOWED_OPCODES = new Set(['pause', 'resume', 'step', 'disconnect']);
+const ALLOWED_OPCODES = new Set(['pause', 'resume', 'step', 'snapshot', 'disconnect']);
 const ALLOWED_DIRECTIONS = new Set(['command', 'telemetry', 'ack']);
 
 function requireInteger(value, label) {

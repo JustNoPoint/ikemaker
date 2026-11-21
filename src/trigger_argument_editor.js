@@ -1,7 +1,7 @@
 'use strict';
 
-const triggerCatalog=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
-const controllerCatalog=require('../data/sctrl.json');
+const triggerCatalog=require('./live_coding_catalog').triggers;
+const controllerCatalog=require('./live_coding_catalog').controllers;
 const {entryAvailable,filterAvailable}=require('./catalog_capability_filter');
 const {argumentSlots}=require('./trigger_argument_model');
 const {callAtOffset,argumentPositionAt,replacementPlan}=require('./trigger_call_context');

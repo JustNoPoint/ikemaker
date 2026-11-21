@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Watch log | IKeMeter</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="telemetry.css">
+  <link rel="stylesheet" href="watch.css">
+  <script src="watch.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="title">IKeMeter</div>
+    <nav aria-label="Meter views"><a href="/">Overview</a> <a href="telemetry.html">Player telemetry</a> <a href="watch.html" aria-current="page">Watch log</a></nav>
+  </header>
+  <div id="watch-status" class="status" role="status">Loading watch log…</div>
+  <main>
+    <h1>Watch log</h1>
+    <section class="telemetry-panel">
+      <h2>Watches</h2>
+      <p>Configure up to 12 watches, then connect from Overview. Watches observe selected roots.</p>
+      <form id="watch-form" class="watch-controls">
+        <label>Root slot <select id="watch-slot" required></select></label>
+        <label>Kind <select id="watch-kind">
+          <option value="var">Var</option>
+          <option value="fvar">FVar</option>
+          <option value="sysvar">SysVar</option>
+          <option value="sysfvar">SysFVar</option>
+          <option value="map">Map</option>
+          <option value="helper">Helper</option>
+          <option value="explod">Explod</option>
+          <option value="projectile">Projectile</option>
+        </select></label>
+        <label><span id="watch-key-label">Variable index</span> <input id="watch-key" inputmode="numeric" maxlength="48" required></label>
+        <label id="watch-map-index-label" hidden>Map index (optional) <input id="watch-map-index" inputmode="numeric" maxlength="11"></label>
+        <label id="watch-owner-label" hidden>Helper owner ID (blank for root) <input id="watch-owner" inputmode="numeric" maxlength="10"></label>
+        <button id="watch-add" disabled>Add watch</button>
+      </form>
+      <ul id="watch-list"></ul>
+      <details>
+        <summary>Paste watch configuration</summary>
+        <form id="watch-paste-form">
+          <label for="watch-paste">JSON watch list</label>
+          <textarea id="watch-paste" rows="4" maxlength="8192" spellcheck="false" disabled></textarea>
+          <button id="watch-paste-submit" disabled>Replace watch list</button>
+        </form>
+      </details>
+    </section>
+    <section class="telemetry-panel">
+      <h2>Observations</h2>
+      <p>Rows show sampled changes and counts. Writes or spawns that begin and end between samples can be invisible. The writer is unknown. State context describes the sampled watch owner or, for Helper presence, the child. Execution and RunState targets are unknown.</p>
+      <form id="watch-retention" class="watch-controls">
+        <label>Retention <select id="watch-seconds">
+          <option value="30">30 seconds</option><option value="60">60 seconds</option><option value="90">90 seconds</option>
+          <option value="120" selected>120 seconds</option><option value="150">150 seconds</option><option value="180">180 seconds</option>
+          <option value="210">210 seconds</option><option value="240">240 seconds</option><option value="270">270 seconds</option>
+          <option value="300">300 seconds</option>
+        </select></label>
+        <button>Set retention</button>
+        <button id="watch-download" type="button" disabled>Export watch log</button>
+      </form>
+      <p id="watch-count"></p>
+      <div class="watch-table">
+        <table>
+          <thead><tr><th>Tick</th><th>Sampled state</th><th>Kind</th><th>Owner</th><th>Entity</th><th>Parent</th><th>Index or ID</th><th>Event</th><th>Before</th><th>After</th><th>Coverage</th></tr></thead>
+          <tbody id="watch-records"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+</body>
+</html>

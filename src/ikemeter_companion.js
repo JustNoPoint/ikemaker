@@ -1,6 +1,6 @@
 'use strict';
 const fs=require('node:fs'),path=require('node:path'),crypto=require('node:crypto'),childProcess=require('node:child_process');
-const {validRequest}=require('./ikemeter_companion_host');
+const {validRequest,validAuthority,SNAPSHOT_PATH,SNAPSHOT_TIMEOUTS,SNAPSHOT_TIMEOUT_MESSAGE}=require('./ikemeter_companion_host');
 const COMMAND='ikemen.openIKeMeter';
 function within(file,root){const relative=path.relative(root,file);return relative===''||relative!=='..'&&!relative.startsWith('..'+path.sep)&&!path.isAbsolute(relative);}
 function validatePackage(launcher){
@@ -51,15 +51,38 @@ function resolvePowerShell7(vscode,services={}){
  throw new Error('PowerShell 7 was not found outside workspace code. Set the user-only ikemenZss.ikeMeterPowerShellPath to an installed pwsh.exe.');
 }
 function htmlEscape(value){return String(value).replace(/[&<>"']/g,char=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));}
-function client(){
+function client(snapshotPath,snapshotTimeout,snapshotTimeoutMessage,validAuthority){
  const api=acquireVsCodeApi(),pending=new Map();let sequence=0;
- window.fetch=(input,options={})=>new Promise((resolve,reject)=>{const resource=String(input),method=options.method||'GET';if(!(method==='GET'&&['/api/status','/api/history'].includes(resource)||method==='POST'&&/^\/api\/(connect|pause|step|resume|disconnect|restart)$/.test(resource))){reject(new Error('Unsupported Meter request'));return;}const id=++sequence,timer=setTimeout(()=>{pending.delete(id);reject(new Error('Meter host did not respond'));},20000);pending.set(id,{resolve,reject,timer});const message={type:'ikemeterRequest',id,path:resource,method};const headers=new Headers(options.headers||{});if(method==='POST'&&headers.has('X-IKeMeter-Session'))message.authority={sessionId:headers.get('X-IKeMeter-Session'),epoch:Number(headers.get('X-IKeMeter-Epoch')),continuityRevision:Number(headers.get('X-IKeMeter-Continuity'))};api.postMessage(message);});
+ window.fetch=(input,options={})=>new Promise((resolve,reject)=>{
+  const resource=String(input),method=options.method||'GET',snapshot=resource===snapshotPath;
+  if(!(method==='GET'&&['/api/status','/api/history'].includes(resource)||method==='POST'&&
+      (snapshot||/^\/api\/(connect|pause|step|resume|disconnect|restart)$/.test(resource)))){
+   reject(new Error('Unsupported Meter request'));
+   return;
+  }
+  const headers=new Headers(options.headers||{}),id=++sequence;
+  const message={type:'ikemeterRequest',id,path:resource,method};
+  if(method==='POST'&&headers.has('X-IKeMeter-Session'))message.authority={
+   sessionId:headers.get('X-IKeMeter-Session'),
+   epoch:Number(headers.get('X-IKeMeter-Epoch')),
+   continuityRevision:Number(headers.get('X-IKeMeter-Continuity'))
+  };
+  if(snapshot&&(!validAuthority(message.authority)||
+      !/^[1-9]\d*$/.test(headers.get('X-IKeMeter-Epoch')||'')||
+      !/^(?:0|[1-9]\d*)$/.test(headers.get('X-IKeMeter-Continuity')||''))){
+   reject(new Error('Snapshot requires current session and continuity authority.'));
+   return;
+  }
+  const timer=setTimeout(()=>{pending.delete(id);reject(new Error(snapshot?snapshotTimeoutMessage:'Meter host did not respond'));},snapshot?snapshotTimeout:20000);
+  pending.set(id,{resolve,reject,timer});
+  api.postMessage(message);
+ });
  addEventListener('message',event=>{const message=event.data;if(message?.type!=='ikemeterResponse'||!Number.isSafeInteger(message.id))return;const request=pending.get(message.id);if(!request)return;clearTimeout(request.timer);pending.delete(message.id);request.resolve({status:message.status,ok:message.status>=200&&message.status<300,json:async()=>message.body});});
 }
 function panelHtml(panel,root,runtime,vscode){
  const nonce=crypto.randomBytes(18).toString('base64'),assets=path.join(root,'app');let html=fs.readFileSync(path.join(assets,'index.html'),'utf8');
  const csp=`default-src 'none'; style-src ${panel.webview.cspSource}; script-src 'nonce-${nonce}'; img-src ${panel.webview.cspSource} data:; connect-src 'none'`;
- html=html.replace('<head>',`<head><meta http-equiv="Content-Security-Policy" content="${htmlEscape(csp)}"><script nonce="${nonce}">(${client.toString()})();</script>`);
+ html=html.replace('<head>',`<head><meta http-equiv="Content-Security-Policy" content="${htmlEscape(csp)}"><script nonce="${nonce}">(${client.toString()})(${JSON.stringify(SNAPSHOT_PATH)},${SNAPSHOT_TIMEOUTS.client},${JSON.stringify(SNAPSHOT_TIMEOUT_MESSAGE)},${validAuthority.toString()});</script>`);
  html=html.replace(/(href|src)="(styles\.css|entity_labels\.js|app\.js)"/g,(_,attribute,name)=>`${attribute}="${panel.webview.asWebviewUri(vscode.Uri.file(path.join(assets,name)))}"${attribute==='src'?` nonce="${nonce}"`:''}`);
  return html.replace('<main>',`<main><p role="note">Runtime: ${htmlEscape(runtime)}. Connect starts a local test game and temporarily installs Meter’s bridge and runtime lease. Closing this tab stops a connected test game; Disconnect keeps the game open.</p>`);
 }
@@ -80,7 +103,7 @@ function createManager(vscode,context,services={}){
   panel.onDidDispose(()=>{if(panel===owner){panel=null;void stop();}});
   panel.webview.onDidReceiveMessage(message=>{
    if(panel!==owner||!validRequest(message)||!host?.connected||pending.size>=16)return;
-   const id=++requestSequence,timer=setTimeout(()=>{const entry=pending.get(id);if(entry?.panel===owner){pending.delete(id);owner.webview.postMessage({type:'ikemeterResponse',id:message.id,status:503,body:{error:'Meter operation exceeded its bound'}});}},20000);
+   const id=++requestSequence,timer=setTimeout(()=>{const entry=pending.get(id);if(entry?.panel===owner){pending.delete(id);owner.webview.postMessage({type:'ikemeterResponse',id:message.id,status:503,body:{error:message.path===SNAPSHOT_PATH?SNAPSHOT_TIMEOUT_MESSAGE:'Meter operation exceeded its bound'}});}},message.path===SNAPSHOT_PATH?SNAPSHOT_TIMEOUTS.host:20000);
    pending.set(id,{panel:owner,id:message.id,timer});host.send({...message,id});
   });
   return panel;
@@ -120,5 +143,5 @@ function createManager(vscode,context,services={}){
  }
  return {open,choose,stop,dispose(){disposed=true;void stop();}};
 }
-function register(vscode,context){const manager=createManager(vscode,context);context.subscriptions.push(manager,vscode.commands.registerCommand(COMMAND,seed=>manager.open(seed)),vscode.commands.registerCommand('ikemen.configureIKeMeter',()=>manager.choose()),vscode.commands.registerCommand('ikemen.closeIKeMeter',()=>manager.stop()));return manager;}
+function register(vscode,context){const findings=require('./ikemeter_findings'),session=findings.createFindingsSession(vscode);require('./ikemeter_telemetry').register(vscode,context,{reviewFinding:session.reviewTelemetryLink});require('./ikemeter_watch_log').register(vscode,context);context.subscriptions.push(session,vscode.commands.registerCommand(findings.COMMAND,file=>session.importFile(file)),vscode.commands.registerCommand(findings.REOPEN_COMMAND,()=>session.reopen()));const manager=createManager(vscode,context);context.subscriptions.push(manager,vscode.commands.registerCommand(COMMAND,seed=>manager.open(seed)),vscode.commands.registerCommand('ikemen.configureIKeMeter',()=>manager.choose()),vscode.commands.registerCommand('ikemen.closeIKeMeter',()=>manager.stop()));return manager;}
 module.exports={COMMAND,validatePackage,validateRuntime,resolveRuntime,resolvePowerShell7,panelHtml,createManager,register};

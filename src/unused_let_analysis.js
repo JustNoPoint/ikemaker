@@ -104,12 +104,27 @@ function analyzeUnusedLets(text, options = {}) {
     declaration.replacement = directCall ? `${source.slice(expressionStart, end - 1).trim()};` : '';
     declarations.push(declaration); scope.declarations.push(declaration);
   }
+  // Reads in a loop header or body can consume a write from its previous iteration.
+  const loops = [];
+  const stack = [];
+  let loopStart = null;
+  const tokens = /\b(?:while|for)\b|[{};]/gi;
+  while ((match = tokens.exec(masked))) {
+    const token = match[0];
+    if (token === '{') { stack.push(loopStart); loopStart = null; }
+    else if (token === '}') {
+      const start = stack.pop();
+      if (start != null) loops.push({start, end: match.index});
+      loopStart = null;
+    } else if (token === ';') loopStart = null;
+    else loopStart = match.index;
+  }
   const usePattern = /\$([A-Za-z_][A-Za-z0-9_]*)/g;
   while ((match = usePattern.exec(masked))) uses.push({ key: match[1].toLowerCase(), offset: match.index });
   for (const use of uses) {
     let scope = scopeFor(scopes, use.offset), resolved = [];
     while (scope) {
-      const candidates = scope.declarations.filter(item => item.key === use.key && item.activation <= use.offset);
+      const candidates = scope.declarations.filter(item => item.key === use.key && (item.activation <= use.offset || loops.some(loop => loop.start <= use.offset && item.activation <= loop.end && item.offset >= use.offset)));
       if (candidates.length) { resolved = candidates; break; }
       scope = scope.parent;
     }

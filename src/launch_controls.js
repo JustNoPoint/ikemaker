@@ -31,6 +31,7 @@ function launchControlsClientScript(options = {}) {
 }
 
 async function handleLaunchMessage(message, seed, kind = '', panel) {
+  if (message?.type === 'ikmPresentationReady' || message?.type === 'ikmPresentationChange') return require('./viewer_presentation').handle(message, panel);
   if(message?.type==='ikemakerToolbarPreference')return require('./toolbar_access').save(message);
   if(message?.type==='ikemenBrowserShortcut')return require('./viewer_browser_shortcut').handle(message,seed,kind,panel);
   const insertionAuthority = require('./map_registry_insertion_authority');

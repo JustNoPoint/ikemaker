@@ -1,0 +1,27 @@
+header nav { margin-top: 8px; }
+header nav a { color: var(--text); padding: 5px 8px; border: 1px solid var(--line); }
+header nav a[aria-current="page"] { border-color: var(--cyan); background: #12313b; }
+main { max-width: 1200px; margin: 0 auto; padding: 16px; }
+#status { overflow-wrap: anywhere; }
+.telemetry-panel { margin-bottom: 12px; padding: 12px; background: var(--panel); border: 1px solid var(--line); }
+.telemetry-panel h2 { margin-bottom: 8px; }
+.telemetry-controls { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-block: 8px; }
+.telemetry-controls input[type="number"] { width: 10em; }
+.telemetry-scrub { flex: 1 1 240px; display: flex; gap: 8px; align-items: center; }
+.telemetry-scrub input { flex: 1; min-width: 80px; }
+.telemetry-panel button, .telemetry-panel input, .telemetry-panel select {
+  background: var(--bg); border: 1px solid var(--line); border-radius: 3px; padding: 5px 8px; color: var(--text);
+}
+.telemetry-panel button[aria-pressed="true"] { border-color: var(--cyan); background: #12313b; }
+.telemetry-panel :focus-visible, header nav a:focus-visible { outline: 2px solid white; outline-offset: 2px; }
+#roots { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 240px), 1fr)); gap: 8px; }
+.root-card { background: var(--bg); border: 1px solid var(--line); padding: 8px; min-width: 0; }
+.root-card h3 { margin: 0; }
+.root-card table { width: 100%; border-collapse: collapse; text-align: start; }
+.root-card th, .root-card td { border-top: 1px solid var(--line); padding: 4px; text-align: start; overflow-wrap: anywhere; }
+.telemetry-panel li { padding-block: 5px; overflow-wrap: anywhere; }
+#events li + li { border-top: 1px solid var(--line); }
+#events { padding-left: 0; list-style-type: none; }
+.diagnostic-text { white-space: pre-wrap; overflow-wrap: anywhere; unicode-bidi: isolate; direction: ltr; margin: 6px 0 4px; padding: 6px; background: var(--bg); }
+#retention { white-space: pre-line; }
+#retention-result:empty, #export-result:empty { display: none; }

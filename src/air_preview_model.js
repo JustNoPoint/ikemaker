@@ -453,7 +453,7 @@ function moveFrameBlockPatch(text, options) {
   if (loopMarkers) { const owner = blocks.findIndex(block => block.loopStart); if (next.action.loopStart !== newPosition.get(owner)) throw new Error('LoopStart ownership could not be preserved; reorder this action in AIR Source.'); }
   const active = Number.isSafeInteger(options.activeFrameIndex) && chosen.has(options.activeFrameIndex) ? options.activeFrameIndex : moving[0];
   const firstHold = frames => frames.findIndex(frame => frame.rawTime === -1);
-  return { ...patch, action: actionNumber, from: active, to: newPosition.get(active), selectedIndices: moving.map(index => newPosition.get(index)), changedPositions, count: moving.length, loopStartBefore: loopMarkers ? ownership.action.loopStart : null, loopStartAfter: loopMarkers ? next.action.loopStart : null, holdBefore: firstHold(ownership.action.frames), holdAfter: firstHold(next.action.frames), interpolationCount: changedPositions.reduce((count, index) => count + blocks[index].interpolation.length, 0) };
+  return { ...patch, action: actionNumber, from: active, to: newPosition.get(active), selectedIndices: moving.map(index => newPosition.get(index)), reorderedElements: blocks.map((_, index) => newPosition.get(index) + 1), changedPositions, count: moving.length, loopStartBefore: loopMarkers ? ownership.action.loopStart : null, loopStartAfter: loopMarkers ? next.action.loopStart : null, holdBefore: firstHold(ownership.action.frames), holdAfter: firstHold(next.action.frames), interpolationCount: changedPositions.reduce((count, index) => count + blocks[index].interpolation.length, 0) };
 }
 
 function sourceLines(text) {

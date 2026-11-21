@@ -38,9 +38,10 @@ function escapeHtml(value) {
   return String(value ?? '').replace(/[&<>"']/g, (character) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[character]));
 }
 
-function languageGuidanceHtml(language, experience = 'learning') {
+function languageGuidanceHtml(language, experience = 'learning', options = {}) {
   const guide = languageGuidance(language), open = experience === 'learning' ? ' open' : '';
-  return `<details id="languagePath"${open}><summary>${escapeHtml(guide.title)}</summary><ol>${guide.steps.map(([title, detail]) => `<li><b>${escapeHtml(title)}</b><br><span class="muted">${escapeHtml(detail)}</span></li>`).join('')}</ol></details>`;
+  const contextualHelp = options.contextualHelp ? ` data-ikm-help="${escapeHtml(guide.title)}" data-ikm-help-mode="disclosure"` : '';
+  return `<details id="languagePath"${open}><summary>${escapeHtml(guide.title)}</summary><ol${contextualHelp}>${guide.steps.map(([title, detail]) => `<li><b>${escapeHtml(title)}</b><br><span class="muted">${escapeHtml(detail)}</span></li>`).join('')}</ol></details>`;
 }
 
 module.exports = { PATHS, languageGuidance, languageGuidanceHtml };

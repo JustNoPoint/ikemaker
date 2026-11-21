@@ -966,7 +966,7 @@ async function createBuildPackage({ sourceRoot, manifestPath, outputDirectory, o
       if (!Number.isSafeInteger(group) || group < 0 || group > 65535) throw new Error('Image-palette intake group must be an integer from 0 through 65535.');
       const groupNumbers = [...occupied].map(id => id.split(',').map(Number)).filter(([entryGroup]) => entryGroup === group).map(([, number]) => number);
       const start = groupNumbers.length ? Math.max(...groupNumbers) + 1 : 0;
-      const unassignedIncoming = incomingMapping.filter(entry => !entry.palette);
+      const unassignedIncoming = incomingMapping.filter(entry => !entry.palette && entry.image.colorDepth === 8);
       if (unassignedIncoming.length && (start > 65535 || start + unassignedIncoming.length - 1 > 65535)) throw new Error(`Image-palette intake cannot append ${unassignedIncoming.length} palette(s) to group ${group}; the 0–65535 range is exhausted.`);
       for (let index = 0; index < unassignedIncoming.length; index += 1) {
         const entry = unassignedIncoming[index], number = start + index, id = `${group},${number}`;

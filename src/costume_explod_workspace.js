@@ -248,7 +248,7 @@ async function openCostumeLayer(context, services = {}) {
   const owner = owners.length === 1 ? owners[0] : await api.window.showQuickPick(owners, { title, placeHolder: 'Choose the character that will use this costume' });
   if (!owner) return;
   const { assets } = owner;
-  const linkSpec=(slot,id)=>({linkId:require('./authoring_links').stableId('layer',pathKey(owner.def.document.fileName),slot,id),linkLabel:composition.layers.find(item=>item.id===slot)?.label||slot});
+  const linkSpec=(slot,id)=>({...((slot===layer.id&&context.equipment)?{equipment:context.equipment}:{}),linkId:require('./authoring_links').stableId('layer',pathKey(owner.def.document.fileName),slot,id),linkLabel:composition.layers.find(item=>item.id===slot)?.label||slot});
   const stamp = sffStamp(assets.sff);
   const air = await snapshot(api, assets.air);
   const baseActions = model.airActions(air.text).filter(item => !item.marker);
@@ -387,8 +387,16 @@ async function openCostumeLayer(context, services = {}) {
   const syncLayer = order.indexOf(layer) - order.findIndex(item => item.id === 'base');
   const generate = services.generate || model.buildCostumeExplod;
   function makeResult(filename, explodId, extra = {}) {
+    const equipment=((extra.layer?.id || layer.id) === layer.id ? context.equipment : undefined) || extra.equipment;
+    if(equipment){
+      const files=sections(parseDef(owner.def.text,owner.def.document.fileName),'files')[0];
+      if(files?.entries.some(entry=>/^pal\d+$/i.test(entry.normalized)&&unquote(entry.value).trim()))throw Error('Equipment palette switching requires embedded SFF palettes. Remove external ACT assignments before baking and reviewing again.');
+      const hash=require('crypto').createHash('sha256').update(fs.readFileSync(assets.sff)).digest('hex');
+      if(equipment.archiveHash&&equipment.archiveHash!==hash)throw Error('The equipment palette pairs belong to a different SFF revision. Reopen the silhouette bake review after changing or undoing the archive.');
+    }
+
     return generate({ ...input, runtimeMode, runtimeAction, runtimePause, runtimeVisibility,runtimeVisibilityPolicy, ...(runtimeMode==='independent-animation'?{foreignPose}:{}), foreignPoses: !!scope.foreignPoses, allowForeignOnly: !!scope.foreignPoses, statePhase, layer:{...layer, syncLayer}, baseLayer:composition.layers.find(item=>item.id==='base'),
-      explodId, language:language(filename), ...extra });
+      explodId, language:language(filename), ...extra, equipment });
   }
   const installed=[];
   for(const source of sources)for(const match of source.text.matchAll(/^[^\r\n]+/gm)){
@@ -429,7 +437,7 @@ async function openCostumeLayer(context, services = {}) {
     const prefix=(language(source.document.fileName)==='zss'?'# ':'; ')+'IKEMaker costume preflight '+slotId+' Explod '+id;
     const hits=sources.flatMap(item=>[...item.text.matchAll(/^[^\r\n]+/gm)].filter(match=>match[0].replace(/^[#;] /,'').startsWith('IKEMaker costume preflight '+slotId+' Explod '+id+' ; ikm2=')).map(match=>({source:item,match})));
     if(hits.length>1)throw Error('Multiple costume preflight blocks exist. Review the generated source before applying.');
-    const spec={version:2,...linkSpec(slotId,id),scopeAction:'all',statePhase:'pre',explodClock:'frozen',foreignPoses:false,omitHeader:false};
+    const spec={version:2,...linkSpec(slotId,id),scopeAction:'all',statePhase:'pre',explodClock:'frozen',foreignPoses:false,omitHeader:false};delete spec.equipment;
     if(hits.length){
       const hit=hits[0],sealed=managedSpecification(hit.match[0],hit.source.text,hit.match.index),eol=hit.source.text.includes('\r\n')?'\r\n':'\n';
       const preCode=language(hit.source.document.fileName)===language(generatedSource.document.fileName)?result.preStateCode:makeResult(hit.source.document.fileName,id,{runtimeMode:'body-pose',layer:{...composition.layers.find(item=>item.id===slotId),syncLayer:rank({id:slotId})}}).preStateCode;
@@ -508,7 +516,7 @@ async function openCostumeLayer(context, services = {}) {
     }
     if (runtimeMode === 'independent-animation' && installedSpec?.runtimeMode === 'independent-animation') installedSpec={...installedSpec,runtimeAction,runtimePause,runtimeVisibility,runtimeVisibilityPolicy,foreignPose};
     if (runtimeMode === 'legacy' && installedSpec?.runtimeMode === 'legacy') installedSpec = {...installedSpec,scopeAction,foreignPoses:!!scope.foreignPoses,statePhase};
-    const filename=primary.source.document.fileName,result=makeResult(filename,primary.id,installedSpec),spec={...linkSpec(layer.id,primary.id),...installedSpec,linkLabel:layer.label,explodClock:result.summary.explodClock};
+    const filename=primary.source.document.fileName,result=makeResult(filename,primary.id,installedSpec),spec={...linkSpec(layer.id,primary.id),...installedSpec,...(result.summary.equipment?{equipment:result.summary.equipment}:{}),linkLabel:layer.label,explodClock:result.summary.explodClock};
     const patch=refreshRecord(primary,result,spec),peers=refreshPeers(result,layer.id),statePatches=[...peers.patches,...preflightPatches(result,primary.source,primary.id),...(patch.unchanged?[]:[{source:primary.source,patch}])];
     return reviewResult(api,{title:'Update costume composition · '+layer.label,result:peers.result,air,reviewed:[owner.def,air,...sources],assets,stamp,target:primary.source,statePatch:patch.unchanged?null:patch,statePatches,stateNumber:result.summary.statedef,selectionNote});
   }
@@ -541,7 +549,7 @@ async function openCostumeLayer(context, services = {}) {
   const result = makeResult(filename, Number(id));
   if (result.summary.statedef !== stateNumber) throw new Error('The generated StateDef does not match the reviewed destination.');
   const installedMarker = (language(filename) === 'zss' ? '# ' : '; ') + marker + 'Explod ' + id;
-  const eol=target.text.includes('\r\n')?'\r\n':'\n',spec={version:2,...linkSpec(layer.id,Number(id)),scopeAction,foreignPoses:!!scope.foreignPoses,statePhase,runtimeMode,runtimeAction,runtimePause,runtimeVisibility,runtimeVisibilityPolicy,...(runtimeMode==='independent-animation'?{foreignPose}:{}),explodClock:result.summary.explodClock,omitHeader:!!picked.global};
+  const eol=target.text.includes('\r\n')?'\r\n':'\n',spec={version:2,...linkSpec(layer.id,Number(id)),scopeAction,foreignPoses:!!scope.foreignPoses,statePhase,runtimeMode,runtimeAction,runtimePause,runtimeVisibility,runtimeVisibilityPolicy,...(runtimeMode==='independent-animation'?{foreignPose}:{}),explodClock:result.summary.explodClock,omitHeader:!!picked.global,...(result.summary.equipment?{equipment:result.summary.equipment}:{})};
   const statePatch=insertion(target.text,picked.global?.end??target.text.length,sealManagedBlock(installedMarker,result.stateCode,spec,stateNumber,eol));
   if (!statePatch) throw new Error('No costume controllers were generated.');
   const peers=refreshPeers(result,layer.id);

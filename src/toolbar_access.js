@@ -54,6 +54,8 @@ function style() {
     '.ikemaker-entity-header>.ikm-toolbar-bar{margin-left:auto;padding:0}',
     '.ikm-toolbar-bar>button{box-sizing:border-box;min-height:26px;padding:2px 7px;font:inherit;font-size:12px;white-space:nowrap;cursor:pointer;color:var(--vscode-button-secondaryForeground,var(--vscode-foreground));background:var(--vscode-button-secondaryBackground,var(--vscode-input-background));border:1px solid var(--vscode-button-border,var(--vscode-panel-border))}',
     '.ikm-toolbar-bar>button[hidden]{display:none!important}',
+    '.ikm-toolbar-bar select[hidden]{display:none!important}',
+    '.ikm-toolbar-bar>:is([data-ikm-presentation-choice],[data-ikm-action-label-choice]){max-width:100px;min-height:26px;font:inherit;font-size:12px;color:var(--vscode-dropdown-foreground);background:var(--vscode-dropdown-background);border:1px solid var(--vscode-dropdown-border,var(--vscode-panel-border))}',
     '.ikm-toolbar-bar>button[aria-pressed="true"],.ikm-toolbar-bar>button[aria-expanded="true"]{border-color:var(--vscode-focusBorder);background:var(--vscode-list-activeSelectionBackground,var(--vscode-input-background))}',
     '.ikm-toolbar-bar>.ikm-toolbar-favorites{display:flex;flex:1 1 auto;min-width:0;gap:3px;overflow-x:auto;overflow-y:hidden;scrollbar-width:thin}',
     '.ikm-toolbar-bar .viewer-action-favorites-bar{flex-wrap:nowrap!important;overflow-x:auto!important}',
@@ -254,8 +256,25 @@ function client(config, getBridge) {
   const resetSource = () => doc.querySelector('[data-viewer-layout-reset]');
   const reset = makeButton('Reset viewer layout', '↺', 'Reset this viewer’s panel layout'); reset.hidden = !resetSource();
   const compactToggle = makeButton('Compact toolbar', '⇲', 'Compact toolbar: one row plus menus; other rows move into More');
+  const choice = (name, help, values, data, selected) => {
+    const select = doc.createElement('select');
+    select.hidden = true;
+    select.dataset[data] = '';
+    select.setAttribute('aria-label', name);
+    select.title = help;
+    for (const [value, label] of values) {
+      const option = doc.createElement('option');
+      option.value = value;
+      option.textContent = label;
+      select.append(option);
+    }
+    select.value = selected;
+    return select;
+  };
+  const presentation = choice('Viewer explanations', 'Show explanations inline or on demand', [['guided', 'Guided'], ['compact', 'Compact']], 'ikmPresentationChoice', root.dataset.ikmPresentation || 'compact');
+  const actionLabels = choice('Viewer action labels', 'Choose icons or named buttons', [['icons', 'Icons'], ['named', 'Named buttons']], 'ikmActionLabelChoice', root.dataset.ikmActionLabels || 'named');
   const favorites = doc.createElement('div'); favorites.className = 'ikm-toolbar-favorites'; favorites.setAttribute('role', 'group'); favorites.setAttribute('aria-label', 'Favorite actions');
-  bar.append(jump, more, reset, compactToggle, favorites);
+  bar.append(jump, more, reset, compactToggle, presentation, actionLabels, favorites);
 
   const panel = doc.createElement('div');
   panel.className = 'ikm-toolbar-more'; panel.id = 'ikm-toolbar-more-' + Math.random().toString(36).slice(2, 8); panel.hidden = true;

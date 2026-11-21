@@ -14,6 +14,23 @@ const {
   transactionalWrite
 } = require('./mutation_safety');
 const sourceChoices = new Map();
+const SILHOUETTE_ACTION = 'Save and review silhouette';
+
+// Receiver contract: {expectedHash, bank, layerIds, baseIds}; ids are 'group,number'
+// strings in matching order, taken from verified saved identities only.
+function bakeRequestFor(expectedHash, bank, importedLayers) {
+  if (!/^[0-9a-f]{64}$/.test(String(expectedHash || '')) || !Number.isInteger(bank) || bank < 1 || bank > 6) throw Error('Silhouette review needs the verified saved SFF hash and bank.');
+  if (!Array.isArray(importedLayers) || !importedLayers.length) throw Error('No verified imported layers are available for silhouette review.');
+  const id = /^\d{1,5},\d{1,5}$/, layerIds = [], baseIds = [];
+  for (const row of importedLayers) {
+    const [baseGroup, baseNumber] = String(row.baseId).split(',').map(Number), [layerGroup, layerNumber] = String(row.layerId).split(',').map(Number);
+    if (!id.test(row.baseId) || !id.test(row.layerId) || layerGroup !== baseGroup + bank * 10000 || layerNumber !== baseNumber || baseGroup >= 10000) throw Error(`Imported layer ${row.layerId} does not match base ${row.baseId} in bank ${bank}.`);
+    layerIds.push(row.layerId);
+    baseIds.push(row.baseId);
+  }
+  if (new Set(layerIds).size !== layerIds.length) throw Error('Duplicate imported layer identity.');
+  return { expectedHash, bank, layerIds, baseIds };
+}
 
 // Commit only the exact reviewed bytes under the currently admitted SFF owner.
 // Recovery evidence is exclusive-create; shared mutation safety owns replacement
@@ -177,6 +194,10 @@ async function openPsdCostumeBank(options = {}) {
       description: 'Exact master-color indexing; beard changes with character palettes',
       value: 'indexed'
     }, {
+      label: 'Own independent palette',
+      description: 'One indexed palette shared by these overlay frames; exact colors, index 0 transparent; ignores costume palettes',
+      value: 'independent'
+    }, {
       label: 'Keep exact source colors',
       description: 'Fixed PNG32 colors; does not follow character palette changes',
       value: 'rgba'
@@ -207,7 +228,27 @@ async function openPsdCostumeBank(options = {}) {
       extracted.skipped.push(...indexed.skipped);
       colorEvidence = indexed.evidence;
     }
-    const suggested = model.suggestBank(archive, extracted.sprites);
+    let independent = null;
+    if (colorMode.value === 'independent') {
+      const alpha = model.independentAlphaReview(extracted.sprites);
+      let partialAlpha = 'reject';
+      if (alpha.partialPixels) {
+        const decision = await vscode.window.showQuickPick([{
+          label: alpha.alphaChanges.toOpaque ? 'Threshold partial alpha at 128' : 'Make faint edge pixels transparent',
+          description: `Explicit pixel change in ${alpha.frames.length} frame(s): ${alpha.alphaChanges.toTransparent} become transparent, ${alpha.alphaChanges.toOpaque} become opaque`,
+          value: 'threshold'
+        }], {
+          title: 'Indexed palettes cannot store partial alpha exactly'
+        });
+        if (!decision) return;
+        partialAlpha = decision.value;
+      }
+      independent = model.prepareIndependent(extracted.sprites, { partialAlpha });
+      extracted.sprites = independent.sprites;
+      colorEvidence = independent.evidence;
+    }
+    const resolveFor = independent ? bank => model.resolveIndependentPalette(archive, independent, bank) : undefined;
+    const suggested = model.suggestBank(archive, extracted.sprites, resolveFor);
     const bankText = await vscode.window.showInputBox({
       title: 'Costume bank',
       value: String(suggested),
@@ -215,7 +256,21 @@ async function openPsdCostumeBank(options = {}) {
       validateInput: v => /^[1-6]$/.test(v) ? undefined : 'Choose 1 through 6 (bank 6 requires all destination groups ≤65535).'
     });
     if (!bankText) return;
-    const plan = model.planBank(archive, extracted.sprites, Number(bankText)),
+    const resolved = resolveFor ? resolveFor(Number(bankText)) : null;
+    if (resolved) {
+      extracted.sprites = resolved.sprites;
+      colorEvidence = {
+        ...colorEvidence,
+        palette: {
+          id: resolved.palette.id,
+          physicalIndex: resolved.palette.index,
+          reused: resolved.palette.reused,
+          colorsHash: resolved.palette.colorsHash,
+          colors: resolved.palette.colors.slice(0, colorEvidence.opaqueColors + 1)
+        }
+      };
+    }
+    const plan = model.planBank(archive, extracted.sprites, Number(bankText), resolved ? { palette: resolved.palette } : {}),
       candidate = model.appendBank(archive, plan);
     const review = {
       schema: 'ikemaker.psd-costume-bank-review',
@@ -260,10 +315,14 @@ async function openPsdCostumeBank(options = {}) {
     await vscode.window.showTextDocument(document, {
       preview: true
     });
-    const action = await vscode.window.showInformationMessage(`PSD bank ${plan.bank}: ${review.added} new, ${review.promoted} exact-source PNG32 imports promoted to follow body palette, ${review.reused} identical existing, ${review.skipped.length} skipped.${review.layoutRepair?' Existing archive layout will be repaired without changing sprite pixels, links or axes.':''} Read the open review manifest before approving: every ID, axis and skip is listed. Destination: ${sffPath}. Raw layers ignore layer visibility, opacity and blend styling.`, {
+    const action = await vscode.window.showInformationMessage(`PSD bank ${plan.bank}: ${review.added} new, ${review.promoted} exact-source PNG32 imports promoted to ${independent?'the independent palette '+colorEvidence.palette.id:'follow body palette'},${independent?(colorEvidence.palette.reused?' reusing':' adding')+' independent palette '+colorEvidence.palette.id+' ('+colorEvidence.opaqueColors+' exact colors, index 0 transparent),':''} ${review.reused} identical existing, ${review.skipped.length} skipped.${review.layoutRepair?' Existing archive layout will be repaired without changing sprite pixels, links or axes.':''} Read the open review manifest before approving: every ID, axis and skip is listed. Destination: ${sffPath}. Raw layers ignore layer visibility, opacity and blend styling.`, {
       modal: false
-    }, review.promoted ? 'Save reviewed palette promotion' : review.added ? 'Save reviewed bank' : changed ? 'Save repaired SFF' : 'Use existing bank');
+    }, review.promoted ? 'Save reviewed palette promotion' : review.added ? 'Save reviewed bank' : changed ? 'Save repaired SFF' : 'Use existing bank', SILHOUETTE_ACTION);
     if (!action) return;
+    const reviewSilhouette = action === SILHOUETTE_ACTION;
+    // Validate the handoff against the reviewed bytes before writing, so a contract
+    // failure can never surface only after the SFF has changed.
+    const plannedBake = reviewSilhouette ? bakeRequestFor(review.afterHash, plan.bank, model.importedLayerIdentities(candidate, plan)) : undefined;
     if (options.isCurrent && !(await options.isCurrent())) throw Error('The viewer target or pending edits changed. Reopen this import from the assigned SFF.');
     if (model.sha(fs.readFileSync(sffPath)) !== expectedHash) throw Error('The assigned SFF changed during review. No changes were saved.');
     let backup;
@@ -275,7 +334,17 @@ async function openPsdCostumeBank(options = {}) {
       psdFolder,
       csvPath
     });
-    void vscode.window.showInformationMessage(`PSD costume bank ${plan.bank} ready: ${review.added} added, ${review.promoted} promoted to follow body palette, ${review.reused} reused.${backup?' Backup: '+backup:''}`);
+    // Identities come from the verified on-disk bytes, never from the in-memory candidate alone.
+    const saved = fs.readFileSync(sffPath);
+    if (model.sha(saved) !== review.afterHash) throw Error('Saved SFF verification failed before reporting imported layers.' + (backup ? ' Original backup: ' + backup : ''));
+    if (changed) {
+      const warning = require('./sff_quick_layer_admission').continueSavedBatches(sffPath,archive,saved);
+      if (warning) void vscode.window.showWarningMessage('The PSD layer bank was saved. '+warning);
+    }
+    const importedLayers = model.importedLayerIdentities(saved, plan);
+    const bakeRequest = reviewSilhouette ? bakeRequestFor(review.afterHash, plan.bank, importedLayers) : undefined;
+    if (reviewSilhouette && JSON.stringify(bakeRequest) !== JSON.stringify(plannedBake)) throw Error('Saved layer identities differ from the reviewed silhouette request. The bank was saved; reopen silhouette review from the viewer.' + (backup ? ' Original backup: ' + backup : ''));
+    void vscode.window.showInformationMessage(`PSD costume bank ${plan.bank} ready: ${review.added} added, ${review.promoted} promoted to ${independent?'independent palette '+colorEvidence.palette.id:'follow body palette'}, ${review.reused} reused.${backup?' Backup: '+backup:''}`);
     return {
       bank: plan.bank,
       label: layerName || 'PSD layer',
@@ -284,7 +353,11 @@ async function openPsdCostumeBank(options = {}) {
       promoted: review.promoted,
       skipped: review.skipped.length,
       backup,
-      sffPath
+      sffPath,
+      palette: independent ? colorEvidence.palette.id : undefined,
+      importedLayers,
+      // Only when chosen: the viewer opens a separate silhouette review for exactly these rows.
+      bakeRequest
     };
   } catch (error) {
     await vscode.window.showErrorMessage(`PSD costume bank: ${error.message}`);
@@ -297,6 +370,6 @@ async function openPsdCostumeBank(options = {}) {
   }
 }
 module.exports = {
-  openPsdCostumeBank,commitReviewedBank
+  openPsdCostumeBank,commitReviewedBank,bakeRequestFor,SILHOUETTE_ACTION
 };
 

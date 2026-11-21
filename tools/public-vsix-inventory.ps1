@@ -30,7 +30,7 @@ foreach ($directory in $runtimeTrees) {
 # of its runtime subset; its acceptance fixtures and developer logs stay local.
 $meterRoot = Join-Path $root 'companions/IKeMeter'
 $meterFiles = @(Get-Content -LiteralPath (Join-Path $meterRoot 'SHA256SUMS.txt') | Where-Object {
-    $_ -match '^[a-f0-9]{64}  (app/|bridge/|src/|package\.json$|Start-IKeMeter\.ps1$)'
+    $_ -match '^[a-f0-9]{64}  (app/|bridge/|src/|package\.json$|Start-IKeMeter\.ps1$|docs/(PLAYER-TELEMETRY-V1|WATCH-LOG-V1)\.md$|tools/export_snapshot_finding\.js$)'
 })
 foreach ($entry in $meterFiles) {
     $digest, $name = $entry -split '  ',2
@@ -39,3 +39,4 @@ foreach ($entry in $meterFiles) {
     Add-FileEntry $file "extension/companions/IKeMeter/$name"
 }
 Add-TextEntry 'extension/companions/IKeMeter/SHA256SUMS.txt' (($meterFiles -join "`n") + "`n")
+

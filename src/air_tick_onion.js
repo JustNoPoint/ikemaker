@@ -25,8 +25,13 @@ function runtime(api) {
     for (const id of ['onion', 'compactOnion']) {
       const button = document.getElementById(id); if (!button) continue;
       button.classList.toggle('active', mode !== 'off');
-      button.textContent = mode === 'elements' ? 'Onion: ' + api.depth() : mode === 'off' ? 'Onion: Off' : 'Onion: ' + (mode === 'pinned' ? 'tick ' + pinnedTick : mode === 'frame' ? 'frame ' + (pinnedElement+1) : mode + ' tick');
-      if (id === 'compactOnion') button.textContent = mode === 'elements' ? '◉' + api.depth() : '◉';
+      const label = mode === 'elements' ? 'Onion: ' + api.depth() : mode === 'off' ? 'Onion: Off' : 'Onion: ' + (mode === 'pinned' ? 'tick ' + pinnedTick : mode === 'frame' ? 'frame ' + (pinnedElement+1) : mode + ' tick');
+      const caption = button.querySelector?.('[data-ikm-action-label]');
+      if (caption) {
+        caption.textContent = label;
+        button.dataset.ikmActionIcon = mode === 'elements' ? '◉' + api.depth() : '◉';
+        button.setAttribute('aria-label', label);
+      } else button.textContent = label;
       button.title = tick ? 'Tick onion preview; choose its mode beside this button. No source changes.' : 'Cycle adjacent element onion depth: Off, 1, 2. Tick modes are available beside this button.';
     }
     api.save({ onionMode: mode, onionPinnedTick: pinnedTick, onionPinnedAction: pinnedAction, onionPinnedElement: pinnedElement });
@@ -81,7 +86,7 @@ function runtime(api) {
 
 function install(page) {
   const controls = '<label class="tick-onion-control">Onion <select id="onionMode" aria-label="Onion preview mode"><option value="off">Off</option><option value="elements">Elements</option><option value="previous">Previous tick</option><option value="next">Next tick</option><option value="pinned">Pinned tick</option><option value="frame">Pinned frame</option></select></label><button id="pinCurrentOnion" title="Keep this exact authored frame as the onion reference, including zero-time frames, while selecting other actions">Pin current frame</button><label class="tick-onion-control">Action <input id="onionPinnedAction" aria-label="Pinned onion action number" type="number" step="1" placeholder="Current" style="width:75px"></label><label class="tick-onion-control">Frame <input id="onionPinnedFrame" aria-label="Pinned onion frame (one-based)" type="number" min="1" step="1" value="1" style="width:65px"></label><label class="tick-onion-control">Tick <input id="onionPinnedTick" aria-label="Pinned onion tick (one-based)" type="number" min="1" step="1" value="1" style="width:65px"></label><span id="onionTickStatus" class="muted" role="status"></span>';
-  return page.replace(/(<button id="compactOnion"[^>]*>[^<]*<\/button>)/, '$1' + controls)
+  return page.replace(/(<button id="compactOnion"[^>]*>[\s\S]*?<\/button>)/, '$1' + controls)
     .replace('[...images.values()].filter(e=>e.onion)', 'globalThis.ikemenTickOnion?.draw();[...images.values()].filter(e=>e.onion&&(!globalThis.ikemenTickOnion||globalThis.ikemenTickOnion.mode()===\'elements\'))')
     .replace('onion:onionDepth?{action:', "onion:onionDepth&&(!globalThis.ikemenTickOnion||globalThis.ikemenTickOnion.mode()==='elements')?{action:")
     .replace('if(!action||!navigationAllowed())return false;collisionViewerEditEpoch++;', 'if(!action||!navigationAllowed())return false;globalThis.ikemenTickOnion?.reset();collisionViewerEditEpoch++;')

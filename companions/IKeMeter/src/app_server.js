@@ -24,6 +24,8 @@ function createAppServer(options = {}) {
   const controller = options.controller || new SessionController({
     async connect() { throw new Error('No attached-nightly driver configured'); },
   });
+  const telemetryRoute = require('./telemetry_http').createTelemetryRoute(sendJson);
+  const watchRoute=require('./watch_http').createWatchRoute(sendJson);
   let server;
   server = http.createServer(async (request, response) => {
     response.setHeader('Content-Security-Policy', "default-src 'self'; connect-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'; frame-ancestors 'none'");
@@ -34,6 +36,14 @@ function createAppServer(options = {}) {
     if (request.url?.startsWith('/api/') && (!expectedHost || host !== expectedHost)) {
       sendJson(response, 403, { error: 'Local API request rejected' }); return;
     }
+    if (/^\/api\/telemetry(?:[/?]|$)/.test(request.url)) {
+      await telemetryRoute(request,response,expectedHost,controller.telemetry);
+      return;
+    }
+    if(/^\/api\/watch(?:[/?]|$)/.test(request.url)){
+      await watchRoute(request,response,expectedHost,controller);
+      return;
+    }
     if (request.url === '/api/status') {
       sendJson(response, 200, controller.status());
       return;
@@ -42,7 +52,7 @@ function createAppServer(options = {}) {
       sendJson(response, 200, controller.historySnapshot());
       return;
     }
-    const action = request.url?.match(/^\/api\/(connect|restart|pause|step|resume|disconnect)$/)?.[1];
+    const action = request.url?.match(/^\/api\/(connect|restart|pause|step|resume|snapshot|disconnect)$/)?.[1];
     if (action) {
       if (request.method !== 'POST') { sendJson(response, 405, { error: 'POST required' }); return; }
       const origin = request.headers?.origin || '';
@@ -55,6 +65,7 @@ function createAppServer(options = {}) {
         const result = action === 'connect' ? await controller.connect()
           : action === 'restart' ? await controller.restart()
           : action === 'disconnect' ? await controller.disconnect()
+          : action === 'snapshot' ? await controller.snapshot()
             : await controller.command(action);
         sendJson(response, 200, result);
       } catch (error) {
@@ -82,7 +93,13 @@ if (require.main === module) {
       lease = acquireRuntimeLease(process.env.IKEMETER_RUNTIME);
       const { AttachedNightlyDriver } = require('./attached_nightly_driver');
       const players = process.env.IKEMETER_P1 ? [process.env.IKEMETER_P1, process.env.IKEMETER_P2 || 'kfm'] : undefined;
-      options = { controller: new SessionController(new AttachedNightlyDriver({ runtime: lease.runtime, players })) };
+      if (process.env.IKEMETER_P3 || process.env.IKEMETER_P4) {
+        if (!players || !process.env.IKEMETER_P3 || !process.env.IKEMETER_P4) throw Error('Four-player capture requires four selected players');
+        players.push(process.env.IKEMETER_P3, process.env.IKEMETER_P4);
+      }
+      options = { controller: new SessionController(new AttachedNightlyDriver({
+        runtime: lease.runtime, players, launchManifest:process.env.IKEMETER_LAUNCH_MANIFEST
+      })) };
     }
     const server=createAppServer(options).listen(0, '127.0.0.1', function () {
       process.stdout.write(`IKeMeter local: http://127.0.0.1:${this.address().port}\n`);

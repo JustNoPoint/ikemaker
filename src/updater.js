@@ -9,6 +9,10 @@ const engineUpdateModel = require('./engine_update_model');
 const { notifyEngineCapabilitiesChanged } = require('./engine_capability_events');
 const { BUILT_IN_ENGINE_CATALOG, ENGINE_CATALOG_KEY, readEngineCatalog } = require('./engine_catalog_access');
 
+const catalogDiscovery = require('./upstream_catalog_discovery');
+const TRIGGER_CATALOG_KEY = 'ikemenZss.triggerCatalog.v1';
+const builtInTriggers = require('../data/triggers.json');
+
 const SNAPSHOT_KEY = 'ikemenZss.upstreamSnapshot.v1';
 const REPORT_KEY = 'ikemenZss.upstreamReport.v1';
 const CATALOG_KEY = 'ikemenZss.controllerCatalog.v1';
@@ -192,7 +196,7 @@ async function discoverCustomCatalogs(fetcher, checkedAt, urls = []) {
 
 async function buildSnapshot(fetcher = fetchText, customSources = []) {
   const checkedAt = new Date().toISOString();
-  const pairs = await Promise.all(SOURCES.map(async (source) => {
+  const pairs = await Promise.all([...SOURCES, ...catalogDiscovery.SOURCES].map(async (source) => {
     try {
       const text = await fetcher(source.url);
       let marker = digest(text);
@@ -201,7 +205,7 @@ async function buildSnapshot(fetcher = fetchText, customSources = []) {
         const data = JSON.parse(text);
         marker = [data.id, data.published_at, data.updated_at, data.target_commitish].filter(Boolean).join('|') || marker;
       }
-      return [source.id, { marker, features, docs: source.docs, text: source.id === 'sctrl' ? text : undefined }];
+      return [source.id, { marker, features, docs: source.docs, text: ['sctrl', 'triggers', 'redirections', ...catalogDiscovery.SOURCES.map(item => item.id)].includes(source.id) ? text : undefined }];
     } catch (error) {
       return [source.id, { error: error.message, features: [] }];
     }
@@ -289,7 +293,7 @@ function makeReport(snapshot, changes, registryDiff, usages, scopeLabel) {
       `Added: ${registryDiff.added.length}${registryDiff.added.length ? ` - ${registryDiff.added.join(', ')}` : ''}`,
       `Removed: ${registryDiff.removed.length}${registryDiff.removed.length ? ` - ${registryDiff.removed.join(', ')}` : ''}`,
       `Reclassified or relinked: ${registryDiff.changed.length}${registryDiff.changed.length ? ` - ${registryDiff.changed.join(', ')}` : ''}`,
-      'Existing parameter templates are preserved. New controllers are inserted safely with no active parameters.', '');
+      'Catalog discoveries are applied automatically. Existing metadata and parameter templates are preserved; documented parameters are added.', '');
   }
   if (usages.length) {
     lines.push('WORKSPACE MIGRATION CANDIDATES', ...usages.map((item) => `- ${item.label}: ${item.uri.fsPath}`),
@@ -341,7 +345,33 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
     output.clear(); output.appendLine(context.globalState.get(REPORT_KEY, 'No update report has been generated yet.')); output.show(true);
   }
 
-  async function check({ manual = false, scopeDef } = {}) {
+  let catalogQueue = Promise.resolve();
+  function refreshCodingCatalogs(sources = {}) {
+    const refresh = catalogQueue.then(async () => {
+      // Read state inside the queue so concurrent offline and normal checks
+      // merge into the most recently promoted catalogs.
+      const currentCatalog = context.globalState.get(CATALOG_KEY, builtInCatalog);
+      const refreshed = catalogDiscovery.discover(sources, currentCatalog, context.globalState.get(TRIGGER_CATALOG_KEY, builtInTriggers), builtInCatalog, builtInTriggers);
+      const controllerDiff = refreshed.controllers, triggerDiff = refreshed.triggers;
+      if (controllerDiff.added.length || controllerDiff.changed.length || triggerDiff.added.length || triggerDiff.changed.length) {
+        await context.globalState.update(CATALOG_KEY, controllerDiff.catalog);
+        await context.globalState.update(TRIGGER_CATALOG_KEY, triggerDiff.catalog);
+        applyCatalog(controllerDiff.catalog, triggerDiff.catalog);
+      }
+      return refreshed;
+    });
+    catalogQueue = refresh.catch(() => {});
+    return refresh;
+  }
+
+  let pendingCheck;
+  function check(options = {}) {
+    if (pendingCheck) return pendingCheck;
+    pendingCheck = runCheck(options).finally(() => { pendingCheck = undefined; });
+    return pendingCheck;
+  }
+
+  async function runCheck({ manual = false, scopeDef } = {}) {
     const config = vscode.workspace.getConfiguration('ikemenZss.updates');
     if (!manual && !config.get('enabled', true)) return;
     const previous = context.globalState.get(SNAPSHOT_KEY);
@@ -352,17 +382,15 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
         const attempted = await buildSnapshot(fetchText, customSources);
         const snapshot = knowledgeModel.mergeSnapshot(previous, attempted);
         const changes = compareSnapshots(previous, snapshot);
-        const currentCatalog = context.globalState.get(CATALOG_KEY, builtInCatalog);
-        let registryDiff;
-        if (snapshot.sources.sctrl && snapshot.sources.sctrl.text) registryDiff = buildControllerCatalog(snapshot.sources.sctrl.text, currentCatalog);
+        const { controllers: registryDiff, triggers: triggerDiff } = await refreshCodingCatalogs(attempted.sources);
         const removed = [...changes.flatMap((item) => item.removed || []), ...(registryDiff ? registryDiff.removed : [])];
         const usages = await findWorkspaceUsages(vscode, removed, config.get('maxWorkspaceFiles', 1000), scopeDef);
         const scopeLabel = scopeDef ? vscode.workspace.asRelativePath(scopeDef, false) : '';
         const currentEngineCatalog = readEngineCatalog(context);
         const engineRefresh = knowledgeModel.refreshCatalog(currentEngineCatalog, snapshot);
-        let report = `${makeReport(snapshot, changes, registryDiff, usages, scopeLabel)}\n\nENGINE KNOWLEDGE CATALOG\nCatalog revision: ${engineRefresh.catalog.catalogRevision}\nExact/candidate builds known: ${engineRefresh.catalog.builds.length}\nCapabilities observed: ${engineRefresh.catalog.capabilities.length}\nRefresh promoted: ${engineRefresh.promoted ? 'yes' : 'no'}\nMetadata changed: ${engineRefresh.changed ? 'yes' : 'no'}\nValidation issues: ${engineRefresh.issues.length}`;
+        let report = `${makeReport(snapshot, changes, registryDiff, usages, scopeLabel)}\n\nTRIGGER CATALOG UPDATE\nTriggers after update: ${triggerDiff.catalog.length}\nAdded: ${triggerDiff.added.join(', ') || 'None'}\nUpdated metadata: ${triggerDiff.changed.length}\nCatalog discoveries are applied automatically.\n\nENGINE KNOWLEDGE CATALOG\nCatalog revision: ${engineRefresh.catalog.catalogRevision}\nExact/candidate builds known: ${engineRefresh.catalog.builds.length}\nCapabilities observed: ${engineRefresh.catalog.capabilities.length}\nRefresh promoted: ${engineRefresh.promoted ? 'yes' : 'no'}\nMetadata changed: ${engineRefresh.changed ? 'yes' : 'no'}\nValidation issues: ${engineRefresh.issues.length}`;
         const storedSnapshot = JSON.parse(JSON.stringify(snapshot));
-        if (storedSnapshot.sources.sctrl) delete storedSnapshot.sources.sctrl.text;
+        for (const source of Object.values(storedSnapshot.sources)) delete source.text;
         await context.globalState.update(SNAPSHOT_KEY, storedSnapshot);
         if (engineRefresh.promoted) {
           await context.globalState.update(ENGINE_CATALOG_KEY, engineRefresh.catalog);
@@ -371,21 +399,21 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
         await context.globalState.update(REPORT_KEY, report);
         output.clear(); output.appendLine(report);
 
-        return { snapshot, changes, registryDiff, engineRefresh, usages, report };
+        return { snapshot, changes, registryDiff, triggerDiff, engineRefresh, usages, report };
       });
-      const { snapshot, changes, registryDiff, engineRefresh, usages } = result;
+      const { snapshot, changes, registryDiff, triggerDiff, engineRefresh, usages } = result;
       let { report } = result;
       const decision = await offerProjectEngineDecision(vscode, context, engineRefresh.catalog, changes, usages, report);
       if (decision?.report && decision.report !== report) { report = decision.report; await context.globalState.update(REPORT_KEY, report); output.clear(); output.appendLine(report); }
       if (decision?.show) output.show(true);
 
       const changed = changes.some((item) => item.status === 'changed');
-      const hasRegistryDiff = registryDiff && (registryDiff.added.length || registryDiff.removed.length || registryDiff.changed.length);
+      const hasRegistryDiff = registryDiff && (registryDiff.added.length || registryDiff.removed.length || registryDiff.changed.length || triggerDiff.added.length || triggerDiff.changed.length);
       const actions = ['View Report'];
       const offlineActions = vscode.workspace.getConfiguration('ikemenZss.docs').get('offlineUpdatesEnabled', true);
       if (offlineActions) actions.push('Open Offline Library');
       if (offlineActions && (manual || changed || hasRegistryDiff)) actions.push('Update Offline Library');
-      if (hasRegistryDiff) actions.unshift('Update Controller Explorer');
+      // Catalog discoveries are already promoted automatically.
       if (changed || usages.length) actions.push('Audit Workspace');
       const message = !previous ? 'IKEMEN update baseline established.'
         : changed || hasRegistryDiff ? `IKEMEN changes found; ${usages.length} workspace migration candidate(s).`
@@ -396,12 +424,7 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
       if (action === 'Open Offline Library') await vscode.commands.executeCommand('ikemen.docs.openOffline');
       if (action === 'Update Offline Library') await vscode.commands.executeCommand('ikemen.docs.updateOffline');
       if (action === 'Audit Workspace') await vscode.commands.executeCommand('zss.audit.workspace');
-      if (action === 'Update Controller Explorer' && registryDiff) {
-        await context.globalState.update(CATALOG_KEY, registryDiff.catalog);
-        applyCatalog(registryDiff.catalog);
-        vscode.window.showInformationMessage(`ZSS State Controllers updated to ${registryDiff.catalog.length} entries.`);
-      }
-      return { snapshot, changes, registryDiff, engineRefresh, usages, report };
+      return { snapshot, changes, registryDiff, triggerDiff, engineRefresh, usages, report };
 
     } catch (error) {
       output.appendLine(`Update check failed: ${error.message}`);
@@ -415,11 +438,11 @@ function createUpdateMonitor(vscode, context, builtInCatalog, applyCatalog) {
     context.subscriptions.push({ dispose: () => clearTimeout(timer) });
   }
 
-  return { check, showLastReport, schedule, output };
+  return { check, refreshCodingCatalogs, showLastReport, schedule, output };
 }
 
 module.exports = {
-  SOURCES, BUILD_SOURCES, fetchText, extractFeatures, buildControllerCatalog, compareSnapshots,
+  TRIGGER_CATALOG_KEY, SOURCES, BUILD_SOURCES, fetchText, extractFeatures, buildControllerCatalog, compareSnapshots,
   discoverBuilds, discoverCustomCatalogs, buildSnapshot, due, makeReport, parseDefSourcePaths, createUpdateMonitor,
   ENGINE_CATALOG_KEY, ENGINE_DECISIONS_KEY, BUILT_IN_ENGINE_CATALOG, readEngineCatalog, activeProject, newestNightly, offerProjectEngineDecision
 };

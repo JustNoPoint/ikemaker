@@ -66,6 +66,13 @@ function decorate(panel,file,kind,page,explicitSelection=false,captureWhenHidden
  if(cached){const data=JSON.stringify(cached).replace(/</g,'\\u003c');page=page.replace('acquireVsCodeApi()',`(()=>{const api=acquireVsCodeApi();globalThis.ikemenResumeAsset=${data};return {getState:()=>api.getState()||globalThis.ikemenResumeAsset.state,setState:value=>api.setState(value),postMessage:message=>api.postMessage(message)}})()`);}
  const placement=openDispositions.get(panel)?.mode,cachedState=JSON.stringify(cached?.state||{}).replace(/</g,'\\u003c');
  page=page.replace('acquireVsCodeApi()',`(()=>{const api=acquireVsCodeApi(),keep=${placement==='new'}||(${placement!=='current'}&&api.getState()?.assetOpenMode==='new');if(keep)api.setState({...${cachedState},...api.getState(),assetOpenMode:'new'});return {getState:()=>api.getState(),setState:value=>{const next={...value};if(keep)next.assetOpenMode='new';else delete next.assetOpenMode;if(api.getState()?.assetKeepTabsOnRestore)next.assetKeepTabsOnRestore=true;return api.setState(next)},postMessage:message=>api.postMessage(message)}})()`);
+ if(kind==='air'||kind==='sff'){
+  const owner=require('./character_view_policy').verifiedOwnerPresentation(panel);
+  if(owner){
+   const header=JSON.stringify(owner.header).replace(/</g,'\\u003c');
+   page=page.replace('acquireVsCodeApi()',`(globalThis.ikemenVerifiedOwnerHeader=${header},acquireVsCodeApi())`);
+  }
+ }
  if(compact())page=page.replace(/(<details\b[^>]*?)\sopen(?=[\s>])/g,'$1').replace('<body>','<body data-simple-assets="true">');
  return page;
 }
@@ -223,6 +230,19 @@ async function loadMediaSession() {
 }
 function register(context){context.subscriptions.push(vscode.commands.registerCommand('ikemen.media.saveSession',saveMediaSession),vscode.commands.registerCommand('ikemen.media.loadSession',loadMediaSession),vscode.commands.registerCommand('ikemen.configureAssetWorkspace',chooseMode),vscode.commands.registerCommand('ikemen.assets.open',openAsset));}
 function client(){
+ let evidenceHeader;
+ function renderVerifiedOwner(header){
+  if(typeof header!=='string'||(!header&&!evidenceHeader))return;
+  if(!evidenceHeader){
+   evidenceHeader=document.createElement('p');
+   evidenceHeader.className='muted';
+   evidenceHeader.setAttribute('role','note');
+   document.body.prepend(evidenceHeader);
+  }
+  evidenceHeader.textContent=header;
+  evidenceHeader.hidden=!header;
+ }
+ renderVerifiedOwner(globalThis.ikemenVerifiedOwnerHeader);
  if(document.body.dataset.simpleAssets==='true'){
   const toolbar=document.querySelector('body > header, body > .toolbar, body > .header');
   if(toolbar){const tools=document.createElement('details'),summary=document.createElement('summary');summary.textContent='Tools & view';tools.append(summary);
@@ -233,7 +253,7 @@ function client(){
    if(tools.children.length>1)toolbar.append(tools);
   }
  }
- addEventListener('message',event=>{const m=event.data;if(m.type==='assetWorkspaceKeepOnRestore'){vscode.setState({...vscode.getState(),assetKeepTabsOnRestore:true});return;}if(m.type!=='assetWorkspaceCapture')return;
+ addEventListener('message',event=>{const m=event.data;if(m?.type==='verifiedOwnerNavigation'){renderVerifiedOwner(m.header);return;}if(m.type==='assetWorkspaceKeepOnRestore'){vscode.setState({...vscode.getState(),assetKeepTabsOnRestore:true});return;}if(m.type!=='assetWorkspaceCapture')return;
  const clean=typeof globalThis.ikemenCanLeaveAsset==='function'&&globalThis.ikemenCanLeaveAsset();
  const fields=Object.fromEntries([...document.querySelectorAll('input[id]')].filter(e=>/search|filter/i.test(e.id)).map(e=>[e.id,e.value]));
  const scroll=[...document.querySelectorAll('[id]')].filter(e=>e.scrollTop||e.scrollLeft).map(e=>({id:e.id,top:e.scrollTop,left:e.scrollLeft}));
@@ -247,4 +267,4 @@ function client(){
  vscode.postMessage({type:'assetWorkspaceReady',openNewTab:vscode.getState()?.assetOpenMode==='new',restoreTabs:vscode.getState()?.assetKeepTabsOnRestore===true});
  });
 }
-module.exports={trackStandalonePalette,configure,register,compact,multiple,beforeOpen,beforeReplace,pinTransfer,suspend,setOpenDisposition,openAsset,decorate,handle,clientScript:()=>`(${client.toString()})();`};
+module.exports={trackStandalonePalette,configure,register,compact,multiple,beforeOpen,beforeReplace,capture,pinTransfer,suspend,setOpenDisposition,openAsset,decorate,handle,clientScript:()=>`(${client.toString()})();`};

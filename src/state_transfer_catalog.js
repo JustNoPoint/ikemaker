@@ -36,9 +36,12 @@ function resolveCharacterStateFiles(definition, text, routing = {}, open = new M
   const characterDirectory = path.dirname(definition), root = routing.root || '', motifDirectory = routing.motif ? path.dirname(routing.motif) : '';
   const stateDirectories = [characterDirectory, root, motifDirectory, root && path.join(root, 'data')].filter(Boolean);
   const commandDirectories = [characterDirectory, root, root && path.join(root, 'data')].filter(Boolean);
+  let inspectedAssignments = 0, omittedAssignments = 0;
   const ordered = [], assignments = [], missing = [], candidates = [], limitations = [], add = (filename, role, directories) => {
+    if (inspectedAssignments >= (routing.assignmentLimit ?? Infinity)) { omittedAssignments++; return; }
+    inspectedAssignments++;
     if (!filename) { limitations.push(`The ${role} state assignment could not be resolved.`); return; }
-    const result = resolveEngineState(unquote(filename), directories, open); candidates.push(...result.candidates);
+    const result = resolveEngineState(unquote(filename), directories, open, routing.admitPath); candidates.push(...result.candidates);
     if (!result.filename) { missing.push(...result.candidates); limitations.push(`The assigned ${role} state file is missing: ${filename}`); return; }
     assignments.push({ filename: result.filename, role });
     if (!ordered.some(item => normalized(item.filename) === normalized(result.filename))) ordered.push({ filename: result.filename, role });
@@ -49,20 +52,20 @@ function resolveCharacterStateFiles(definition, text, routing = {}, open = new M
   if (command) add(command, 'cmd', commandDirectories);
   const commonEntry = (files.entries || []).find(entry => /^stcommon$/i.test(entry.key || ''));
   if (commonEntry) add(commonEntry.value, 'stcommon', stateDirectories);
-  return { files: ordered, assignments, missing, candidates, limitations };
+  return { files: ordered, assignments, missing, candidates, limitations, ...(omittedAssignments ? { omittedAssignments } : {}) };
 }
 
 function splitIniValues(input) {
   return String(input || '').split(',').map(value => unquote(value.trim())).filter(Boolean);
 }
 
-function resolveEngineState(filename, searchDirectories, open = new Map()) {
+function resolveEngineState(filename, searchDirectories, open = new Map(), admitPath = () => true) {
   const candidates = [];
   const add = value => { if (value && !candidates.some(candidate => normalized(candidate) === normalized(value))) candidates.push(path.resolve(value)); };
   const bases = path.isAbsolute(filename) ? [filename] : (searchDirectories || []).map(directory => path.join(directory, filename));
   for (const value of bases) add(value);
   if (!/\.zss$/i.test(filename)) for (const value of bases) add(`${value}.zss`);
-  return { filename: candidates.find(candidate => open.has(normalized(candidate)) || fs.existsSync(candidate)) || '', candidates };
+  return { filename: candidates.find(candidate => admitPath(candidate) && (open.has(normalized(candidate)) || fs.existsSync(candidate))) || '', candidates };
 }
 
 function commonEntries(text, filename, category = 'states') {
@@ -73,10 +76,11 @@ function commonEntries(text, filename, category = 'states') {
   return result;
 }
 
-function resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userText, searchDirectories, open = new Map(), category = 'states') {
+function resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userText, searchDirectories, open = new Map(), category = 'states', routing = {}) {
   const merged = commonEntries(defaultText, defaultConfig, category);
   for (const [key, entry] of commonEntries(userText, userConfig, category)) merged.set(key, entry);
   const files = [], assignments = [], missing = [], candidates = [], limitations = [];
+  let inspectedAssignments = 0, omittedAssignments = 0;
   const ordered = [...merged.values()].sort((left, right) => String(left.key).localeCompare(String(right.key), undefined, { numeric: true, sensitivity: 'base' }));
   const numericKeys = new Map();
   for (const entry of ordered) {
@@ -86,14 +90,17 @@ function resolveEngineCommonStates(defaultConfig, defaultText, userConfig, userT
   }
   for (const entry of ordered) {
     for (const assigned of splitIniValues(entry.value)) {
+      if (inspectedAssignments >= (routing.assignmentLimit ?? Infinity)) { omittedAssignments++; continue; }
+      inspectedAssignments++;
       // Common.Const uses LoadFile with no extension fallback (char.go).
-      const resolved = category === 'const' ? (() => { const candidates = path.isAbsolute(assigned) ? [assigned] : searchDirectories.map(directory => path.resolve(directory, assigned)); return { candidates, filename: firstExisting(candidates, open) }; })() : resolveEngineState(assigned, searchDirectories, open), filename = resolved.filename;
+      const resolved = category === 'const' ? (() => { const candidates = path.isAbsolute(assigned) ? [assigned] : searchDirectories.map(directory => path.resolve(directory, assigned)); return { candidates, filename: firstExisting(candidates, open) }; })() : resolveEngineState(assigned, searchDirectories, open, routing.admitPath), filename = resolved.filename;
       candidates.push(...resolved.candidates);
       if (!filename) { missing.push(...resolved.candidates); limitations.push((category === 'states' ? `The runtime common-state assignment is missing: ${assigned}` : `The runtime Common.Const assignment is missing: ${assigned}`)); }
       else { assignments.push({filename,role:`config:${entry.key}`});if (!files.some(item => normalized(item.filename) === normalized(filename))) files.push({ filename, role: `config:${entry.key}` }); }
     }
   }
-  return { files, assignments, missing: [...new Set(missing.map(item => path.resolve(item)))], candidates: [...new Set(candidates.map(item => path.resolve(item)))], limitations };
+  return { files, assignments, missing: [...new Set(missing.map(item => path.resolve(item)))], candidates: [...new Set(candidates.map(item => path.resolve(item)))], limitations,
+    ...(omittedAssignments ? { omittedAssignments } : {}) };
 }
 
 function configValue(defaultText, defaultFile, userText, userFile, sectionName, key) {
@@ -269,4 +276,4 @@ function referencesForState(catalog, value) {
   return (catalog.entries || []).flatMap(entry => (entry.transfers || []).filter(record => !record.dynamic && record.literal === value && usesCharacterCatalog(record)).map(record => ({ ...record, filename: entry.filename, uri: entry.uri })));
 }
 
-module.exports = { DEFAULT_STATE_LIMITS, buildStateTransferCatalog, definitionsForState, duplicateDeclarationFindings, referencesForState, resolveCharacterStateFiles, resolveEngineCommonStates, stateCatalogStillCurrent, stateTransferFindings };
+module.exports = { DEFAULT_STATE_LIMITS, buildStateTransferCatalog, configValue, definitionsForState, duplicateDeclarationFindings, referencesForState, resolveCharacterStateFiles, resolveEngineCommonStates, stateCatalogStillCurrent, stateTransferFindings };

@@ -1,7 +1,7 @@
 'use strict';
 
 const { createHash } = require('crypto');
-const triggerCatalog = require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
+const triggerCatalog = require('./live_coding_catalog').triggers;
 const {argumentSlot,argumentSummary}=require('./trigger_argument_model');
 const {luaCatalogFor,luaApiSignatureHelp}=require('./lua_target_catalog');
 const { completionModels, hoverModel, luaCompletionModels, luaHoverModel } = require('./language_intelligence');

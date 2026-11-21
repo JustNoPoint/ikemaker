@@ -3,7 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const controllerCatalog = require('../data/sctrl.json');
+const controllerCatalog = require('./live_coding_catalog').controllers;
 const { buildCharacterDependencyModel } = require('./character_dependency_model');
 const { analyzeZss } = require('./analyzer');
 

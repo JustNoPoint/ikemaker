@@ -143,7 +143,7 @@ function extractSources(matches, directory, layerName, executable = 'magick', pr
   };
 }
 
-function planBank(archive, sprites, bank = 1) {
+function planBank(archive, sprites, bank = 1, options = {}) {
   if (friendlyVersion(archive.header.version) !== '2.1') throw Error('PSD costume banks require SFF 2.1. Convert a copy with SFF Creator first.');
   if (!Number.isInteger(bank) || bank < 1 || bank > 6) throw Error('Choose costume bank 1 through 6 (10000-group steps).');
   if (sprites.some(s => s.group + bank * 10000 > 65535)) throw Error(`Costume bank ${bank} exceeds the SFF group limit for these base groups.`);
@@ -153,6 +153,9 @@ function planBank(archive, sprites, bank = 1) {
     equivalent = [],
     promotions = [];
   unique(sprites, 'overlay source');
+  const palette = options.palette || null;
+  if (sprites.some(s => s.independentPalette) && (!palette || sprites.some(s => !s.independentPalette || s.paletteIndex !== palette.index))) throw Error('Independent palette rows require one resolved palette for every frame.');
+  if (palette && palette.group !== bank * 10000) throw Error('The independent palette belongs to a different costume bank.');
   const wanted = new Set(sprites.map(s => `${s.group+bank*10000},${s.number}`));
   if (archive.sprites.some(s => s.group >= bank * 10000 && s.group < (bank + 1) * 10000 && !wanted.has(key(s)))) throw Error(`Costume bank ${bank} contains unrelated sprites. Choose another bank.`);
   for (const row of sprites) {
@@ -179,11 +182,23 @@ function planBank(archive, sprites, bank = 1) {
     bank,
     additions,
     equivalent,
-    promotions
+    promotions,
+    ...(palette ? { palette } : {})
   };
 }
 
 function appendBank(archive, plan) {
+  if (!plan.palette) return appendBankRows(archive, plan);
+  const changed = [...plan.additions, ...(plan.promotions || [])];
+  // A reused palette is already present; a new one is appended first so every
+  // later verification decodes against the real stored table.
+  const staged = plan.palette.reused || !changed.length ? archive : withIndependentPalette(archive, plan.palette),
+    bytes = appendBankRows(staged, plan);
+  verifyIndependentBank(archive, bytes, plan.palette.reused || changed.length ? plan : { ...plan, palette: { ...plan.palette, reused: true } });
+  return bytes;
+}
+
+function appendBankRows(archive, plan) {
   const {
     relayoutSffV2
   } = require('./sff_direct_delete');
@@ -262,10 +277,193 @@ function appendBank(archive, plan) {
   return relayoutSffV2(after).buffer;
 }
 
-function suggestBank(archive, sprites) {
+// ---- Own independent palette -------------------------------------------------
+// One palette shared by every imported overlay frame. It lives outside the
+// costume range (group = bank * 10000, never 1,n) so costume selection, ACT
+// palettes and owner RemapPal tables never alias it. Index 0 is reserved for
+// transparency; opaque source colors are stored exactly, sorted, from index 1.
+const INDEPENDENT_SCHEMA = 'ikemaker.psd-independent-palette';
+const colorKey = c => c.join(',');
+const sortColors = (a, b) => a[0] - b[0] || a[1] - b[1] || a[2] - b[2] || a[3] - b[3];
+
+function independentAlphaReview(sprites) {
+  let partialPixels = 0, toTransparent = 0, toOpaque = 0;
+  const frames = [];
+  for (const sprite of sprites) {
+    const { rgba } = decodePng(sprite.png);
+    let partial = 0;
+    for (let at = 3; at < rgba.length; at += 4) {
+      const a = rgba[at];
+      if (a === 0 || a === 255) continue;
+      partial++;
+      if (a < 128) toTransparent++; else toOpaque++;
+    }
+    if (partial) frames.push(sprite.file || key(sprite));
+    partialPixels += partial;
+  }
+  return { partialPixels, frames, alphaChanges: { threshold: 128, toTransparent, toOpaque } };
+}
+
+function prepareIndependent(sprites, options = {}) {
+  if (!Array.isArray(sprites) || !sprites.length) throw Error('No separate overlay layers were found.');
+  const policy = options.partialAlpha || 'reject';
+  if (!['reject', 'threshold'].includes(policy)) throw Error('Partial alpha policy must be reject or threshold.');
+  const alpha = independentAlphaReview(sprites);
+  if (alpha.partialPixels && policy !== 'threshold') throw Error(`${alpha.partialPixels} partially transparent pixel(s) in ${alpha.frames.length} frame(s) cannot be stored exactly in an indexed palette. Approve the explicit alpha threshold or keep exact source colors.`);
+  const images = sprites.map(sprite => {
+    const image = decodePng(sprite.png), rgba = Buffer.from(image.rgba);
+    if (image.width !== sprite.width || image.height !== sprite.height) throw Error(`${sprite.file || key(sprite)}: decoded layer size differs from its base canvas.`);
+    for (let at = 0; at < rgba.length; at += 4) {
+      const a = rgba[at + 3];
+      // Fully transparent pixels carry no color; canonicalize them to the reserved index-0 RGBA.
+      if (a === 0 || policy === 'threshold' && a < 128) rgba.fill(0, at, at + 4);
+      else if (a !== 255) rgba[at + 3] = 255;
+    }
+    return { ...image, rgba };
+  });
+  const seen = new Map();
+  for (const image of images)
+    for (let at = 0; at < image.rgba.length; at += 4)
+      if (image.rgba[at + 3]) {
+        const color = [...image.rgba.subarray(at, at + 4)];
+        seen.set(colorKey(color), color);
+      }
+  if (!seen.size) throw Error('The selected overlay frames contain no opaque pixels.');
+  if (seen.size > 255) throw Error(`The selected overlay frames use ${seen.size} opaque colors; one independent palette holds at most 255 plus reserved transparency. Reduce colors in the PSD or keep exact source colors.`);
+  const used = [...seen.values()].sort(sortColors),
+    colors = [[0, 0, 0, 0], ...used];
+  while (colors.length < 256) colors.push([0, 0, 0, 0]);
+  const lookup = new Map(used.map((color, i) => [colorKey(color), i + 1]));
+  const encodeIndexed = require('./sff_palette_remap').encodeIndexed,
+    { readIndexedPng8 } = require('./sff_png8_source');
+  const rows = sprites.map((sprite, i) => {
+    const image = images[i], indices = Buffer.alloc(image.width * image.height);
+    for (let p = 0, at = 0; p < indices.length; p++, at += 4)
+      indices[p] = image.rgba[at + 3] ? lookup.get(colorKey([...image.rgba.subarray(at, at + 4)])) : 0;
+    const png = encodeIndexed(image.width, image.height, indices, colors),
+      decoded = readIndexedPng8(png);
+    if (!decoded.indices.equals(indices)) throw Error(`${sprite.file || key(sprite)}: indexed encoding did not round-trip.`);
+    return {
+      ...sprite,
+      png,
+      indexed: true,
+      independentPalette: true,
+      indexHash: decoded.decodedHash,
+      sourceRgbaHash: sprite.rgbaHash,
+      expectedRgbaHash: sha(image.rgba),
+      masterColors: colors
+    };
+  });
+  return {
+    colors,
+    colorsHash: sha(Buffer.from(colors.flat())),
+    sprites: rows,
+    skipped: [],
+    evidence: {
+      mode: 'independent-palette',
+      schema: INDEPENDENT_SCHEMA,
+      opaqueColors: used.length,
+      reservedTransparentIndex: 0,
+      partialAlphaPolicy: policy,
+      alphaChanges: alpha.partialPixels ? alpha.alphaChanges : null,
+      partialAlphaFrames: alpha.frames,
+      assignment: 'All imported overlay frames share one independent palette; transparent pixels use index 0 and opaque colors are stored exactly'
+    }
+  };
+}
+
+function paletteUsers(archive, paletteIndex) {
+  return archive.sprites.filter(s => s.colorDepth === 8 && s.paletteIndex === paletteIndex);
+}
+
+// Bind prepared rows to a palette identity for one bank. An existing palette is
+// reused only when it is in the bank's own group, owns its 256 colors exactly,
+// and is used by nothing outside that bank — so retries never append duplicates
+// and the palette is never shared with body or costume art.
+function resolveIndependentPalette(archive, prepared, bank) {
+  if (!Number.isInteger(bank) || bank < 1 || bank > 6) throw Error('Choose costume bank 1 through 6 (10000-group steps).');
+  const { paletteRgba } = require('./sff_reader'),
+    group = bank * 10000,
+    low = bank * 10000,
+    high = (bank + 1) * 10000;
+  const exact = archive.palettes.filter(p => p.group === group && p.dataSize > 0 && !p.link && JSON.stringify(paletteRgba(archive, p.index)) === JSON.stringify(prepared.colors));
+  const own = exact.find(p => paletteUsers(archive, p.index).every(s => s.group >= low && s.group < high));
+  if (archive.palettes.some(p => p.group === group && p.link && exact.some(e => e.index === p.link))) throw Error(`Palette group ${group} contains linked aliases of the independent palette; repair the palette table first.`);
+  let palette;
+  if (own) palette = { index: own.index, group, number: own.number, reused: true };
+  else {
+    if (archive.palettes.length >= 65536) throw Error('No palette slot remains for an independent palette.');
+    const taken = new Set(archive.palettes.filter(p => p.group === group).map(p => p.number));
+    let number = 0;
+    while (taken.has(number)) number++;
+    if (number > 65535) throw Error(`Palette group ${group} has no free number.`);
+    palette = { index: archive.palettes.length, group, number, reused: false };
+  }
+  palette = { ...palette, id: `${palette.group},${palette.number}`, colors: prepared.colors, colorsHash: prepared.colorsHash };
+  return { palette, sprites: prepared.sprites.map(s => ({ ...s, paletteIndex: palette.index })) };
+}
+
+function withIndependentPalette(archive, palette) {
+  const { rewriteArchiveRows } = require('./sff_direct_delete');
+  const lit = archive.header.literalDataOffset;
+  const rows = archive.sprites.map(s => ({ ...s, newIndex: s.index, data: s.dataSize ? archive.buffer.subarray(s.dataOffset, s.dataOffset + s.dataSize) : null }));
+  const palettes = archive.palettes.map(p => ({ ...p, data: p.dataSize ? archive.buffer.subarray(lit + p.dataOffset, lit + p.dataOffset + p.dataSize) : null }));
+  palettes.push({ index: palettes.length, group: palette.group, number: palette.number, colors: 256, link: 0, data: Buffer.from(palette.colors.flat()) });
+  return parseSffBuffer(rewriteArchiveRows(archive, rows, palettes).buffer);
+}
+
+function verifyIndependentBank(before, bytes, plan) {
+  const { paletteRgba } = require('./sff_reader'),
+    { readIndexedPng8 } = require('./sff_png8_source');
+  const palette = plan.palette, after = parseSffBuffer(bytes);
+  if (after.palettes.length !== before.palettes.length + (palette.reused ? 0 : 1)) throw Error('Independent palette count verification failed.');
+  before.palettes.forEach((p, i) => {
+    const q = after.palettes[i];
+    if (q.group !== p.group || q.number !== p.number || JSON.stringify(paletteRgba(before, i)) !== JSON.stringify(paletteRgba(after, i))) throw Error(`Existing palette ${p.group},${p.number} changed.`);
+  });
+  const stored = after.palettes[palette.index];
+  if (!stored || stored.group !== palette.group || stored.number !== palette.number || stored.link || !stored.dataSize) throw Error('Independent palette identity verification failed.');
+  const colors = paletteRgba(after, palette.index);
+  if (JSON.stringify(colors) !== JSON.stringify(palette.colors) || colors[0][3] !== 0) throw Error('Independent palette RGBA verification failed.');
+  if (!palette.reused) {
+    const promoted = new Set((plan.promotions || []).map(s => s.replaceIndex));
+    if (after.sprites.some(s => s.index < before.sprites.length && !promoted.has(s.index) && s.colorDepth === 8 && s.paletteIndex === palette.index)) throw Error('Existing artwork would alias the new independent palette.');
+  }
+  for (const row of [...plan.additions, ...(plan.promotions || []), ...plan.equivalent]) {
+    if (!row.independentPalette) continue;
+    const sprite = after.sprites.find(s => s.group === row.group && s.number === row.number);
+    if (!sprite || sprite.paletteIndex !== palette.index || sprite.colorDepth !== 8) throw Error(`${key(row)}: independent palette assignment verification failed.`);
+    const decoded = readIndexedPng8(spritePng(after, sprite)),
+      rgba = Buffer.alloc(decoded.indices.length * 4);
+    decoded.indices.forEach((index, p) => Buffer.from(colors[index]).copy(rgba, p * 4));
+    if (decoded.decodedHash !== row.indexHash || sha(rgba) !== row.expectedRgbaHash) throw Error(`${key(row)}: independent palette pixel round-trip failed.`);
+  }
+  return {
+    paletteId: palette.id,
+    paletteIndex: palette.index,
+    reused: palette.reused,
+    colorsHash: palette.colorsHash,
+    verifiedFrames: [...plan.additions, ...(plan.promotions || []), ...plan.equivalent].filter(s => s.independentPalette).length
+  };
+}
+
+// Physical identities of the imported layers and their bases in saved bytes.
+// This is the payload for a later silhouette-bake handoff; it never includes
+// unrelated rows already in the bank.
+function importedLayerIdentities(bytes, plan) {
+  const after = parseSffBuffer(bytes), byId = unique(after.sprites, 'saved SFF');
+  return [...plan.promotions || [], ...plan.additions, ...plan.equivalent].map(row => {
+    const layer = byId.get(key(row)), base = byId.get(`${row.group - plan.bank * 10000},${row.number}`);
+    if (!layer || !base) throw Error(`${key(row)}: imported layer or its base is missing after save.`);
+    return { baseId: key(base), layerId: key(layer), basePhysicalIndex: base.index, layerPhysicalIndex: layer.index };
+  }).sort((a, b) => a.basePhysicalIndex - b.basePhysicalIndex);
+}
+
+function suggestBank(archive, sprites, resolve) {
   for (let bank = 1; bank <= 6; bank++) {
     try {
-      planBank(archive, sprites, bank);
+      const resolved = resolve ? resolve(bank) : null;
+      planBank(archive, resolved ? resolved.sprites : sprites, bank, resolved ? { palette: resolved.palette } : {});
       return bank;
     } catch (error) {
       if (!/collision|unrelated sprites|exceeds the SFF group limit/.test(error.message)) throw error;
@@ -374,5 +572,10 @@ module.exports = {
   planBank,
   appendBank,
   suggestBank,
-  prepareIndexed
+  prepareIndexed,
+  independentAlphaReview,
+  prepareIndependent,
+  resolveIndependentPalette,
+  verifyIndependentBank,
+  importedLayerIdentities
 };

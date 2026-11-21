@@ -1,12 +1,17 @@
 'use strict';
 const path=require('node:path'),http=require('node:http');
-const ACTIONS=new Set(['connect','pause','step','resume','disconnect','restart']);
+const ACTIONS=new Set(['connect','pause','step','resume','disconnect','restart','snapshot']);
+const SNAPSHOT_PATH='/api/snapshot';
+const SNAPSHOT_TIMEOUT_MESSAGE='Snapshot may still be completing. Refresh Meter status before retrying.';
+// Snapshot verifies two captures. Each can wait for a bridge reply and a stable PNG.
+const SNAPSHOT_TIMEOUTS=Object.freeze({proxy:55000,host:57000,client:60000});
 function validAuthority(value){return value&&Object.getPrototypeOf(value)===Object.prototype&&Object.keys(value).sort().join(',')==='continuityRevision,epoch,sessionId'&&typeof value.sessionId==='string'&&/^[A-Za-z0-9_-]{1,160}$/.test(value.sessionId)&&Number.isSafeInteger(value.epoch)&&value.epoch>0&&Number.isSafeInteger(value.continuityRevision)&&value.continuityRevision>=0;}
 function validRequest(message){
   if(!message||Object.getPrototypeOf(message)!==Object.prototype)return false;
   const keys=Object.keys(message).sort().join(',');
   if(keys!=='id,method,path,type'&&keys!=='authority,id,method,path,type')return false;
   if('authority' in message&&(!validAuthority(message.authority)||message.method!=='POST'||message.path==='/api/connect'))return false;
+  if(message.path===SNAPSHOT_PATH&&!validAuthority(message.authority))return false;
   return message.type==='ikemeterRequest'&&Number.isSafeInteger(message.id)&&message.id>0&&typeof message.path==='string'&&typeof message.method==='string'&&(
     message.method==='GET'&&['/api/status','/api/history'].includes(message.path)||
     message.method==='POST'&&message.path.startsWith('/api/')&&ACTIONS.has(message.path.slice(5))
@@ -24,25 +29,32 @@ function deferredDriver(root,runtime,services={}){
     freshWindowOfferFloor:(...args)=>driver.freshWindowOfferFloor(...args),completeWindowSuspension:(...args)=>driver.completeWindowSuspension(...args),
     canRestartOwnedGame:(...args)=>driver.canRestartOwnedGame?.(...args),restartOwnedGame:(...args)=>driver.restartOwnedGame(...args),
     disconnect:(...args)=>driver.disconnect(...args),
+    ...(typeof driver.captureSnapshot==='function'&&typeof driver.verifySnapshotPair==='function' ? {
+      captureSnapshot:driver.captureSnapshot.bind(driver),
+      verifySnapshotPair:driver.verifySnapshotPair.bind(driver),
+    } : {}),
     async shutdown(){try{await driver.shutdown();}finally{if(lease){lease.release();lease=null;}}}
   };
 }
-function proxy(origin,message){return new Promise(resolve=>{
+function proxy(origin,message,snapshotSupported=false){
+  if(message.path===SNAPSHOT_PATH&&!snapshotSupported)return Promise.resolve({status:501,body:{error:'Snapshot is unavailable in the selected IKeMeter package.'}});
+  return new Promise(resolve=>{
   const headers=message.method==='POST'?{Origin:origin,'Content-Type':'application/json','X-IKeMeter-Action':'1'}:{};
   if(message.authority){headers['X-IKeMeter-Session']=message.authority.sessionId;headers['X-IKeMeter-Epoch']=String(message.authority.epoch);headers['X-IKeMeter-Continuity']=String(message.authority.continuityRevision);}
   const request=http.request(origin+message.path,{method:message.method,headers},response=>{let text='';response.setEncoding('utf8');response.on('data',chunk=>{text+=chunk;if(Buffer.byteLength(text)>4*1024*1024)request.destroy(new Error('Meter response exceeded its bound'));});response.once('end',()=>{try{resolve({status:response.statusCode,body:JSON.parse(text)});}catch{resolve({status:502,body:{error:'Invalid Meter response'}});}});});
-  request.setTimeout(18000,()=>request.destroy(new Error('Meter request timed out')));request.once('error',error=>resolve({status:503,body:{error:error.message}}));if(message.method==='POST')request.write('{}');request.end();
+  request.setTimeout(message.path===SNAPSHOT_PATH?SNAPSHOT_TIMEOUTS.proxy:18000,()=>request.destroy(new Error(message.path===SNAPSHOT_PATH?SNAPSHOT_TIMEOUT_MESSAGE:'Meter request timed out')));request.once('error',error=>resolve({status:503,body:{error:error.message}}));if(message.method==='POST')request.write('{}');request.end();
 });}
 async function run(root,runtime,powershell){
   if(!process.send)throw new Error('IKeMeter integrated host requires its owning extension IPC channel');
   const {SessionController}=require(path.join(root,'src/session_controller')),{createAppServer}=require(path.join(root,'src/app_server'));
-  const controller=new SessionController(deferredDriver(root,runtime,{powershell})),server=createAppServer({controller});
+  const driver=deferredDriver(root,runtime,{powershell}),controller=new SessionController(driver),server=createAppServer({controller});
+  const snapshotSupported=typeof controller.snapshot==='function'&&typeof driver.captureSnapshot==='function';
   await new Promise((resolve,reject)=>{server.once('error',reject);server.listen(0,'127.0.0.1',resolve);});
   const origin='http://127.0.0.1:'+server.address().port;let stopping=false;let pending=0;
   async function stop(){if(stopping)return;stopping=true;try{await controller.shutdown();}catch(error){process.stderr.write(error.message+'\n');}finally{server.close(()=>process.exit(0));setTimeout(()=>process.exit(1),5000).unref();}}
-  process.on('message',async message=>{if(message?.type==='ikemeterShutdown'&&Object.keys(message).length===1){await stop();return;}if(stopping||!validRequest(message))return;if(pending>=16){process.send?.({type:'ikemeterResponse',id:message.id,status:429,body:{error:'Meter requests are busy'}});return;}pending++;try{const response=await proxy(origin,message);if(process.connected)process.send({type:'ikemeterResponse',id:message.id,...response});}finally{pending--;}});
+  process.on('message',async message=>{if(message?.type==='ikemeterShutdown'&&Object.keys(message).length===1){await stop();return;}if(stopping||!validRequest(message))return;if(pending>=16){process.send?.({type:'ikemeterResponse',id:message.id,status:429,body:{error:'Meter requests are busy'}});return;}pending++;try{const response=await proxy(origin,message,snapshotSupported);if(process.connected)process.send({type:'ikemeterResponse',id:message.id,...response});}finally{pending--;}});
   process.once('disconnect',stop);process.once('SIGINT',stop);process.once('SIGTERM',stop);
   process.send({type:'ikemeterReady'});
 }
-module.exports={validRequest,deferredDriver,run};
+module.exports={validRequest,validAuthority,deferredDriver,run,SNAPSHOT_PATH,SNAPSHOT_TIMEOUTS,SNAPSHOT_TIMEOUT_MESSAGE};
 if(require.main===module){if(process.argv.length!==5){process.stderr.write('Expected trusted Meter package, runtime and PowerShell 7 paths.\n');process.exitCode=1;}else run(path.resolve(process.argv[2]),path.resolve(process.argv[3]),path.resolve(process.argv[4])).catch(error=>{process.stderr.write(error.message+'\n');process.exitCode=1;});}

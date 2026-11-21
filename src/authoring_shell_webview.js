@@ -39,6 +39,8 @@ const AUTHORING_SHELL_CSS = `
   .navigator{min-width:0;max-width:100%;border-top:1px solid var(--vscode-panel-border)}
   .destination-strip{display:grid;grid-template-columns:27px minmax(0,1fr) 27px;align-items:start;gap:4px;min-width:0;max-width:100%;padding:5px 6px 2px}
   .nav-arrow{box-sizing:border-box;width:27px;min-width:27px;max-width:27px;height:27px;min-height:27px;max-height:27px;padding:0}
+  html:not([data-ikm-action-labels="icons"]) .destination-strip{grid-template-columns:auto minmax(0,1fr) auto}
+  html:not([data-ikm-action-labels="icons"]) .nav-arrow{width:auto;max-width:none;padding-inline:7px}
   .slider-row{flex-wrap:nowrap;padding-top:2px}
   #destination-slider{width:min(320px,100%);min-width:60px;max-width:100%;flex:1 1 120px}
   #destination-position{min-width:0;max-width:50%;flex:0 1 auto;white-space:normal;overflow-wrap:anywhere}
@@ -163,8 +165,10 @@ function validatedAuthoringShellMessage(message) {
   return validatedLaunchIntent(message);
 }
 
-function button(label, attributes = '') {
-  return `<button type="button" ${attributes}>${escapeHtml(label)}</button>`;
+function button(label, attributes = '', icon) {
+  const text = escapeHtml(label);
+  return icon ? `<button type="button" ${attributes} data-ikm-action-icon="${escapeHtml(icon)}"><span data-ikm-action-label>${text}</span></button>`
+    : `<button type="button" ${attributes}>${text}</button>`;
 }
 
 function renderNavigation(projection, announcement = '') {
@@ -190,9 +194,9 @@ function renderNavigation(projection, announcement = '') {
   return `<section class="navigator" aria-label="Authoring destinations">
     <div class="presentation-switch" role="group" aria-label="Destination presentation">${['tabs','cards'].map((choice) => button(choice === 'tabs' ? 'Tabs' : 'Cards', `data-message="set-navigation-mode" data-mode="${choice}" aria-pressed="${mode === choice}"`)).join('')}${button('Organize tabs…','data-message="organize-navigation"')}</div>
     <div class="destination-strip">
-      ${button('◀', `class="nav-arrow" data-message="previous-navigation" title="Previous tab" aria-label="Previous authoring destination" ${slider.previousDisabled ? 'disabled aria-disabled="true"' : ''}`)}
+      ${button('Previous', `class="nav-arrow" data-message="previous-navigation" title="Previous tab" aria-label="Previous authoring destination" ${slider.previousDisabled ? 'disabled aria-disabled="true"' : ''}`, '◀')}
       <div class="destination-${escapeHtml(mode)}" ${mode === 'tabs' ? 'role="tablist"' : 'role="navigation"'} aria-label="Authoring destination list">${destinationBody}</div>
-      ${button('▶', `class="nav-arrow" data-message="next-navigation" title="Next tab" aria-label="Next authoring destination" ${slider.nextDisabled ? 'disabled aria-disabled="true"' : ''}`)}
+      ${button('Next', `class="nav-arrow" data-message="next-navigation" title="Next tab" aria-label="Next authoring destination" ${slider.nextDisabled ? 'disabled aria-disabled="true"' : ''}`, '▶')}
     </div>
     <div class="slider-row">
       <input id="destination-slider" data-message="select-navigation" aria-label="Select authoring destination" type="range" min="${slider.min}" max="${slider.max}" value="${slider.value}" step="1" list="destination-names" ${slider.max === 0 ? 'disabled' : ''}>
@@ -235,7 +239,7 @@ function renderAuthoringShellHtml(model = {}, options = {}) {
   const styleSource = cspSource ? `${cspSource} 'unsafe-inline'` : "'unsafe-inline'";
   return `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src ${styleSource}; script-src 'nonce-${nonce}'"><style>${viewerToolbar.style()}${AUTHORING_SHELL_CSS}</style></head><body>
     ${require('./shared_workspace_header').html('code',toolbar)}
-    
+
     <div class="shell-controls"><div class="view-switch" role="group" aria-label="Workspace view">${VIEW_MODES.map((mode) => button(mode[0].toUpperCase() + mode.slice(1), `data-message="set-view-mode" data-mode="${mode}" aria-pressed="${viewMode === mode}"`)).join('')}</div>${button('Open Full Text', 'class="open-full-text" data-message="open-full-text" aria-label="Open Full Text in the native editor"')}</div>
     ${model.conflict ? `<p class="conflict" role="alert">${escapeHtml(model.conflict)}</p>` : ''}
     ${renderNavigation(projection, options.navigationAnnouncement)}
@@ -245,7 +249,7 @@ function renderAuthoringShellHtml(model = {}, options = {}) {
       const slider = document.getElementById('destination-slider'); slider?.addEventListener('change', () => {rememberSourceView();send({ type:'select-navigation', index:Number(slider.value)-1 });});
       const editor=document.getElementById('source-editor'),sourceStatus=document.getElementById('source-status');let editRevision=${Number(model.editRevision || 0)},editGeneration=${Number(model.editGeneration || 0)},viewTimer=null;const documentId=${sourceDocumentId},revealNavigationId=${revealNavigationId},focusNavigationId=${focusNavigationId},restoredSourceView=${restoredSourceView};const rememberSourceView=()=>{if(!editor||!documentId)return;send({type:'remember-source-view',generation:editGeneration,documentId,selectionStart:editor.selectionStart,selectionEnd:editor.selectionEnd,selectionDirection:editor.selectionDirection||'none',scrollTop:Math.max(0,Math.round(editor.scrollTop)),scrollLeft:Math.max(0,Math.round(editor.scrollLeft)),focused:document.activeElement===editor})};const queueSourceView=()=>{clearTimeout(viewTimer);viewTimer=setTimeout(rememberSourceView,60)};if(editor){const length=editor.value.length;editor.setSelectionRange(Math.min(length,restoredSourceView.selectionStart),Math.min(length,Math.max(restoredSourceView.selectionStart,restoredSourceView.selectionEnd)),restoredSourceView.selectionDirection);editor.scrollTop=restoredSourceView.scrollTop;editor.scrollLeft=restoredSourceView.scrollLeft;if(restoredSourceView.focused)editor.focus({preventScroll:true});['select','keyup','mouseup','scroll','focus','blur'].forEach(type=>editor.addEventListener(type,rememberSourceView));}editor?.addEventListener('input',()=>{queueSourceView();if(sourceStatus)sourceStatus.textContent='Native-document-backed editor · Unsaved changes';send({type:'edit-source',text:editor.value,revision:++editRevision,generation:editGeneration})});editor?.addEventListener('keydown',event=>{if(event.key==='Tab'&&!event.ctrlKey&&!event.altKey&&!event.metaKey){event.preventDefault();const start=editor.selectionStart,end=editor.selectionEnd;editor.setRangeText('\t',start,end,'end');editor.dispatchEvent(new Event('input',{bubbles:true}));return}if((event.ctrlKey||event.metaKey)&&!event.altKey&&event.key.toLowerCase()==='s'){event.preventDefault();vscode?.postMessage({type:${JSON.stringify(require('./universal_toolbar_webview').MESSAGE_TYPE)},slotId:'save'})}});const resolveDestinationKey=${resolveDestinationKey.toString()};const handleDestinationKey=${handleDestinationKey.toString()};const applyDestinationVisibility=${applyDestinationVisibility.toString()};const navigationButtons=[...document.querySelectorAll('[data-nav-destination="true"]')],navigationIds=${canonicalNavigationIds};navigationButtons.forEach(tab=>tab.addEventListener('keydown',event=>handleDestinationKey(navigationIds,tab.dataset.id,event,{preventDefault:()=>event.preventDefault(),rememberSourceView,activate:id=>send({type:'activate-navigation',id})},resolveDestinationKey)));applyDestinationVisibility(navigationButtons,revealNavigationId,focusNavigationId); globalThis.ikemenHasUnappliedForms=()=>false; globalThis.ikemenCanKeepDraft=()=>false;
       window.addEventListener('message', (event) => { if (!event.data || event.data.type !== 'authoring-shell-state') return; });
-      
+
     })();</script></body></html>`;
 }
 

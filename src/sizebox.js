@@ -1,7 +1,23 @@
 'use strict';
 
-const SIZEBOX_PATTERN = /^(\s*)(stand|crouch|air|down)\.sizebox(\s*=\s*)([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*,\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*,\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*,\s*([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)(.*)$/i;
+const SIZEBOX_PATTERN = /^(\s*)(stand|crouch|air|down)\.sizebox(\s*=\s*)([^;]*)(;.*)?$/i;
+const SIZE_NUMBER = /^([+-]?)(\d+(?:\.\d*)?|\.\d+)(?:[eE]([+-]?)(\d+))?$/;
 const SOURCE_PATTERN = /;\s*IKEMEN ZSS Tools:\s*sourceBox=([^;]+);\s*referenceScale=([^;\s]+)\s*$/i;
+
+function readSizeNumber(value) {
+  const match = SIZE_NUMBER.exec(String(value ?? '').trim());
+  if (!match) return undefined;
+  const [, sign, mantissa, exponentSign, exponent] = match;
+  // Ikemen's Atof checks the exponent sign at an offset from the unsigned
+  // mantissa. A leading sign therefore makes a negative exponent positive.
+  const power = exponentSign === '-' && !sign ? -Number(exponent) : Number(exponent || 0);
+  const number = Number(`${sign}${mantissa}e${power}`);
+  return Number.isFinite(Math.fround(number)) ? (number || 0) : undefined;
+}
+
+function stripSizeboxScaleMarker(comment) {
+  return String(comment || '').replace(SOURCE_PATTERN, '').trimEnd();
+}
 
 function finitePositive(value, label) {
   const number = Number(value);
@@ -10,11 +26,12 @@ function finitePositive(value, label) {
 }
 
 function parseSizeboxLine(line) {
-  const match = String(line).match(SIZEBOX_PATTERN);
-  if (!match) throw new Error('Place the cursor on a stand, crouch, air, or down .sizebox assignment.');
-  const trailing = match[8] || '';
+  const match = SIZEBOX_PATTERN.exec(String(line));
+  const fields = match?.[4].trim().split(',').map(readSizeNumber);
+  if (fields?.length !== 4 || fields.includes(undefined)) throw new Error('Place the cursor on a stand, crouch, air, or down .sizebox assignment with four numeric values.');
+  const trailing = (match[4].match(/\s*$/)?.[0] || '') + (match[5] || '');
   const marker = trailing.match(SOURCE_PATTERN);
-  const displayed = match.slice(4, 8).map(Number);
+  const displayed = fields;
   let source = displayed;
   let referenceScale;
   if (marker) {
@@ -32,7 +49,7 @@ function parseSizeboxLine(line) {
     displayed,
     source,
     referenceScale,
-    trailing: trailing.replace(SOURCE_PATTERN, '').trimEnd()
+    trailing: stripSizeboxScaleMarker(trailing)
   };
 }
 
@@ -49,7 +66,14 @@ function roundCoordinate(value) {
 }
 
 function formatNumber(value) {
-  return Number.isInteger(value) ? String(value) : String(value).replace(/0+$/, '').replace(/\.$/, '');
+  const text = String(value);
+  const match = /^(-?)(\d+)(?:\.(\d+))?e([+-]?\d+)$/.exec(text);
+  if (!match) return text;
+  const [, sign, integer, fraction = '', exponent] = match;
+  const digits = integer + fraction, position = integer.length + Number(exponent);
+  if (position <= 0) return `${sign}0.${'0'.repeat(-position)}${digits}`;
+  if (position >= digits.length) return sign + digits.padEnd(position, '0');
+  return `${sign}${digits.slice(0, position)}.${digits.slice(position)}`;
 }
 
 function scaleSizebox(source, referenceScale, characterScale) {
@@ -70,4 +94,4 @@ function formatScaledLine(parsed, scaled, referenceScale) {
   return `${parsed.indent}${parsed.name}.sizebox${parsed.separator}${scaled.map(formatNumber).join(', ')}${preserved}; IKEMEN ZSS Tools: sourceBox=${sourceText}; referenceScale=${referenceText}`;
 }
 
-module.exports = { parseSizeboxLine, readCharacterScale, scaleSizebox, formatScaledLine };
+module.exports = { parseSizeboxLine, readCharacterScale, scaleSizebox, formatScaledLine, readSizeNumber, stripSizeboxScaleMarker, formatNumber };

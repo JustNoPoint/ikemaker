@@ -10,6 +10,13 @@ const { parseTerminalFrame } = require('./terminal_frame');
 const { createSessionBootstrap, restrictFile } = require('./session_bootstrap');
 const { deriveOfferName } = require('./transport_protocol');
 const {prepareSessionStorage}=require('./session_storage');
+const {resolveScreenshotPlan,pngState,waitForStablePng,preserveSnapshot,preserveSnapshotPair,parseSnapshotEntity,addSnapshotRootCustomState}=require('./snapshot_capture');
+const {locateExecutable,verifyLaunchExecutable,hashSnapshotExecutable}=require('./snapshot_engine_identity');
+const {loadLaunchManifest,retainPrelaunchBinding,writeBindingReceipt,bindingReceiptPath,parseRootSelection}=require('./snapshot_binding');
+const {openSampleCreditRelay}=require('./sample_credit_relay');
+const {verifyStockTelemetryPhase,telemetrySession,parsePlayerTelemetry}=require('./player_telemetry_wire');
+const {watchPlan,encodeWatchPlan,decodeWatchRows}=require('./watch_wire');
+const {createTelemetryDiagnostics}=require('./telemetry_diagnostics');
 
 function waitForFile(file, timeoutMs = 12000, signal) {
   const started = performance.now();
@@ -22,6 +29,13 @@ function waitForFile(file, timeoutMs = 12000, signal) {
     };
     poll();
   });
+}
+
+function assertSnapshotAuthority(current,active,sessionId,interval) {
+  if(current!==active||active.revoked||active.windowSuspended||active.operationAbort.signal.aborted||
+     active.session.bootstrap.sessionId!==sessionId||active.windowIntervalToken!==interval) {
+    throw Error('Snapshot lost its session or window authority before evidence retention');
+  }
 }
 
 function readResult(file) {
@@ -96,8 +110,10 @@ function gameLaunchOptions(options={}) {
   const mode=options.launchMode||'interactive';
   if(!['interactive','fixture'].includes(mode))throw new Error('Unknown game launch mode');
   const ai=options.aiLevel??8;if(!Number.isInteger(Number(ai))||Number(ai)<0||Number(ai)>8)throw new Error('AI level must be 0 through 8');
-  const players=options.players||['kfm','kfm'];if(!Array.isArray(players)||players.length!==2||players.some(p=>typeof p!=='string'||!p||p.startsWith('-')))throw new Error('Two explicit player identifiers are required');
+  const players=options.players||['kfm','kfm'];if(!Array.isArray(players)||![2,4].includes(players.length)||players.some(p=>typeof p!=='string'||!p||p.startsWith('-')))throw new Error('Two or four explicit player identifiers are required');
+  if(players.length===4&&options.launchManifest)throw Error('Asset binding requires a two-root launch');
   const args=['-p1',players[0],'-p2',players[1],'-s','stages/stage0.def','-p1.ai',mode==='fixture'?String(ai):'0','-p2.ai',String(ai)];
+  if(players.length===4)args.push('-p3',players[2],'-p4',players[3],'-p3.ai',String(ai),'-p4.ai',String(ai),'-tmode1','1','-tmode2','1');
   if(mode==='fixture')args.push('-time','1','-rounds','1');
   args.push('-loadmotif','1');
   return {args,windowsHide:mode==='fixture'};
@@ -111,13 +127,78 @@ class AttachedNightlyDriver {
     this.timeoutMs = options.timeoutMs || 12000;
     this.players = options.players || ['kfm','kfm'];
     this.aiLevel = String(options.aiLevel ?? 8);
-    this.gameLaunch=gameLaunchOptions(options);
+    if(options.launchManifest&&options.players?.length===4)throw Error('Asset binding requires a two-root launch');
+    this.launchBinding=options.launchManifest?loadLaunchManifest(options.launchManifest,this.runtime):null;
+    this.gameLaunch=gameLaunchOptions(this.launchBinding ? {...options,players:this.launchBinding.manifest.selections.map(item=>item.launchArgument)} : options);
+    this.rootSlots=(this.launchBinding||this.players.length===2)?[1,2]:[1,2,3,4];
     this.active = null;
     this.storageRoot=options.storageRoot;
   }
 
+  setTelemetryDiagnosticSink(sink){this.telemetryDiagnosticSink=typeof sink==='function'?sink:null;}
+  telemetryDiagnosticsStopped(session){
+    const active=this.active;
+    return Boolean(active?.diagnosticFailure&&session?.epoch===1&&
+      active.session.bootstrap.sessionId===session.sessionId);
+  }
+
+  #wireGameDiagnostics(active,game) {
+    const sessionId=active.session.bootstrap.sessionId;
+    const ready=()=>this.active===active&&active.diagnosticsAuthenticated&&!active.operationAbort.signal.aborted;
+    const publish=(value)=>{if(ready())this.telemetryDiagnosticSink?.({sessionId,epoch:1,...value});};
+    const stopDiagnostics=()=>{
+      if(this.active!==active||active.operationAbort.signal.aborted||active.diagnosticFailure||!active.diagnosticCapture)return;
+      active.diagnosticFailure=true;
+      active.diagnosticsAuthenticated=false;
+      active.diagnosticCapture?.close();
+    };
+    if(this.telemetryDiagnosticSink){
+      active.diagnosticCapture=createTelemetryDiagnostics({onEvent:event=>publish({event}),onDrop:dropped=>publish({dropped})});
+    }
+    for(const source of ['stdout','stderr']){
+      const stream=game[source];
+      let processing=false,ended=false,discardStartupTail=false;
+      const finish=()=>{
+        if(ended&&!processing&&ready()){
+          try{active.diagnosticCapture?.end(source);}catch{stopDiagnostics();}
+        }
+      };
+      stream.on('data',chunk=>{
+        if(!ready()||!active.diagnosticCapture){
+          if(chunk.length)discardStartupTail=chunk[chunk.length-1]!==10;
+          return;
+        }
+        processing=true;
+        stream.pause();
+        let offset=0;
+        const next=()=>{
+          if(!ready()||offset===chunk.length){
+            processing=false;
+            finish();
+            stream.resume();
+            return;
+          }
+          const end=Math.min(offset+4096,chunk.length);
+          let part=chunk.subarray(offset,end);
+          if(discardStartupTail){
+            const newline=part.indexOf(10);
+            discardStartupTail=newline<0;
+            part=discardStartupTail?part.subarray(part.length):part.subarray(newline+1);
+          }
+          try{if(part.length)active.diagnosticCapture.write(source,part);}
+          catch{stopDiagnostics();processing=false;stream.resume();return;}
+          offset=end;
+          setImmediate(next);
+        };
+        next();
+      });
+      stream.once('end',()=>{ended=true;finish();});
+      stream.on('error',stopDiagnostics);
+    }
+  }
+
   detachedGameRunning(){const record=this.detachedGame;if(!record)return false;const game=record.game,proof=record.proof;return game instanceof ChildProcess&&game===proof?.game&&game.pid===proof.pid&&typeof proof.processStarted==='string'&&typeof proof.image==='string'&&proof.image===record.imagePath&&game.exitCode===null&&game.signalCode===null&&!game.killed;}
-  processStatus(session){if(!session)return{detachedGameRunning:this.detachedGameRunning()};const active=this.active;if(!active||active.session.bootstrap.sessionId!==session.sessionId)return null;return{gameExited:active.gameExitCode!==undefined};}
+  processStatus(session){if(!session)return{detachedGameRunning:this.detachedGameRunning()};const active=this.active;if(!active||active.session.bootstrap.sessionId!==session.sessionId)return null;return{gameExited:active.gameExitCode!==undefined,...(active.bindingLatest&&{snapshotBinding:active.bindingLatest})};}
 
   observeWindow(session,listener){const active=this.active;if(!active||active.session.bootstrap.sessionId!==session.sessionId)throw Error('Window observer belongs to another session');if(!active.windowListeners)return()=>{};active.windowListeners.add(listener);if(active.windowFailure)listener({error:'Owned window observation lost'});else if(active.windowState)listener(active.windowState);return()=>active.windowListeners.delete(listener);}
   beginWindowSuspension(session,token){const active=this.active;if(!active||active.revoked||active.session.bootstrap.sessionId!==session.sessionId||active.commandOffer)throw Error('A native command cannot be fenced safely');active.windowSuspended=true;active.windowIntervalToken=token;if(active.inflightSample)active.inflightSample.windowToken=token;}
@@ -126,7 +207,8 @@ class AttachedNightlyDriver {
   canRestartOwnedGame(session){const active=this.active;if(!active||!active.revoked||active.session.bootstrap.sessionId!==session?.sessionId||!(active.game instanceof ChildProcess))return false;if(active.gameExitCode!==undefined)return true;const game=active.game;return active.children.has(game)&&game.exitCode===null&&game.signalCode===null&&!game.killed&&active.windowProof?.game===game&&active.windowProof.sessionId===session.sessionId&&active.windowProof.pid===game.pid&&typeof active.windowProof.processStarted==='string'&&active.windowProof.image===active.imagePath;}
   async restartOwnedGame(session){if(!this.canRestartOwnedGame(session))throw Error('The prior owned child handle cannot be verified; no new game was started');const warning=await this.#cleanup(true);if(warning)throw Error('Previous game cleanup is incomplete; no new game was started: '+warning);}
 
-  async connect() {
+  async connect({watches=[]}={}) {
+    const configuredWatches=watchPlan(watches,this.rootSlots);
     if (this.active) throw new Error('attached nightly is already active');
     if(this.detachedGameRunning())throw Error('The previously Meter-owned game is still running. Close it before Connect starts a new game.');this.detachedGame=null;
     const executable = path.join(this.runtime, 'Ikemen_GO.exe');
@@ -143,6 +225,7 @@ class AttachedNightlyDriver {
     const failures=recoverSessions(this.root,{runtime:fs.realpathSync(this.runtime)},{additionalSessionRoots:[storage.sessions]});
     if(failures.length)throw new Error(`Prior session cleanup requires attention: ${failures.join('; ')}`);
     if (fs.existsSync(bridgeTarget)) throw new Error('an unowned IKeMeter bridge file already exists in the runtime');
+    const launchImage=locateExecutable(executable);
     const session = createSessionBootstrap(storage.sessions);
     const key = Buffer.from(session.bootstrap.key, 'base64url');
     const telemetryEndpoint = deriveOfferName(key,{epoch:1,sequence:1,direction:'telemetry',opcode:''});
@@ -150,7 +233,10 @@ class AttachedNightlyDriver {
     const bridgeSource = path.join(this.root, 'bridge', 'ikemeter_bridge.lua');
     const bridgeBytes = installedBridgeBytes(fs.readFileSync(bridgeSource),session.bootstrap.sessionId);
     const baseLines = ['protocol=1',`session=${session.bootstrap.sessionId}`,'epoch=1',`telemetry=${telemetryEndpoint}`];
-    this.active = { imagePath:fs.realpathSync(executable),session, key, baseLines, config, bridgeTarget, bridgeBytes, results: session.directory, recoveryFile:path.join(session.directory,'recovery.json'), operationAbort:new AbortController(), game: null, children:new Set(), nextSampleSequence:2, commandOffer:null, sampleOffer:null, sampling:false };
+    if(this.rootSlots.length===4)baseLines.push('rootSlots=4');
+    if(this.launchBinding)baseLines.push('binding=1');
+    this.active = { ...launchImage,session, key, baseLines, config, bridgeTarget, bridgeBytes, results: session.directory, recoveryFile:path.join(session.directory,'recovery.json'), operationAbort:new AbortController(), game: null, children:new Set(), nextSampleSequence:2, commandOffer:null, sampleOffer:null, sampling:false,snapshotIntervals:new WeakMap() };
+    const activeSession=this.active;
     try {
       fs.writeFileSync(config, baseLines.join('\n')+'\n',{encoding:'utf8',flag:'wx',mode:0o600});
       restrictFile(config, session.sid);
@@ -160,14 +246,32 @@ class AttachedNightlyDriver {
       await this.#startSampleHost();
       const telemetryFile = path.join(session.directory, 'telemetry.json');
       await this.#startPipe(telemetryEndpoint, telemetryFile, 'Frame', 'Telemetry');
-      const gameLog = path.join(session.directory, 'nightly.log');
-      const logHandle = fs.openSync(gameLog, 'a');
+      activeSession.launchEngine=await hashSnapshotExecutable(activeSession.imagePath,activeSession.identity,activeSession.operationAbort.signal);
+      activeSession.richTelemetry=verifyStockTelemetryPhase(this.runtime,activeSession.launchEngine.sha256);
+      if(this.rootSlots.length===4&&!activeSession.richTelemetry)throw Error('Four-root capture requires the pinned stock telemetry runtime');
+      if(activeSession.richTelemetry){
+        baseLines.push('richTelemetry=1');
+        if(configuredWatches.length){
+          activeSession.watch={plan:configuredWatches,projectId:this.launchBinding?.manifest.projectId??null};
+          baseLines.push(`watchPlan=${encodeWatchPlan(configuredWatches)}`);
+        }
+        this.#writeConfig();
+      }
+      if(this.launchBinding){
+        await retainPrelaunchBinding(this.launchBinding,activeSession,this.gameLaunch.args,()=>{
+          activeSession.operationAbort.signal.throwIfAborted();
+          if(this.active!==activeSession||activeSession.revoked)throw Error('Connect lost launch authority');
+        });
+      }
+      activeSession.operationAbort.signal.throwIfAborted();
+      if(this.active!==activeSession)throw Error('Connect lost launch authority');
+      verifyLaunchExecutable(executable,activeSession.imagePath,activeSession.identity);
       this.gameStartedAtMs=Date.now();this.gameStartedAtMonotonicMs=performance.now();
       this.active.spawnPending=true;this.#writeRecovery(this.active);
-      const game = spawn(executable,this.gameLaunch.args,{cwd:this.runtime,env:{...process.env,IKEMETER_SESSION_FILE:config},windowsHide:this.gameLaunch.windowsHide,stdio:['ignore',logHandle,logHandle]});
+      const game = spawn(activeSession.imagePath,this.gameLaunch.args,{cwd:this.runtime,env:{...process.env,IKEMETER_SESSION_FILE:config},windowsHide:this.gameLaunch.windowsHide,stdio:['ignore','pipe','pipe']});
       const startupFailure=new Promise((resolve,reject)=>{game.once('error',reject);game.once('exit',code=>reject(new Error('official nightly exited before startup completed (code '+code+')')));});startupFailure.catch(()=>{});
-      fs.closeSync(logHandle);
-      const activeSession=this.active;this.#track(game,activeSession);activeSession.game=game;
+      this.#wireGameDiagnostics(activeSession,game);
+      this.#track(game,activeSession);activeSession.game=game;
       this.#writeRecovery(activeSession);
       game.once('exit',(code)=>{if(this.active===activeSession)activeSession.gameExitCode=code;});
       if(!this.gameLaunch.windowsHide)await Promise.race([this.#startWindowObserver(activeSession),startupFailure]);
@@ -179,13 +283,75 @@ class AttachedNightlyDriver {
       if (telemetry.session !== session.bootstrap.sessionId || telemetry.epoch !== '1' || telemetry.mode !== 'quickvs') throw new Error('telemetry did not authenticate the expected offline session');
       const tick = Number(telemetry.tick);
       if (!Number.isSafeInteger(tick)) throw new Error('telemetry tick is malformed');
-      return { sessionId: session.bootstrap.sessionId, epoch: 1, tick, notice:storage.notice };
+      if(activeSession.richTelemetry){
+        activeSession.telemetrySession=telemetrySession(activeSession.launchEngine.sha256,this.rootSlots,true,Boolean(activeSession.diagnosticCapture));
+        activeSession.diagnosticsAuthenticated=!activeSession.diagnosticFailure;
+      }
+      return { sessionId: session.bootstrap.sessionId, epoch: 1, tick, notice:storage.notice,
+        ...(activeSession.telemetrySession&&{telemetrySession:activeSession.telemetrySession}),
+        ...(activeSession.watch&&{watch:activeSession.watch}) };
     } catch (error) { await this.#cleanup(true); throw error; }
   }
 
   async command(opcode, session) {
-    if (!['pause','step','resume'].includes(opcode) || !this.active || this.active.revoked || this.active.windowSuspended) throw new Error('command is unavailable');
+    if (!['pause','step','resume','snapshot'].includes(opcode) || !this.active || this.active.revoked || this.active.windowSuspended) throw new Error('command is unavailable');
     return this.#exchange(opcode, session.requestSequence);
+  }
+
+  async captureSnapshot(session){
+    if(!this.active||this.active.revoked||this.active.windowSuspended)throw Error('snapshot is unavailable');
+    const active=this.active,interval=active.windowIntervalToken,{folder,prefix}=resolveScreenshotPlan(this.runtime),before=pngState(folder);
+    const ack=await this.#exchange('snapshot',session.requestSequence);
+    if(ack.status!=='applied')return ack;
+    assertSnapshotAuthority(this.active,active,session.sessionId,interval);
+    if(ack.epoch!==session.epoch||ack.requestSequence!==session.requestSequence||ack.opcode!=='snapshot'||ack.observedTick!==session.tick||ack.snapshotFrame?.paused!==true||ack.snapshotFrame.tick!==session.tick)throw Error('snapshot acknowledgement did not prove current frozen authority');
+    const signal=active.operationAbort.signal;
+    const [captured,engine]=await Promise.all([
+      waitForStablePng(folder,before,{timeoutMs:this.timeoutMs,prefix,signal}),
+      hashSnapshotExecutable(active.imagePath,active.identity,signal),
+    ]);
+    if(engine.sha256!==active.launchEngine.sha256)throw Error('Snapshot executable digest changed since Connect');
+    verifyLaunchExecutable(path.join(this.runtime,'Ikemen_GO.exe'),active.imagePath,active.identity);
+    assertSnapshotAuthority(this.active,active,session.sessionId,interval);
+    const snapshot=preserveSnapshot(captured.file,captured.bytes,path.join(active.results,'snapshots'),{
+      sessionId:session.sessionId,epoch:session.epoch,tick:ack.observedTick,paused:true,capturedAt:new Date().toISOString(),
+      engine,
+      frame:ack.snapshotFrame,
+      capabilities:{fullComposite:'candidate-until-duplicate-hash-verification',renderedFrame:'stock-screenshot-observed',animationMetadata:'bounded-stock-hook-observations-and-timing-estimates-for-roots-and-helpers',animationOwnerSlots:'reported-animPN-and-spritePN-source-mapping-unavailable',alpha:'opaque-window-composite-engine-forces-alpha-255',transparentLayers:'unavailable-without-matting-or-instrumented-renderer',bgFgSeparation:'unavailable-stock-engine',explodAndAttachedEnumeration:'unavailable-current-bridge',pixelProvenance:'unavailable-stock-engine',paletteWorkshopTrace:'handoff-pending-index-provenance'},
+      uncertainty:['stock framebuffer screenshot is not renderer-instrumented','nightly asynchronous screenshot may be a later redraw of the same paused simulation state'],
+    });
+    active.snapshotIntervals.set(snapshot,{interval,binding:ack.snapshotBinding});
+    return{...ack,snapshot};
+  }
+
+  verifySnapshotPair(first,second,metadata){
+    const active=this.active;
+    const left=active?.snapshotIntervals.get(first),right=active?.snapshotIntervals.get(second);
+    if(!left||!right||left.interval!==right.interval)throw Error('snapshot verification belongs to a retired session or window interval');
+    const assertCurrent=()=>assertSnapshotAuthority(this.active,active,metadata.sessionId,left.interval);
+    assertCurrent();
+    const pair=preserveSnapshotPair(path.join(active.results,'snapshots'),first,second,metadata);
+    active.snapshotIntervals.delete(first);active.snapshotIntervals.delete(second);
+    if(!pair.stable||!active.bindingPre)return pair;
+    const receipt=bindingReceiptPath(path.dirname(pair.verificationPath),pair.id);
+    const state={pairId:pair.id,status:'pending',receiptPath:receipt};
+    active.bindingLatest=state;
+    const assertReceiptCurrent=()=>{
+      if(this.active===active&&!active.revoked&&!active.operationAbort.signal.aborted&&
+         (active.windowSuspended||active.windowIntervalToken!==left.interval)){
+        throw Error('Window continuity changed while checking the binding receipt');
+      }
+      assertCurrent();
+    };
+    active.bindingWork=(active.bindingWork||Promise.resolve()).then(()=>{
+      assertReceiptCurrent();
+      return writeBindingReceipt(active,this.launchBinding,first,second,pair,left.binding,right.binding,assertReceiptCurrent);
+    }).then(result=>{Object.assign(state,result);}).catch(error=>{
+      state.status='unavailable';
+      state.reason=error.message;
+      if(this.active===active&&!active.operationAbort.signal.aborted)console.error('Snapshot binding receipt unavailable: '+error.message);
+    });
+    return {...pair,bindingReceiptPath:receipt};
   }
 
   async disconnect(session) {
@@ -203,6 +369,8 @@ class AttachedNightlyDriver {
     const active=this.active;if(!active||active.revoked)return;
     active.revoked=reason||'session revoked';active.sampling=false;
     active.operationAbort.abort(new Error(active.revoked));
+    active.diagnosticsAuthenticated=false;
+    active.diagnosticCapture?.close();
     active.commandOffer=null;active.sampleOffer=null;
     try{this.#writeConfig();}catch(error){active.revocationWarning=error.message;}
     for(const child of active.children)if(child!==active.game){try{child.kill();}catch{}}
@@ -211,27 +379,39 @@ class AttachedNightlyDriver {
   async shutdown() { const warning=await this.#cleanup(true);if(warning)throw new Error(`Cleanup incomplete; recovery record retained: ${warning}`); }
 
   async sample(session) {
-    if (!this.active || this.active.revoked || session.epoch !== 1) throw new Error('sampling is unavailable');
+    if (!this.active || this.active.revoked || session.epoch !== 1 ||
+        this.active.session.bootstrap.sessionId!==session.sessionId || this.active.inflightSample) {
+      throw new Error('sampling is unavailable');
+    }
     const active=this.active;
     const sequence=this.active.nextSampleSequence++;
     const sampleContext={sequence,windowToken:active.windowSuspended?active.windowIntervalToken:null};active.inflightSample=sampleContext;
     const endpoint=deriveOfferName(this.active.key,{epoch:1,sequence,direction:'telemetry',opcode:''});
-    const resultFile=path.join(this.active.results,`sample-${sequence}.json`);
-    const readyFile=`${resultFile}.ready`;const pipePrefix='\\\\.\\pipe\\';
+    const pipePrefix='\\\\.\\pipe\\';
     const nativeWindow=active.windowState?{processId:active.game.pid,processStarted:active.windowState.processStarted,threadId:active.windowState.threadId,hwnd:active.windowState.hwnd}:null;
-    const job={pipeName:endpoint.slice(pipePrefix.length),resultPath:resultFile,readyPath:readyFile,nativeWindow};
-    const queue=this.active.sampleQueue;const temp=`${queue}.tmp`;
+    const job={pipeName:endpoint.slice(pipePrefix.length),sequence,nativeWindow};
     try {
-    fs.writeFileSync(temp,JSON.stringify(job),{encoding:'utf8',flag:'wx'});fs.renameSync(temp,queue);
-    await waitForFile(readyFile,3000,active.operationAbort.signal);
-    if(this.active!==active)throw new Error('sample credit belongs to a retired session');
-    active.sampleOffer={sequence,endpoint};this.#writeConfig();
-    await waitForFile(resultFile,this.timeoutMs,active.operationAbort.signal);
-    if(this.active!==active)throw new Error('sample completed for a retired session');
-    const result=readResult(resultFile);if(!result.bounded){const error=new Error(result.error||'sample was not bounded');if(require('./owned_window_observer').isRetiredModalAccept(result,nativeWindow)){error.modalNoClient=true;error.offerSequence=sequence;error.modalIntervalToken=sampleContext.windowToken;}throw error;}
+    const result=await active.sampleRelay.request(job,()=>{
+      if(this.active!==active||active.revoked||active.operationAbort.signal.aborted)throw Error('sample credit belongs to a retired session');
+      active.sampleOffer={sequence,endpoint};this.#writeConfig();
+    });
+    if(this.active!==active||active.revoked||active.operationAbort.signal.aborted)throw new Error('sample completed for a retired session');
+    if(!result.bounded){const error=new Error(result.error||'sample was not bounded');if(require('./owned_window_observer').isRetiredModalAccept(result,nativeWindow)){error.modalNoClient=true;error.offerSequence=sequence;error.modalIntervalToken=sampleContext.windowToken;}throw error;}
     const terminal=parseTerminalFrame(result.payload,{sessionId:session.sessionId,epoch:session.epoch,sequence});
     if(terminal)return {...terminal,offerSequence:sequence};
-    const fields={};for(const part of result.payload.split('\t')){const match=part.match(/^([A-Za-z][A-Za-z0-9]*)=([A-Za-z0-9_.,+-]+)$/);if(match)fields[match[1]]=match[2];}
+    const fields=Object.create(null);
+    const parts=result.payload.split('\t');
+    for(const part of parts){
+      const match=part.match(/^([A-Za-z][A-Za-z0-9]*)=([A-Za-z0-9_.,+-]+)$/);
+      if(match){
+        if(Object.hasOwn(fields,match[1])&&/^(?:epoch|tick|root(?:Observation|\d+))$/.test(match[1]))throw Error('duplicate sample identity field');
+        fields[match[1]]=match[2];
+      }
+    }
+    const tick=Number(fields.tick);
+    if(fields.epoch!=='1'||!/^\d+$/.test(fields.tick||'')||!Number.isInteger(tick)||tick>2147483647) {
+      throw Error('sample time identity is malformed');
+    }
     const entities=[];
     const entityKeys=Object.keys(fields).filter((name)=>/^entity\d+$/.test(name)).sort((a,b)=>Number(a.slice(6))-Number(b.slice(6)));
     for(const key of entityKeys){
@@ -248,8 +428,11 @@ class AttachedNightlyDriver {
     const firstTick=Number(fields.costFirstTick);const lastTick=Number(fields.costLastTick);const deliveredThroughTick=Number(fields.deliveredThroughTick);const repeatedHooks=Number(fields.repeatedHooks);
     if(!Number.isSafeInteger(deliveredThroughTick)||deliveredThroughTick<0||!Number.isSafeInteger(repeatedHooks)||repeatedHooks<0||(metricCount>0&&(!Number.isSafeInteger(firstTick)||firstTick<0||!Number.isSafeInteger(lastTick)||lastTick<firstTick)))throw new Error('sample metric coverage is malformed');
     const frame={offerSequence:sequence,sessionId:active.session.bootstrap.sessionId,epoch:Number(fields.epoch),tick:Number(fields.tick),complete,entities,events,eventDrops:Number(fields.eventDrops)||0,metrics:{count:metricCount,sumUs:Number(fields.costSumUs)||0,maxUs:Number(fields.costMaxUs)||0,p95Us:Number(fields.costP95Us)||0,drops:Number(fields.costDrops)||0,histogram,firstTick:metricCount?firstTick:null,lastTick:metricCount?lastTick:null,deliveredThroughTick,repeatedHooks,sendAttempts:Number(fields.sendAttempts)||0,sendFailures:Number(fields.sendFailures)||0,truncatedEvents:Number(fields.truncatedEvents)||0,truncatedEntities:Number(fields.truncatedEntities)||0},reason:complete?'':(dense&&eventsDense?'bridge-incomplete-scan':'sample-count-mismatch')};
+    if(active.telemetrySession)frame.telemetry=parsePlayerTelemetry(fields,active.telemetrySession,true);
+    if(active.watch)frame.watchRows=decodeWatchRows(parts,active.watch.plan,frame.telemetry,tick);
+    if(active.diagnosticFailure)frame.telemetryDiagnosticsStopped=true;
     return frame;
-    } finally {if(active.inflightSample===sampleContext)active.inflightSample=null;await this.#removeTransient([resultFile,`${resultFile}.tmp`,readyFile,temp,queue]); }
+    } finally {if(active.inflightSample===sampleContext)active.inflightSample=null;if(active.sampleOffer?.sequence===sequence)active.sampleOffer=null;}
   }
 
   startSampling(session,onFrame) {
@@ -258,7 +441,7 @@ class AttachedNightlyDriver {
     const onGameExit=(code)=>{if(this.active===active&&active.sampling){try{onFrame({sessionId:session.sessionId,epoch:session.epoch,tick:null,complete:false,entities:[],fatal:true,reason:`game-exit:${code}`});}catch{}}};
     active.game.once('exit',onGameExit);
     if(active.gameExitCode!==undefined){queueMicrotask(()=>onGameExit(active.gameExitCode));return()=>{active.sampling=false;active.game.off('exit',onGameExit);};}
-    const loop=async()=>{while(this.active===active&&active.sampling){try{onFrame(await this.sample(session));}catch(error){try{onFrame({sessionId:session.sessionId,epoch:session.epoch,tick:null,complete:false,entities:[],modalNoClient:error.modalNoClient===true,offerSequence:error.offerSequence,modalIntervalToken:error.modalIntervalToken,reason:`sample-error:${error.message}`});}catch{}await new Promise((resolve)=>setTimeout(resolve,25));}}};
+    const loop=async()=>{while(this.active===active&&active.sampling){try{onFrame(await this.sample(session));}catch(error){try{onFrame({sessionId:session.sessionId,epoch:session.epoch,tick:null,complete:false,entities:[],fatal:error.relayFatal===true,modalNoClient:error.modalNoClient===true,offerSequence:error.offerSequence,modalIntervalToken:error.modalIntervalToken,reason:`sample-error:${error.message}`});}catch{}await new Promise((resolve)=>setTimeout(resolve,25));}}};
     loop();return()=>{active.sampling=false;active.game.off('exit',onGameExit);};
   }
 
@@ -278,7 +461,27 @@ class AttachedNightlyDriver {
       const received = readResult(ackFile);
       if (!received.bounded) throw new Error(received.error || 'bridge acknowledgement was not bounded');
       const fields = received.fields || {};
-      result={ epoch:Number(fields.epoch),requestSequence:Number(fields.seq),opcode:fields.op,status:fields.status,observedTick:Number(fields.tick),reason:fields.reason||'',fromTick:fields.from===undefined?null:Number(fields.from),heldSamples:fields.held===undefined?null:Number(fields.held) };
+      const snapshotKeys=Object.keys(fields).filter(name=>/^snap\d+$/.test(name)).sort((a,b)=>Number(a.slice(4))-Number(b.slice(4)));
+      const snapshotEntities=snapshotKeys.map(name=>{
+        const entity=parseSnapshotEntity(fields[name],Boolean(active.bindingPre));
+        return active.richTelemetry&&fields.paused==='1'?addSnapshotRootCustomState(entity,fields):entity;
+      });
+      const snapshotBinding=active.bindingPre&&fields.paused==='1'?{
+        roots:[parseRootSelection(fields.bind1,1),parseRootSelection(fields.bind2,2)],
+        prefixes:snapshotKeys.map((name,index)=>{
+          const entity=snapshotEntities[index],parts=fields[name].split(',');
+          if((entity.kind==='player'||entity.kind==='helper')&&parts.length===20&&/^[a-zA-Z0-9]{1,16}$/.test(parts[19])){
+            return {kind:entity.kind,runtimeId:entity.runtimeId,prefix:parts[19]};
+          }
+          return null;
+        }).filter(Boolean)
+      }:null;
+      const camera=fields.cameraCoverage==='observed'&&fields.cameraX!==undefined&&fields.cameraY!==undefined&&fields.cameraZoom!==undefined?{x:Number(fields.cameraX),y:Number(fields.cameraY),zoom:Number(fields.cameraZoom),provenance:'engine-observed-at-hook'}:null;
+      result={ epoch:Number(fields.epoch),requestSequence:Number(fields.seq),opcode:fields.op,status:fields.status,observedTick:Number(fields.tick),reason:fields.reason||'',fromTick:fields.from===undefined?null:Number(fields.from),heldSamples:fields.held===undefined?null:Number(fields.held),snapshotFrame:fields.paused==='1'?{tick:Number(fields.tick),paused:true,camera,cameraCoverage:fields.cameraCoverage||'unavailable',entities:snapshotEntities,entityCoverage:{captured:Number(fields.entityCaptured)||snapshotEntities.length,total:Number(fields.entityTotal)||snapshotEntities.length,truncated:fields.entityTruncated==='1'},coverage:fields.coverage||'bounded-roots-helpers-projectiles'}:null };
+      if(result.snapshotFrame){
+        result.snapshotFrame.entityCoverage.ownerSlotsOmitted=/^(?:[0-9]|[12][0-9]|3[0-2])$/.test(fields.ownerSlotsOmitted)?Number(fields.ownerSlotsOmitted):null;
+        if(snapshotBinding)result.snapshotBinding=snapshotBinding;
+      }
     }catch(error){exchangeError=error;}
     if(this.active===active)retireCommandOffer(active,requestSequence,pipeChildren,()=>this.#writeConfig());
     else for(const child of pipeChildren)if(child&&!child.killed)child.kill();
@@ -329,13 +532,13 @@ class AttachedNightlyDriver {
   }
 
   async #startSampleHost() {
-    const active=this.active;active.sampleQueue=path.join(active.results,'sample-job.json');active.sampleStop=path.join(active.results,'sample-stop');
-    const ready=path.join(active.results,'sample-host.ready');const logHandle=fs.openSync(path.join(active.results,'sample-host.log'),'a');
-    const script=path.join(this.root,'bridge','sample_credit_host.ps1');
-    const child=spawn(this.powershell,['-NoProfile','-File',script,'-QueuePath',active.sampleQueue,'-StopPath',active.sampleStop,'-ReadyPath',ready],{windowsHide:true,stdio:['ignore',logHandle,logHandle]});fs.closeSync(logHandle);this.#track(child,active);
-    await Promise.race([waitForFile(ready,3000,active.operationAbort.signal),new Promise((resolve,reject)=>child.once('error',reject)),new Promise((resolve,reject)=>child.once('exit',(code)=>reject(new Error(`sample host exited before ready (code ${code})`))))]);
+    const active=this.active,script=path.join(this.root,'bridge','sample_credit_relay.ps1');
+    const child=spawn(this.powershell,['-NoProfile','-File',script],{windowsHide:true,stdio:['pipe','pipe','ignore']});
+    active.sampleRelay=openSampleCreditRelay(child,active.operationAbort.signal,this.timeoutMs);
+    active.sampleRelay.ready.catch(()=>{});
+    this.#track(child,active);
+    await active.sampleRelay.ready;
   }
-
   #writeRecovery(active) {
     if(!active||this.active!==active)return;
     try{persistRecoveryRecord(active,this.runtime);}
@@ -358,10 +561,8 @@ class AttachedNightlyDriver {
     const warnings=[];
     if(active.recoveryFailed)warnings.push('recovery-manifest-failed; retained for inspection');
     active.sampling=false;
-    try { if(active.sampleStop&&!fs.existsSync(active.sampleStop))fs.writeFileSync(active.sampleStop,'stop'); }
-    catch(error){warnings.push(`sample-stop:${error.code||error.message}`);}
-    try { const left=await removeTransient([active.sampleQueue,active.sampleQueue?`${active.sampleQueue}.tmp`:null]);const warning=formatCleanupWarning('transient-files',left);if(warning)warnings.push(warning); }
-    catch(error){warnings.push(`transient-files:${error.code||error.message}`);}
+    active.sampleRelay?.close();
+    active.diagnosticCapture?.close();
     const stopping=[...active.children].filter((child)=>child!==active.game||killGame);
     for(const child of stopping){try{child.kill();}catch(error){warnings.push(`child-stop:${error.code||error.message}`);}}
     for(let attempt=0;attempt<50&&stopping.some((child)=>active.children.has(child));attempt++)await new Promise((resolve)=>setTimeout(resolve,10));
@@ -381,4 +582,4 @@ class AttachedNightlyDriver {
   }
 }
 
-module.exports = { gameLaunchOptions, observeChildExit, persistRecoveryRecord, installOwnedBridge, removeOwnedBridge, AttachedNightlyDriver, waitForFile, removeTransient, formatCleanupWarning, appendCleanupWarning, retireCommandOffer };
+module.exports = { gameLaunchOptions, observeChildExit, persistRecoveryRecord, installOwnedBridge, removeOwnedBridge, AttachedNightlyDriver, waitForFile, removeTransient, formatCleanupWarning, appendCleanupWarning, retireCommandOffer, assertSnapshotAuthority };

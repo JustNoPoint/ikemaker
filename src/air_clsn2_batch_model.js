@@ -2,6 +2,7 @@
 
 const { parseNumberSet } = require('./air');
 const { hash } = require('./mutation_safety');
+const { resolveStandards } = require('./animation_standards');
 
 const ACTION = /^\s*\[\s*Begin\s+Action\s+(-?\d+)\s*\]/i;
 const FRAME = /^\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+\s*,\s*-?\d+/;
@@ -9,7 +10,8 @@ const CLSN2_HEADER = /^\s*Clsn2(Default)?\s*:\s*(\d+)/i;
 const CLSN2_BOX = /^\s*Clsn2\s*\[\s*\d+\s*\]\s*=\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)/i;
 const CLSN1_HEADER = /^\s*Clsn1(Default)?\s*:\s*(\d+)/i;
 const CLSN1_BOX = /^\s*Clsn1\s*\[\s*\d+\s*\]/i;
-const ROLES = new Set(['all', 'stand', 'crouch', 'air', 'grounded-start', 'custom', 'unknown', 'excluded']);
+const ROLES = new Set(['all', 'stand', 'crouch', 'air', 'down', 'grounded-start', 'custom', 'unknown', 'excluded']);
+const DEFAULT_STANDARDS = ['ikemen-1.0-character-core'];
 
 function normalizedBoxes(boxes) {
   return (boxes || []).map((box, index) => {
@@ -26,18 +28,24 @@ function normalizedBoxes(boxes) {
 function sameBoxes(left, right) { return JSON.stringify(left || []) === JSON.stringify(right || []); }
 function cleanHeading(line) { const match = /^\s*;\s?(.*)$/.exec(line); return match && match[1].trim(); }
 
+function actionHeading(lines, headerIndex) {
+  const inline = /;\s*(.+)$/.exec(lines[headerIndex])?.[1].trim();
+  if (inline) return inline;
+  const heading = [];
+  for (let before = headerIndex - 1; before >= 0; before -= 1) {
+    const comment = cleanHeading(lines[before]);
+    if (comment === false || comment === null) break;
+    heading.unshift(comment);
+  }
+  return heading.join(' ').trim();
+}
+
 function actionsIn(text) {
   const lines = String(text || '').split(/\r?\n/), starts = [];
   for (let line = 0; line < lines.length; line += 1) {
     const match = ACTION.exec(lines[line]);
     if (!match) continue;
-    const heading = [];
-    for (let before = line - 1; before >= 0; before -= 1) {
-      const comment = cleanHeading(lines[before]);
-      if (comment === false || comment === null) break;
-      heading.unshift(comment);
-    }
-    starts.push({ number: Number(match[1]), start: line, end: lines.length, heading: heading.join(' ').trim(), frames: [], blocks: [] });
+    starts.push({ number: Number(match[1]), start: line, end: lines.length, heading: actionHeading(lines, line), frames: [], blocks: [] });
   }
   starts.forEach((action, index) => { if (starts[index + 1]) action.end = starts[index + 1].start; });
   for (const action of starts) {
@@ -100,11 +108,19 @@ function hintRole(heading) {
   if (/stand(?:ing)?\s+to\s+crouch|stand\s*>\s*crouch/.test(value)) return 'crouch';
   if (/crouch(?:ing)?\s+to\s+stand|crouch\s*>\s*stand/.test(value)) return 'stand';
   if (/jump\s*(?:start|begin|startup)/.test(value)) return 'grounded-start';
+  if (/\b(?:laydown|liedown|(?:lie|lying|lay|laying)\s+down|downed|prone|supine)\b/.test(value)) return 'down';
   if (/\b(crouch|crouching|duck|ducking)\b/.test(value)) return 'crouch';
-  if (/\b(air|aerial|jump|fall|flying)\b/.test(value)) return 'air';
+  if (/\b(air|airborne|aerial|jump|fall|flying)\b/.test(value)) return 'air';
   if (/\b(stand|standing|idle|walk|run)\b/.test(value)) return 'stand';
   return 'unknown';
 }
+
+function standardRoleHints(ids = DEFAULT_STANDARDS) {
+  const { requiredAnimations, recommendedAnimations } = resolveStandards(ids);
+  return new Map([...recommendedAnimations, ...requiredAnimations].filter(entry => entry.poseRole).map(entry => [entry.action, entry.poseRole]));
+}
+
+const DEFAULT_ROLE_HINTS = standardRoleHints();
 
 function classification(action, options = {}) {
   const number = Number(action.number), exclusions = new Set((options.exclusions || []).map(Number));
@@ -112,10 +128,16 @@ function classification(action, options = {}) {
   const overrides = options.overrides || {}, saved = options.savedMappings || {};
   if (Object.prototype.hasOwnProperty.call(overrides, number)) return { role: roleOverride(overrides[number]), source: 'this review' };
   if (Object.prototype.hasOwnProperty.call(saved, number)) return { role: roleOverride(saved[number]), source: 'remembered owner mapping' };
-  if (number === 10) return { role: 'transition-crouch', source: 'standard Action 10 suggestion', transitionAt: 0 };
-  if (number === 12) return { role: 'transition-stand', source: 'standard Action 12 suggestion', transitionAt: 0 };
-  if (number === 40) return { role: 'grounded-start', source: 'standard Action 40 suggestion' };
-  return { role: hintRole(action.heading), source: action.heading ? 'name suggestion' : 'unclassified' };
+  const standard = (options.standardRoles || DEFAULT_ROLE_HINTS).get(number), nameRole = hintRole(action.heading);
+  const configuredName = options.suggestedNames?.[number], configuredRole = hintRole(configuredName);
+  if (nameRole !== 'unknown' && nameRole !== standard && nameRole !== standard?.replace(/^transition-/, '')) {
+    if (standard === 'grounded-start' && nameRole === 'air' && !/\b(?:air|airborne|aerial|flying)\b/i.test(action.heading)) return { role: 'unknown', source: 'authored name and grounded startup standard differ' };
+    return { role: nameRole, source: 'authored name suggestion' };
+  }
+  if (nameRole === 'unknown' && configuredRole !== 'unknown') return { role: configuredRole, source: 'configured name suggestion' };
+  if (standard?.startsWith('transition-')) return { role: standard, source: `standard Action ${number} suggestion`, transitionAt: 0 };
+  if (standard) return { role: standard, source: `standard Action ${number} suggestion` };
+  return { role: 'unknown', source: 'unclassified' };
 }
 
 function frameRole(actionRole, frameIndex) {
@@ -204,7 +226,7 @@ function parseAssignmentInput(value) {
   const overrides = {}, exclusions = [];
   for (const token of String(value || '').split(/[\s,]+/).filter(Boolean)) {
     if (/^!-?\d+$/.test(token)) { exclusions.push(Number(token.slice(1))); continue; }
-    const match = /^(-?\d+)=(stand|crouch|air|grounded-start|custom|unknown|excluded)$/i.exec(token);
+    const match = /^(-?\d+)=(stand|crouch|air|down|grounded-start|custom|unknown|excluded)$/i.exec(token);
     if (!match) throw new Error(`Invalid role assignment "${token}". Use 10=crouch or !40.`);
     if (match[2].toLowerCase() === 'excluded') exclusions.push(Number(match[1]));
     else overrides[Number(match[1])] = match[2].toLowerCase();
@@ -212,4 +234,4 @@ function parseAssignmentInput(value) {
   return { overrides, exclusions };
 }
 
-module.exports = { actionsIn, normalizedBoxes, classification, frameRole, createProposal, parseAssignmentInput };
+module.exports = { actionsIn, actionHeading, normalizedBoxes, standardRoleHints, classification, frameRole, createProposal, parseAssignmentInput, DEFAULT_STANDARDS };

@@ -25,7 +25,7 @@ function resolveAssigned(defPath, text) {
     const resolve = (entry) => entry ? path.resolve(path.dirname(defPath), unquote(entry)) : '';
     result.sff = resolve(value(files, 'sprite', value(files, 'sff', '')));
     result.air = resolve(value(files, 'anim', value(files, 'air', '')));
-    result.snd = resolve(value(files, 'sound', ''));
+    result.snd = resolve(value(files, 'sound', value(files, 'snd', '')));
     result.commands = resolve(value(files, 'cmd', ''));
     result.constants = resolve(value(files, 'cns', ''));
     result.movelist = resolve(value(files, 'movelist', ''));

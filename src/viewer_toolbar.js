@@ -22,7 +22,7 @@ const BASE_MENU_COMMANDS = [
   'ikemen.palette.openWorkspace', 'ikemen.palette.createTemplate', 'zss.openPalFxEditor', 'ikemen.commandMovelist.openEditor', 'ikemen.codeStructure.openWorkspace',
   'ikemen.palettePlayer.organize', 'ikemen.palettePlayer.finishStaged', 'ikemen.paletteImport.open', 'ikemen.openPaletteFolder', 'ikemen.maps.openBrowser',
   'ikemen.mutations.openHistory', 'ikemen.impact.preview', 'ikemen.characterDependencies.open', 'ikemen.characterHealth.open',
-  'ikemen.productionWorkflow.open', 'ikemen.testSessions.open', 'ikemen.animationStandards.open', 'ikemen.projectManager.open', 'ikemen.engineRegistry.open',
+  'ikemen.projectBible.open', 'ikemen.productionWorkflow.open', 'ikemen.testSessions.open', 'ikemen.animationStandards.open', 'ikemen.projectManager.open', 'ikemen.engineRegistry.open',
   'ikemen.character.open', 'ikemen.character.close', 'ikemen.context.show', 'ikemen.context.openRegistry',
   'ikemen.character.createNew', 'ikemen.character.firstPlayableAttack', 'ikemen.launchTrainingCurrent', 'ikemen.launchMirrorCurrent', 'ikemen.restartRunning',
   'ikemen.workspacePreset.save', 'ikemen.workspacePreset.restore', 'ikemen.authoring.openRecipes', 'ikemen.authoring.openFavorites', 'ikemen.authoring.openExamples', 'ikemen.authoring.openSymbols',
@@ -116,7 +116,7 @@ const CONTEXT_FREE_COMMANDS = Object.freeze(new Set([
   'ikemen.launchTrainingConfigured','ikemen.updates.configureFrequency','ikemen.configureAssetWorkspace',
   'ikemen.switchSuite','ikemen.openIKeMeter','ikemen.switchToIkeMiner','ikeminer.open','ikeminer.session.create','ikeminer.session.open',
   'ikemen.textToolbar.toggleHeaderOnlyLayout','ikemen.maps.configureTextGrammar','ikemen.openLauncherSettings','ikemen.extensionUpdates.settings',
-  'ikemen.stage.openStart','ikemen.ui.openStart','ikemen.storyboard.openStart','ikemen.projectManager.open','ikemen.engineRegistry.open','ikemen.shader.openWorkshop','ikemen.fontLab.open','ikemen.stage.createNew','ikemen.stage.createFromPngLayers','ikemen.stage.openWorkspace','ikemen.stage.launchRig','ikemen.ui.createNew','ikemen.ui.openWorkspace','ikemen.selectDef.openWorkspace','ikemen.menuModes.openPlayer','ikemen.menuModes.openCreator','ikemen.storyDialogue.openPlayer','ikemen.storyDialogue.openCreator','ikemen.storyboard.create','ikemen.storyboard.open'
+  'ikemen.stage.openStart','ikemen.ui.openStart','ikemen.storyboard.openStart','ikemen.projectBible.open','ikemen.projectManager.open','ikemen.engineRegistry.open','ikemen.shader.openWorkshop','ikemen.fontLab.open','ikemen.stage.createNew','ikemen.stage.createFromPngLayers','ikemen.stage.openWorkspace','ikemen.stage.launchRig','ikemen.ui.createNew','ikemen.ui.openWorkspace','ikemen.selectDef.openWorkspace','ikemen.menuModes.openPlayer','ikemen.menuModes.openCreator','ikemen.storyDialogue.openPlayer','ikemen.storyDialogue.openCreator','ikemen.storyboard.create','ikemen.storyboard.open'
   ,'ikemen.file.createNew','zss.createNew','cns.createNew','sff.createNew','air.createNew','snd.createNew','sff.openViewer','air.openAnimationPreview','snd.openViewer','snd.chooseAudioEditor','ikemen.windowsFileAssociations.configure','ikemen.palette.createTemplate','ikemen.palette.createScratch','ikemen.palette.openWorkspace','ikemen.character.createNew','ikemen.character.firstPlayableAttack','ikemen.character.open'
 ]));
 const SEED_COMMANDS = Object.freeze(new Set([
@@ -174,7 +174,7 @@ function normalize(input) {
   const order = [...new Set((Array.isArray(input?.order) ? input.order : []).filter(id => ACTIONS.includes(id)))];
   return { order: [...order, ...ACTIONS.filter(id => !order.includes(id))], hidden: [...new Set((Array.isArray(input?.hidden) ? input.hidden : []).filter(id => ACTIONS.includes(id)))] };
 }
-function configure(context) { require('./toolbar_access').configure(context); storage = context.globalState; preferences = storage?.get(KEY, {}) || {}; activityPreferences = require('./toolbar_shared_favorites').migrate(storage?.get(ACTIVITY_KEY, {}) || {}); require('./viewer_layout').configure(context); }
+function configure(context) { require('./toolbar_access').configure(context); require('./viewer_presentation').configure(context); storage = context.globalState; preferences = storage?.get(KEY, {}) || {}; activityPreferences = require('./toolbar_shared_favorites').migrate(storage?.get(ACTIVITY_KEY, {}) || {}); require('./viewer_layout').configure(context); }
 function normalizeActivity(input) {
   const valid = value => typeof value === 'string' && /^[a-z0-9_.:[\]="-]{1,180}$/i.test(value);
   return { favorites: [...new Set(Array.isArray(input?.favorites) ? input.favorites.filter(valid) : [])].slice(0, 40), recent: [...new Set(Array.isArray(input?.recent) ? input.recent.filter(valid) : [])].slice(0, 8), repeatable: valid(input?.repeatable) ? input.repeatable : '' };
@@ -247,7 +247,7 @@ function menuDefinitions(surface, options = {}) {
       { label: 'Character Dependencies…', command: 'ikemen.characterDependencies.open', seed: true }, { label: 'Character Health…', command: 'ikemen.characterHealth.open', seed: true },
       { label: 'Run Character Scale Review…', command: 'ikemen.scaleReview.run', seed: true }, { label: 'Toggle Character Scale Monitoring', command: 'ikemen.scaleReview.toggleMonitoring', seed: true },
       { label: 'Audit Current ZSS File', command: 'zss.audit.currentFile', seed: true }, { label: 'Audit Workspace Safety', command: 'zss.audit.workspace', seed: true },
-      { separator: true }, { label: 'Production Workflow…', command: 'ikemen.productionWorkflow.open', seed: true }, { label: 'Test Sessions…', command: 'ikemen.testSessions.open', seed: true }, { label: 'Project & Team Manager…', command: 'ikemen.projectManager.open', seed: true }
+      { separator: true }, { label: 'Project & Team Bible…', command: 'ikemen.projectBible.open', seed: true }, { label: 'Production Workflow…', command: 'ikemen.productionWorkflow.open', seed: true }, { label: 'Test Sessions…', command: 'ikemen.testSessions.open', seed: true }, { label: 'Project & Team Manager…', command: 'ikemen.projectManager.open', seed: true }
     ] },
     { label: 'Build', items: [
       { label: 'Create New', heading: true, id: 'shared.build.create-heading' },
@@ -294,7 +294,7 @@ function menuDefinitions(surface, options = {}) {
       { label: 'Map Browser…', command: 'ikemen.maps.openBrowser', seed: true }, { label: 'Project Data…', command: 'zss.openProjectData', seed: true }, { label: 'Engine Targets & Compatibility…', command: 'ikemen.engineRegistry.open', seed: true }, { label: 'Platform Capabilities…', command: 'ikemen.showPlatformCapabilities' },
       { separator: true }, { label: 'Recipe Library…', command: 'ikemen.authoring.openRecipes', seed: true }, { label: 'Authoring Favorites…', command: 'ikemen.authoring.openFavorites', seed: true }, { label: 'Example Templates…', command: 'ikemen.authoring.openExamples', seed: true }, { label: 'Project Symbols & Contracts…', command: 'ikemen.authoring.openSymbols', seed: true },
       { separator: true }, { label: 'Universal HitDef Editor…', command: 'ikemen.hitDef.openEditor', seed: true }, { label: 'Move Lab…', command: 'ikemen.moveLab.open', seed: true }, { label: 'Helper Lab…', command: 'ikemen.helperLab.open', seed: true }, { label: 'Throw Creator…', command: 'ikemen.throwCreator.open', seed: true }, { label: 'Explod Composer…', command: 'ikemen.explodComposer.open', seed: true }, { label: 'Position & Camera Editor…', command: 'ikemen.positionCamera.open', seed: true }, { label: 'Orbit / Trajectory Assist…', command: 'ikemen.trajectory.openAssist', seed: true },
-      { separator: true }, { label: 'Open IKeMeter…', command: 'ikemen.openIKeMeter' }, { label: 'Switch to IkeMiner Workspace…', command: 'ikemen.switchToIkeMiner' }, { label: 'New IkeMiner Capture Session…', command: 'ikeminer.session.create' }, { label: 'Open IkeMiner Capture Session…', command: 'ikeminer.session.open' },
+      { separator: true }, { label: 'Open IKeMeter…', command: 'ikemen.openIKeMeter' }, { label: 'Import IKeMeter Telemetry…', command: 'ikemen.importIKeMeterTelemetry' }, { label: 'Import IKeMeter Watch Log…', command: 'ikemen.importIKeMeterWatchLog' }, { label: 'Import IKeMeter Findings…', command: 'ikemen.importIKeMeterFindings' }, { label: 'Reopen IKeMeter Findings…', command: 'ikemen.reopenIKeMeterFindings' }, { label: 'Switch to IkeMiner Workspace…', command: 'ikemen.switchToIkeMiner' }, { label: 'New IkeMiner Capture Session…', command: 'ikeminer.session.create' }, { label: 'Open IkeMiner Capture Session…', command: 'ikeminer.session.open' },
       { separator: true }, { label: 'Pinned Sources…', action: 'pinned' }, { label: 'Compare…', action: 'compare' },
       { separator: true }, { label: 'Mode & Focus…', command: 'ikemen.changeMode' }, { label: 'IKEMaker Settings…', command: 'ikemen.openExtensionSettings' }
     ] },
@@ -564,6 +564,11 @@ function menuButtonHtml(surface, group, item, options = {}) {
   const descriptions = [unproven ? 'Availability is confirmed when you run it.' : ''].filter(Boolean).join(' ');
   return `<button role="menuitem" data-toolbar-action-id="${escapeHtml(item.id)}" data-toolbar-route-kind="${escapeHtml(item.routeKind)}" data-toolbar-availability="${escapeHtml(item.availability)}" data-toolbar-group="${escapeHtml(group.label)}" data-toolbar-repeatable="${item.repeatable ? 'true' : 'false'}"${item.tooltip ? ` title="${escapeHtml(item.tooltip)}"` : ''}${effect ? ` data-toolbar-changes="${escapeHtml(effect[0])}" data-toolbar-does-not-change="${escapeHtml(effect[1])}"` : ''}${item.shortcut ? ` data-toolbar-shortcut="${escapeHtml(item.shortcut)}" aria-keyshortcuts="${escapeHtml(require('./viewer_shortcuts').ariaShortcut(item.shortcut))}"` : ''}${item.action ? ` data-toolbar-proxy="${escapeHtml(item.action)}"` : ''}${item.element ? ` data-toolbar-element="${escapeHtml(item.element)}"` : ''}${item.selector ? ` data-toolbar-selector="${escapeHtml(item.selector)}"` : ''}${item.special ? ` data-toolbar-special="${escapeHtml(item.special)}"` : ''}${item.workflowAction ? ` data-toolbar-workflow="${escapeHtml(item.workflowAction)}"` : ''}${item.targetSurface ? ` data-toolbar-target-surface="${escapeHtml(item.targetSurface)}" data-toolbar-target-action="${escapeHtml(item.targetAction)}"` : ''}${accessible ? ` aria-label="${escapeHtml(accessible)}"` : ''}${descriptions ? ` aria-description="${escapeHtml(descriptions)}"` : ''}${unproven ? ' data-toolbar-unproven="true"' : ''}>${escapeHtml(item.label)}${options.qualifier ? ` <span class="viewer-menu-qualifier">(${escapeHtml(options.qualifier)})</span>` : ''}${unproven ? '<span class="viewer-menu-badge" aria-hidden="true">unverified</span>' : ''}</button>`;
 }
+const MENU_GLYPHS = Object.freeze({
+  Project: '▦', Edit: '✎', View: '◉', Palettes: '◐', Sprites: '▧', Animations: '▷',
+  Sounds: '♫', Review: '✓', Build: '⚒', Stage: '▱', Screenpack: '▣', Tools: '⚙', Help: '?', More: '⋯'
+});
+
 function menuGroupHtml(surface, group) {
   const own = tidyMenuEntries(group.items.filter(item => item.separator || item.heading || item.routeKind !== 'cross-surface'));
   const counts = new Map();
@@ -584,10 +589,12 @@ function menuGroupHtml(surface, group) {
     const name = targetName(target);
     return `<details class="viewer-menu-more" data-toolbar-more-target="${escapeHtml(target)}"><summary role="menuitem" aria-haspopup="true" aria-expanded="false">More from ${escapeHtml(name)} <span class="viewer-menu-count">(${items.length})</span></summary><div role="group" aria-label="Actions that run in the ${escapeHtml(name)}">${items.map(item => menuButtonHtml(surface, group, item, { accessibleLabel: `${item.label} — ${name}` })).join('')}</div></details>`;
   }).join('');
-  return `<details class="viewer-dropdown" data-toolbar-menu="${escapeHtml(group.label)}"><summary aria-haspopup="menu">${escapeHtml(group.label)}</summary><div role="menu" aria-label="${escapeHtml(group.label)}">${ownHtml}${ownHtml && othersHtml ? '<hr>' : ''}${othersHtml}</div></details>`;
+  const glyph = MENU_GLYPHS[group.label], label = escapeHtml(group.label);
+  const presentation = glyph ? ` data-ikm-action-icon="${escapeHtml(glyph)}" aria-label="${label}" title="${label}"` : '';
+  return `<details class="viewer-dropdown" data-toolbar-menu="${label}"><summary aria-haspopup="menu"${presentation}><span data-ikm-action-label>${label}</span></summary><div role="menu" aria-label="${escapeHtml(group.label)}">${ownHtml}${ownHtml && othersHtml ? '<hr>' : ''}${othersHtml}</div></details>`;
 }
 function menuHtml(surface) {
-  return `<span class="viewer-dropdown-toolbar" role="toolbar" aria-label="IKEMaker menus">${orderedMenuGroups(surface, menuDefinitions(surface)).map(group => menuGroupHtml(surface, group)).join('')}<button class="viewer-action-search-button" data-toolbar-search aria-keyshortcuts="Alt+A" title="Search every command available in this viewer · Alt+A">Actions…</button></span>`;
+  return `<span class="viewer-dropdown-toolbar" role="toolbar" aria-label="IKEMaker menus">${orderedMenuGroups(surface, menuDefinitions(surface)).map(group => menuGroupHtml(surface, group)).join('')}<button class="viewer-action-search-button" data-toolbar-search data-ikm-action-icon="⌕" aria-label="Search viewer actions" aria-keyshortcuts="Alt+A" title="Search every command available in this viewer · Alt+A"><span data-ikm-action-label>Actions…</span></button></span>`;
 }
 const LEGACY_SURFACE_IDS = Object.freeze({
   shared:'help.workspace',png_stage:'stage.png-creation',
@@ -595,7 +602,7 @@ const LEGACY_SURFACE_IDS = Object.freeze({
   sff:'sff.viewer',air:'air.viewer',snd:'snd.viewer',artist_intake:'sff.artist-intake',sff_assembly:'sff.assembly',
   code_structure:'code.structure',command_movelist:'code.command-movelist',helper:'code.helper',hitdef:'code.hitdef',move_constants:'move.constants',spatial_composer:'code.spatial',
   mutation_history:'project.recovery',palette:'palette.workspace',palette_import:'palette.workspace',palette_index_organizer:'palette.workspace',palfx_editor:'palette.palfx',
-  production_workflow:'project.production-workflow',project_manager:'project.manager',quick_launch:'project.quick-launch',storyboard:'story.storyboard',test_session:'project.tests'
+  production_workflow:'project.production-workflow',project_manager:'project.manager',project_bible:'project.bible',quick_launch:'project.quick-launch',storyboard:'story.storyboard',test_session:'project.tests'
   ,story_dialogue:'story.dialogue'
 });
 const LEGACY_ENABLED = Object.freeze(new Set(['new','close','open','text-source','backup','recovery','run','versus','training','restart','project','stage','sprites','animations','commands','states','sounds','palettes','viewer-browser','actions-search','suite-switch','updates','help','settings']));
@@ -730,6 +737,7 @@ async function postActionState(panel) {
 async function handle(message, panel, options = {}) {
   const current=()=>typeof options?.isCurrent!=='function'||options.isCurrent();
   if(!current())return true;
+  if (message?.type === 'ikmPresentationReady' || message?.type === 'ikmPresentationChange') return require('./viewer_presentation').handle(message, panel);
   if (!['viewerToolbarReady', 'viewerToolbarSave', 'viewerToolbarActivityReady', 'viewerToolbarActivitySave'].includes(message?.type)) return false;
   if (!panel?.webview || !/^[a-z][a-z0-9_-]{0,60}$/.test(message.surface || '')) return true;
   if (!panels.has(panel)) { panels.set(panel, {surface:message.surface,mode:['player','simple','workspace'].includes(message.mode)?message.mode:require('./interface_mode').current()}); const focusSubscription = panel.onDidChangeViewState?.(() => {

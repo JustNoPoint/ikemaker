@@ -1,0 +1,14 @@
+.watch-controls{display:flex;flex-wrap:wrap;align-items:end;gap:10px;margin:8px 0 12px}
+.watch-controls label{display:grid;gap:4px;color:var(--muted)}
+.watch-controls label[hidden]{display:none}
+.watch-controls input,.watch-controls select,.watch-controls button,#watch-list button{min-height:30px;background:#151b24;color:var(--text);border:1px solid var(--line);border-radius:3px;padding:4px 8px}
+#watch-seconds{width:7em}
+#watch-list{margin:0;padding:0;list-style:none}
+#watch-list li{display:flex;justify-content:space-between;align-items:center;gap:12px;min-height:35px;border-top:1px solid var(--line)}
+#watch-paste-form{display:grid;gap:6px;margin:10px 0;max-width:500px}
+#watch-paste-form textarea{background:var(--bg);color:var(--text);border:1px solid var(--line);padding:6px;font:inherit}
+.watch-table{overflow:auto;max-height:480px}
+.watch-table table{border-collapse:collapse;width:100%;text-align:left}
+.watch-table th{position:sticky;top:0;background:var(--panel)}
+.watch-table th,.watch-table td{padding:7px 8px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.watch-table tr[data-event="gap"]{color:#f3d98d}

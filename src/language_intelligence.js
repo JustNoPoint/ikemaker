@@ -77,7 +77,7 @@ function parameterCompletion(parameter, languageId) {
   return {
     kind: 'parameter',
     label: parameter.name,
-    detail: `${parameter.required ? 'Required' : 'Optional'} IKEMEN 1.0 controller option`,
+    detail: `${parameter.required ? 'Required' : 'Optional'} IKEMEN controller option`,
     documentation: `${parameter.name} expects ${parameter.placeholder || 'a value'}.`,
     insertText: `${parameter.name}${separator}\${1:${snippetPlaceholder(parameter.placeholder)}}${suffix}`
   };
@@ -150,12 +150,12 @@ function completionModels({ text, line, linePrefix = '', languageId = 'zss', exp
     for (const controller of controllers) {
       items.push({
       kind: 'controller', label: controller.name, filterText: controller.name,
-      detail: 'IKEMEN 1.0 state controller', documentation: controller.description,
+      detail: 'IKEMEN state controller', documentation: controller.description,
       insertText: formatCnsControllerSnippet(controller, 'required')
     });
       if ((controller.params || []).some(parameter => !parameter.required)) items.push({
         kind: 'controller', label: `${controller.name} (all parameters)`, filterText: controller.name,
-        detail: 'IKEMEN 1.0 state controller · optional parameters commented', documentation: controller.description,
+        detail: 'IKEMEN state controller · optional parameters commented', documentation: controller.description,
         insertText: formatCnsControllerSnippet(controller, 'all')
       });
     }
@@ -164,12 +164,12 @@ function completionModels({ text, line, linePrefix = '', languageId = 'zss', exp
       const name = zssControllerName(controller.name);
       items.push({
       kind: 'controller', label: name, filterText: name,
-      detail: 'IKEMEN 1.0 state controller', documentation: controller.description,
+      detail: 'IKEMEN state controller', documentation: controller.description,
       insertText: formatControllerSnippet(controller, experience)
     });
       if ((controller.params || []).some(parameter => !parameter.required)) items.push({
         kind: 'controller', label: `${name} (all parameters)`, filterText: name,
-        detail: 'IKEMEN 1.0 state controller · optional parameters commented', documentation: controller.description,
+        detail: 'IKEMEN state controller · optional parameters commented', documentation: controller.description,
         insertText: formatControllerSnippet(controller, experience, 'all')
       });
     }
@@ -179,7 +179,7 @@ function completionModels({ text, line, linePrefix = '', languageId = 'zss', exp
   if (expressionLikely) {
     for (const trigger of triggers) items.push({
       kind: trigger.kind || 'trigger', label: trigger.name,
-      detail: `${trigger.status === 'new'?'New':trigger.status === 'changed' ? 'Expanded' : 'Documented'} IKEMEN 1.0 ${trigger.kind || 'trigger'}`,
+      detail: `${trigger.status === 'new'?'New':trigger.status === 'changed' ? 'Expanded' : 'Documented'} IKEMEN ${trigger.kind || 'trigger'}`,
       documentation: trigger.description,
       insertText: triggerInsert(trigger), experience
     });
@@ -207,7 +207,7 @@ function hoverModel({ word, text, line, languageId = 'zss', experience = 'learni
   if (controller) return {
     kind: 'controller', title: controller.name, summary: controller.description,
     explanation: experience === 'learning'
-      ? `This is an IKEMEN 1.0 state controller. In ZSS it uses a named block; in CNS it is selected with type = ${controller.name}.`
+      ? `This is an IKEMEN state controller. In ZSS it uses a named block; in CNS it is selected with type = ${controller.name}.`
       : '',
     url: controller.url
   };

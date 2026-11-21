@@ -3,7 +3,7 @@
 const path = require('path');
 const fs = require('fs');
 const { parseSelectedClsn2 } = require('./air');
-const { actionsIn, createProposal, parseAssignmentInput } = require('./air_clsn2_batch_model');
+const { actionsIn, createProposal, parseAssignmentInput, standardRoleHints, DEFAULT_STANDARDS } = require('./air_clsn2_batch_model');
 const { hash } = require('./mutation_safety');
 
 const MAPPING_KEY = 'ikemen.air.clsn2.roleMappings.v1';
@@ -43,6 +43,16 @@ class AirClsn2BatchService {
   mappingScope(source) { return `${canonical(source.ownerDef || source.airPath)}|${canonical(source.airPath)}`; }
   allMappings() { return this.context?.workspaceState?.get(MAPPING_KEY, {}) || {}; }
   savedMappings(source) { return this.allMappings()[this.mappingScope(source)]?.assignments || {}; }
+  roleOptions(source) {
+    const configuration = this.vscode.workspace.getConfiguration?.('ikemenZss', this.vscode.Uri?.file?.(source.airPath));
+    const standardSets = configuration?.get?.('animationStandardSets', DEFAULT_STANDARDS);
+    const key = 'ikemen.air.suggestedNames', profileNames = this.context?.globalState?.get?.(key, {});
+    return {
+      standardRoles: standardRoleHints(Array.isArray(standardSets) ? standardSets : DEFAULT_STANDARDS),
+      savedMappings: this.savedMappings(source),
+      suggestedNames: this.context?.workspaceState?.get?.(key, profileNames) || {}
+    };
+  }
   async rememberMappings(source, assignments) {
     const existing = this.savedMappings(source);
     const state = { ...this.allMappings(), [this.mappingScope(source)]: { version: 1, ownerDef: source.ownerDef || '', airPath: source.airPath, assignments: { ...existing, ...assignments } } };
@@ -116,6 +126,7 @@ class AirClsn2BatchService {
       { label: 'Standing role', role: 'stand', description: 'Reviewed stand assignments, including standard Action 12 from displayed element 1.' },
       { label: 'Crouching role', role: 'crouch', description: 'Reviewed crouch assignments, including standard Action 10 from displayed element 1.' },
       { label: 'Airborne role', role: 'air', description: 'Name suggestions do not treat Action 40 jump startup as airborne.' },
+      { label: 'Laydown role', role: 'down', description: 'Laydown names and compatible configured animation standards.' },
       { label: 'Grounded startup role', role: 'grounded-start', description: 'Includes the standard Action 40 grounded-start suggestion.' },
       { label: 'Custom role', role: 'custom', description: 'Only actions explicitly mapped as custom.' },
       { label: 'Unclassified role', role: 'unknown', description: 'Review custom actions that have no known suggestion.' }
@@ -127,9 +138,9 @@ class AirClsn2BatchService {
       if (elements === undefined) return { status: 'cancelled' };
     }
     let overrides = {}, exclusions = [], remember = false;
-    const savedMappings = this.savedMappings(source);
+    const roles = this.roleOptions(source);
     while (true) {
-      const proposal = createProposal(baseline.text, { actions, elements, boxes, operation, role: roleChoice.role, overrides, exclusions, savedMappings });
+      const proposal = createProposal(baseline.text, { actions, elements, boxes, operation, role: roleChoice.role, overrides, exclusions, ...roles });
       const assignmentSummary = proposal.assignments.map((item) => `${item.action}: ${item.role} (${item.source})`).join('\n');
       const changedSummary = proposal.changed.map((item) => `${item.action}: elements ${item.elements.join(', ')}`).join('\n');
       const skippedSummary = proposal.skipped.map((item) => `${item.action}: ${item.reason}`).join('\n') || '(none)';
@@ -180,4 +191,4 @@ class AirClsn2BatchService {
 }
 
 function createAirClsn2BatchService(vscode, context) { return new AirClsn2BatchService(vscode, context); }
-module.exports = { AirClsn2BatchService, createAirClsn2BatchService, sameDocument, MAPPING_KEY };
+module.exports = { AirClsn2BatchService, createAirClsn2BatchService, ownerCandidates, sameDocument, MAPPING_KEY };

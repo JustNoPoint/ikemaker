@@ -44,13 +44,19 @@ try {
     $bounded = $readError -eq '' -and $declared -le 4096 -and $count -eq (4 + $declared)
     if ($readError -eq '' -and -not $bounded) { $readError = 'invalid-length-or-trailing-bytes' }
     $fields = [ordered]@{}
+    $customSeen = @{}
     if ($bounded -and $Kind -ne 'Metadata') {
         $text = [Text.Encoding]::UTF8.GetString($buffer, 4, [int]$declared)
-        $allowed = if ($Kind -eq 'Ack') { @('epoch','seq','op','status','tick','from','reason','held') } elseif ($Kind -eq 'Sample') { @('epoch','tick','complete','count') } else { @('session','epoch','tick','mode') }
+        $allowed = if ($Kind -eq 'Ack') { @('epoch','seq','op','status','tick','from','reason','held','paused','coverage','cameraCoverage','cameraX','cameraY','cameraZoom','entityCaptured','entityTruncated','ownerSlotsOmitted','bind1','bind2') } elseif ($Kind -eq 'Sample') { @('epoch','tick','complete','count') } else { @('session','epoch','tick','mode') }
         foreach ($part in ($text -split "`t")) {
             if ($part -match '^([A-Za-z][A-Za-z0-9]*)=([A-Za-z0-9_.,+-]+)$') {
                 $fieldName = $Matches[1]; $fieldValue = $Matches[2]
-                if (($allowed -contains $fieldName) -or ($Kind -eq 'Sample' -and $fieldName -match '^entity[0-9]+$')) { $fields[$fieldName] = $fieldValue }
+                if ($Kind -eq 'Ack' -and $fieldName -cmatch '^custom[1-4]$') {
+                    if ($customSeen.ContainsKey($fieldName)) { $fields.Remove($fieldName) }
+                    else { $fields[$fieldName] = $fieldValue; $customSeen[$fieldName] = $true }
+                    continue
+                }
+                if (($allowed -contains $fieldName) -or ($Kind -eq 'Sample' -and $fieldName -match '^entity[0-9]+$') -or ($Kind -eq 'Ack' -and $fieldName -match '^snap[0-9]+$')) { $fields[$fieldName] = $fieldValue }
             }
         }
     }

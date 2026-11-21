@@ -117,7 +117,7 @@ function layerSource(layer) {
   const bank = rawBank === undefined || rawBank === null ? null : int(rawBank, 'layer bank', 1, 6);
   if (source.kind && !['bank', 'mapping'].includes(source.kind)) fail(`layer source kind "${source.kind}" cannot build layer animations; use a sprite bank or a reviewed mapping.`);
   if (bank === null && !mapping.size) fail('layer needs a sprite bank (source.bank 1..6) or a reviewed mapping.');
-  const key = bank !== null ? `bank:${bank}` : 'mapping';
+  const key = /^silhouette:layer[1-4]:bank:[1-6]$/.test(layer.equipmentIdentity||'') ? layer.equipmentIdentity : bank !== null ? `bank:${bank}` : 'mapping';
   return { bank, mapping, key, label: safeLabel(layer.label, bank !== null ? `Bank ${bank}` : 'Reviewed mapping') };
 }
 
@@ -731,6 +731,7 @@ function buildLegacyCostumeExplod({ airText, sprites, layer, baseLayer = null, s
 // Pose following intentionally uses only one static atlas, independent of the owner's Action ID.
 // Selection runs after the current state's controllers, including opponent custom states.
 function buildCostumeExplod(options = {}) {
+  if(options.equipment) {const {equipment,...rest}=options;return require('./silhouette_equipment_code').buildSilhouetteEquipment({...rest,...equipment});}
   const layer = options.layer || {};
   const mode = options.runtimeMode ?? layer.runtimeMode ?? 'body-pose';
   if (mode === 'legacy') return buildLegacyCostumeExplod(options);

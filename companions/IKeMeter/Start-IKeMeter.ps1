@@ -3,10 +3,15 @@ param(
     [string]$Runtime,
     [string]$Player1 = 'kfm',
     [string]$Player2 = 'kfm',
-    [string]$PowerShell = 'pwsh.exe'
+    [string]$PowerShell = 'pwsh.exe',
+    [string]$LaunchManifest = '',
+    [string]$Player3 = '',
+    [string]$Player4 = ''
 )
 
 $ErrorActionPreference = 'Stop'
+if ([bool]$Player3 -ne [bool]$Player4) { throw 'Provide both Player3 and Player4 for a four-root match.' }
+if ($LaunchManifest -and $Player3) { throw 'Asset binding requires a two-root match.' }
 $root = Split-Path -Parent $MyInvocation.MyCommand.Path
 $resolvedRuntime = (Resolve-Path -LiteralPath $Runtime).Path
 $executable = Join-Path $resolvedRuntime 'Ikemen_GO.exe'
@@ -25,7 +30,10 @@ if ($LASTEXITCODE -ne 0 -or [int]$powerShellMajor -lt 7) { throw 'PowerShell 7 o
 $env:IKEMETER_RUNTIME = $resolvedRuntime
 $env:IKEMETER_P1 = $Player1
 $env:IKEMETER_P2 = $Player2
+$env:IKEMETER_P3 = $Player3
+$env:IKEMETER_P4 = $Player4
 $env:IKEMETER_PWSH = $resolvedPowerShell
+$env:IKEMETER_LAUNCH_MANIFEST = if ($LaunchManifest) { (Resolve-Path -LiteralPath $LaunchManifest).Path } else { '' }
 Write-Host 'IKeMeter will print its private local URL below. Open that URL in your browser.'
 & node (Join-Path $root 'src\app_server.js')
 if ($LASTEXITCODE -ne 0) { throw 'IKeMeter stopped with an error; review the message above.' }

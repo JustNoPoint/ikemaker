@@ -79,7 +79,12 @@ async function synchronizeCodeEditors(active) {
 }
 
 async function activateCharacter(entry) {
-  if (synchronizing || !entry.characterKey || isClosingFile(entry.filename)) return;
+  if (isClosingFile(entry.filename)) return;
+  if (entry.verifiedOwner) {
+    if (typeof entry.onActivate === 'function') await entry.onActivate(entry);
+    return;
+  }
+  if (synchronizing || !entry.characterKey) return;
   synchronizing = true;
   try {
     for (const foreign of [...registeredPanels].filter((item) => item !== entry && item.panel && item.panel.visible && item.characterKey && item.characterKey !== entry.characterKey)) {
@@ -105,13 +110,81 @@ function assignedCharacterDef(folder,filename){
   }catch{return '';}
 }
 
+function panelEntry(panel) {
+  return [...registeredPanels].find(entry => entry.panel === panel);
+}
+
+function verifiedOwner(value) {
+  if (!value || typeof value.ownerDef !== 'string' || !path.isAbsolute(value.ownerDef) ||
+      !Number.isSafeInteger(value.player) || value.player < 1 ||
+      typeof value.assetPath !== 'string' || typeof value.ownerPath !== 'string') return null;
+  return { ...value, ownerDef: path.resolve(value.ownerDef) };
+}
+
+function ownerSet(values, verified) {
+  const owners = values.map(ownerDefValue).filter(Boolean);
+  if (verified && values.some(value => typeof value === 'string' && path.isAbsolute(value) &&
+      path.relative(value, verified.ownerDef) === '')) owners.push(verified.ownerDef);
+  return new Set(owners);
+}
+
+function verifiedOwnerPresentation(panel) {
+  const entry = panelEntry(panel), verified = entry?.verifiedOwner;
+  if (!verified) return null;
+  const otherCount = [...entry.ownerDefs].filter(owner => path.relative(owner, verified.ownerDef) !== '').length;
+  const others = otherCount ? ` (+${otherCount} other ${otherCount === 1 ? 'owner' : 'owners'})` : '';
+  return {
+    title: `${path.basename(entry.filename)} · ${path.basename(verified.ownerDef)} (P${verified.player}, verified)${others}`,
+    header: `Asset: ${verified.assetPath} · Verified owner: ${verified.ownerPath} · Player ${verified.player}${others}`
+  };
+}
+
+function publishVerifiedOwner(panel, notify = true) {
+  const entry = panelEntry(panel);
+  if (!entry) return null;
+  const presentation = verifiedOwnerPresentation(panel);
+  if (presentation) {
+    if (panel.title !== entry.verifiedTitle) entry.ordinaryTitle = panel.title;
+    panel.title = entry.verifiedTitle = presentation.title;
+  } else if (entry.verifiedTitle) {
+    if (panel.title === entry.verifiedTitle) panel.title = entry.ordinaryTitle;
+    entry.verifiedTitle = undefined;
+  }
+  if (notify) panel.webview?.postMessage?.({ type: 'verifiedOwnerNavigation', header: presentation?.header || '' });
+  return presentation;
+}
+
+function registerOwnerContext(entry, owner, allowUnkeyed = false) {
+  if (!owner && !entry.characterKey && !(allowUnkeyed && entry.characterFolder)) return;
+  const root = owner ? path.dirname(owner) : entry.characterFolder;
+  registerAuthoringPanel(entry.panel, {
+    type: 'character', key: owner || assignedCharacterDef(root, entry.filename) || root,
+    label: owner ? path.basename(root) : characterLabel(entry.filename), root,
+    ownerDef: owner, files: [entry.filename]
+  });
+}
+
+function setVerifiedOwnerNavigation(panel, value) {
+  const entry = panelEntry(panel);
+  if (!entry) return false;
+  const next = verifiedOwner(value), previous = entry.verifiedOwner;
+  if (!next && !previous) return false;
+  if (next) entry.ownerDefs.add(next.ownerDef);
+  entry.verifiedOwner = next;
+  registerOwnerContext(entry, next?.ownerDef || [...entry.ownerDefs][0] || '');
+  publishVerifiedOwner(panel);
+  return true;
+}
+
 function registerCharacterPanel(panel, filename, kind, onActivate, options = {}) {
   const folder = characterFolder(filename);
-  const ownerDefs = new Set((options.ownerDefs || [options.ownerDef]).map(ownerDefValue).filter(Boolean));
+  const verified = verifiedOwner(options.verifiedOwnerNavigation);
+  const ownerDefs = ownerSet(options.ownerDefs || [options.ownerDef], verified);
   const entry = { panel, filename: path.resolve(filename), kind, characterFolder: folder, characterKey: characterKey(filename), onActivate, onOwnersChanged: typeof options.onOwnersChanged === 'function' ? options.onOwnersChanged : null, ownerDefs, standalone: options.standalone === true && !ownerDefs.size, restoredUnowned: options.restoredUnowned === true && !ownerDefs.size };
   registeredPanels.add(entry);
-  const exactOwner=[...ownerDefs][0]||'';
-  if (entry.characterKey || exactOwner) { const root=exactOwner?path.dirname(exactOwner):folder;registerAuthoringPanel(panel, { type: 'character', key: exactOwner||assignedCharacterDef(folder,filename)||root, label: exactOwner?path.basename(root):characterLabel(filename), root, ownerDef:exactOwner, files: [filename] }); }
+  entry.verifiedOwner = verified && ownerDefs.has(verified.ownerDef) ? verified : null;
+  registerOwnerContext(entry, entry.verifiedOwner?.ownerDef || [...ownerDefs][0] || '');
+  if (entry.verifiedOwner) publishVerifiedOwner(panel, false);
   panel.onDidChangeViewState((event) => { if (event.webviewPanel.active) activateCharacter(entry); });
   panel.onDidDispose(() => registeredPanels.delete(entry));
   return entry;
@@ -120,7 +193,8 @@ function registerCharacterPanel(panel, filename, kind, onActivate, options = {})
 function addCharacterPanelOwner(panel, ownerDef) {
   const exact=ownerDefValue(ownerDef),entry=[...registeredPanels].find(item=>item.panel===panel);if(!entry||!exact)return false;
   entry.ownerDefs.add(exact);entry.standalone=false;entry.restoredUnowned=false;
-  const root=path.dirname(exact);registerAuthoringPanel(panel,{type:'character',key:root,label:path.basename(root),root,ownerDef:exact,files:[entry.filename]});
+  registerOwnerContext(entry, entry.verifiedOwner?.ownerDef || exact);
+  if (entry.verifiedOwner) publishVerifiedOwner(panel);
   entry.onOwnersChanged?.([...entry.ownerDefs]);
   return true;
 }
@@ -130,11 +204,14 @@ function characterPanelOwners(panel) { const entry=[...registeredPanels].find(it
 function rebindCharacterPanel(panel, filename, ownerDefs = []) {
   const entry=[...registeredPanels].find(item=>item.panel===panel);
   if(!entry)return false;
-  const exactFilename=path.resolve(filename),exactOwners=new Set((ownerDefs||[]).map(ownerDefValue).filter(Boolean));
+  const exactFilename=path.resolve(filename), previousVerified=entry.verifiedOwner;
+  const sameFile = path.relative(entry.filename, exactFilename) === '';
+  const exactOwners = ownerSet(ownerDefs, sameFile ? previousVerified : null);
+  entry.verifiedOwner = sameFile && previousVerified && exactOwners.has(previousVerified.ownerDef) ? previousVerified : null;
   entry.filename=exactFilename;entry.characterFolder=characterFolder(exactFilename);entry.characterKey=characterKey(exactFilename);
   entry.ownerDefs=exactOwners;entry.standalone=!exactOwners.size;entry.restoredUnowned=false;
-  const exactOwner=[...exactOwners][0]||'',root=exactOwner?path.dirname(exactOwner):entry.characterFolder;
-  if(root)registerAuthoringPanel(panel,{type:'character',key:exactOwner||assignedCharacterDef(root,exactFilename)||root,label:path.basename(root),root,ownerDef:exactOwner,files:[exactFilename]});
+  registerOwnerContext(entry, entry.verifiedOwner?.ownerDef || [...exactOwners][0] || '', true);
+  if (previousVerified) publishVerifiedOwner(panel);
   entry.onOwnersChanged?.([...exactOwners]);
   return true;
 }
@@ -156,7 +233,7 @@ function matchingCharacterPanels(context) {
 
 function sharedCharacterPanels(context) { const owner=ownerDefValue(context?.ownerDef);return owner?[...registeredPanels].filter(entry=>entry.panel&&entry.ownerDefs.has(owner)&&entry.ownerDefs.size>1):[]; }
 function restoredUnownedCharacterPanels() { return [...registeredPanels].filter(entry=>entry.panel&&entry.restoredUnowned); }
-function releaseCharacterPanelOwner(context) { const owner=ownerDefValue(context?.ownerDef);if(!owner)return 0;let released=0;for(const entry of registeredPanels)if(entry.ownerDefs.delete(owner)){released++;entry.onOwnersChanged?.([...entry.ownerDefs]);}return released; }
+function releaseCharacterPanelOwner(context) { const owner=ownerDefValue(context?.ownerDef);if(!owner)return 0;let released=0;for(const entry of registeredPanels)if(entry.ownerDefs.delete(owner)){released++;if(entry.verifiedOwner?.ownerDef===owner)setVerifiedOwnerNavigation(entry.panel,null);else if(entry.verifiedOwner)publishVerifiedOwner(entry.panel);entry.onOwnersChanged?.([...entry.ownerDefs]);}return released; }
 
 function hasCharacterPanel(panel) {
   return [...registeredPanels].some((entry) => entry.panel === panel);
@@ -174,4 +251,4 @@ function configureCharacterCodeSync(vscode) {
   });
 }
 
-module.exports = { characterFolder, characterLabel, characterKey, reusableViewColumn, sourceColumnFor, matchingPeer, rememberCodeFile, forgetCharacter, registerCharacterPanel, addCharacterPanelOwner, characterPanelOwners, rebindCharacterPanel, matchingCharacterPanels, sharedCharacterPanels, restoredUnownedCharacterPanels, releaseCharacterPanelOwner, hasCharacterPanel, configureCharacterCodeSync };
+module.exports = { characterFolder, characterLabel, characterKey, reusableViewColumn, sourceColumnFor, matchingPeer, rememberCodeFile, forgetCharacter, registerCharacterPanel, addCharacterPanelOwner, characterPanelOwners, rebindCharacterPanel, matchingCharacterPanels, sharedCharacterPanels, restoredUnownedCharacterPanels, releaseCharacterPanelOwner, hasCharacterPanel, configureCharacterCodeSync, setVerifiedOwnerNavigation, verifiedOwnerPresentation };

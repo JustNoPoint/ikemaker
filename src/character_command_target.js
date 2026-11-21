@@ -21,10 +21,13 @@ function commandCharacter(filename, preferredOwner = '') {
     }
   }
   if (!filename) return '';
-  const nearby = nearestCharacterDef(filename);
-  if (nearby) return nearby;
   const defs = require('./viewer_navigation').associatedDefs(filename) || [];
-  return defs.length === 1 ? defs[0] : '';
+  if (defs.length) return defs.length === 1 && !/^(?:template|sharedtemplate)$/i.test(path.basename(path.dirname(defs[0]))) ? defs[0] : '';
+  const nearby = nearestCharacterDef(filename);
+  if (!nearby || /^(?:template|sharedtemplate)$/i.test(path.basename(path.dirname(nearby)))) return '';
+  // Proximity alone cannot attach an unassigned shared source to a template.
+  const files = Object.values(resolveAssigned(nearby)).flat();
+  return files.some(file => typeof file === 'string' && file && path.resolve(file).toLowerCase() === path.resolve(filename).toLowerCase()) ? nearby : '';
 }
 
 module.exports = { commandCharacter };

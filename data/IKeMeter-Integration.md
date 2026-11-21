@@ -30,9 +30,13 @@ its private IPC channel. It never searches for or kills a process by name/PID.
 
 ## Portable app and PowerShell fallback
 
-The default app payload exactly matches the 79-file manifest in local candidate
-`IKeMeter-0.0.1-ownership-storage-local-candidate.zip`, SHA-256
-`e3e6eeec1aedf5a2e5b9591eafc2be663410ffe19dd21dec37d48361b5487509`.
+The local development bundle exactly matches the 153-file manifest in
+`IKeMeter-policy2-8e01d8d0.zip` from Meter revision `8e01d8d0`.
+The archive SHA-256 is
+`6ecb80f65062853b241b74eda56ebc31b1c8192428a164023d0f8dc42e7e216f`
+and the original `SHA256SUMS.txt` SHA-256 is
+`e87875c12da6a84ac856df1098c747ccfe3dd3047c2df66fbce3a3d249b6c055`.
+[Bundle provenance](../companions/IKeMeter-PROVENANCE.json)
 The integrated extension-owned host uses those tested app/controller/driver
 modules while deferring the lease until Connect. Its webview uses only local
 nonce-authorized assets and an allowlisted IPC-to-guarded-loopback API adapter;
@@ -51,12 +55,27 @@ workspace code are refused. It is version-checked before opening Meter, rather
 than letting Connect fail later. A portable user-only
 `ikemenZss.ikeMeterPowerShellPath` can name an installed pwsh.exe explicitly.
 Both executable preferences are application scoped and ignore workspace values.
+
+The local development bundle supports Snapshot. It uses the active paused
+session and captures the same frozen tick twice to verify the result. A
+compatible separately selected verified package can also provide Snapshot.
+Older verified packages retain the controls they support.
 The integrated host runs using VS Code's own Node/Electron runtime, so a normal
 VS Code launch does not need the Codex shell's Node or PowerShell PATH additions.
 
 Only trusted local Windows workspaces can open the native tester. Remote,
 virtual, untrusted and browser activation paths report unavailable instead of
 starting native processes. Activation/registration alone is inert.
+
+## Findings import
+
+Choose **Tools → Import IKeMeter Findings** to review an exported findings file.
+When an exact locator is available, map the capture to an open local project
+folder and open its verified source range, AIR action or sprite. Uncertain
+attribution and proposed resolutions stay available for review. **Reopen
+IKeMeter Findings** returns to the last capture for this window, and **Copy
+Evidence** copies the selected finding as plain text.
+[Findings v1 contract and example](IKeMeter-Findings-v1.md)
 
 ## Runtime scope
 

@@ -8,6 +8,7 @@ document.querySelectorAll('nav button').forEach((button)=>button.addEventListene
 
 const actionButtons=Object.fromEntries([...document.querySelectorAll('[data-action]')].map((button)=>[button.dataset.action,button]));
 const statusNode=document.querySelector('#status');
+const snapshotGuidance='Snapshot saves and hash-verifies two lossless full composites at one frozen tick. Press Shift+S while paused.';
 const {lifetimeStatus}=IKeMeterLabels;
 let pending=false;
 let transientError='';
@@ -19,6 +20,7 @@ let statusRequest=0;
 let renderedAuthority=null;
 let authorityGeneration=0;
 let actionRequest=0;
+let snapshotPairId=null;
 let lastStatus={connected:false,phase:'disconnected',reason:'no authenticated bridge session'};
 
 function render(status){
@@ -27,9 +29,13 @@ function render(status){
   const suspended=phase==='window-suspended',restarting=status.restartAvailable===true;
   const ended=status.gameExited===true,revoked=connected&&(phase==='uncertain'||ended);
   document.querySelector('#session-guidance').textContent=status.detachedGameRunning?'The previous Meter-owned game is still running. Close it before Connect starts a new game.':restarting?(ended?'Start new game & Connect starts a fresh match.':'Restart game & Connect closes this Meter-owned match and starts a fresh one. Disconnect keeps the match open.'):suspended?'Controls are suspended during verified window movement. The interval is unknown; a fresh authenticated capture is required after release.':ended?'The game has exited. Disconnect to finish cleanup before connecting again.':revoked?'Session controls are revoked. Disconnect before connecting again.':connected?'The interactive game is running in its own window. Use Pause, Step, Resume or Disconnect here.':'Connect starts a NEW game; it does not attach to an existing match. Close a previously detached match first if you do not want another game.';
-  const authority=`${status.sessionId||''}:${status.epoch||''}:${status.continuityRevision||0}:${phase==='uncertain'||!connected}`;
-  if(authority!==renderedAuthority){authorityGeneration++;if(renderedAuthority!==null){historyRequest++;transientError='';clearHistory(connected?'Loading history for the current session.':'Disconnected. Connect to view session history.');}}
+  const authority=`${status.sessionId||''}:${status.epoch||''}:${status.continuityRevision||0}:${revoked||!connected}:${suspended}`;
+  if(authority!==renderedAuthority){authorityGeneration++;if(renderedAuthority!==null){historyRequest++;transientError='';clearSnapshot();clearHistory(connected?'Loading history for the current session.':'Disconnected. Connect to view session history.');}}
   renderedAuthority=authority;
+  const binding=status.snapshotBinding;
+  document.querySelector('#snapshot-binding-status').textContent=binding?.status==='unavailable'&&binding.reason?
+    `Binding receipt unavailable · ${binding.reason}`:binding&&binding.pairId===snapshotPairId?
+      `Binding receipt ${binding.status}${binding.reason?` · ${binding.reason}`:''} · ${binding.receiptPath}`:'';
   statusNode.textContent=transientError&&!ended?`Control rejected — ${transientError}`:(connected?`${ended?'Game exited':revoked?'Session revoked':suspended?'Suspended':'Connected'} — epoch ${status.epoch}, tick ${status.tick}, ${phase}${status.reason?` — ${status.reason}`:''}${status.notice?` — ${status.notice}`:''}.`:`Disconnected — ${status.reason||'no authenticated bridge session'}.`);
   statusNode.classList.toggle('connected',connected&&!revoked&&!suspended);
   document.querySelector('#session-value').textContent=connected?`${ended?'Game exited · ':revoked?'Revoked · ':''}Epoch ${status.epoch}`:'Disconnected';
@@ -39,6 +45,7 @@ function render(status){
   actionButtons.pause.disabled=pending||!connected||phase!=='running';
   actionButtons.step.disabled=pending||!connected||phase!=='paused';
   actionButtons.resume.disabled=pending||!connected||phase!=='paused';
+  if(actionButtons.snapshot)actionButtons.snapshot.disabled=pending||status.snapshotAvailable!==true;
   actionButtons.disconnect.disabled=pending||!connected;
   actionButtons.connect.dataset.restart=String(restarting);actionButtons.connect.textContent=restarting?(ended?'Start new game & Connect':'Restart game & Connect'):'↔';actionButtons.connect.title=restarting?'Stop the exact Meter-owned game, wait for cleanup, and Connect with a fresh identity':'Connect starts a new local game';
   for(const [name,button] of Object.entries(actionButtons)){
@@ -108,6 +115,53 @@ function clearInspector(message='Select an observed entity or event.'){
   const p=document.createElement('p');p.textContent=message;document.querySelector('#inspector').replaceChildren(p);
 }
 
+function clearSnapshot(){
+  snapshotPairId=null;
+  document.querySelector('#snapshot-result').textContent=snapshotGuidance;
+  const details=document.querySelector('#snapshot-details');
+  details.hidden=true;details.open=false;
+  document.querySelector('#snapshot-entities').replaceChildren();
+  document.querySelector('#snapshot-heading').textContent='';
+}
+
+function reportedOwnerText(reading){
+  if(reading?.status==='player-slot')return `slot ${reading.reportedSlot} (reported)`;
+  if(reading?.status==='common-fx-or-undefined')return 'common FX / undefined';
+  return 'unavailable';
+}
+
+function renderSnapshot(snapshot){
+  if(snapshot.stability?.stable!==true||snapshot.stability.classification!=='verified-identical-paused-composite'){
+    clearSnapshot();
+    document.querySelector('#snapshot-result').textContent='Snapshot verification failed. Review the retained evidence.';
+    return;
+  }
+  document.querySelector('#snapshot-result').textContent=`Snapshot ${snapshot.id} duplicate-verified at frozen tick ${snapshot.tick} · ${snapshot.width}×${snapshot.height} · SHA-256 ${snapshot.sha256}. Pair verdict: ${snapshot.stability?.verificationPath||'unavailable'}`;
+  snapshotPairId=snapshot.stability.id||null;
+  const details=document.querySelector('#snapshot-details');
+  const entities=(snapshot.frame?.entities||[]).filter(({kind})=>kind==='player'||kind==='helper');
+  const truncated=snapshot.frame?.entityCoverage?.truncated===true;
+  const omitted=snapshot.frame?.entityCoverage?.ownerSlotsOmitted;
+  document.querySelector('#snapshot-heading').textContent=`Animation metadata at tick ${snapshot.tick}${truncated?' · showing captured entities':''}${omitted>0?` · owner readings omitted for ${omitted} entities (capture limit)`:''}`;
+  const rows=entities.map((entity)=>{
+    const row=document.createElement('li');
+    const identity=document.createElement('strong');
+    identity.textContent=`P${entity.owner} ${entity.kind==='player'?'root':'helper'} · ID ${entity.runtimeId} · action ${entity.anim}`;
+    const fields=document.createElement('div');
+    const {authoredAirFrame:air,resolvedSprite:sprite,airTimingEstimate:estimate}=entity;
+    const duration=air?.durationTicks;
+    const durationText=duration===-1?'indefinite':Number.isInteger(duration)?`${duration} ticks`:'unavailable';
+    fields.textContent=`Authored AIR sprite ${air?.sprite?`${air.sprite.group},${air.sprite.image}`:'unavailable'} · duration ${durationText} · resolved sprite ${sprite?`${sprite.group},${sprite.image}`:'unavailable'} · timing estimate ${estimate?`element ${estimate.element}, elapsed ${estimate.elapsedTicks} ticks`:'unavailable'}`;
+    const owners=document.createElement('div');
+    owners.textContent=`Animation owner ${reportedOwnerText(entity.animationOwner)} · sprite owner ${reportedOwnerText(entity.spriteOwner)}`;
+    row.append(identity,fields,owners);
+    return row;
+  });
+  if(!rows.length){const row=document.createElement('li');row.textContent='No root or helper observations in this capture.';rows.push(row);}
+  document.querySelector('#snapshot-entities').replaceChildren(...rows);
+  details.hidden=false;
+}
+
 async function pollStatus(){
   const request=++statusRequest;
   try{const status=await(await fetch('/api/status')).json();if(request!==statusRequest)return;lastStatus=status;render(status);if(status.connected)await refreshHistory();}catch{}
@@ -124,7 +178,7 @@ async function requestAction(action){
     const headers={'Content-Type':'application/json','X-IKeMeter-Action':'1'};if(lastStatus.sessionId){headers['X-IKeMeter-Session']=lastStatus.sessionId;headers['X-IKeMeter-Epoch']=String(lastStatus.epoch);headers['X-IKeMeter-Continuity']=String(lastStatus.continuityRevision||0);}
     const response=await fetch(`/api/${action}`,{method:'POST',headers});
     const value=await response.json();if(request!==actionRequest||authorityAtRequest!==authorityGeneration)return;
-    if(!response.ok)throw new Error(value.error||'Bridge request failed');lastStatus=value;statusRequest++;historyRequest++;
+    if(!response.ok)throw new Error(value.error||'Bridge request failed');if(action==='snapshot'&&value.snapshot)renderSnapshot(value.snapshot);lastStatus=value;statusRequest++;historyRequest++;
   }catch(error){
     if(request!==actionRequest||authorityAtRequest!==authorityGeneration)return;
     transientError=error.message;const fallback=++statusRequest,fallbackAuthority=authorityGeneration;
@@ -134,4 +188,5 @@ async function requestAction(action){
 }
 
 Object.values(actionButtons).forEach((button)=>button.addEventListener('click',()=>requestAction(button.dataset.action)));
+document.addEventListener?.('keydown',(event)=>{if(event.shiftKey&&event.key.toLowerCase()==='s'&&!event.ctrlKey&&!event.altKey&&!event.metaKey&&actionButtons.snapshot&&!actionButtons.snapshot.disabled&&!/^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName||'')){event.preventDefault();requestAction('snapshot');}});
 pollLoop();

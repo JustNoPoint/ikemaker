@@ -10,7 +10,7 @@ const { buildSimilarCodeProjection } = require('./similar_code_model');
 const { BROWSER_BOUNDS } = require('./authoring_browser_bounds');
 const sourceAdmission=require('./coding_source_admission');
 const {textGrammar}=require('./map_registry_grammar');
-const triggerCatalog=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
+const triggerCatalog=require('./live_coding_catalog').triggers;
 const {argumentSummary}=require('./trigger_argument_model');
 const {entryAvailable,filterAvailable,enabledCapabilityIds}=require('./catalog_capability_filter');
 const {buildResourceLifecycleProjection}=require('./resource_lifecycle_projection');
@@ -140,14 +140,14 @@ function triggerFamily(entry){
 }
 function triggerProjection(catalog=triggerCatalog,options={}){
   const grouped=new Map(),children=[];
-  for(const entry of filterAvailable(catalog,options.capabilities).slice(0,256)){
+  for(const entry of filterAvailable(catalog,options.capabilities)){
     if(!entry||typeof entry.name!=='string'||!entry.name.trim())continue;
     const family=triggerFamily(entry),status=text(entry.status||'documented',128),compatibility=/\bnew\b/i.test(status)?'IKEMEN new or expanded':'documented IKEMEN expression';
-    const argumentHelp=argumentSummary(entry,options.capabilities),item={id:opaque(['trigger',entry.name,entry.signature||'']),label:text(entry.name,256),kind:'trigger',family,status,description:text(`${entry.signature||entry.name}${entry.returnType?` · returns ${entry.returnType}`:''}${argumentHelp!=='No arguments.'?` · ${argumentHelp}`:''}`,1024),detail:text(entry.description||'',2048),sourceLabel:text(entry.source||'Bundled IKEMEN documentation',256),compatibility,referenceOnly:true};
+    const argumentHelp=argumentSummary(entry,options.capabilities),item={id:opaque(['trigger',entry.name,entry.signature||'']),label:text(entry.name,256),kind:'trigger',family,status,description:text(`${entry.signature||entry.name}${entry.returnType?` · returns ${entry.returnType}`:''}${argumentHelp!=='No arguments.'?` · ${argumentHelp}`:''}`,1024),detail:text(entry.description||'',2048),sourceLabel:text(entry.source||entry.url||'Bundled IKEMEN documentation',256),compatibility,referenceOnly:true};
     children.push(item);if(!grouped.has(family))grouped.set(family,[]);grouped.get(family).push(item);
   }
   const families=[...TRIGGER_FAMILIES.map(([label])=>label),'Other Expressions'].filter(label=>grouped.has(label)).map(label=>({id:opaque(['trigger-family',label]),label,kind:'trigger-family',description:`${grouped.get(label).length} documented expression${grouped.get(label).length===1?'':'s'}`,children:grouped.get(label)}));
-  return{items:[{id:'triggers-expressions',label:'Triggers & Expressions',kind:'catalog',description:`${children.length} bundled documented trigger${children.length===1?'':'s'} organized by purpose`,children:families}],count:children.length,truncated:(Array.isArray(catalog)?catalog.length:0)>256};
+  return{items:[{id:'triggers-expressions',label:'Triggers & Expressions',kind:'catalog',description:`${children.length} documented trigger${children.length===1?'':'s'} organized by purpose`,children:families}],count:children.length,truncated:false};
 }
 
 function aliasPhrase(value) {

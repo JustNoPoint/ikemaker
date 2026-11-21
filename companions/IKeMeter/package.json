@@ -1,6 +1,6 @@
 {
   "name": "ikemeter",
-  "version": "0.0.1-interactive-candidate",
+  "version": "0.0.2-watch.2",
   "private": true,
   "scripts": {
     "test": "node --test"

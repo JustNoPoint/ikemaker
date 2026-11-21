@@ -1,7 +1,10 @@
 'use strict';
+const { PlayerTelemetry } = require('./player_telemetry');
 const { CaptureHistory } = require('./capture_history');
 const { performance } = require('node:perf_hooks');
 const { TERMINAL_REASONS } = require('./terminal_frame');
+const { WatchLog } = require('./watch_log');
+const { watchPlan } = require('./watch_wire');
 
 class SessionController {
   constructor(driver, options = {}) {
@@ -15,6 +18,12 @@ class SessionController {
     this.windowPause=null;this.windowState=null;this.stopWindowObservation=null;
     if(!Number.isFinite(this.contactLeaseMs)||this.contactLeaseMs<=0)throw new Error('invalid contact lease');
     this.history = new CaptureHistory();
+    this.telemetry = new PlayerTelemetry({ clock: this.clock, ...options.telemetry });
+    this.watchLog=new WatchLog(this.clock);
+    this.watches=[];
+    driver.setTelemetryDiagnosticSink?.(packet => {
+      if (this.session && !this.session.revoked) this.telemetry.diagnostic(packet);
+    });
     this.session = null;this.connectionsStarted=0;
     this.busy = false;
     this.stopSampling = null;
@@ -25,7 +34,8 @@ class SessionController {
 
   status() {
     this.#checkLease();
-    if(this.session&&this.driver.processStatus?.(this.session)?.gameExited===true){this.session.gameExited=true;this.#revoke('Official nightly exited; authenticated bridge contact ended');}
+    const processStatus=this.session?this.driver.processStatus?.(this.session):null;
+    if(processStatus?.gameExited===true){this.session.gameExited=true;this.#revoke('Official nightly exited; authenticated bridge contact ended');}
     if (!this.session) return { connected: false, detachedGameRunning:this.driver.processStatus?.(null)?.detachedGameRunning===true, epoch: null, controls: false, phase: 'disconnected', tick: null, reason: this.lastReason, samplingCost:this.#performanceSnapshot() };
     const history=this.history.snapshot();
     return {
@@ -36,6 +46,8 @@ class SessionController {
       controls: !this.busy && !this.session.revoked && ['running','paused'].includes(this.session.phase),
       continuityRevision:this.session.continuityRevision||0,
       restartAvailable:!this.busy&&this.session.revoked&&this.driver.canRestartOwnedGame?.(this.session)===true,
+      snapshotAvailable:!this.busy&&!this.session.revoked&&this.session.phase==='paused'&&typeof this.driver.captureSnapshot==='function',
+      ...(!this.session.revoked&&processStatus?.snapshotBinding&&{snapshotBinding:processStatus.snapshotBinding}),
       phase: this.session.phase,
       tick: this.session.tick,
       reason: this.session.revoked ? this.lastReason : this.windowPause?(this.windowPause.finished?'Window operation ended; waiting for a fresh authenticated capture':'Verified Windows move/size; controls suspended and interval unknown'):(this.busy ? 'Waiting for bounded bridge acknowledgement' : ''),
@@ -54,10 +66,20 @@ class SessionController {
     return authority&&Object.getPrototypeOf(authority)===Object.prototype&&Object.keys(authority).sort().join('|')==='continuityRevision|epoch|sessionId'&&authority.sessionId===session.sessionId&&authority.epoch===session.epoch&&authority.continuityRevision===(session.continuityRevision||0);
   }
 
+  configureWatches(watches){
+    if(this.session||this.busy)throw Error('Disconnect before editing the watch list');
+    this.watches=watchPlan(watches,this.driver.rootSlots??[1,2]);
+    return this.watchView();
+  }
+
+  watchView(){
+    return {...this.watchLog.view(),watches:this.watches,slots:this.driver.rootSlots??[1,2],editable:!this.session&&!this.busy};
+  }
+
   async connect() {
     if (this.session || this.busy) throw new Error('a bridge session is already active');
     await this.#exclusive(async () => {
-      const connected = await this.driver.connect();
+      const connected = await this.driver.connect({watches:this.watches});
       if(!connected||typeof connected.sessionId!=='string'||!connected.sessionId||!Number.isSafeInteger(connected.epoch)||connected.epoch<1||!Number.isSafeInteger(connected.tick)||connected.tick<0)throw new Error('invalid authenticated connection');
       this.connectionsStarted++;
       this.session = {
@@ -76,6 +98,8 @@ class SessionController {
       this.contactFailures = 0;
       this.performance = {count:0,sumUs:0,maxUs:0,drops:0,histogram:Array(10).fill(0),firstTick:null,lastTick:null,deliveredThroughTick:null,repeatedHooks:0,terminalObservedTick:null,sessionEnded:false,sendAttempts:0,sendFailures:0,truncatedEvents:0,truncatedEntities:0};
       this.history.beginEpoch(connected.epoch, connected.sessionId);
+      this.telemetry.begin(connected.sessionId, connected.epoch, connected.telemetrySession);
+      this.watchLog.begin(connected.sessionId,connected.epoch,connected.watch);
       this.watchdog=this.setWatchdog(()=>this.#checkLease());
       if(typeof this.driver.observeWindow==='function'){try{const stop=this.driver.observeWindow({...this.session},state=>this.#windowObservation(state,connected.sessionId));if(typeof stop!=='function')throw Error('Window observer did not provide bounded cleanup');if(this.session.revoked)stop();else this.stopWindowObservation=stop;}catch(error){this.#revoke('Owned window observation setup failed');throw error;}}
       await this.#capture();
@@ -136,6 +160,17 @@ class SessionController {
     return { ...this.status(), ack: result };
   }
 
+  async snapshot(){
+    this.#checkLease();if(!this.session)throw Error('no authenticated bridge session');if(this.busy)throw Error('another bridge operation is pending');if(this.session.revoked||this.session.phase!=='paused')throw Error('Snapshot requires an authenticated IKeMeter-owned pause');if(typeof this.driver.captureSnapshot!=='function')throw Error('Snapshot is unavailable for this driver');
+    const result=await this.#exclusive(async()=>{const operationSession=this.session,before=this.session.tick,firstSequence=this.session.nextRequestSequence,secondSequence=firstSequence+2;this.session.nextRequestSequence+=4;let first,second,verification;
+      const validate=(sequence,ack)=>{this.#checkLease();if(this.session!==operationSession||operationSession.revoked)throw Error('bridge authority was revoked while Snapshot was pending');this.#validateAck('snapshot',sequence,ack);if(ack.status!=='applied')throw Error(ack.reason||'Snapshot was rejected');if(ack.observedTick!==before||ack.snapshotFrame?.paused!==true||ack.snapshotFrame.tick!==before)throw Error('Snapshot did not prove the frozen paused tick');if(!ack.snapshot?.sha256||!ack.snapshot?.imagePath||!ack.snapshot?.metadataPath)throw Error('Snapshot evidence is incomplete');};
+      try{first=await this.#awaitAuthority(this.driver.captureSnapshot({...this.session,requestSequence:firstSequence}),operationSession);validate(firstSequence,first);second=await this.#awaitAuthority(this.driver.captureSnapshot({...this.session,requestSequence:secondSequence}),operationSession);validate(secondSequence,second);if(typeof this.driver.verifySnapshotPair!=='function')throw Error('Snapshot stability verification is unavailable');const telemetryFrameSha256=this.telemetry.frozenReceipt(before);
+        verification=this.driver.verifySnapshotPair(first.snapshot,second.snapshot,{sessionId:this.session.sessionId,epoch:this.session.epoch,tick:before,capturedAt:new Date().toISOString(),
+          ...(telemetryFrameSha256 && {telemetryFrameSha256})});if(!verification.stable){const issue=verification.classification==='invalid-provenance-mismatch'?'Duplicate paused capture provenance did not match':'Duplicate paused screenshots did not match';throw Error(`${issue}; evidence retained at ${verification.verificationPath}`);}}
+      catch(error){this.#revoke(error.message);throw Error(`${error.message}; session is uncertain and must be disconnected`);}this.session.lastContactAt=this.clock();return{first,second,verification};});
+    return{...this.status(),snapshot:{...result.first.snapshot,stability:result.verification,verificationCapture:{id:result.second.snapshot.id,imagePath:result.second.snapshot.imagePath,metadataPath:result.second.snapshot.metadataPath,sha256:result.second.snapshot.sha256}},ack:{epoch:result.first.epoch,requestSequence:result.first.requestSequence,opcode:result.first.opcode,status:result.first.status,observedTick:result.first.observedTick}};
+  }
+
   historySnapshot() {
     const snapshot=this.history.snapshot();
     // Closed history still belongs to the connected, now-revoked session.
@@ -152,6 +187,8 @@ class SessionController {
       if(!this.windowPause){
         if(this.busy||session.pendingAuthority.size||this.contactFailures!==0||now-session.lastContactAt>500||!['running','paused'].includes(session.phase)||!state.visible||state.minimized){this.#revoke('Window operation overlapped a pending or ambiguous operation; fresh session required');return;}
         const token=String(state.hwnd||'owned')+':'+state.sequence;try{this.driver.beginWindowSuspension({...session},token);}catch{this.#revoke('Old native offers could not be fenced; fresh session required');return;}
+        this.telemetry.interrupt("windows-move-size-unknown-interval");
+        this.watchLog.interrupt();
         this.windowPause={token,fromPhase:session.phase,begunAt:now,startSequence:state.sequence,finished:false};session.phase='window-suspended';session.continuityRevision++;
         try{this.history.ingest({sessionId:session.sessionId,epoch:session.epoch,tick:session.tick,complete:false,entities:[],reason:'windows-move-size-unknown-interval'});}catch{this.#revoke('Window interval could not be marked safely');}
       }
@@ -161,7 +198,12 @@ class SessionController {
     }
   }
 
+  #checkDiagnosticCoverage() {
+    if (this.session && this.driver.telemetryDiagnosticsStopped?.(this.session)) this.telemetry.noteStreamsStopped();
+  }
+
   #checkLease() {
+    this.#checkDiagnosticCoverage();
     const session=this.session;if(!session||session.revoked)return;
     const now=this.clock();if(this.windowPause){
       const state=this.windowState;
@@ -175,12 +217,16 @@ class SessionController {
 
   #revoke(reason) {
     const session=this.session;if(!session||session.revoked)return;
+    this.#checkDiagnosticCoverage();
     session.revoked=true;session.phase='uncertain';this.lastReason=reason;this.windowPause=null;
     if(this.stopWindowObservation){this.stopWindowObservation();this.stopWindowObservation=null;}
     this.performance.sessionEnded=true;
     if(this.watchdog!==null){this.clearWatchdog(this.watchdog);this.watchdog=null;}
     try{this.history.ingest({sessionId:session.sessionId,epoch:session.epoch,tick:session.tick,complete:false,entities:[],reason});}catch{}
     this.history.endEpoch(reason);
+    this.telemetry.meterDiagnostic(reason, 'warning');
+    this.telemetry.end(reason);
+    this.watchLog.end(true);
     if(this.stopSampling){const stop=this.stopSampling;this.stopSampling=null;stop();}
     for(const reject of session.pendingAuthority)reject(new Error(`bridge authority was revoked: ${reason}`));
     session.pendingAuthority.clear();
@@ -223,6 +269,9 @@ class SessionController {
     const normalized=frame.complete?frame:{...frame,tick:validTick?frame.tick:this.session.tick,entities:Array.isArray(frame.entities)?frame.entities:[]};
     try{
       this.history.ingest(normalized);this.#applyMetrics(normalized.metrics);if(normalized.tick>=this.session.tick)this.session.tick=normalized.tick;
+      if (validTick && frame.telemetry && !frame.fatal) this.telemetry.addFrame(frame);
+      else this.telemetry.interrupt('telemetry-batch-unavailable');
+      this.watchLog.add(frame);
       if(validTick){this.contactFailures=0;this.session.lastContactAt=this.clock();}else this.contactFailures+=1;
       const fatalExit=frame.fatal===true&&String(frame.reason||'').startsWith('game-exit:');
       if(fatalExit)this.session.gameExited=true;
@@ -250,6 +299,7 @@ class SessionController {
   async disconnect() {
     if (!this.session) return this.status();
     if (this.busy) throw new Error('another bridge operation is pending');
+    this.#checkDiagnosticCoverage();
     if(this.windowPause)this.#revoke('Disconnected during window suspension; only local detach is available');
     await this.#exclusive(async () => {
       if(this.watchdog!==null){this.clearWatchdog(this.watchdog);this.watchdog=null;}
@@ -269,6 +319,8 @@ class SessionController {
         }
         throw error;
       } finally {
+        this.telemetry.end('disconnected');
+        this.watchLog.end();
         this.performance.sessionEnded=true;
         this.session = null;this.windowPause=null;this.windowState=null;
         if (!this.lastReason.startsWith('Disconnected with cleanup warning:')) this.lastReason = 'Disconnected; prior capabilities were revoked';
@@ -292,6 +344,8 @@ class SessionController {
     try { if(typeof this.driver.shutdown==='function')await this.driver.shutdown(); }
     catch(error){cleanupError=error;throw error;}
     finally {
+      this.telemetry.dispose();
+      this.watchLog.dispose();
       if(this.session)this.history.endEpoch('launcher-shutdown');
       this.performance.sessionEnded=true;
       this.session=null;

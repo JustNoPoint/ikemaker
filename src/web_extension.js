@@ -39,7 +39,7 @@ const FALLBACK_COMMANDS = [
   'ikemen.storyboard.create', 'ikemen.storyboard.createOpening', 'ikemen.storyboard.createEnding', 'ikemen.storyboard.open',
   'ikemen.paletteOrganizer.open', 'ikemen.palette.openWorkspace', 'ikemen.palettePlayer.open', 'ikemen.palettePlayer.organize', 'ikemen.palettePlayer.finishStaged',
   'ikemen.moveConstants.open', 'ikemen.moveLab.open', 'ikemen.moveLab.commandTriggerRecipes', 'ikemen.character.firstPlayableAttack', 'ikemen.hitDef.openEditor', 'ikemen.throwCreator.open', 'ikemen.throwCreator.openGuide', 'ikemen.explodComposer.open', 'ikemen.positionCamera.open', 'ikemen.helperLab.open', 'ikemen.paletteImport.open', 'ikemen.artistIntake.open',
-  'ikemen.changeMode', 'ikemen.openHome', 'ikemen.switchToIkeMiner', 'ikemen.switchSuite', 'ikemen.openIKeMeter', 'ikemen.configureIKeMeter', 'ikemen.closeIKeMeter', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
+  'ikemen.changeMode', 'ikemen.openHome', 'ikemen.switchToIkeMiner', 'ikemen.switchSuite', 'ikemen.openIKeMeter', 'ikemen.importIKeMeterTelemetry', 'ikemen.importIKeMeterWatchLog', 'ikemen.importIKeMeterFindings', 'ikemen.reopenIKeMeterFindings', 'ikemen.configureIKeMeter', 'ikemen.closeIKeMeter', 'ikemen.workspaceSetup.change', 'ikemen.workspaceSetup.showAll', 'ikemen.workspaceSetup.pin', 'ikemen.configureAssetWorkspace', 'ikemen.makeBackup', 'ikemen.toggleAutoSave',
   'ikemen.productionWorkflow.open', 'ikemen.productionWorkflow.editProfile', 'ikemen.productionWorkflow.openGuide',
   'ikemen.testSessions.open',
   'ikemen.release.captureDefaults', 'ikemen.release.openProfile', 'ikemen.release.audit', 'ikemen.release.complete',

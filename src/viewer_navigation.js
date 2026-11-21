@@ -244,9 +244,13 @@ function referenceAt(text, line) {
   return { kind, prefix: match[1] || (/sparkno|sound/.test(name) && name !== 'value' ? 'f' : ''), group: Number(match[2]), number: match[3] === undefined ? undefined : Number(match[3]) };
 }
 
-function associatedDefs(seed, readText) {
+function associatedDefs(seed, readText, options = {}) {
   const { resolveAssigned } = require('./related_work');
   const result = [], wanted = path.resolve(seed).toLowerCase();
+  if (/\.def$/i.test(seed) && require('./character_picker').isCharacterDef(seed)) return [path.resolve(seed)];
+  let preferredOwner=options.ownerDef||'';
+  if(!preferredOwner){const context=require('./authoring_context_registry').currentContext?.();if(context?.type==='character')preferredOwner=context.ownerDef||'';}
+  if(preferredOwner){let text;try{text=readText?.(preferredOwner);}catch(_){}const assigned=resolveAssigned(preferredOwner,text);if(Object.values(assigned).flat().some(file=>typeof file==='string'&&file&&assetKey(file)===wanted))return[path.resolve(preferredOwner)];}
   let folder = path.dirname(path.resolve(seed));
   for (let depth = 0; depth < 5; depth++) {
     if (!fs.existsSync(folder)) break;
@@ -260,7 +264,20 @@ function associatedDefs(seed, readText) {
     if (path.basename(folder).toLowerCase() === 'chars' || path.dirname(folder) === folder) break;
     folder = path.dirname(folder);
   }
-  return [...new Set(result)];
+  // Broad roster discovery is reserved for deliberate owner selection.
+  // Passive toolbar/context projection must remain local and bounded.
+  if (options.discoverAll === true) {
+    const { gameRoot, characterDefs } = require('./character_context');
+    const root = gameRoot(seed);
+    for (const filename of root ? characterDefs(root) : []) {
+      if (result.includes(filename)) continue;
+      let text;
+      try { text = readText?.(filename); } catch (_) { continue; }
+      const assets = resolveAssigned(filename, text);
+      if ([assets.def, assets.sff, assets.air, assets.snd, assets.movelist, ...assets.code].some(file => file && assetKey(file) === wanted)) result.push(filename);
+    }
+  }
+  return [...new Set(result)].filter(filename=>options.discoverAll===true||!/^(?:template|sharedtemplate)$/i.test(path.basename(path.dirname(filename))));
 }
 
 function cleanDocumentText(vscode, filename) {
@@ -319,15 +336,21 @@ async function resolveOwner(seed, prompt=true, options={}) {
   // viewer intentionally routes to another. Text-editor navigation must use
   // the character DEF assignment and must never inherit a stale FX archive.
   const inherited=options.allowArchiveContext===true?archiveContext(seed):undefined;
-  const owners = inherited?[inherited.ownerDef]:seed ? associatedDefs(seed) : [];
+  const context=require('./authoring_context_registry').currentContext?.();
+  const hinted=context?.type==='character'?context.ownerDef:'';
+  let knownOwner='';
+  if(seed&&hinted){const assigned=require('./related_work').resolveAssigned(hinted);if(Object.values(assigned).flat().some(file=>typeof file==='string'&&file&&assetKey(file)===assetKey(seed)))knownOwner=hinted;}
+  const localOwners = seed && !inherited && !knownOwner ? associatedDefs(seed) : [];
+  const sharedLocal=localOwners.some(filename=>/^(?:template|sharedtemplate)$/i.test(path.basename(path.dirname(filename))));
+  const owners = inherited?[inherited.ownerDef]:knownOwner?[knownOwner]:seed && prompt && (sharedLocal||!localOwners.length) ? associatedDefs(seed,undefined,{discoverAll:true}) : localOwners;
   let def = owners.length === 1 ? owners[0] : '';
   if (owners.length > 1) {
     const picked = await vscode.window.showQuickPick(owners.map(filename => ({label:path.basename(filename), description:filename, filename})), {title:'Choose the asset owner', matchOnDescription:true});
     if (!picked) return;
     def = picked.filename;
   }
-  if (!def) def = nearestCharacterDef(seed) || '';
-  if (!def && /\.air$/i.test(seed)) def = require('./character_asset_resolver').inferCharacterFiles(seed)?.defPath || '';
+  if (!def) {const nearby=nearestCharacterDef(seed)||'';if(nearby&&!/^(?:template|sharedtemplate)$/i.test(path.basename(path.dirname(nearby))))def=nearby;}
+  if (!def && /\.air$/i.test(seed)) {const inferred=require('./character_asset_resolver').inferCharacterFiles(seed)?.defPath||'';if(inferred&&!/^(?:template|sharedtemplate)$/i.test(path.basename(path.dirname(inferred))))def=inferred;}
   if (!def && prompt) def = await chooseCharacterDef(seed ? vscode.Uri.file(seed) : undefined, { title: 'Choose the character for this viewer' });
   if (!def && prompt) return;
   return {def,inherited};
@@ -360,7 +383,8 @@ async function openConnected(seed, target, reference, sourceOrigin, fromPoint, o
     if (constant && target === 'air' && Number.isInteger(constant.value)) reference = {...reference,expression:undefined,kind:target, group:constant.value};
   }
   if (target === 'source') {
-    const files = [...new Set([seed, assets.def, ...assets.code].filter(f => f && fs.existsSync(f) && /\.(def|air|cns|st|zss|cmd|jnp|lua|txt)$/i.test(f)))];
+    const textSeed = [assets.sff, assets.snd].some(f => f && assetKey(f) === assetKey(seed)) ? '' : seed;
+    const files = [...new Set([textSeed, assets.def, assets.air, ...assets.code].filter(f => f && fs.existsSync(f)))];
     const root = path.dirname(def), ordered = [...new Set([def, ...files].map(filename => path.resolve(filename)))];
     const context={type:'character',key:path.resolve(root),label:path.basename(root),root:path.resolve(root),ownerDef:path.resolve(def),files:ordered};
     if(['beside','window'].includes(navigationOptions.disposition)){
@@ -394,7 +418,7 @@ async function openConnected(seed, target, reference, sourceOrigin, fromPoint, o
     const visible=(vscode.window.visibleTextEditors||[]).find(editor=>assetKey(editor.document?.fileName)===assetKey(preferred));
     return vscode.window.showTextDocument(document,{viewColumn:visible?.viewColumn||vscode.ViewColumn?.Beside,preview:false,preserveFocus:false});
   }
-  const exactTextAsset=navigationOptions.origin==='text'&&path.extname(seed).toLowerCase()===`.${target}`?path.resolve(seed):'';
+  const exactTextAsset=navigationOptions.origin==='text' && assets[target] && assetKey(seed)===assetKey(assets[target])?path.resolve(seed):'';
   let filename = exactTextAsset||(inherited?inherited.record[target]:assets[target]),chosenContext=inherited||null;
   if (reference?.prefix && reference.prefix.toLowerCase() !== 's' || reference?.expression) {
     const registry=archiveRegistry(def),combined=String(reference.prefix||'')+String(reference.group??'');

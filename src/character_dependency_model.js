@@ -3,7 +3,6 @@
 const fs = require('fs');
 const path = require('path');
 const { parseDef, unquote } = require('./def_model');
-const { collectRecords } = require('./analyzer');
 
 const FILE_EXTENSIONS = new Set(['.def', '.sff', '.air', '.snd', '.zss', '.cns', '.st', '.inp', '.cmd', '.jnp', '.act', '.dat', '.txt', '.json', '.csv', '.lua']);
 const CODE_EXTENSIONS = new Set(['.zss', '.cns', '.st', '.inp', '.cmd', '.jnp']);
@@ -33,10 +32,15 @@ function inferredGameRoot(owner) {
 function assignedPath(owner, input, key = '', io = fs) {
   const rawValue = unquote(String(input || '').trim()).trim();
   let local = referencedPath(owner, input);
-  if (!local && /^cmd$/i.test(String(key || '').trim()) && rawValue && !rawValue.includes(',') && path.extname(rawValue)) {
+  if (!local && /^(?:anim|air|sprite|sff|sound|snd|pal\d*|cmd|command|cns|constants|common|st(?:common|\d*)|movelist|lua|intro\.storyboard|ending\.storyboard)$/i.test(key) && rawValue && !/[\0\r\n]/.test(rawValue)) {
     local = path.resolve(path.dirname(owner), rawValue.replace(/[\\/]/g, path.sep));
   }
   const role = String(key || '').trim();
+  // Additional [Files] keys may be supplied by an engine module.
+  if (!local && role && rawValue && !/[\0\r\n]/.test(rawValue)) {
+    const candidate = path.resolve(path.dirname(owner), rawValue.replace(/[\\/]/g, path.sep));
+    try { if (io.statSync(candidate).isFile()) local = candidate; } catch (_) {}
+  }
   if (!local || !/^(?:cmd|st(?:common|\d*))$/i.test(role)) return local;
   const raw = rawValue.replace(/[\\/]/g, path.sep);
   const root = inferredGameRoot(owner);
@@ -50,7 +54,29 @@ function assignedPath(owner, input, key = '', io = fs) {
   return local;
 }
 
+// Startup and ownership need only the DEF's direct assignments. Source parsing
+// and recursive DEF traversal belong to the explicitly opened connection tree.
+function readCharacterAssignments(defPath, io = fs) {
+  const root = path.resolve(defPath), assignments = {}, files = [root];
+  let document;
+  try { document = parseDef(io.readFileSync(root, 'utf8'), root); } catch (_) { return { root, assignments, files }; }
+  for (const section of document.sections) {
+    if (!['files', 'arcade'].includes(section.normalized)) continue;
+    for (const entry of section.entries || []) {
+      if (section.normalized === 'arcade' && !/^(?:intro|ending)\.storyboard$/.test(entry.normalized)) continue;
+      const target = assignedPath(root, entry.value, entry.key, io);
+      if (!target) continue;
+      const key = String(entry.key).toLowerCase();
+      if (!assignments[key]) assignments[key] = [];
+      assignments[key].push(target);
+      if (!files.includes(target)) files.push(target);
+    }
+  }
+  return { root, assignments, files };
+}
+
 function buildCharacterDependencyModel(defPath, io = fs) {
+  const { collectRecords } = require('./analyzer');
   const root = path.resolve(defPath), nodes = new Map(), edges = [], edgeKeys = new Set(), visitedDefs = new Set();
   const exists = (filename) => { try { return io.existsSync(filename); } catch (_) { return false; } };
   const addNode = (filename) => {
@@ -71,18 +97,23 @@ function buildCharacterDependencyModel(defPath, io = fs) {
     let document;
     try { document = parseDef(io.readFileSync(resolved, 'utf8'), resolved); } catch (_) { return; }
     for (const section of document.sections) for (const entry of section.entries || []) {
-      const target = assignedPath(resolved, entry.value, entry.key, io);
+      const target = assignedPath(resolved, entry.value, section.normalized === 'files' ? entry.key : '', io);
       if (!target) continue;
       const node = addNode(target);
-      if (/^cmd$/i.test(entry.key)) node.kind = path.extname(target).toLowerCase() === '.cmd' ? 'Legacy Commands' : 'Commands';
+      const role = section.normalized === 'files' ? entry.normalized : '';
+      const kind = { sprite:'Sprites', sff:'Sprites', anim:'Animation', air:'Animation', sound:'Sound', snd:'Sound', movelist:'Data', 'ending.storyboard':'Definition', 'intro.storyboard':'Definition' }[role];
+      if (kind) node.kind = kind;
+      if (/^pal\d*$/.test(role)) node.kind = 'Palette';
+      if (/^(?:st(?:common|\d*)|cns|constants|common)$/.test(role)) node.kind = 'Code';
+      if (/^cmd$/i.test(role)) node.kind = path.extname(target).toLowerCase() === '.cmd' ? 'Legacy Commands' : 'Commands';
       addEdge(resolved, target, 'assignment', `[${section.name || 'Root'}] ${entry.key}`, 0);
-      if (path.extname(target).toLowerCase() === '.def') visitDef(target);
+      if (node.kind === 'Definition') visitDef(target);
     }
   };
   visitDef(root);
 
-  const assignedCode = new Set(edges.filter((edge) => edge.type === 'assignment' && /^\[Files\]\s+(?:cmd|command|cns|constants|common|st\d*)$/i.test(edge.label)).map((edge) => path.resolve(edge.to).toLowerCase()));
-  const sources = [...nodes.values()].filter((node) => node.exists && (CODE_EXTENSIONS.has(path.extname(node.filename).toLowerCase()) || assignedCode.has(path.resolve(node.filename).toLowerCase()))).map((node) => {
+  const assignedCode = new Set(edges.filter((edge) => edge.type === 'assignment' && /^\[Files\]\s+(?:cmd|command|cns|constants|common|st(?:common|\d*))$/i.test(edge.label)).map((edge) => path.resolve(edge.to).toLowerCase()));
+  const sources = [...nodes.values()].filter((node) => node.exists && (['Code','Commands','Legacy Commands'].includes(node.kind) || assignedCode.has(path.resolve(node.filename).toLowerCase()))).map((node) => {
     try { return { node, records: collectRecords(io.readFileSync(node.filename, 'utf8'), node.filename) }; } catch (_) { return { node, records: collectRecords('', node.filename) }; }
   });
   const functions = new Map(), states = new Map();
@@ -114,4 +145,4 @@ function buildCharacterDependencyModel(defPath, io = fs) {
   };
 }
 
-module.exports = { FILE_EXTENSIONS, CODE_EXTENSIONS, kindFor, referencedPath, inferredGameRoot, assignedPath, buildCharacterDependencyModel };
+module.exports = { FILE_EXTENSIONS, CODE_EXTENSIONS, kindFor, referencedPath, inferredGameRoot, assignedPath, readCharacterAssignments, buildCharacterDependencyModel };

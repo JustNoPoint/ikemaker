@@ -61,8 +61,8 @@ function defFileReferenceAt(document, position) {
     if(position.character<valueStart||position.character>valueEnd)return null;
     const relative=/^"([^"\r\n]+)"$/.test(value)?value.slice(1,-1):value;
     if(!relative||/[\r\n\0]/.test(relative)||/[,*?]/.test(relative))return null;
-    const target=path.resolve(path.dirname(filename),relative.replace(/[\\/]/g,path.sep)),extension=path.extname(target).toLowerCase();
-    if(['.sff','.snd','.act','.pcx','.png','.bmp','.gif','.jpg','.jpeg','.ogg','.wav','.mp3'].includes(extension)||!fs.existsSync(target)||!fs.statSync(target).isFile())return null;
+    const target=require('./character_dependency_model').assignedPath(filename,relative,field[1]) || path.resolve(path.dirname(filename),relative.replace(/[\\/]/g,path.sep)),extension=path.extname(target).toLowerCase();
+    if((!require('./code_navigator_assignments').CODE_FILE_KEY.test(field[1]) && ['.sff','.snd','.act','.pcx','.png','.bmp','.gif','.jpg','.jpeg','.ogg','.wav','.mp3'].includes(extension))||!fs.existsSync(target)||!fs.statSync(target).isFile())return null;
     return{key:field[1],value:relative,target,line,start:valueStart+(value.startsWith('"')?1:0),length:relative.length};
   }
   return null;
@@ -185,6 +185,32 @@ function registerNavigationProviders(vscode, context, sharedIndex, getFunctionCa
     }
     return vscode.window.showTextDocument(selected.uri, { selection: selected.range, preview: false });
   };
+  if (vscode.languages.registerDocumentLinkProvider) {
+    const assignments = document => require('./def_model').parseDef(document.getText(), document.fileName)
+      .sections.filter(section => section.normalized === 'files').flatMap(section => section.entries);
+    context.subscriptions.push(vscode.languages.registerDocumentLinkProvider(defSelector, {
+      provideDocumentLinks(document) {
+        return assignments(document).flatMap(entry => {
+          const target = require('./character_dependency_model').assignedPath(document.fileName, entry.value, entry.key);
+          if (!target) return [];
+          const start = entry.raw.indexOf(entry.value, entry.raw.indexOf('=') + 1);
+          if (start < 0) return [];
+          const range = new vscode.Range(entry.line, start, entry.line, start + entry.value.length);
+          const args = [document.fileName, entry.line, entry.key, target];
+          const link = new vscode.DocumentLink(range, vscode.Uri.parse('command:ikemen.navigation.openAssignedFile?' + encodeURIComponent(JSON.stringify(args))));
+          link.tooltip = 'Open assigned ' + entry.key + ' file';
+          return [link];
+        });
+      }
+    }), vscode.commands.registerCommand('ikemen.navigation.openAssignedFile', async (owner, line, key, target) => {
+      const document = vscode.window.activeTextEditor?.document;
+      if (!document || document.fileName !== owner || !/\.def$/i.test(owner)) return;
+      const entry = assignments(document).find(item => item.line === line && item.key === key);
+      if (!entry || require('./character_dependency_model').assignedPath(owner, entry.value, key) !== target) return;
+      return vscode.commands.executeCommand('ikemen.workbench.openFile',
+        {id:owner, defPath:owner, assignments:{[key.toLowerCase()]:[target]}}, target);
+    }));
+  }
   context.subscriptions.push(
     vscode.languages.registerDefinitionProvider(definitionSelector, definitionProvider),
     vscode.languages.registerReferenceProvider(definitionSelector, referenceProvider),

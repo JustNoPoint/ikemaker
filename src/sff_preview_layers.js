@@ -58,7 +58,13 @@ function installSffPreviewLayers(normalizePreviewLayers, editPreviewLayers, laye
   importButton.title = 'Use the saved frame mapping to add artwork to this SFF';
   importButton.onclick = () => vscode.postMessage({type:'importPsdCostumeBank', bindingGeneration:model.bindingGeneration, value:composition});
   importButton.hidden = !!model.transfer;
-  tools.append(add, remove, importButton, airButton, reviewButton, runtimeButton);
+  const bakeButton=document.createElement('button');
+  bakeButton.id='bakeLayerSilhouette';
+  bakeButton.textContent='Bake Layer Silhouette into Base…';
+  bakeButton.title='Review a shadow/reflection outline and equipped/unequipped palettes before saving';
+  bakeButton.hidden=!!model.transfer;
+  bakeButton.onclick=()=>vscode.postMessage({type:'sffAction',action:'bakeLayerSilhouette',bindingGeneration:model.bindingGeneration,bank:primaryLayer()?.source?.bank,selectedIndex:selected?.index,selectedIndices:[...selectedIndices],value:composition});
+  tools.append(add, remove, importButton, airButton, reviewButton, runtimeButton,bakeButton);
   const mode = document.createElement('button');
   mode.id = 'sffPreviewSourceMode';
   mode.textContent = 'Edit saved sprite axes';

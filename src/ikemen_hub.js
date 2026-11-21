@@ -36,60 +36,58 @@ class IkemenHubProvider {
   }
 }
 
+const QUICK_START_ACTIONS = [
+  { label: 'Open Character…', command: 'ikemen.character.open' },
+  { label: 'Create New Character…', command: 'ikemen.character.createNew' },
+  { label: 'Open Stage…', command: 'ikemen.stage.openWorkspace', forcePicker: true },
+  { label: 'Create New Stage…', command: 'ikemen.stage.createNew' },
+  { label: 'Open Screenpack/Motif…', command: 'ikemen.ui.openWorkspace', forcePicker: true },
+  { label: 'Create New Screenpack/Motif…', command: 'ikemen.ui.createNew' },
+  { label: 'Open Storyboard…', command: 'ikemen.storyboard.open', forcePicker: true },
+  { label: 'Create New Storyboard…', command: 'ikemen.storyboard.create' },
+  { label: 'Open Roster Manager…', command: 'ikemen.selectDef.openWorkspace' }
+];
+
+const LAUNCH_ACTIONS = [
+  { label: 'Launch IKEMEN', command: 'ikemen.launchGame', description: 'Ctrl+Alt+F5' },
+  { label: 'Infinite Quick VS Mirror', command: 'ikemen.launchMirrorCurrent', description: 'Ctrl+Alt+F6' },
+  { label: 'Training Mirror', command: 'ikemen.launchTrainingCurrent', description: 'Ctrl+Alt+F7' },
+  { label: 'IKeMiner', command: 'ikemen.switchToIkeMiner' },
+  { label: 'IKeMeter', command: 'ikemen.openIKeMeter' }
+];
+const LAUNCH_COMMANDS = new Set(LAUNCH_ACTIONS.map(action => action.command));
+
+function buildShortcutGroups(allowed = () => true) {
+  function group(label, actions, inCatalog = false) {
+    return new HubItem(label, actions.map(action => {
+      const enabled = allowed(action.command);
+      const item = new HubItem(action.label, null, enabled ? action.command : null,
+        enabled ? action.description : 'Unavailable in the current interface mode.');
+      if (item.command && action.forcePicker) item.command.arguments = [undefined, { forcePicker: true }];
+      if (inCatalog) item.actionId = `command.${action.command}`;
+      item.contextValue = enabled ? 'ikemenAction' : 'ikemenActionUnavailable';
+      return item;
+    }));
+  }
+  return [group('Quick Start', QUICK_START_ACTIONS), group('Launch', LAUNCH_ACTIONS, true)];
+}
+
 // Commands have a primary home, while common entry points are intentionally
 // repeated where a player or creator would reasonably look for them.
 function buildHubItems(){
   const mode=require('./interface_mode').current(), setup=require('./workspace_setup').current();
-  const allowed=command=>require('./interface_capabilities').allows(command,mode,setup),catalog=require('./viewer_action_registry').publicCommandCatalog();
-  const quickStartActions=[
-    ['Open Character…','ikemen.character.open','start here'],
-    ['Open Recent Project / File…','workbench.action.openRecent','VS Code recent folders, workspaces, and files'],
-    ['Open Asset in Current / New Tab…','ikemen.assets.open','SFF, AIR, and SND; choose with the keyboard'],
-    ['Open Move Lab…','ikemen.moveLab.open','moves, throws, animation, assets, code, diagnostics, and tests'],
-    ['Create New Character…','ikemen.character.createNew','complete playable character scaffold'],
-    ['Create New Stage…','ikemen.stage.createNew','stage files and visual workspace'],
-    ['Create New Screenpack / Fight UI…','ikemen.ui.createNew','screenpack files and visual workspace'],
-    ['Create New Storyboard…','ikemen.storyboard.create','opening, ending, credits, logo, loading, and story scenes'],
-    ['Create Code, Stage, or UI…','ikemen.file.createNew','code/data files and complete Stage or UI workspaces'],
-    ['Close Current Character…','ikemen.character.close','close all of its tabs'],
-    ['Close Current Authoring Context…','ikemen.context.closeCurrent','character, stage, or screenpack'],
-    ['Open Related Work…','ikemen.relatedWork.open','connected files and tools'],
-    ['Open Production Workflow…','ikemen.productionWorkflow.open','guided character work'],
-    ['Open Project & Team Manager…','ikemen.projectManager.open','games, work projects, teams, members, and job classes'],
-    ['Create New Game Profile…','ikemen.projectProfile.create','game identity, classification, and ownership'],
-    ['Open Roster Manager…','ikemen.selectDef.openWorkspace','add characters and stages'],
-    ['Launch IKEMEN  (Ctrl+Alt+F5)','ikemen.launchGame',''],
-    ['Infinite Quick VS Mirror  (Ctrl+Alt+F6)','ikemen.launchMirrorCurrent',''],
-    ['Training Mirror  (Ctrl+Alt+F7)','ikemen.launchTrainingCurrent','']
-  ];
-  const quickStart=new HubItem('Quick Start',quickStartActions.map(([label,command,description])=>{const enabled=['workbench.action.openRecent','ikemen.assets.open'].includes(command)||allowed(command),item=new HubItem(label,null,enabled?command:null,enabled?description:'Unavailable in the current interface mode.');item.contextValue=enabled?'ikemenAction':'ikemenActionUnavailable';return item;}));
+  const { allows } = require('./interface_capabilities');
+  const allowed = command => allows(command, mode, setup);
+  const catalog = require('./viewer_action_registry').publicCommandCatalog();
+  // These entry points can start work outside the current project's focus.
+  const shortcuts = buildShortcutGroups(command => allows(command, mode, {}));
   const viewEscapeOrder=['ikemen.textToolbar.restoreNativeLayout','ikemen.textToolbar.disableNativeLayout'];
-  const catalogGroups=catalog.menuOrder.map(group=>{const actions=catalog.actions.filter(action=>action.group===group);if(group==='View')actions.sort((left,right)=>{const a=viewEscapeOrder.indexOf(left.command),b=viewEscapeOrder.indexOf(right.command);return(a<0?viewEscapeOrder.length:a)-(b<0?viewEscapeOrder.length:b);});return new HubItem(group,actions.map(action=>{const enabled=allowed(action.command),item=new HubItem(action.label,null,enabled?action.command:null,enabled?[action.tooltip,action.shortcut].filter(Boolean).join(' · '):'Unavailable in the current interface mode.');item.actionId=action.actionId;item.contextValue=enabled?'ikemenAction':'ikemenActionUnavailable';return item;}));});
-  return [quickStart,...catalogGroups];
+  const catalogGroups=catalog.menuOrder.map(group=>{const actions=catalog.actions.filter(action=>action.group===group&&!LAUNCH_COMMANDS.has(action.command));if(group==='View')actions.sort((left,right)=>{const a=viewEscapeOrder.indexOf(left.command),b=viewEscapeOrder.indexOf(right.command);return(a<0?viewEscapeOrder.length:a)-(b<0?viewEscapeOrder.length:b);});return new HubItem(group,actions.map(action=>{const enabled=allowed(action.command),item=new HubItem(action.label,null,enabled?action.command:null,enabled?[action.tooltip,action.shortcut].filter(Boolean).join(' · '):'Unavailable in the current interface mode.');item.actionId=action.actionId;item.contextValue=enabled?'ikemenAction':'ikemenActionUnavailable';return item;}));});
+  return [...shortcuts,...catalogGroups];
 }
 function buildAllHubItems() {
   return [
-      new HubItem('Quick Start', [
-        new HubItem('Open Character…', null, 'ikemen.character.open', 'start here'),
-        new HubItem('Open Recent Project / File…', null, 'workbench.action.openRecent', 'VS Code recent folders, workspaces, and files'),
-        new HubItem('Open Asset in Current / New Tab…', null, 'ikemen.assets.open', 'SFF, AIR, and SND; choose with the keyboard'),
-        new HubItem('Open Move Lab…', null, 'ikemen.moveLab.open', 'moves, throws, animation, assets, code, diagnostics, and tests'),
-        new HubItem('Create New Character…', null, 'ikemen.character.createNew', 'complete playable character scaffold'),
-        new HubItem('Create New Stage…', null, 'ikemen.stage.createNew', 'stage files and visual workspace'),
-        new HubItem('Create New Screenpack / Fight UI…', null, 'ikemen.ui.createNew', 'screenpack files and visual workspace'),
-        new HubItem('Create New Storyboard…', null, 'ikemen.storyboard.create', 'opening, ending, credits, logo, loading, and story scenes'),
-        new HubItem('Create Code, Stage, or UI…', null, 'ikemen.file.createNew', 'code/data files and complete Stage or UI workspaces'),
-        new HubItem('Close Current Character…', null, 'ikemen.character.close', 'close all of its tabs'),
-        new HubItem('Close Current Authoring Context…', null, 'ikemen.context.closeCurrent', 'character, stage, or screenpack'),
-        new HubItem('Open Related Work…', null, 'ikemen.relatedWork.open', 'connected files and tools'),
-        new HubItem('Open Production Workflow…', null, 'ikemen.productionWorkflow.open', 'guided character work'),
-        new HubItem('Open Project & Team Manager…', null, 'ikemen.projectManager.open', 'games, work projects, teams, members, and job classes'),
-        new HubItem('Create New Game Profile…', null, 'ikemen.projectProfile.create', 'game identity, classification, and ownership'),
-        new HubItem('Open Roster Manager…', null, 'ikemen.selectDef.openWorkspace', 'add characters and stages'),
-        new HubItem('Launch IKEMEN  (Ctrl+Alt+F5)', null, 'ikemen.launchGame'),
-        new HubItem('Infinite Quick VS Mirror  (Ctrl+Alt+F6)', null, 'ikemen.launchMirrorCurrent'),
-        new HubItem('Training Mirror  (Ctrl+Alt+F7)', null, 'ikemen.launchTrainingCurrent')
-      ]),
+      ...buildShortcutGroups(),
       new HubItem('Create New', [
         new HubItem('Create Character…', null, 'ikemen.character.createNew', 'DEF, AIR, SFF, SND, and starter code'),
         new HubItem('Create Stage…', null, 'ikemen.stage.createNew', 'DEF, SFF, and visual workspace'),

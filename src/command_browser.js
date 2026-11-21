@@ -25,7 +25,7 @@ function browserHtml(commands, entries = [], guideHtml = '') {
   const rows = commands.map((command, index) => '<li><button data-index="' + index + '">' +
     escapeText(command.name) + '</button> <code>' + escapeText(command.command) + '</code></li>').join('');
   return protect(`<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>
-    ${companion.style()}${entityHeader.style()}
+    ${companion.style()}${entityHeader.style()}${require('./viewer_presentation').style()}
     *{box-sizing:border-box}[hidden]{display:none!important}#guideContent{padding:0 8px;overflow-wrap:anywhere}body{margin:0;font:13px var(--vscode-font-family);color:var(--vscode-foreground);background:var(--vscode-editor-background)}
     button,input{font:inherit;color:inherit;background:var(--vscode-input-background);border:1px solid var(--vscode-input-border);padding:5px}
     .bar,.tabs,.tools{display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:6px 8px;border-bottom:1px solid var(--vscode-panel-border)}
@@ -33,12 +33,12 @@ function browserHtml(commands, entries = [], guideHtml = '') {
     .tabs button[aria-pressed=true]{background:var(--vscode-button-background);color:var(--vscode-button-foreground);outline:2px solid var(--vscode-focusBorder)}
     .tools input{flex:1;min-width:0}ul{list-style:none;padding:0;margin:0}li{padding:7px;border-bottom:1px solid var(--vscode-panel-border)}code{overflow-wrap:anywhere}
     </style></head><body class="ikemaker-companion-browser">${entityHeader.html()}
-    <header class="bar"><strong>Command Browser</strong><button id="floatWindow">Float Window</button><button id="owner">Focus Command Maker</button><button id="closeBrowser">Close Browser</button></header>
+    <header class="bar"><strong>Command Browser</strong>${require('./viewer_presentation').chooserHtml()}<button id="floatWindow" data-ikm-action-icon="↗" aria-label="Float Window" title="Float Window"><span data-ikm-action-label>Float Window</span></button><button id="owner" aria-label="Focus Command Maker" title="Focus Command Maker" data-ikm-action-icon="⊙"><span data-ikm-action-label>Focus Command Maker</span></button><button id="closeBrowser" aria-label="Close Browser" title="Close Browser" data-ikm-action-icon="×"><span data-ikm-action-label>Close Browser</span></button></header>
     <main class="panel"><div class="tabs"><button id="existing" aria-pressed="true">Character Commands</button><button id="premade" aria-pressed="false">Premade Commands</button><button id="guide" aria-pressed="false">Guide</button></div><section id="guideContent" hidden>${guideHtml}</section>
     <label id="filters" class="tools">Find <input type="search" id="filter" placeholder="Command name or input"></label>
     <ul id="ownedRows">${rows}</ul><ul id="recipeRows" hidden>${premade}</ul><p id="empty">No matching commands.</p></main>
     <script>const vscode=acquireVsCodeApi();(${browserClient.toString()})(vscode);
-    ${entityHeader.clientScript({vscodeVariable:'vscode'})}${companion.clientScript()}${require('./universal_toolbar_webview').companionBrowserShortcutClientScript()}</script></body></html>`);
+    ${entityHeader.clientScript({vscodeVariable:'vscode'})}${companion.clientScript()}${require('./universal_toolbar_webview').companionBrowserShortcutClientScript()}${require('./viewer_presentation').clientScript({vscodeVariable:'vscode'})}</script></body></html>`);
 
 }
 
@@ -69,7 +69,7 @@ function browserClient(vscode) {
   filter.oninput=render;
   for(const button of document.querySelectorAll('[data-index]'))button.onclick=()=>vscode.postMessage({type:'pickCommand',index:Number(button.dataset.index)});
   for(const button of document.querySelectorAll('[data-recipe]'))button.onclick=()=>vscode.postMessage({type:'pickRecipe',index:Number(button.dataset.recipe)});
-  window.addEventListener('message',event=>{if(event.data?.type==='commandBrowserFloating')el('floatWindow').textContent=event.data.value?'Return to Main Window':'Float Window';});
+  window.addEventListener('message',event=>{if(event.data?.type==='commandBrowserFloating'){const button=el('floatWindow'),label=event.data.value?'Return to Main Window':'Float Window';const text=button.querySelector('[data-ikm-action-label]');if(text)text.textContent=label;button.title=label;button.setAttribute('aria-label',label);button.dataset.ikmActionIcon=event.data.value?'↙':'↗';}});
   render();
 
 }
@@ -109,6 +109,8 @@ async function openBrowser(api, owner, seed, commands, select, entries = [], pic
     const close = owner.onDidDispose(()=>panel.dispose());
     panel.onDidDispose(()=>{close?.dispose();panels.delete(owner);});
     panel.webview.onDidReceiveMessage(async message=>{
+      const presentation=require('./viewer_presentation');
+      if (presentation.isMessage(message)) return presentation.handle(message,panel);
       if(record.readiness.signal(message)){
         if(record.floating)await panel.webview.postMessage({type:'commandBrowserFloating',value:true});
       }else if(message?.type==='companionBrowserViewport'){

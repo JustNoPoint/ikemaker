@@ -32,6 +32,8 @@ const personalExamplesApi=require('./personal_examples');
 const {IdentifierGlossaryPersistence}=require('./identifier_glossary_persistence');
 const resumeContextApi=require('./resume_context');
 const { attachedTextLayout, attachedLayoutShape } = require('./text_editor_layout');
+const { leafPaths } = require('./text_dropdown_layout');
+const { prepareOriginTextLayout } = require('./text_origin_layout');
 const { createMinimumWidthController } = require('./companion_browser_layout');
 const codingAssistantActions=require('./coding_assistance_action_host');
 
@@ -317,13 +319,58 @@ async function openNative(document, line, authorize, viewColumn) {
   return editor;
 }
 
-async function attachedCodeColumns() {
-  let current;
-  try { current = await api.commands.executeCommand('vscode.getEditorLayout'); } catch (_) {}
-  if (!attachedLayoutShape(current)) {
-    try { await api.commands.executeCommand('vscode.setEditorLayout', attachedTextLayout()); } catch (_) {}
+let attachedCodeRequest = 0;
+
+async function attachedCodeColumns(filename, options = {}) {
+  const request = ++attachedCodeRequest;
+  const isCurrent = () => request === attachedCodeRequest && (options.isCurrent?.() ?? true);
+  const tabGroups = api.window.tabGroups;
+  if (!filename || !path.isAbsolute(filename) || !tabGroups || !isCurrent()) return null;
+  const groups = [...tabGroups.all].sort((a, b) => a.viewColumn - b.viewColumn);
+  const origin = tabGroups.activeTabGroup;
+  if (!groups.includes(origin)) return null;
+  const snapshots = groups.map(group => [...group.tabs]);
+  try {
+    const layout = await api.commands.executeCommand('vscode.getEditorLayout');
+    const current = [...tabGroups.all].sort((a, b) => a.viewColumn - b.viewColumn);
+    if (!isCurrent() || tabGroups.activeTabGroup !== origin || current.length !== groups.length ||
+        current.some((group, index) => group !== groups[index] || group.tabs.length !== snapshots[index].length ||
+          group.tabs.some((tab, tabIndex) => tab !== snapshots[index][tabIndex]))) return null;
+
+    const paths = leafPaths(layout);
+    if (![0, 1].includes(layout?.orientation) || !paths.length || paths.length > groups.length) return null;
+    const headerIndex = groups.findIndex(group => group.tabs.some(tab =>
+      String(tab.input?.viewType || '').replace(/^mainThreadWebview-/, '') === 'ikemenTextCompanion'));
+    if (headerIndex >= 0) {
+      const headerPath = paths[headerIndex];
+      // Reuse the existing header and its lower region in the same main grid.
+      // A column in a detached window is outside that grid.
+      if (!headerPath || !paths[groups.indexOf(origin)] || (layout.orientation + headerPath.length - 1) % 2 !== 1) return null;
+      const below = [...headerPath.slice(0, -1), headerPath.at(-1) + 1];
+      const nativeIndex = paths.findIndex(leaf => below.every((part, index) => leaf[index] === part));
+      if (nativeIndex < 0 || !groups[nativeIndex]) return null;
+      return { headerColumn: groups[headerIndex].viewColumn, editorColumn: groups[nativeIndex].viewColumn, scopedLayout: true };
+    }
+
+    // Only an empty single grid can start with the default two-row layout.
+    // Populated and detached regions use a scoped split to retain their tabs.
+    if (groups.length === 1 && snapshots[0].length === 0 && paths.length === 1) {
+      await api.commands.executeCommand('vscode.setEditorLayout', attachedTextLayout());
+      return isCurrent() ? { headerColumn: 1, editorColumn: 2 } : null;
+    }
+    if (groups.length === 2 && snapshots[0].length === 0 && attachedLayoutShape(layout)) {
+      return { headerColumn: groups[0].viewColumn, editorColumn: groups[1].viewColumn, scopedLayout: true };
+    }
+    const prepared = await prepareOriginTextLayout(api, origin, filename, isCurrent);
+    return isCurrent() ? {
+      headerColumn: prepared.headerGroup.viewColumn,
+      editorColumn: prepared.nativeGroup.viewColumn,
+      scopedLayout: true
+    } : null;
+  } catch (_) {
+    // The source can still open natively when the workbench cannot attach.
+    return null;
   }
-  return { headerColumn: 1, editorColumn: 2 };
 }
 async function openExactNative(document, route, line, authorize) {
   const request = { ...route, selectionRevision: route.selectionRevision };
@@ -716,8 +763,14 @@ async function openCodingViewer(uri, options = {}) {
   const document = await sourceDocument(target), classification = classifyDocument(document, { configuration: api.workspace.getConfiguration('ikemenZss', document.uri) });
   if (!classification.supported) return openNative(document,options.line);
   if(options.legacyIntegrated!==true){
-    const columns=await attachedCodeColumns(),editor=await openNative(document,options.line,undefined,columns.editorColumn),documents=connectedDocuments(document),files=[...new Map([document,...documents].map(item=>[key(item.fileName),item.fileName])).values()],directory=path.dirname(document.fileName);
-    const companion=await api.commands.executeCommand('ikemen.textToolbar.openCompanion',{files,viewColumn:columns.editorColumn,headerColumn:columns.headerColumn,context:{type:classification.role||'project',key:directory,label:path.basename(directory),root:directory,files}});
+    const columns = await attachedCodeColumns(document.fileName);
+    const editor = await openNative(document, options.line, undefined, columns?.editorColumn);
+    if (!columns || !editor) {
+      if (editor) api.window.showInformationMessage('Opened the source in a native editor. Code Navigation could not attach to the current editor layout.');
+      return editor;
+    }
+    const documents=connectedDocuments(document),files=[...new Map([document,...documents].map(item=>[key(item.fileName),item.fileName])).values()],directory=path.dirname(document.fileName);
+    const companion=await api.commands.executeCommand('ikemen.textToolbar.openCompanion',{files,selectedFile:document.fileName,scopedLayout:columns.scopedLayout,viewColumn:columns.editorColumn,headerColumn:columns.headerColumn,context:{type:classification.role||'project',key:directory,label:path.basename(directory),root:directory,files}});
     if(companion&&typeof companion==='object')companion.assetViewColumn=columns.editorColumn;
     return companion||editor||null;
   }
@@ -801,12 +854,17 @@ async function openCodingSet(descriptor, behavior = {}) {
     // universal header above, and every native source/viewer tab below. Coding
     // Assistance remains an explicit browser action in the lower tab group.
     if (behavior.legacyIntegrated !== true) {
-      const columns=await attachedCodeColumns(),nativeDocuments=[...documents,...nativeFallback];
-      for (const current of nativeDocuments) await openNative(current,undefined,undefined,columns.editorColumn);
-      if(documents[0])await openNative(documents[0],undefined,undefined,columns.editorColumn);
+      const nativeDocuments = [...documents, ...nativeFallback];
+      const selectedFile = nativeDocuments[0]?.fileName;
+      const columns = documents.length ? await attachedCodeColumns(selectedFile) : null;
+      for (const current of nativeDocuments) await openNative(current,undefined,undefined,columns?.editorColumn);
+      if(documents[0])await openNative(documents[0],undefined,undefined,columns?.editorColumn);
       const files=nativeDocuments.map(item=>item.fileName);
-      const companion=await api.commands.executeCommand('ikemen.textToolbar.openCompanion',{files,viewColumn:columns.editorColumn,headerColumn:columns.headerColumn,context:options.context});
+      const companion = columns && await api.commands.executeCommand('ikemen.textToolbar.openCompanion',{
+        files, selectedFile, scopedLayout: columns.scopedLayout, viewColumn: columns.editorColumn, headerColumn: columns.headerColumn, context: options.context
+      });
       if(companion&&typeof companion==='object')companion.assetViewColumn=columns.editorColumn;
+      if (!columns && documents.length) api.window.showInformationMessage('Opened connected native editors. Code Navigation could not attach to the current editor layout.');
       if (skipped.length) api.window.showWarningMessage(`Skipped ${skipped.length} unavailable character source file(s).`);
       return companion||api.window.activeTextEditor||null;
     }
@@ -1135,4 +1193,4 @@ function registerAuthoringWorkspace(vscode, context, browserProviders = {}) {
   );
 }
 
-module.exports = { browserContextForSource, openBrowserCodingSource, liveBrowserDocuments, VIEW_TYPE, SERIALIZED_STATE_SCHEMA, SERIALIZED_STATE_VERSION, ASSISTANCE_RESTORE_SCHEMA, ASSISTANCE_RESTORE_VERSION, registerAuthoringWorkspace, openCodingViewer, openCharacterCodingSet, openAuthoringBrowser, choosePresentation, toolbarModel, navigationFor, canonicalRegularFiles, normalizedCodingContext, validateCharacterCodingDescriptor, serializedPanelState, parseSerializedPanelState, serializedAssistanceState, parseAssistanceState, recoveryEntries, boundedPersonalDiscoveryPin, attachedLayoutShape, browserSnapshot:()=>browserPanel?{panel:browserPanel}:null };
+module.exports = { attachedCodeColumns, browserContextForSource, openBrowserCodingSource, liveBrowserDocuments, VIEW_TYPE, SERIALIZED_STATE_SCHEMA, SERIALIZED_STATE_VERSION, ASSISTANCE_RESTORE_SCHEMA, ASSISTANCE_RESTORE_VERSION, registerAuthoringWorkspace, openCodingViewer, openCharacterCodingSet, openAuthoringBrowser, choosePresentation, toolbarModel, navigationFor, canonicalRegularFiles, normalizedCodingContext, validateCharacterCodingDescriptor, serializedPanelState, parseSerializedPanelState, serializedAssistanceState, parseAssistanceState, recoveryEntries, boundedPersonalDiscoveryPin, attachedLayoutShape, browserSnapshot:()=>browserPanel?{panel:browserPanel}:null };

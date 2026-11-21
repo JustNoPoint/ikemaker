@@ -2,12 +2,8 @@
 
 const { classifyRuntimeValue, classifyArguments, summarizeRuntimeValue, summarizeArguments } = require('./runtime_value_kind');
 const { parseStateSource } = require('./state_transfer_model');
-const { enabledCapabilityIds } = require('./catalog_capability_filter');
-const TRIGGER_CATALOG=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
-const TRIGGER_BY_NAME=new Map(TRIGGER_CATALOG.map(entry=>[String(entry.name||'').toLowerCase(),entry]).filter(([name])=>name));
-const TRIGGER_NAMES=new Set(TRIGGER_BY_NAME.keys());
-const CONTROLLER_BY_NAME=new Map(require('../data/sctrl.json').map(entry=>[String(entry.name||'').toLowerCase(),entry]).filter(([name])=>name));
-
+const { enabledCapabilityIds, entryAvailable } = require('./catalog_capability_filter');
+const {triggerByName:TRIGGER_BY_NAME, controllerByName:CONTROLLER_BY_NAME} = require('./live_coding_catalog');
 function controllerContract(name){const catalog=CONTROLLER_BY_NAME.get(String(name||'').toLowerCase());return catalog?{name:catalog.name,signature:catalog.name,documentation:catalog.description||'',catalogMatch:true,metadata:{status:catalog.status||'documented','option count':String((catalog.params||[]).length),visibilityCapabilityId:catalog.capabilityId||''}}:{name:String(name||''),signature:String(name||''),documentation:'',catalogMatch:false,metadata:{status:'not in bundled catalog','option count':'unknown',visibilityCapabilityId:''}};}
 
 
@@ -458,17 +454,17 @@ function capabilityCatalogIssues(lines, capabilities) {
     const raw = String(lines[line] || ''), structure = withoutStrings(withoutComment(raw));
     for (const match of structure.matchAll(/\b([A-Za-z_][A-Za-z0-9_.]*)\b/g)) {
       const catalog = TRIGGER_BY_NAME.get(match[1].toLowerCase()), before = structure.slice(0, match.index), after = structure.slice(match.index + match[0].length);
-      if (!catalog?.capabilityId || enabled.has(String(catalog.capabilityId).toLowerCase()) || /\b(?:call|Function)\s*$/i.test(before) || /^\s*\(/.test(after)) continue;
-      findings.push(issue(line, match.index, match[0].length, 'error', 'unsupported-engine-capability', `${catalog.name} requires the unavailable ${catalog.capabilityId} engine capability for this project target.`, 'Review the exact project engine target, or replace this trigger deliberately. IKEMaker will not rewrite source or switch engines automatically.'));
+      if (!catalog || entryAvailable(catalog,capabilities) || /\b(?:call|Function)\s*$/i.test(before) || /^\s*\(/.test(after)) continue;
+      findings.push(issue(line, match.index, match[0].length, 'error', 'unsupported-engine-capability', `${catalog.name} requires the unavailable ${catalog.capabilityId || 'Nightly'} engine capability for this project target.`, 'Review the exact project engine target, or replace this trigger deliberately. IKEMaker will not rewrite source or switch engines automatically.'));
     }
     if (!active) {
       const headers = [...structure.matchAll(/\b([A-Za-z_][A-Za-z0-9_.]*)\s*\{/g)];
       for (const header of headers) {
         const catalog = CONTROLLER_BY_NAME.get(header[1].toLowerCase());
-        if (!catalog || (!catalog.capabilityId && !(catalog.params || []).some(parameter => parameter.capabilityId))) continue;
+        if (!catalog || (entryAvailable(catalog,capabilities) && !(catalog.params || []).some(parameter => parameter.capabilityId))) continue;
         active = { catalog, start: header.index, startLine: line };
         depth = 0;
-        if (catalog.capabilityId && !enabled.has(String(catalog.capabilityId).toLowerCase())) findings.push(issue(line, header.index, header[1].length, 'error', 'unsupported-engine-capability', `${catalog.name} requires the unavailable ${catalog.capabilityId} engine capability for this project target.`, 'Review the exact project engine target, or replace this controller deliberately. IKEMaker will not remove the controller, rewrite source, or switch engines automatically.'));
+        if (!entryAvailable(catalog,capabilities)) findings.push(issue(line, header.index, header[1].length, 'error', 'unsupported-engine-capability', `${catalog.name} requires the unavailable ${catalog.capabilityId || 'Nightly'} engine capability for this project target.`, 'Review the exact project engine target, or replace this controller deliberately. IKEMaker will not remove the controller, rewrite source, or switch engines automatically.'));
         break;
       }
     }

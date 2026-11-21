@@ -5,7 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { findGameRoot } = require('./ikemen_hub');
 const { chooseCharacterDef } = require('./character_picker');
-const { buildCharacterDependencyModel } = require('./character_dependency_model');
+const { readCharacterAssignments } = require('./character_dependency_model');
 const metadataRegistry = require('./metadata_registry');
 const projectContext = require('./project_context_model');
 const projectRegistry = require('./project_registry');
@@ -15,31 +15,29 @@ const { normalized, openContexts, currentContext, contextOwnsFile, disposeContex
 const KEY = 'ikemenZss.characterWorkbenches.v1';
 const WORKBENCH_COLUMNS = new Map();
 const SESSION_GENERATIONS = new Map();
-const SOURCE_EXTENSIONS = new Set(['.def', '.zss', '.cns', '.inp', '.cmd', '.lua', '.air', '.sff', '.act', '.snd', '.txt', '.md', '.json', '.csv']);
+const SOURCE_EXTENSIONS = new Set(['.def', '.zss', '.cns', '.st', '.inp', '.cmd', '.jnp', '.dat', '.lua', '.air', '.sff', '.act', '.snd', '.txt', '.md', '.json', '.csv']);
 const CATEGORIES = [
   ['Code', new Set(['.def', '.zss', '.cns', '.inp', '.cmd', '.lua'])], ['Animations', new Set(['.air'])], ['Sprites', new Set(['.sff'])],
-  ['Palettes', new Set(['.act'])], ['Sound', new Set(['.snd'])], ['Notes and Data', new Set(['.txt', '.md', '.json', '.csv'])], ['Other', new Set()]
+  ['Palettes', new Set(['.act'])], ['Sound', new Set(['.snd'])], ['Storyboards', new Set()], ['Notes and Data', new Set(['.txt', '.md', '.json', '.csv'])], ['Other', new Set()]
 ];
 const SESSION_OPTIONS = [
-  { id: 'essentials', label: 'Character essentials', description: 'Connected code, DEF, AIR text and preview, assigned sprites and sounds', picked: true },
   { id: 'connections', label: 'Character overview', description: 'Browse the character connection tree and assigned files' },
   { id: 'moves', label: 'Create or edit moves', description: 'Move Lab, command inputs, throws and effects' },
-  { id: 'editAnimation', label: 'Edit animations', description: 'AIR editor with the character’s sprites' },
-  { id: 'sprites', label: 'Edit sprites and palettes', description: 'SFF viewer with Quick Add and Palette Workshop' },
-  { id: 'sound', label: 'Edit sounds', description: 'Assigned and character-local sound archives' },
-  { id: 'source', label: 'Edit character code', description: 'Choose a connected source file' },
-  { section: 'Shortcuts' },
+  { id: 'source', label: 'Edit selected character code', description: 'Select specific connected source files' },
   { id: 'attacks', label: 'Adjust attack properties', description: 'Open attack settings in Move Lab' },
   { id: 'throws', label: 'Author a throw interaction', description: 'Open Throw Maker' },
-  { id: 'code', label: 'Open every connected code file', description: 'Open the grouped character sources' },
-  { section: 'Review' },
-  { id: 'animation', label: 'Repair animations or disappearing frames', description: 'AIR editor, sprites and Problems' },
   { id: 'health', label: 'Character health and cleanup', description: 'Find missing, malformed or conflicting character data' },
   { id: 'workflow', label: 'Workflow and QA', description: 'Production checklist, testing and signoff' }
 ];
 
 function activeFile() { return vscode.window.activeTextEditor && vscode.window.activeTextEditor.document.uri.scheme === 'file' ? vscode.window.activeTextEditor.document.fileName : null; }
-function load(context) { return context.workspaceState.get(KEY, []); }
+function load(context) {
+  // Older saves mixed a recursive folder manifest into files. Keep their known
+  // connections and manual additions, and let explicit browsing rediscover extras.
+  return context.workspaceState.get(KEY, []).map(profile => profile.inventoryVersion === 1 ? profile : {
+    ...profile, inventoryVersion: 1, files: profile.connectedFiles || [profile.defPath]
+  });
+}
 async function save(context, profiles) { await context.workspaceState.update(KEY, profiles); }
 
 function configuredExtensions(name) { return new Set((vscode.workspace.getConfiguration('ikemenZss').get(name, []) || []).map((item) => `.${String(item).replace(/^\./, '').toLowerCase()}`).filter((item) => item.length > 1)); }
@@ -60,16 +58,18 @@ function collectFiles(folder) {
 
 function assignmentRole(profile, filename) {
   const target = path.resolve(filename).toLowerCase();
-  for (const [key, files] of Object.entries(profile?.assignments || {})) if ((files || []).some((item) => path.resolve(item).toLowerCase() === target)) return key.toLowerCase();
+  for (const [key, files] of [...Object.entries(profile?.assignments || {}), ...Object.entries(profile?.nestedAssignments || {})]) if ((files || []).some((item) => path.resolve(item).toLowerCase() === target)) return key.toLowerCase();
   return '';
 }
 function categoryFor(filename, profile) {
   const role = assignmentRole(profile, filename);
-  if (role === 'sprite') return 'Sprites';
-  if (role === 'anim') return 'Animations';
+  if ((role === 'sprite' || role === 'sff')) return 'Sprites';
+  if ((role === 'anim' || role === 'air')) return 'Animations';
   if (role === 'sound' || role === 'snd') return 'Sound';
   if (/^pal\d*$/.test(role)) return 'Palettes';
-  if (role === 'cmd' || role === 'command' || role === 'cns' || role === 'constants' || role === 'common' || /^st\d*$/.test(role)) return 'Code';
+  if (role === 'cmd' || role === 'command' || role === 'cns' || role === 'constants' || role === 'common' || /^st(?:common|\d*)$/.test(role)) return 'Code';
+  if (role === 'ending.storyboard' || role === 'intro.storyboard') return 'Storyboards';
+  if (role) return 'Notes and Data';
   const ext = path.extname(filename).toLowerCase();
   if (configuredExtensions('additionalCodeExtensions').has(ext)) return 'Code';
   return (CATEGORIES.find(([, extensions]) => extensions.has(ext)) || ['Other'])[0];
@@ -82,12 +82,28 @@ function projectIdentity(defPath) {
   return { gameRoot, projectId: detected.project?.id || 'universal', projectName: detected.project?.name || 'Universal Template', registryPath };
 }
 function profileFromDef(defPath) {
-  const folder = path.dirname(defPath), name = path.basename(folder), dependency = buildCharacterDependencyModel(defPath), assignments = {};
-  for (const edge of dependency.edges.filter((item) => item.type === 'assignment' && item.from === dependency.root)) {
-    const match = /^\[Files\]\s+(.+)$/i.exec(edge.label); if (!match) continue;
-    const key = match[1].toLowerCase(); if (!assignments[key]) assignments[key] = []; assignments[key].push(edge.to);
+  const folder = path.dirname(defPath), name = path.basename(folder);
+  const { assignments, files } = readCharacterAssignments(defPath);
+  return { inventoryVersion: 1, id: folder.toLowerCase(), name, folder, defPath, ...projectIdentity(defPath), files, connectedFiles: files.filter(fs.existsSync), assignments, addedFiles: [] };
+}
+
+// Expand only explicitly assigned DEFs, after a code-oriented action is chosen.
+// Source contents and neighboring character folders are never searched here.
+function expandedAssignedProfile(profile) {
+  const files = new Set(allFiles(profile)), visited = new Set([normalized(profile.defPath)]), nestedAssignments = {};
+  const pending = [...files].filter(file => /\.def$/i.test(file));
+  while (pending.length) {
+    const def = pending.shift(), key = normalized(def);
+    if (visited.has(key)) continue;
+    visited.add(key);
+    const inventory = readCharacterAssignments(def);
+    for (const [role, assignedFiles] of Object.entries(inventory.assignments)) nestedAssignments[role] = [...(nestedAssignments[role] || []), ...assignedFiles];
+    for (const file of inventory.files) {
+      files.add(file);
+      if (/\.def$/i.test(file) && !visited.has(normalized(file))) pending.push(file);
+    }
   }
-  return { id: folder.toLowerCase(), name, folder, defPath, ...projectIdentity(defPath), files: collectFiles(folder), connectedFiles: dependency.nodes.filter((node) => node.exists).map((node) => node.filename), assignments, addedFiles: [] };
+  return { ...profile, connectedFiles: [...files], nestedAssignments };
 }
 
 class Item extends vscode.TreeItem {
@@ -100,8 +116,21 @@ class Provider {
   getTreeItem(item) { return item; }
   getChildren(item) {
     const profiles = load(this.context);
-    if (!item) return profiles.length ? profiles.map((profile) => { const identity = profile.projectName ? profile : projectIdentity(profile.defPath); const node = new Item(profile.name, vscode.TreeItemCollapsibleState.Collapsed, { profile, contextValue: 'ikemenWorkbench' }); node.description = `${identity.projectName} · ${new Set([...(profile.files || []), ...(profile.addedFiles || [])]).size} files`; node.tooltip = `Game profile: ${identity.projectName} (${identity.projectId})\nGame root: ${identity.gameRoot || 'Not detected'}\nCharacter DEF: ${profile.defPath}`; node.iconPath = new vscode.ThemeIcon('window'); return node; }) : [new Item('Create from a character DEF…', vscode.TreeItemCollapsibleState.None, { command: { command: 'ikemen.workbench.create', title: 'Create Character Workbench' }, iconPath: new vscode.ThemeIcon('add') })];
-    if (item.profile && !item.category) { const workflow = new Item('Production Workflow', vscode.TreeItemCollapsibleState.None, { profile: item.profile, contextValue: 'ikemenWorkbenchWorkflow', command: { command: 'ikemen.productionWorkflow.open', title: 'Open Production Workflow', arguments: [vscode.Uri.file(item.profile.defPath)] } }); workflow.description = 'next tasks and team progress'; workflow.iconPath = new vscode.ThemeIcon('checklist'); const health = new Item('Character Health & Cleanup', vscode.TreeItemCollapsibleState.None, { profile: item.profile, contextValue: 'ikemenWorkbenchHealth', command: { command: 'ikemen.characterHealth.open', title: 'Open Character Health & Cleanup', arguments: [vscode.Uri.file(item.profile.defPath)] } }); health.description = 'audit first, repair with preview'; health.iconPath = new vscode.ThemeIcon('shield'); const connections = new Item('Character Connection Tree', vscode.TreeItemCollapsibleState.None, { profile: item.profile, contextValue: 'ikemenWorkbenchConnections', command: { command: 'ikemen.characterDependencies.open', title: 'Open Character Connection Tree', arguments: [vscode.Uri.file(item.profile.defPath)] } }); connections.description = 'files, functions, and states'; connections.iconPath = new vscode.ThemeIcon('type-hierarchy'); return [workflow, health, connections, ...CATEGORIES.map(([category]) => { const count = allFiles(item.profile).filter((file) => categoryFor(file, item.profile) === category).length; if (!count) return null; const node = new Item(category, vscode.TreeItemCollapsibleState.Collapsed, { profile: item.profile, category, contextValue: 'ikemenWorkbenchCategory' }); node.description = String(count); node.iconPath = new vscode.ThemeIcon({ Code: 'code', Animations: 'play', Sprites: 'symbol-color', Palettes: 'symbol-color', Sound: 'unmute', 'Notes and Data': 'note' }[category]); return node; }).filter(Boolean)]; }
+    if (!item) return profiles.length ? profiles.map((profile) => { const identity = profile.projectName ? profile : projectIdentity(profile.defPath); const node = new Item(profile.name, vscode.TreeItemCollapsibleState.Collapsed, { profile, contextValue: 'ikemenWorkbench' }); node.description = `${identity.projectName} · ${allFiles(profile).length} files`; node.tooltip = `Game profile: ${identity.projectName} (${identity.projectId})\nGame root: ${identity.gameRoot || 'Not detected'}\nCharacter DEF: ${profile.defPath}`; node.iconPath = new vscode.ThemeIcon('window'); return node; }) : [new Item('Create from a character DEF…', vscode.TreeItemCollapsibleState.None, { command: { command: 'ikemen.workbench.create', title: 'Create Character Workbench' }, iconPath: new vscode.ThemeIcon('add') })];
+    if (item.profile && !item.category) {
+      if (item.profile.defPath && fs.existsSync(item.profile.defPath)) {
+        const inventory = readCharacterAssignments(item.profile.defPath);
+        item = { ...item, profile:{...item.profile, assignments:inventory.assignments, files:inventory.files,
+          connectedFiles:inventory.files.filter(fs.existsSync)} };
+      }
+      const counts = new Map();
+      for (const file of allFiles(item.profile)) {
+        const category = categoryFor(file, item.profile);
+        counts.set(category, (counts.get(category) || 0) + 1);
+      }
+      const workflow = new Item('Production Workflow', vscode.TreeItemCollapsibleState.None, { profile: item.profile, contextValue: 'ikemenWorkbenchWorkflow', command: { command: 'ikemen.productionWorkflow.open', title: 'Open Production Workflow', arguments: [vscode.Uri.file(item.profile.defPath)] } }); workflow.description = 'next tasks and team progress'; workflow.iconPath = new vscode.ThemeIcon('checklist'); const health = new Item('Character Health & Cleanup', vscode.TreeItemCollapsibleState.None, { profile: item.profile, contextValue: 'ikemenWorkbenchHealth', command: { command: 'ikemen.characterHealth.open', title: 'Open Character Health & Cleanup', arguments: [vscode.Uri.file(item.profile.defPath)] } }); health.description = 'audit first, repair with preview'; health.iconPath = new vscode.ThemeIcon('shield'); const connections = new Item('Character Connection Tree', vscode.TreeItemCollapsibleState.None, { profile: item.profile, contextValue: 'ikemenWorkbenchConnections', command: { command: 'ikemen.characterDependencies.open', title: 'Open Character Connection Tree', arguments: [vscode.Uri.file(item.profile.defPath)] } }); connections.description = 'files, functions, and states'; connections.iconPath = new vscode.ThemeIcon('type-hierarchy'); const browse = new Item('Browse unassigned character files', vscode.TreeItemCollapsibleState.Collapsed, { profile: item.profile, category: '__unassigned', contextValue: 'ikemenWorkbenchUnassigned' }); browse.iconPath = new vscode.ThemeIcon('folder-opened'); return [workflow, health, connections, browse, ...CATEGORIES.map(([category]) => { const count = counts.get(category); if (!count) return null; const node = new Item(category, vscode.TreeItemCollapsibleState.Collapsed, { profile: item.profile, category, contextValue: 'ikemenWorkbenchCategory' }); node.description = String(count); node.iconPath = new vscode.ThemeIcon({ Code: 'code', Animations: 'play', Sprites: 'symbol-color', Palettes: 'symbol-color', Sound: 'unmute', 'Notes and Data': 'note' }[category]); return node; }).filter(Boolean)]; }
+    if (item.profile && item.category === '__unassigned') { const known = new Set(allFiles(expandedAssignedProfile(item.profile)).map(normalized)); return collectFiles(item.profile.folder).filter(file => !known.has(normalized(file))).map(file => { const node = new Item(path.relative(item.profile.folder, file), vscode.TreeItemCollapsibleState.None, { profile: item.profile, file, contextValue: 'ikemenWorkbenchFile', command: { command: 'ikemen.workbench.openFile', title: 'Open Workbench File', arguments: [item.profile, file] } }); node.resourceUri = vscode.Uri.file(file); return node; }); }
+    if (item.profile && item.category === 'Code') item = { ...item, profile: expandedAssignedProfile(item.profile) };
     if (item.profile && item.category) return allFiles(item.profile).filter((file) => categoryFor(file, item.profile) === item.category).map((file) => { const node = new Item(path.relative(item.profile.folder, file), vscode.TreeItemCollapsibleState.None, { profile: item.profile, file, contextValue: 'ikemenWorkbenchFile', command: { command: 'ikemen.workbench.openFile', title: 'Open Workbench File', arguments: [item.profile, file] } }); node.tooltip = file; node.resourceUri = vscode.Uri.file(file); return node; });
     return [];
   }
@@ -112,7 +141,7 @@ function assigned(profile, key) { return (profile.assignments?.[key] || []).filt
 function refreshedProfile(profile) {
   if (!profile?.defPath || !fs.existsSync(profile.defPath)) return profile;
   const refreshed = profileFromDef(profile.defPath);
-  return { ...refreshed, addedFiles: profile.addedFiles || [], lastSession: profile.lastSession || [] };
+  return { ...refreshed, addedFiles: profile.addedFiles || [], lastSession: profile.lastSession || [], lastOpenMode: profile.lastOpenMode };
 }
 function targetColumn() { return vscode.window.activeTextEditor && vscode.window.activeTextEditor.viewColumn || vscode.window.tabGroups?.activeTabGroup?.viewColumn || vscode.ViewColumn.One; }
 function sharedWorkbenchColumn() { return [...WORKBENCH_COLUMNS.values()].find((column) => Number.isInteger(column) && column > 0) || 0; }
@@ -128,7 +157,7 @@ function groupedCodeFiles(profile, candidates) {
       if (normalized(lexical) !== normalized(canonical) || !fs.statSync(canonical).isFile()) continue;
     } catch (_) { continue; }
     const ext = path.extname(canonical).toLowerCase();
-    if (!supported.has(ext) && !(ext === '.txt' && configured.has(ext)) && !configured.has(ext)) continue;
+    if (!supported.has(ext) && !configured.has(ext) && !['Code','Animations'].includes(categoryFor(canonical, profile))) continue;
     const identity = normalized(canonical); if (seen.has(identity)) continue;
     seen.add(identity); result.push(canonical);
   }
@@ -147,16 +176,26 @@ async function openGroupedCode(profile, candidates, taskId = 'character-essentia
 
 async function openFile(profile, filename, column, assetColumn = 0) {
   column = column || WORKBENCH_COLUMNS.get(profile.id) || targetColumn();
-  const ext = path.extname(filename).toLowerCase();
+  const category = categoryFor(filename, profile);
   // Character startup is deliberately single-group. Users can detach an active
   // viewer afterwards from the universal More menu when a larger display makes
   // a second native window useful.
   const viewerColumn = assetColumn || column;
-  if (ext === '.sff') return vscode.commands.executeCommand('sff.openViewer', vscode.Uri.file(filename), viewerColumn, undefined, { ownerDef: profile.defPath });
-  if (ext === '.snd') return vscode.commands.executeCommand('snd.openViewer', vscode.Uri.file(filename), viewerColumn, undefined, undefined, { ownerDef: profile.defPath });
-  if (ext === '.act') return vscode.commands.executeCommand('revealFileInOS', vscode.Uri.file(filename));
-  const document = await vscode.workspace.openTextDocument(vscode.Uri.file(filename));
+  if (category === 'Animations') return vscode.commands.executeCommand('air.openAnimationPreview', vscode.Uri.file(filename), { viewerColumn, sourceColumn: column, ownerDef: profile.defPath });
+  if (category === 'Sprites') return vscode.commands.executeCommand('sff.openViewer', vscode.Uri.file(filename), viewerColumn, undefined, { ownerDef: profile.defPath });
+  if (category === 'Sound') return vscode.commands.executeCommand('snd.openViewer', vscode.Uri.file(filename), viewerColumn, undefined, undefined, { ownerDef: profile.defPath });
+  if (category === 'Storyboards') return vscode.commands.executeCommand('ikemen.storyboard.open', vscode.Uri.file(filename));
+  if (category === 'Palettes') return vscode.commands.executeCommand('ikemen.palette.openWorkspace', vscode.Uri.file(filename), { assignedAct: true });
+  let document = await vscode.workspace.openTextDocument(vscode.Uri.file(filename));
+  if (category === 'Code' && assignmentRole(profile, filename)) {
+    const language = /\.zss$/i.test(filename) ? 'zss' : 'ikemen-cns';
+    if (document.languageId !== language) document = await vscode.languages.setTextDocumentLanguage(document, language);
+  }
   rememberCodeFile(filename, column);
+  if (assignmentRole(profile, filename)) {
+    await vscode.commands.executeCommand('vscode.openWith', document.uri, 'default', { viewColumn: column, preview: false });
+    return vscode.window.visibleTextEditors.find(editor => editor.document.uri.toString() === document.uri.toString());
+  }
   return vscode.window.showTextDocument(document, { viewColumn: column, preview: false, preserveFocus: false });
 }
 
@@ -170,7 +209,7 @@ function coreFiles(profile) {
 }
 
 async function openWorkbench(profile, allCode = false) {
-  profile = refreshedProfile(profile);
+  profile = expandedAssignedProfile(refreshedProfile(profile));
   const previousColumn = sharedWorkbenchColumn(), column = previousColumn || targetColumn();
   let assetColumn = column;
   const openInSession = async (filename) => {
@@ -180,13 +219,13 @@ async function openWorkbench(profile, allCode = false) {
     return opened;
   };
   WORKBENCH_COLUMNS.set(profile.id, column);
-  const files = allCode ? allFiles(profile).filter((file) => categoryFor(file, profile) === 'Code' || path.extname(file).toLowerCase() === '.air') : coreFiles(profile);
+  const files = allCode ? allFiles(profile).filter((file) => categoryFor(file, profile) === 'Code' || categoryFor(file, profile) === 'Animations') : coreFiles(profile);
   if (!files.length) return vscode.window.showWarningMessage(`${profile.name} has no available workbench files.`);
-  const sourceFiles = files.filter((file) => !['.sff', '.snd', '.act'].includes(path.extname(file).toLowerCase()));
+  const sourceFiles = files.filter((file) => !['Sprites', 'Sound', 'Palettes'].includes(categoryFor(file, profile)));
   const grouped = await openGroupedCode(profile, sourceFiles, allCode ? 'character-all-code' : 'character-workbench');
   const groupedColumn = grouped?.assetViewColumn || grouped?.viewColumn;
   if (Number.isInteger(groupedColumn) && groupedColumn > 0) assetColumn = groupedColumn;
-  for (const file of files.filter((file) => ['.sff', '.snd', '.act'].includes(path.extname(file).toLowerCase()))) await openInSession(file);
+  for (const file of files.filter((file) => ['Sprites', 'Sound', 'Palettes'].includes(categoryFor(file, profile)))) await openInSession(file);
   // The DEF's [Files] sprite assignment is the character's archive authority.
   // Never let a discovered common/FX archive replace it merely because that
   // file happened to sort first in the dependency graph.
@@ -198,96 +237,96 @@ async function openWorkbench(profile, allCode = false) {
 }
 
 async function chooseSessionOptions(profile) {
-  const remembered = new Set(profile.lastSession || []), hasRemembered = remembered.size > 0;
-  const picked = await vscode.window.showQuickPick(SESSION_OPTIONS.map((item) => item.section ? { label: item.section, kind: vscode.QuickPickItemKind.Separator } : ({
-    label: item.label, description: item.description, id: item.id,
-    picked: hasRemembered ? remembered.has(item.id) : Boolean(item.picked)
+  const { OPEN_MODES, chooseOpenMode } = require('./entity_open_modes');
+  const focused = { id: 'focused-tasks', label: 'Choose focused character tasks…', description: 'Moves, selected code, health, or QA' };
+  const previous = OPEN_MODES.find(item => item.id === profile.lastOpenMode);
+  const modes = previous ? [previous, ...OPEN_MODES.filter(item => item !== previous), focused] : [...OPEN_MODES, focused];
+  const mode = await chooseOpenMode(vscode, profile.name, modes);
+  if (!mode) return;
+  if (mode !== focused.id) return [mode];
+  const remembered = new Set(profile.lastSession || []);
+  const picked = await vscode.window.showQuickPick(SESSION_OPTIONS.map(item => ({
+    ...item, picked: remembered.has(item.id)
   })), {
-    title: `${profile.name} — Choose what to work on`,
-    placeHolder: 'Select one or more focused workspaces. Your choices are remembered for this character.',
+    title: profile.name + ' — Focused character tasks',
+    placeHolder: 'Select one or more tasks',
     canPickMany: true,
     matchOnDescription: true
   });
-  return picked && picked.map((item) => item.id);
+  return picked?.map(item => item.id);
 }
 
-async function openCharacterSession(profile, context, provider) {
+async function openCharacterMode(profile, mode, cancelled) {
+  const opening = require('./entity_open_modes');
+  const owner = { ...opening.entityContext('character', profile.defPath, profile.name), key: profile.folder, ownerDef: profile.defPath };
+  const column = sharedWorkbenchColumn() || targetColumn();
+  WORKBENCH_COLUMNS.set(profile.id, column);
+  const resources = opening.characterResources(profile.defPath, {
+    assignments: profile.assignments,
+    addedFiles: profile.addedFiles,
+    readAssignments: readCharacterAssignments,
+    readText: file => opening.readResourceText(vscode, file)
+  });
+  if (mode === opening.VIEWERS_ONLY) {
+    const opened = await opening.openConnectedViewers(vscode, resources, { column, cancelled });
+    if (!opened && !cancelled()) vscode.window.showWarningMessage('No connected viewers are available for this character.');
+    return opened;
+  }
+  return opening.openConnectedText(vscode, mode, owner, resources, {
+    column, cancelled,
+    async prepareDocument(document, { filename, role }) {
+      if (!/^(?:cmd|command|cns|constants|common|st(?:common|\d*))$/i.test(role || '')) return document;
+      const extension = path.extname(filename).toLowerCase();
+      if (extension === '.def' || extension === '.lua') return document;
+      if (['zss', 'ikemen-cns'].includes(document.languageId)) return document;
+      const zss = extension === '.zss' || require('./assigned_state_text_dialect').malformedAssignedCnsText(document.getText());
+      return vscode.languages.setTextDocumentLanguage(document, zss ? 'zss' : 'ikemen-cns');
+    }
+  });
+}
+
+async function openCharacterSession(profile, context, provider, textOnly = false) {
   profile = refreshedProfile(profile);
   const sessionKey=normalized(profile.defPath||profile.folder),generation=SESSION_GENERATIONS.get(sessionKey)||0,cancelled=()=>generation!==(SESSION_GENERATIONS.get(sessionKey)||0)||Boolean(profile.defPath&&typeof isClosingOwner==='function'&&isClosingOwner(profile.defPath));
-  const choices = await chooseSessionOptions(profile); if (!choices?.length||cancelled()) return;
-  const selected = new Set(choices), previousColumn = sharedWorkbenchColumn(), column = previousColumn || targetColumn(), opened = new Set(); WORKBENCH_COLUMNS.set(profile.id, column);
-  let assetColumn = column;
-  const open = async (filename) => {
-    if (cancelled()||!filename || opened.has(filename.toLowerCase()) || !fs.existsSync(filename)) return;
-    opened.add(filename.toLowerCase());
-    const result = await openFile(profile, filename, column, assetColumn);
-    if(cancelled())return;
-    const resolved = result?.panel?.viewColumn || result?.viewColumn;
-    if (Number.isInteger(resolved) && resolved > 0) assetColumn = resolved;
-    return result;
-  };
-  const constants = assigned(profile, 'cns')[0], air = assigned(profile, 'anim')[0], sprite = assigned(profile, 'sprite')[0], sounds = assigned(profile, 'sound');
-  if (selected.has('essentials')) {
-    const sources = [profile.defPath, constants, air, ...(profile.connectedFiles || []).filter((filename) => categoryFor(filename, profile) === 'Code')];
-    const grouped = await openGroupedCode(profile, sources, 'character-essentials');
-    if(cancelled())return;
-    const groupedColumn = grouped?.assetViewColumn || grouped?.viewColumn;
-    if (Number.isInteger(groupedColumn) && groupedColumn > 0) assetColumn = groupedColumn;
-    for (const file of groupedCodeFiles(profile, sources)) opened.add(normalized(file));
-    await open(sprite); for (const sound of sounds) await open(sound);
+  const choices = textOnly ? ['source'] : await chooseSessionOptions(profile); if (!choices?.length||cancelled()) return;
+  const mode = choices.find(choice => choice.startsWith('connected-'));
+  if (mode) {
+    const opened = await openCharacterMode(profile, mode, cancelled);
+    if (opened && !cancelled()) {
+      const profiles = load(context).map(entry => entry.id === profile.id ? { ...profile, lastOpenMode: mode } : entry);
+      await save(context, profiles);
+      provider.refresh();
+    }
+    return opened;
   }
-  if (selected.has('sprites') || selected.has('editAnimation')) {
-    if (sprite && fs.existsSync(sprite)) await open(sprite);
-    else vscode.window.showWarningMessage('Assign a sprite archive in the character DEF to open its sprites and palettes.');
-    if(cancelled())return;
-  }
-  if (selected.has('animation')) {
-    await open(sprite); await open(air);
-    await vscode.commands.executeCommand('workbench.actions.view.problems');
-    if(cancelled())return;
-  }
-  if ((selected.has('essentials') || selected.has('animation') || selected.has('editAnimation')) && air && fs.existsSync(air)) {
-    const result = await vscode.commands.executeCommand('air.openAnimationPreview', vscode.Uri.file(air), { preserveFocus: true, sourceColumn: column, viewerColumn: assetColumn, ownerDef: profile.defPath });
-    if(cancelled())return;
-    const resolved = result?.panel?.viewColumn || result?.viewColumn;
-    if (Number.isInteger(resolved) && resolved > 0) assetColumn = resolved;
-  }
-  if (selected.has('editAnimation') && (!air || !fs.existsSync(air))) vscode.window.showWarningMessage('Assign an AIR file in the character DEF to edit its animations.');
+  const selected = new Set(choices), column = sharedWorkbenchColumn() || targetColumn();
+  if (selected.has('source')) profile = expandedAssignedProfile(profile);
+  WORKBENCH_COLUMNS.set(profile.id, column);
   if (selected.has('moves') && !selected.has('attacks')) {
     await vscode.commands.executeCommand('ikemen.moveLab.open', vscode.Uri.file(profile.defPath));
     if(cancelled())return;
   }
   if (selected.has('attacks')) {
-    await open(constants);
+    const constants = assigned(profile, 'cns')[0];
+    if (constants && !cancelled()) await openFile(profile, constants, column);
+    if (cancelled()) return;
     await vscode.commands.executeCommand('ikemen.moveLab.open', vscode.Uri.file(profile.defPath), { preset: true, reference: { defPath: profile.defPath, mode: 'attack' } });
     if(cancelled())return;
   }
   if (selected.has('throws')) {
-    await open(air); await open(sprite);
     await vscode.commands.executeCommand('ikemen.throwCreator.open', vscode.Uri.file(profile.defPath));
     if(cancelled())return;
   }
-  if (selected.has('sound')) {
-    const localSounds = allFiles(profile).filter((file) => path.extname(file).toLowerCase() === '.snd');
-    for (const sound of [...sounds, ...localSounds]) await open(sound);
-    if(cancelled())return;
-  }
-  if (selected.has('source') && !selected.has('code')) {
-    const files = groupedCodeFiles(profile, [profile.defPath, ...(profile.connectedFiles || []).filter(file => categoryFor(file, profile) === 'Code')]);
+  if (selected.has('source')) {
+    const files = groupedCodeFiles(profile, [profile.defPath, ...allFiles(profile).filter(file => categoryFor(file, profile) === 'Code')]);
     const file = await vscode.window.showQuickPick(files.map(filename => ({
       label: path.basename(filename), description: path.relative(profile.folder, filename), filename
-    })), { title: profile.name + ' — Edit character code', matchOnDescription: true });
+    })), { title: profile.name + ' — Edit character code', canPickMany: true, matchOnDescription: true });
     if(cancelled())return;
-    if (file) await openFile(profile, file.filename, column, assetColumn);
+    if (!file?.length && selected.size === 1) return;
+    if (file?.length === 1) await openFile(profile, file[0].filename, column);
+    else if (file?.length > 1) await openGroupedCode(profile, file.map(item => item.filename), 'character-selected-code');
     if(cancelled())return;
-  }
-  if (selected.has('code') && !selected.has('essentials')) {
-    const sources = (profile.connectedFiles || []).filter((filename) => categoryFor(filename, profile) === 'Code');
-    const grouped = await openGroupedCode(profile, sources, 'character-all-code');
-    if(cancelled())return;
-    const groupedColumn = grouped?.assetViewColumn || grouped?.viewColumn;
-    if (Number.isInteger(groupedColumn) && groupedColumn > 0) assetColumn = groupedColumn;
-    for (const file of groupedCodeFiles(profile, sources)) opened.add(normalized(file));
   }
   if (selected.has('connections')) await vscode.commands.executeCommand('ikemen.characterDependencies.open', vscode.Uri.file(profile.defPath));
   if(cancelled())return;
@@ -295,7 +334,11 @@ async function openCharacterSession(profile, context, provider) {
   if(cancelled())return;
   if (selected.has('workflow')) await vscode.commands.executeCommand('ikemen.productionWorkflow.open', vscode.Uri.file(profile.defPath));
   if(cancelled())return;
-  const profiles = load(context).map((entry) => entry.id === profile.id ? { ...profile, lastSession: choices } : entry); await save(context, profiles); provider.refresh();
+  if (!textOnly) {
+    const profiles = load(context).map(entry => entry.id === profile.id ? { ...profile, lastSession: choices } : entry);
+    await save(context, profiles);
+    provider.refresh();
+  }
   vscode.window.showInformationMessage(`${profile.name} session opened: ${choices.map((id) => SESSION_OPTIONS.find((item) => item.id === id)?.label).filter(Boolean).join(', ')}.`);
 }
 
@@ -314,7 +357,7 @@ function characterContext(profile) {
 }
 
 function refreshedCharacterContext(profile) {
-  return characterContext(refreshedProfile(profile));
+  return characterContext(expandedAssignedProfile(refreshedProfile(profile)));
 }
 
 async function chooseCloseContext(context, requestedType = '') {
@@ -330,7 +373,7 @@ async function chooseCloseContext(context, requestedType = '') {
   }
   const active = activeFile(), activeFolder = active && characterFolder(active);
   if ((!requestedType || requestedType === 'character') && active) {
-    const refreshed = profiles.map(refreshedProfile);
+    const refreshed = profiles.map(profile => expandedAssignedProfile(refreshedProfile(profile)));
     const owners = refreshed.filter((profile) => allFiles(profile).some((filename) => normalized(filename) === normalized(active)));
     if (owners.length === 1) return characterContext(owners[0]);
     if (owners.length > 1) {
@@ -494,11 +537,11 @@ async function closeAuthoringContext(context, requestedType = '', provided = nul
 function registerCharacterWorkbenches(context) {
   const provider = new Provider(context);
   context.subscriptions.push(configureCharacterCodeSync(vscode));
-  const registerDef = async (value) => {
+  const registerDef = async (value, textOnly = false) => {
     const defPath = value && value.fsPath ? value.fsPath : value;
     if (!defPath || !fs.existsSync(defPath)) return;
-    const previous = load(context).find((item) => item.id === path.dirname(defPath).toLowerCase()), profile = { ...profileFromDef(defPath), addedFiles: previous?.addedFiles || [], lastSession: previous?.lastSession || [] }, profiles = load(context).filter((item) => item.id !== profile.id);
-    profiles.push(profile); await save(context, profiles); provider.refresh(); await openCharacterSession(profile, context, provider);
+    const previous = load(context).find((item) => item.id === path.dirname(defPath).toLowerCase()), profile = { ...profileFromDef(defPath), addedFiles: previous?.addedFiles || [], lastSession: previous?.lastSession || [], lastOpenMode: previous?.lastOpenMode }, profiles = load(context).filter((item) => item.id !== profile.id);
+    profiles.push(profile); await save(context, profiles); provider.refresh(); await openCharacterSession(profile, context, provider, textOnly);
   };
   const chooseAndOpen = async (title = 'Open Character') => { const defPath = await chooseCharacterDef(undefined, { title }); if (defPath) await registerDef(defPath); };
   context.subscriptions.push(
@@ -510,9 +553,15 @@ function registerCharacterWorkbenches(context) {
     vscode.commands.registerCommand('ikemen.workbench.create', () => chooseAndOpen('Create Character Workbench')),
     vscode.commands.registerCommand('ikemen.workbench.registerDef', registerDef),
     vscode.commands.registerCommand('ikemen.workbench.open', (item) => openCharacterSession(item.profile || item, context, provider)),
+    vscode.commands.registerCommand('ikemen.workbench.openTextOnly', async item => {
+      const profile = item?.profile || item;
+      if (profile?.defPath) return openCharacterSession(profile, context, provider, true);
+      const def = await chooseCharacterDef(undefined, { title: 'Open character text files' });
+      if (def) return registerDef(def, true);
+    }),
     vscode.commands.registerCommand('ikemen.workbench.openAllCode', (item) => openWorkbench(item.profile || item, true)),
     vscode.commands.registerCommand('ikemen.workbench.openFile', (profile, file) => openFile(profile, file)),
-    vscode.commands.registerCommand('ikemen.workbench.refresh', async (item) => { const wanted = item && (item.profile || item); const profiles = load(context).map((profile) => { if (wanted && profile.id !== wanted.id) return profile; const refreshed = profileFromDef(profile.defPath); return { ...refreshed, addedFiles: profile.addedFiles || [], lastSession: profile.lastSession || [] }; }); await save(context, profiles); provider.refresh(); }),
+    vscode.commands.registerCommand('ikemen.workbench.refresh', async (item) => { const wanted = item && (item.profile || item); const profiles = load(context).map((profile) => { if (wanted && profile.id !== wanted.id) return profile; const refreshed = profileFromDef(profile.defPath); return { ...refreshed, addedFiles: profile.addedFiles || [], lastSession: profile.lastSession || [], lastOpenMode: profile.lastOpenMode }; }); await save(context, profiles); provider.refresh(); }),
     vscode.commands.registerCommand('ikemen.workbench.addCurrentFile', async (item) => { const profile = item.profile || item, file = activeFile(); if (!file) return; const profiles = load(context).map((entry) => entry.id === profile.id ? { ...entry, addedFiles: [...new Set([...(entry.addedFiles || []), file])] } : entry); await save(context, profiles); provider.refresh(); }),
     vscode.commands.registerCommand('ikemen.workbench.remove', async (item) => { const profile = item.profile || item, answer = await vscode.window.showWarningMessage(`Remove the saved “${profile.name}” workbench? No project files will be deleted.`, { modal: true }, 'Remove Workbench'); if (answer !== 'Remove Workbench') return; await save(context, load(context).filter((entry) => entry.id !== profile.id)); provider.refresh(); })
   );

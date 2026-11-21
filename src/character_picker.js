@@ -7,8 +7,8 @@ const { parseDef, sections, value } = require('./def_model');
 const { gameRoot, characterDefs } = require('./character_context');
 const { chooseFileOrFolder, chooseFromFolder } = require('./open_target_picker');
 
-function isCharacterDef(filename) {
-  try { const document = parseDef(fs.readFileSync(filename, 'utf8'), filename), files = sections(document, 'Files')[0]; return Boolean(files && (value(files, 'sprite') || value(files, 'anim') || value(files, 'cns') || value(files, 'st'))); } catch (_) { return false; }
+function isCharacterDef(filename, parsedDocument) {
+  try { const document = parsedDocument || parseDef(fs.readFileSync(filename, 'utf8'), filename), files = sections(document, 'Files')[0]; return Boolean(files && (value(files, 'sprite') || value(files, 'sff') || value(files, 'anim') || value(files, 'air') || value(files, 'cns') || value(files, 'st'))); } catch (_) { return false; }
 }
 function nearestCharacterDef(filename) {
   if (!filename) return '';

@@ -169,10 +169,10 @@ function motifPreview(motifFile) {
   } catch (error) { return { state: 'warning', detail: error.message, motifFile }; }
 }
 
-function rosterPreview(selectFile, model, motif) {
+function rosterPreview(selectFile, model, motif, options = {}) {
   const cells = rosterCells(model), portraitSpec = motif.portraitSpec || { sprite: [9000, 0], offset: [0, 0], scale: [1, 1] };
   const portraits = {}, largePortraits = {}, stagePortraits = {};
-  for (const cell of cells) {
+  for (const cell of cells.filter(cell => !options.cellIds || options.cellIds.includes(cell.id))) {
     const entry = cell.members[0];
     const portrait = portraitFor(selectFile, entry, portraitSpec);
     if (portrait.state === 'ready') {
@@ -186,7 +186,7 @@ function rosterPreview(selectFile, model, motif) {
       largePortraits[cell.id] = { p1, p2 };
     }
   }
-  for (const entry of model.stages) stagePortraits[String(entry.line)] = stagePortraitFor(selectFile, entry, motif.stagePortraitSpec);
+  for (const entry of model.stages.filter(entry => !options.stageLines || options.stageLines.includes(entry.line))) stagePortraits[String(entry.line)] = stagePortraitFor(selectFile, entry, motif.stagePortraitSpec);
   return { cells, portraits, largePortraits, stagePortraits };
 }
 

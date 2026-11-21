@@ -35,29 +35,36 @@ async function openOfflineLibrary(vscode, context) {
   await vscode.window.showTextDocument(document, { preview: false });
 }
 
-async function updateOfflineLibrary(vscode, context) {
+async function updateOfflineLibrary(vscode, context, refreshCodingCatalogs) {
   const choice = await vscode.window.showInformationMessage('Download current official wiki and IKEMEN 1.0 documentation into VS Code offline storage? Existing downloaded copies will be replaced; project files are untouched.', { modal: true }, 'Update Library');
   if (choice !== 'Update Library') return;
   const directory = path.dirname(manifestPath(context)); await fs.promises.mkdir(directory, { recursive: true });
   const previous = readManifest(context);
   const manifest = { updatedAt: new Date().toISOString(), sources: {} };
+  const codingSources = {};
   await vscode.window.withProgress({ location: vscode.ProgressLocation.Notification, title: 'Updating IKEMEN offline documentation', cancellable: false }, async (progress) => {
     for (let index = 0; index < OFFLINE_SOURCES.length; index += 1) {
       const source = OFFLINE_SOURCES[index]; progress.report({ message: source.label, increment: 100 / OFFLINE_SOURCES.length });
-      try { const text = await fetchText(source.url); transactionalWrite(fs, path.join(directory, source.filename), text, {label:'update-offline-document',backup:false,journal:false}); manifest.sources[source.id] = { ok: true, url: source.url, bytes: Buffer.byteLength(text), updatedAt:manifest.updatedAt }; }
+      try { const text = await fetchText(source.url);
+        transactionalWrite(fs, path.join(directory, source.filename), text, {label:'update-offline-document',backup:false,journal:false});
+        if (source.id === 'merged-sctrl') codingSources.sctrl = { text };
+        if (source.id === 'merged-redirections') codingSources.redirections = { text };
+        if (source.id === 'merged-triggers') codingSources.triggers = { text };
+        manifest.sources[source.id] = { ok: true, url: source.url, bytes: Buffer.byteLength(text), updatedAt:manifest.updatedAt }; }
       catch (error) { const last = previous.sources?.[source.id]; manifest.sources[source.id] = last?.ok && fs.existsSync(path.join(directory, source.filename)) ? {...last,stale:true,error:error.message,lastAttempt:manifest.updatedAt} : { ok: false, url: source.url, error: error.message }; }
     }
   });
   transactionalWrite(fs, manifestPath(context), `${JSON.stringify(manifest, null, 2)}\n`, {label:'update-offline-manifest',backup:false,journal:false});
+  if (refreshCodingCatalogs && Object.keys(codingSources).length) await refreshCodingCatalogs(codingSources);
   const successful = Object.values(manifest.sources).filter((item) => item.ok && !item.stale).length;
   vscode.window.showInformationMessage(`Offline documentation updated: ${successful}/${OFFLINE_SOURCES.length} sources downloaded.`);
   return openOfflineLibrary(vscode, context);
 }
 
-function registerOfflineDocs(vscode, context) {
+function registerOfflineDocs(vscode, context, refreshCodingCatalogs) {
   context.subscriptions.push(
     vscode.commands.registerCommand('ikemen.docs.openOffline', () => openOfflineLibrary(vscode, context)),
-    vscode.commands.registerCommand('ikemen.docs.updateOffline', () => updateOfflineLibrary(vscode, context))
+    vscode.commands.registerCommand('ikemen.docs.updateOffline', () => updateOfflineLibrary(vscode, context, refreshCodingCatalogs))
   );
 }
 

@@ -34,8 +34,8 @@ function paletteSource(filename) {
   return { filename: path.resolve(filename), name: path.basename(filename), kind: png ? 'Indexed PNG' : 'ACT', colors, byteHash: hash(data) };
 }
 
-function characterSff(defPath) {
-  const document = parseDef(fs.readFileSync(defPath, 'utf8'), defPath), files = sections(document, 'files')[0];
+function characterSff(defPath, parsedDocument) {
+  const document = parsedDocument || parseDef(fs.readFileSync(defPath, 'utf8'), defPath), files = sections(document, 'files')[0];
   const reference = unquote(value(files, 'sprite') || value(files, 'sff'));
   if (!reference) throw new Error('The character DEF does not assign a sprite/SFF file.');
   const filename = path.resolve(path.dirname(defPath), reference.replace(/[\\/]/g, path.sep));

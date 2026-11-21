@@ -48,6 +48,40 @@ function isLayerOneCandidate(record, base) {
   return Boolean(layer && baseLayer && Number(layer[1]) === Number(baseLayer[1]) + 1);
 }
 
+function detectPsdLayerRoles(records) {
+  if(!Array.isArray(records)||!records.some(r=>r.index===0))throw Error('PSD composite page 0 is required.');
+  const pages=records.filter(r=>r.index!==0),backgrounds=pages.filter(r=>/^(?:(?:solid[\s_.-]*)?(?:transparency|transparent)[\s_.-]*(?:background|bg)|(?:solid[\s_.-]*)?(?:background|bg)(?:[\s_.-]*(?:color|colour|transparency|key))?)$/i.test(r.name.trim()));
+  if(backgrounds.length>1)throw Error('This PSD has multiple transparency background pages.');
+  const candidates=pages.filter(r=>!backgrounds.includes(r)&&!/^(?:frame|timeline)[\s_.-]*\d+|^(?:reference|guide)(?:\b|[_.-])/i.test(r.name));
+  const explicit=candidates.filter(r=>/(?:^|[\s_.-])(?:base|body)(?:$|[\s_.-])/i.test(r.name));
+  if(explicit.length>1)throw Error('This PSD has multiple base/body pages.');
+  const numeric=r=>/^layer[\s_.-]*(\d+)$/i.exec(r?.name.trim()||'');
+  const numbered=candidates.filter(numeric).sort((a,b)=>Number(numeric(a)[1])-Number(numeric(b)[1]));
+  const base=explicit[0]||numbered[0]||candidates.find(r=>!/(?:beard|overlay|cosmetic|fx|effect|accessory|weapon|aura|glow)/i.test(r.name));
+  if(!base)throw Error('This PSD has no separate base artwork page.');
+  const baseNumber=numeric(base),slots=new Map(),ignored=[];
+  for(const record of pages){
+    if(record===base||backgrounds.includes(record))continue;
+    if(!candidates.includes(record)){ignored.push(record);continue;}
+    let slot=null;const number=numeric(record),label=/^(?:artwork|overlay|cosmetic)(?:[\s_.-]*layer)?[\s_.-]*(\d+)$/i.exec(record.name.trim());
+    if(number)slot=Number(number[1])-(baseNumber?Number(baseNumber[1]):0);
+    else if(label)slot=Number(label[1]);
+    else if(/^(?:beard|beard[\s_.-]*layer)$/i.test(record.name.trim()))slot=1;
+    if(slot===null){ignored.push(record);continue;}
+    if(slot<1||slot>4)throw Error('PSD artwork '+record.name+' is outside the four supported artwork slots.');
+    if(slots.has(slot))throw Error('This PSD has multiple pages for artwork Layer '+slot+'.');
+    slots.set(slot,record);
+  }
+  return {base,artwork:[...slots].sort((a,b)=>a[0]-b[0]).map(([slot,record])=>({slot,record})),background:backgrounds[0]||null,ignored};
+}
+
+function validateSolidBackground(pngBuffer) {
+  const {width,height,rgba}=require('./palette_index_organizer_model').decodePng(pngBuffer),color=[...rgba.subarray(0,4)];
+  if(color[3]!==255)throw Error('The optional transparency background must be one solid opaque color.');
+  for(let at=4;at<rgba.length;at+=4)for(let c=0;c<4;c++)if(rgba[at+c]!==color[c])throw Error('The optional transparency background must be one solid opaque color.');
+  return {width,height,color,transparencyKey:color.slice(0,3),pixelCount:width*height};
+}
+
 function planPsdExports(records, mode = 'composite') {
   if (!Array.isArray(records) || !records.length) throw new Error('PSD inspection records are required.');
   const canvas = records.find(record => record.index === 0), layers = records.filter(record => record.index !== 0);
@@ -58,7 +92,12 @@ function planPsdExports(records, mode = 'composite') {
   const overlays = authored.filter(record => record !== base && overlayPattern.test(record.name));
   const result = [];
   const add = (label, pages, role, sourceOrdinal) => result.push({ label, filename: `${String(result.length).padStart(5, '0')}_${safeLabel(label, `frame_${result.length}`)}.png`, pages, role, sourceOrdinal });
-  if (mode === 'composite') add('Composite', [canvas], 'composite', 0);
+  let roles=null;
+  if(mode==='base-and-optional-layers'){
+    roles=detectPsdLayerRoles(records);add(roles.base.name,[roles.base],'base',roles.base.index);
+    for(const {slot,record} of roles.artwork)add(record.name,[record],'layer-'+slot,record.index);
+  }
+  else if (mode === 'composite') add('Composite', [canvas], 'composite', 0);
   else if (mode === 'base') add(base.name, [base], 'base', base.index);
   else if (mode === 'layers') for (const layer of authored) add(layer.name, [layer], layer === base ? 'base' : 'layer', layer.index);
   else if (mode === 'base-and-layer1') {
@@ -79,7 +118,7 @@ function planPsdExports(records, mode = 'composite') {
     if (!timeline.length) throw new Error('No explicitly named timeline/frame pages were exposed by this PSD. Use Photoshop timeline export or another PSD mode.');
     for (const frame of timeline.sort((left, right) => left.index - right.index)) add(frame.name, [frame], 'timeline-frame', frame.index);
   } else throw new Error(`Unknown PSD intake mode ${mode}.`);
-  return { canvas: { width: canvas.width, height: canvas.height }, base, overlays, timeline, exports: result };
+  return { canvas: { width: canvas.width, height: canvas.height }, base:roles?.base||base, overlays, timeline, exports: result,...(roles?{background:roles.background,artwork:roles.artwork,ignored:roles.ignored}: {}) };
 }
 
 function inspectPsd(filename, executable = 'magick') {
@@ -120,4 +159,4 @@ function collectTimelineSequence(directory) {
   return frames;
 }
 
-module.exports = { parseIdentifyOutput, planPsdExports, inspectPsd, exportPsdPlan, collectTimelineSequence, safeLabel, isLayerOneCandidate };
+module.exports = { parseIdentifyOutput, planPsdExports, inspectPsd, exportPsdPlan, collectTimelineSequence, safeLabel, isLayerOneCandidate,detectPsdLayerRoles,validateSolidBackground };

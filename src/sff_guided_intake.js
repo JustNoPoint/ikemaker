@@ -1,7 +1,7 @@
 'use strict';
 const fs = require('fs'), os = require('os'), path = require('path'), crypto = require('crypto');
 const { extractGifSequence } = require('./sff_gif_intake');
-const { inspectPsd, exportPsdPlan } = require('./sff_psd_intake');
+const { inspectPsd, exportPsdPlan,detectPsdLayerRoles,validateSolidBackground } = require('./sff_psd_intake');
 const { decodePng } = require('./palette_index_organizer_model');
 const sha = bytes => crypto.createHash('sha256').update(bytes).digest('hex');
 const MAX_BYTES = 64 * 1024 * 1024, MAX_FRAMES = 4096, MAX_PIXELS = 268435456;
@@ -79,16 +79,23 @@ async function prepareGuidedSource(filename, api, options = {}) {
         const indexes = new Set(picked.map(item => item.layer.index)); selected = layers.filter(layer => indexes.has(layer.index));
       }
       if (mode.mode === 'layers' && options.psdMode) selected = layers;
+      let roles=null;
+      if(mode.mode==='layers')try{roles=detectPsdLayerRoles(inspection.records);}catch(_){/* Suggestions never block the explicit legacy raw-layer route. */}
       dimensions(canvas.width, canvas.height, selected.length);
       const plan = { canvas, rawLayerSnapshots: ['layers', 'raw-layers'].includes(options.psdMode), exports: selected.map((page, ordinal) => ({ label: page.name, filename: `page_${String(ordinal).padStart(5, '0')}.png`, pages: [page], role: mode.mode === 'composite' ? 'composite' : 'separate-layer', sourceOrdinal: page.index })) };
       rows = (options.exportPsd || exportPsdPlan)(inspection, plan, path.join(directory, 'pages')).map((row, index) => ({ ...row, label: `${originalName} · ${row.label}${options.psdMode === 'raw-layers' ? ' · isolated raw' : ''}`, expectedWidth: canvas.width, expectedHeight: canvas.height, sourceFrameCount: selected.length, layerMetadata: selected[index], layerRole: mode.mode === 'composite' ? null : selected[index].index === layers[0]?.index ? 'body' : 'cosmetic', layerPolicy: options.psdMode === 'raw-layers' ? 'raw-ignore-visibility-opacity-blend' : 'normal-visible-layers' }));
+      if(roles)for(const row of rows){
+        const page=row.layerMetadata,artwork=roles.artwork.find(item=>item.record.index===page.index);
+        row.suggestedSlot=page.index===roles.base.index?0:page.index===roles.background?.index?'background':artwork?artwork.slot:'skip';
+        if(row.suggestedSlot==='background')try{row.backgroundKey=validateSolidBackground(fs.readFileSync(row.filename));}catch(_){/* The optional background choice is validated when admitted. */}
+      }
     }
     for (const row of rows) if (row.expectedWidth !== undefined) {
       const file = stableSource(row.filename), decoded = decodePng(file.bytes);
       if (decoded.width !== row.expectedWidth || decoded.height !== row.expectedHeight) throw Error('An extracted image does not match its declared full source canvas. Nothing was admitted.');
     }
     assertOriginal(original);
-    rows = rows.map((row, ordinal) => ({ ...row, ordinal, provenance: { kind: 'guided-image-intake', sourceFile: original.filename, sourceByteHash: original.hash, originalPhysical: original.physical, originalRealpath: original.realpath, sourceOrdinal: ordinal, role: row.role, pages: row.pages || null, layerMetadata: row.layerMetadata || null, layerRole: row.layerRole || null, layerPolicy: row.layerPolicy || null, delayMs: row.delayMs ?? null, timingAvailable: row.timingAvailable ?? null, gifLoopCount: row.gifLoopCount ?? null, sourceFrameCount: row.sourceFrameCount || 1 }, assertOriginal: () => assertOriginal(original) }));
+    rows = rows.map((row, ordinal) => ({ ...row, ordinal, provenance: { kind: 'guided-image-intake', sourceFile: original.filename, sourceByteHash: original.hash, originalPhysical: original.physical, originalRealpath: original.realpath, sourceOrdinal: ordinal, role: row.role, pages: row.pages || null, layerMetadata: row.layerMetadata || null, layerRole: row.layerRole || null, suggestedSlot:row.suggestedSlot,backgroundKey:row.backgroundKey||null, layerPolicy: row.layerPolicy || null, delayMs: row.delayMs ?? null, timingAvailable: row.timingAvailable ?? null, gifLoopCount: row.gifLoopCount ?? null, sourceFrameCount: row.sourceFrameCount || 1 }, assertOriginal: () => assertOriginal(original) }));
     retained = true; return { rows, directory, assertOriginal: () => assertOriginal(original), dispose() { fs.rmSync(directory, { recursive: true, force: true }); } };
   } finally { if (!retained) fs.rmSync(directory, { recursive: true, force: true }); }
 }

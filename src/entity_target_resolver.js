@@ -52,14 +52,13 @@ function characterTargets(owner, fileSystem) {
   for (const entry of files.entries || []) {
     if (!/^(?:cns|st(?:common|\d*)?|cmd|movelist|lua)$/i.test(entry.key || '')) continue;
     const filename = resolveCharacterAssignment(owner.exact, entry.value, entry.key, fileSystem);
-    if (TEXT_EXTENSIONS.has(path.extname(filename).toLowerCase())) code.push(filename);
+    if (filename) code.push(filename);
   }
   return { sff, air, snd, code:unique(code) };
 }
 
 function availability(filename, expected, fileSystem) {
   if (!filename) return freeze({ available:false, filename:'', reason:'No file is assigned by this exact entity owner.' });
-  if (path.extname(filename).toLowerCase() !== expected) return freeze({ available:false, filename, reason:`The exact owner assignment is not a ${expected.slice(1).toUpperCase()} file.` });
   try {
     const stat = fileSystem.statSync(filename);
     if (!stat.isFile()) return freeze({ available:false, filename, reason:'The assigned resource is not a file.' });

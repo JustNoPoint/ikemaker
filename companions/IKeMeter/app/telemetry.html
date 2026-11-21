@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Player telemetry | IKeMeter</title>
+  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="telemetry.css">
+  <script src="telemetry.js" defer></script>
+</head>
+<body>
+  <header>
+    <div class="title">IKeMeter <span>Live Runtime Analysis &amp; Debugging for IKEMEN GO</span></div>
+    <nav aria-label="Meter views"><a href="/">Overview</a> <a href="telemetry.html" aria-current="page">Player telemetry</a> <a href="watch.html">Watch log</a></nav>
+  </header>
+  <div id="status" class="status" role="status">Loading player telemetry…</div>
+  <main>
+    <h1>Player telemetry</h1>
+    <section class="telemetry-panel" aria-labelledby="timeline-heading">
+      <h2 id="timeline-heading">Timeline</h2>
+      <div class="telemetry-controls">
+        <label class="telemetry-scrub">Receipt sequence <input id="scrub" type="range" min="1" max="1" value="1" disabled></label>
+        <button id="previous" type="button" disabled>Previous observation</button>
+        <button id="next" type="button" disabled>Next observation</button>
+        <button id="follow" type="button" aria-pressed="true" disabled>Follow latest</button>
+      </div>
+      <form id="exact-form" class="telemetry-controls">
+        <label for="exact">Exact GameTime</label>
+        <input id="exact" type="number" min="0" max="2147483647" step="1" required disabled>
+        <button id="seek" disabled>Find tick</button>
+      </form>
+      <p id="selection" aria-live="polite"></p>
+      <form id="retention-form" class="telemetry-controls">
+        <label for="seconds">Retention</label>
+        <select id="seconds" disabled>
+          <option value="30">30 seconds</option><option value="60">60 seconds</option>
+          <option value="90">90 seconds</option><option value="120" selected>120 seconds</option>
+          <option value="150">150 seconds</option><option value="180">180 seconds</option>
+          <option value="210">210 seconds</option><option value="240">240 seconds</option>
+          <option value="270">270 seconds</option><option value="300">300 seconds</option>
+        </select>
+        <button id="apply" disabled>Set retention</button>
+      </form>
+      <p id="retention"></p>
+      <p id="retention-result" role="status"></p>
+    </section>
+    <section class="telemetry-panel" aria-labelledby="root-heading">
+      <h2 id="root-heading">Root observations</h2>
+      <p>Motion uses raw stock units. Position X is camera-relative, Y increases downward, and Z increases toward the stage bottom bound. Velocity X is facing-relative. The owning-slot coordinate basis can differ from the active state scale.</p>
+      <div id="roots"></div>
+    </section>
+    <section class="telemetry-panel" aria-labelledby="gaps-heading">
+      <h2 id="gaps-heading">Recent coverage gaps</h2>
+      <ul id="gaps"></ul>
+    </section>
+    <section class="telemetry-panel" aria-labelledby="diagnostics-heading">
+      <h2 id="diagnostics-heading">Recent diagnostics</h2>
+      <p id="streams"></p>
+      <p>Owned output can have mixed origins. Receipt times are milliseconds from session start. Diagnostic clock domains are shown as reported.</p>
+      <ol id="events"></ol>
+    </section>
+    <section class="telemetry-panel" aria-labelledby="export-heading">
+      <h2 id="export-heading">Download telemetry clip</h2>
+      <form id="export-form">
+        <div class="telemetry-controls">
+          <label>First receipt sequence <input id="first" type="number" min="1" step="1" disabled></label>
+          <label>Last receipt sequence <input id="last" type="number" min="1" step="1" disabled></label>
+        </div>
+        <p>Leave both blank to include the full retained interval. Enter both to download a specific range.</p>
+        <label><input id="include-diagnostics" type="checkbox" disabled> Include diagnostic text, which can contain local paths</label>
+        <div class="telemetry-controls"><button id="download" disabled>Download local JSON</button></div>
+      </form>
+      <p id="export-result" role="status"></p>
+    </section>
+  </main>
+</body>
+</html>

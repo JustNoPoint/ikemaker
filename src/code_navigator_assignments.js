@@ -18,7 +18,6 @@ const { NAVIGABLE_EXTENSIONS } = require('./code_navigator_model');
 // Same [Files] code keys that coding_source_admission.js admits.
 const CODE_FILE_KEY = /^(?:st\d*|stcommon|common|cns|cmd)$/i;
 // Assigned paths with these extensions are assets or other grammars, never legacy CNS text.
-const NON_LEGACY_EXTENSIONS = new Set(['.def', '.air', '.sff', '.snd', '.act', '.pal', '.png', '.lua', '.dat', '.fnt', '.json', '.csv']);
 const LIMITS = Object.freeze({ defBytes: 1024 * 1024, codeBytes: 4 * 1024 * 1024, assignmentsPerDef: 64, ownerSearchDefs: 32, ownerSearchDepth: 2, workspaceDefs: 500 });
 
 const fileKey = file => path.resolve(String(file)).toLowerCase();
@@ -32,7 +31,6 @@ function signature(stat) { return `${stat.size}:${stat.mtimeMs}`; }
 // True for an assigned file that the extension list does not already make navigable.
 function extraAssignmentCandidate(file) {
   const extension = path.extname(file).toLowerCase();
-  if (!extension || NON_LEGACY_EXTENSIONS.has(extension)) return false;
   return !NAVIGABLE_EXTENSIONS.includes(extension.slice(1));
 }
 

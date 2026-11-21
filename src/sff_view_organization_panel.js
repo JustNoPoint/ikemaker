@@ -14,7 +14,8 @@ function installSffViewOrganization(){
   const focused=document.activeElement;if(focused!==document.body&&focused!==prior&&focused?.isConnected)return;
   const current=[...list.querySelectorAll('.sprite[data-row-id]')].find(node=>node.dataset.rowId===prior.dataset.rowId);current?.focus({preventScroll:true});
  });
- button.id='sffViewOrganizationToggle';button.type='button';button.textContent='☷';button.title='View organization';button.setAttribute('aria-label','View organization');button.setAttribute('aria-controls',section.id);
+ const label=document.createElement('span');label.dataset.ikmActionLabel='';label.textContent='View organization';
+ button.id='sffViewOrganizationToggle';button.type='button';button.dataset.ikmActionIcon='☷';button.append(label);button.title='View organization';button.setAttribute('aria-label','View organization');button.setAttribute('aria-controls',section.id);
  const saved=vscode.getState?.()||{};section.open=saved.sffViewOrganizationOpen===true;
  const synchronize=()=>{button.setAttribute('aria-expanded',String(section.open));vscode.setState({...vscode.getState(),sffViewOrganizationOpen:section.open});};
  section.addEventListener('toggle',synchronize);button.onclick=()=>{section.open=!section.open;synchronize();if(section.open){section.scrollIntoView({block:'nearest'});document.getElementById('organizeMode')?.focus();}};

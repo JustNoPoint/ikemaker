@@ -11,7 +11,7 @@ function routeForFilename(filename) {
   return DIRECT_VISUAL_ROUTES[path.extname(String(filename || '')).toLowerCase()] || null;
 }
 
-function registerDirectAssetOpening(vscode, context) {
+function registerDirectAssetOpening(vscode, context, isAssignedSource = () => false) {
   const pending = new Set();
 
   function sameFile(left, right) {
@@ -38,6 +38,8 @@ function registerDirectAssetOpening(vscode, context) {
     if (!uri || uri.scheme !== 'file') return false;
     const viewType = routeForFilename(uri.fsPath);
     if (!viewType || currentViewType === viewType) return false;
+    const document = vscode.workspace?.textDocuments?.find(doc => sameFile(doc.uri, uri));
+    if (document?.languageId === 'ikemen-cns' || document?.languageId === 'zss' || isAssignedSource({ uri, fileName: uri.fsPath })) return false;
     const key = `${viewType}:${path.resolve(uri.fsPath).toLowerCase()}`;
     if (pending.has(key)) return false;
     pending.add(key);

@@ -837,6 +837,7 @@ function safeDraft(value, admittedSourceBuffers = null) {
     importedPaletteIds.add(id);
     try {
       const observed = paletteSourceInfo(item.path, item.tableOrder), expectedHash = String(item.byteHash || '').toUpperCase();
+      if(item.alphaTable){if(!Array.isArray(item.alphaTable)||item.alphaTable.length!==256||item.alphaTable.some(a=>!Number.isInteger(a)||a<0||a>255))throw Error('Invalid imported palette alpha table');observed.colors.forEach((color,index)=>color[3]=item.alphaTable[index]);observed.colorHash=crypto.createHash('sha256').update(JSON.stringify(observed.colors)).digest('hex');observed.partialAlphaIndexes=observed.colors.map((color,index)=>color[3]>0&&color[3]<255?index:-1).filter(index=>index>=0);observed.partialAlphaCount=observed.partialAlphaIndexes.length;}
       importedPalettes.push({ ...item, id, group: Number(match[1]), number: Number(match[2]), path: observed.path, byteHash: expectedHash || observed.byteHash, colorHash: observed.colorHash, colors: observed.colors, tableOrder: observed.tableOrder, partialAlphaCount: observed.partialAlphaCount, partialAlphaIndexes: observed.partialAlphaIndexes, stale: Boolean(expectedHash && expectedHash !== observed.byteHash), currentByteHash: observed.byteHash });
     } catch (_) { importedPalettes.push({ ...item, id, group: Number(match[1]), number: Number(match[2]), path: path.resolve(String(item.path || '.')), stale: true, unavailable: true }); }
   }
@@ -1115,7 +1116,7 @@ function imagePaletteAllocation(draft, plan) {
   if (!draft?.target || draft.configuration?.paletteMode !== 'image') return null;
   const group = Number(draft.configuration.imagePaletteGroup);
   if (!Number.isSafeInteger(group) || group < 0 || group > 65535) throw new Error('Image palette group must be an integer from 0 through 65535.');
-  const ready = (Array.isArray(plan?.ready) ? plan.ready : []).filter(row => !row.paletteId);
+  const ready = (Array.isArray(plan?.ready) ? plan.ready : []).filter(row => !row.paletteId && row.paletteChoice!=='true-color');
   if (!ready.length) return null;
   const missing = ready.filter(row => !row.source?.paletteColorHash);
   if (missing.length) throw new Error(`${missing.length} source(s) cannot supply an indexed 256-color image palette.`);
@@ -1159,6 +1160,8 @@ function applyState(draft) {
     const incompatible = plan.ready.filter(row => ![2, 6].includes(Number(row.source?.colorType)) || Number(row.source?.bitDepth) !== 8 || !row.source?.decodedHash);
     if (incompatible.length) return { enabled: false, reason: `${incompatible.length} source(s) are not sealed 8-bit RGB or RGBA PNG images. Choose Needs Palette for indexed or unsupported artwork.`, plan };
   }
+  const mixedTruecolor=plan.ready.filter(row=>row.paletteChoice==='true-color');
+  if(mixedTruecolor.length&&((draft.target?.sffVersion||draft.configuration.newArchiveVersion)!=='2.1'||mixedTruecolor.some(row=>![2,6].includes(Number(row.source.colorType))||row.source.bitDepth!==8||!row.source.decodedHash)))return {enabled:false,reason:'True Color layer sources require sealed RGB/RGBA images and SFF 2.1.',plan};
   const importedPalettes = Array.isArray(draft.configuration.importedPalettes) ? draft.configuration.importedPalettes : [], importedPaletteIds = new Set(importedPalettes.map(palette => palette.id)), targetPaletteIds = new Set((draft.target?.palettes || []).map(palette => palette.id));
   const staleImported = importedPalettes.find(palette => palette.stale || palette.unavailable);
   if (staleImported) return { enabled: false, reason: `Imported recipe palette ${staleImported.id} changed or is unavailable. Re-import the portable SprMake2 definition.`, plan };
@@ -1174,7 +1177,7 @@ function applyState(draft) {
     if (matches.length !== 1) return { enabled: false, reason: `Sprite ${row.identity} indexing palette ${row.indexingPaletteId} is missing or ambiguous in the target SFF.`, plan };
     if (row.source?.paletteColorHash !== matches[0].colorHash) return { enabled: false, reason: `Sprite ${row.identity} is not indexed by its reviewed indexing palette ${row.indexingPaletteId}. Re-run the reviewed remap.`, plan };
   }
-  const unassignedRows = plan.ready.filter(row => !row.paletteId);
+  const unassignedRows = plan.ready.filter(row => !row.paletteId && row.paletteChoice!=='true-color');
   if (!temporaryMode && !imageMode && !trueColorMode && unassignedRows.length && draft.target?.duplicatePaletteIds?.includes(draft.addedSpritePaletteId)) return { enabled: false, reason: `The selected target palette ${draft.addedSpritePaletteId} occurs more than once physically. Choose a unique palette identity or repair the palette table first.`, plan };
   if (draft.sources.length && draft.target && !imageMode && !temporaryMode && !trueColorMode && unassignedRows.length && !draft.addedSpritePaletteId) return { enabled: false, reason: 'Choose the embedded target palette for the added sprites.', plan };
   if (draft.sources.length && draft.target && !temporaryMode && !imageMode && !trueColorMode && unassignedRows.length) {
@@ -1236,7 +1239,7 @@ function applyState(draft) {
   if (duplicatePolicies.size > 1) plan.sprMake2Limitations.push('This plan mixes per-sprite identical-data choices, while SprMake2 exposes one build-wide duplicate switch. Create Package Only retains the exact choices for the built-in specification; SprMake2 Build and Compare Both remain unavailable.');
   if (plan.ready.some(row => row.group < 0 || row.group > 65535 || row.number < 0 || row.number > 65535)) return { enabled: false, reason: 'Every SFF group and index must be within 0–65535.' };
   if (plan.ready.some(row => row.axisX < -32768 || row.axisX > 32767 || row.axisY < -32768 || row.axisY > 32767)) return { enabled: false, reason: 'Every SFF axis coordinate must fit the signed 16-bit range.' };
-  if (!trueColorMode && plan.ready.some(row => row.paletteChoice !== 'own-png-palette')) return { enabled: false, reason: 'This slice can only preserve each PNG palette. Shared palette selection is not implemented yet.' };
+  if (!trueColorMode && plan.ready.some(row => !['own-png-palette','true-color'].includes(row.paletteChoice))) return { enabled: false, reason: 'This slice can only preserve each PNG palette. Shared palette selection is not implemented yet.' };
   return { enabled: true, reason: plan.sprMake2Limitations.join(' '), plan };
 }
 
@@ -1484,23 +1487,45 @@ async function stageCompactIntake(targetPath, sourcePaths, settings = {}) {
   draft = bound.draft;
   let paths = Array.isArray(sourcePaths) ? sourcePaths : [];
   if (!paths.length || paths.length > MAX_SOURCES) throw new Error(`Choose from 1 through ${MAX_SOURCES} PNG sprite sources.`);
-  const admittedBuffers = Array.isArray(settings.admittedBuffers) ? settings.admittedBuffers : [];
+  let admittedBuffers = Array.isArray(settings.admittedBuffers) ? settings.admittedBuffers : [];
   const provenance = Array.isArray(settings.sourceProvenance) ? settings.sourceProvenance : [];
+  let layerPalettes=null;
+  if(provenance.some(item=>item?.quickLayer)){
+    if(settings.reversed===true)throw Error('Named PSD layer palettes use exact index order. Turn off Reversed palette order before writing.');
+    if(provenance.some(item=>item?.quickLayer?.bake)&&(!Number.isInteger(Number(settings.group))||Number(settings.group)<0||Number(settings.group)>=10000))throw Error('Silhouette baking requires a base group from 0 through 9999.');
+    const inputBuffers=paths.map((filename,index)=>Buffer.isBuffer(admittedBuffers[index])?admittedBuffers[index]:fs.readFileSync(filename));
+    const identity=crypto.createHash('sha256').update(JSON.stringify(inputBuffers.map((buffer,index)=>[crypto.createHash('sha256').update(buffer).digest('hex'),provenance[index].quickLayer]))).digest('hex');
+    const directory=path.join(require('./sff_private_storage').directory('sources'),'named-layers-'+identity);
+    layerPalettes=require('./sff_quick_layer_palettes').prepareQuickLayerPalettes({buffers:inputBuffers,provenance,archive:readSff(targetPath),directory,baseGroup:Number(settings.group)});
+    admittedBuffers=layerPalettes.buffers;
+    paths=admittedBuffers.map((buffer,index)=>{const filename=path.join(directory,'source-'+index+'-'+crypto.createHash('sha256').update(buffer).digest('hex')+'.png');if(!fs.existsSync(filename))transactionalWrite(fs,filename,buffer,{allowExisting:false,backup:false,journal:false,label:'private-quick-layer-source'});return filename;});
+  }
   if (provenance.length === paths.length && provenance.every(item => item?.kind === 'guided-image-intake')) {
     const batchHash = crypto.createHash('sha256').update(JSON.stringify(paths.map((filename, index) => [crypto.createHash('sha256').update(admittedBuffers[index] || fs.readFileSync(filename)).digest('hex'), provenance[index]]))).digest('hex');
     paths = persistCreatorFrames(require('./sff_private_storage').directory('sources'), paths.map(filename => ({ filename })), batchHash, 'guided-intake').map(item => item.filename);
   }
-  const additions = paths.map((filename, index) => sourceFromFile(filename, provenance[index] ? { sourceIdentity: provenance[index].role === 'image' ? (process.platform === 'win32' ? path.resolve(provenance[index].sourceFile).toLowerCase() : path.resolve(provenance[index].sourceFile)) : `guided:${provenance[index].sourceByteHash}:${provenance[index].role}:${provenance[index].sourceOrdinal}`, label: path.basename(provenance[index].sourceFile) + ' · ' + provenance[index].role + ' ' + provenance[index].sourceOrdinal, provenance: provenance[index] } : {}, Buffer.isBuffer(admittedBuffers[index]) ? admittedBuffers[index] : null));
+  const additions = paths.map((filename, index) => sourceFromFile(filename, provenance[index] ? { sourceIdentity: provenance[index].quickLayer ? `quick-layer:${path.resolve(provenance[index].sourceFile)}:${provenance[index].sequenceOrdinal}:${provenance[index].quickLayer.slot}:${provenance[index].sourceOrdinal}` : provenance[index].role === 'image' ? (process.platform === 'win32' ? path.resolve(provenance[index].sourceFile).toLowerCase() : path.resolve(provenance[index].sourceFile)) : `guided:${provenance[index].sourceByteHash}:${provenance[index].role}:${provenance[index].sourceOrdinal}`, label: path.basename(provenance[index].sourceFile) + ' · ' + provenance[index].role + ' ' + provenance[index].sourceOrdinal, provenance: provenance[index] } : {}, Buffer.isBuffer(admittedBuffers[index]) ? admittedBuffers[index] : null));
   const hasTrueColor = additions.some(source => source.colorType !== 3 || source.bitDepth !== 8);
   const compact = compactIntakeConfiguration(settings), paletteChoice = compact.paletteChoice;
-  if (hasTrueColor && paletteChoice !== 'true-color' && paletteChoice !== 'needs-palette') throw new Error('Choose True Color to retain these pixels in SFF 2.1, or Needs Palette to prepare indexed artwork.');
+  if (hasTrueColor && !layerPalettes && paletteChoice !== 'true-color' && paletteChoice !== 'needs-palette') throw new Error('Choose True Color to retain these pixels in SFF 2.1, or Needs Palette to prepare indexed artwork.');
   if (paletteChoice === 'true-color' && target.sffVersion !== '2.1') throw new Error(`SFF ${target.sffVersion} cannot store true-color sprites. Choose Needs Palette for this target.`);
   mergeCreatorSources(draft, additions);
   draft.configuration = {
     ...draft.configuration,
     ...compact
   };
-  require('./sff_guided_grouping').applyGuidedGrouping(draft.configuration, additions, settings);
+  if(layerPalettes){
+    if(target.sffVersion!=='2.1')throw Error('Per-layer palette choices require SFF 2.1.');
+    draft.configuration.paletteMode='image';draft.configuration.paletteChoice='own-png-palette';
+    draft.configuration.importedPalettes=layerPalettes.palettes;
+    additions.forEach((source,index)=>{
+      const ordinal=Number(source.provenance.sequenceOrdinal),slot=layerPalettes.rows[index].slot;
+      const group=Number(settings.group)+10000*slot,number=Number(settings.startIndex)+ordinal*(settings.numberingMode==='stepped'?10:1);
+      if(!Number.isInteger(ordinal)||ordinal<0||!Number.isInteger(group)||group<0||group>65535||!Number.isInteger(number)||number<0||number>65535)throw Error('Named-layer group/index is outside the exact SFF range.');
+      draft.configuration.overrides[source.id]={...(draft.configuration.overrides[source.id]||{}),...layerPalettes.rows[index],group,number,cropMode:layerPalettes.rows[index].paletteChoice==='true-color'?'none':draft.configuration.cropMode};
+    });
+    draft.configuration.collisionPolicy='stop';draft.configuration.quickLayerPaletteReview=layerPalettes.review;
+  }else require('./sff_guided_grouping').applyGuidedGrouping(draft.configuration, additions, settings);
   const reviewedSheetIdentities = applyReviewedSheetIdentities(draft.configuration, additions);
   if (draft.configuration.paletteMode === 'target') {
     const paletteId = String(settings.paletteId || '').replace(/\s+/g, '');
@@ -1508,14 +1533,15 @@ async function stageCompactIntake(targetPath, sourcePaths, settings = {}) {
     draft.addedSpritePaletteId = paletteId;
   } else draft.addedSpritePaletteId = '';
   const admittedSourceBuffers = new Map(paths.map((filename, index) => [path.resolve(filename), Buffer.isBuffer(admittedBuffers[index]) ? admittedBuffers[index] : null]));
-  if(settings.separatePsdGroups===true)require('./sff_guided_grouping').assertGuidedPairing(draftToPlan(draft),draft.configuration);
+  if(!layerPalettes&&settings.separatePsdGroups===true)require('./sff_guided_grouping').assertGuidedPairing(draftToPlan(draft),draft.configuration);
   const staged = settings.quickWrite === true ? await (async()=>{const safe=safeDraft(draft,admittedSourceBuffers);return{draft:safe,state:applyState(safe)}})() : await stageDraft(root, draft, admittedSourceBuffers);
+  if(layerPalettes){for(const source of additions){const override=draft.configuration.overrides[source.id],row=staged.state.plan?.ready?.find(item=>item.sourceId===source.id);if(!row||row.group!==override.group||row.number!==override.number)throw Error('A named PSD layer changed its reviewed group/index. Choose unused destinations and retry.');}}
   for (const reviewed of reviewedSheetIdentities) {
     const row = staged.state.plan?.ready?.find(item => item.sourceId === reviewed.sourceId);
     if (row && row.identity !== reviewed.identity) throw new Error(`Reviewed sheet sprite ${reviewed.identity} changed destination to ${row.identity}. Review the sheet again.`);
   }
   if (!staged.state.enabled && paletteChoice !== 'true-color' && paletteChoice !== 'needs-palette') throw new Error(staged.state.reason);
-  return { draft: staged.draft, plan: staged.state.plan, writer: draft.configuration.preferredWriter, buildReady: staged.state.enabled, limitation: staged.state.enabled ? '' : staged.state.reason, message: `Staged ${additions.length} sprite source${additions.length === 1 ? '' : 's'} for ${target.name}.` };
+  return { paletteReview:layerPalettes?.review||null, draft: staged.draft, plan: staged.state.plan, writer: draft.configuration.preferredWriter, buildReady: staged.state.enabled, limitation: staged.state.enabled ? '' : staged.state.reason, message: `Staged ${additions.length} sprite source${additions.length === 1 ? '' : 's'} for ${target.name}.` };
 }
 
 function manifestRows(plan, configuration = {}, evidenceArtifact = null) {
@@ -1600,7 +1626,7 @@ function prepareReviewedCropSources(packageRoot, plan) {
       const existing = crypto.createHash('sha256').update(fs.readFileSync(target)).digest('hex').toUpperCase();
       if (existing !== cropped.outputByteHash) throw new Error(`A different reviewed crop already occupies ${target}.`);
     } else writes.push([target, cropped.buffer]);
-    return { ...row, axisX, axisY, cropAxisDeltaX: axisDeltaX, cropAxisDeltaY: axisDeltaY, axisBeforeCrop: { x: row.axisX, y: row.axisY }, source: { ...row.source, path: target, name: path.basename(target), width: cropped.bounds.width, height: cropped.bounds.height, byteHash: cropped.outputByteHash, cropBounds: { empty: false, x: 0, y: 0, width: cropped.bounds.width, height: cropped.bounds.height, visiblePixels: cropped.bounds.visiblePixels }, cropChanged: false, provenance: { kind: `${suffix}-crop`, sourceIdentity: row.source.id, sourceFile: row.source.path, sourceByteHash: cropped.sourceByteHash, sourceRectangle: cropped.bounds, outputByteHash: cropped.outputByteHash, axisDeltaX, axisDeltaY, originalAxis: { x: row.axisX, y: row.axisY }, finalAxis: { x: axisX, y: axisY }, priorProvenance: row.source.provenance || null } } };
+    return { ...row, axisX, axisY, cropAxisDeltaX: axisDeltaX, cropAxisDeltaY: axisDeltaY, axisBeforeCrop: { x: row.axisX, y: row.axisY }, source: { ...row.source, path: target, name: path.basename(target), width: cropped.bounds.width, height: cropped.bounds.height, byteHash: cropped.outputByteHash, cropBounds: { empty: false, x: 0, y: 0, width: cropped.bounds.width, height: cropped.bounds.height, visiblePixels: cropped.bounds.visiblePixels }, cropChanged: false, provenance: { ...(row.source.provenance?.quickLayer?{quickLayer:row.source.provenance.quickLayer,sequenceOrdinal:row.source.provenance.sequenceOrdinal}:{}), kind: `${suffix}-crop`, sourceIdentity: row.source.id, sourceFile: row.source.path, sourceByteHash: cropped.sourceByteHash, sourceRectangle: cropped.bounds, outputByteHash: cropped.outputByteHash, axisDeltaX, axisDeltaY, originalAxis: { x: row.axisX, y: row.axisY }, finalAxis: { x: axisX, y: axisY }, priorProvenance: row.source.provenance || null } } };
   });
   return { plan: { ...plan, ready, rows: plan.rows.map(row => ready.find(item => item.sourceId === row.sourceId && item.identity === row.identity) || row) }, writes };
 }

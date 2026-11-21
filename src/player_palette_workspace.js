@@ -100,11 +100,11 @@ function resolveAssignedAsset(reference, owner) {
   return resolved;
 }
 
-function assignedSff(defPath) {
-  const document = parseDef(fs.readFileSync(defPath, 'utf8'), defPath), type = kind(document);
+function assignedSff(defPath, parsedDocument) {
+  const document = parsedDocument || parseDef(fs.readFileSync(defPath, 'utf8'), defPath), type = kind(document);
   if (type === 'stage') return resolveAssignedAsset(stageModel(document).sff, defPath);
   if (type === 'screenpack' || type === 'lifebar') return resolveAssignedAsset(screenpackModel(document).sff, defPath);
-  return characterSff(defPath);
+  return characterSff(defPath,document);
 }
 
 function openSffPaletteWorkspace(sff, options = {}) {
@@ -122,11 +122,12 @@ function activeCharacterDef() {
 async function openCanonicalPaletteWorkspace(uri, options = {}) {
   const suppliedPath = uri?.fsPath || uri?.path || '';
   const extension = path.extname(suppliedPath).toLowerCase();
+  if (options.assignedAct === true) return paletteWorkspaceController().openSourceWorkspace(uri, { section:'sources-preflight', origin:{ assignedAct:true }, assetOpenMode: options.assetOpenMode, keepTextHeader: options.keepTextHeader });
   if (/\.ikpalette\.json$/i.test(suppliedPath)) return paletteWorkspaceController().openScratchWorkspace(uri, options);
   if (extension === '.sff') return openSffPaletteWorkspace(suppliedPath, options);
   if (extension === '.act' || extension === '.png') return paletteWorkspaceController().openSourceWorkspace(uri, { section: options.section || 'sources-preflight', origin: { compatibilityAlias: options.compatibilityAlias || null } });
-  if (extension === '.def') return openSffPaletteWorkspace(assignedSff(suppliedPath), options);
-  const contextualDef = activeCharacterDef(); if (contextualDef) return openSffPaletteWorkspace(assignedSff(contextualDef), options);
+  if (extension === '.def') { const document=parseDef(fs.readFileSync(suppliedPath,'utf8'),suppliedPath);return openSffPaletteWorkspace(assignedSff(suppliedPath,document), !['stage','screenpack','lifebar'].includes(kind(document))&&isCharacterDef(suppliedPath,document)?{...options,ownerDef:path.resolve(suppliedPath)}:options); }
+  const contextualDef = activeCharacterDef(); if (contextualDef) return openSffPaletteWorkspace(assignedSff(contextualDef), {...options,ownerDef:contextualDef});
   const target = await vscode.window.showQuickPick([
     { label: 'Create a standalone palette template image…', description: 'Use PNG artwork for any character without closing or changing the character that is currently open.', action: 'template' },
     { label: 'Create a new palette…', description: 'Start a lossless 256-color RGBA palette with transparent index 0 locked.', action: 'scratch' },
@@ -149,7 +150,7 @@ async function openCanonicalPaletteWorkspace(uri, options = {}) {
   }
   const defPath = await chooseCharacterDef(uri, { title: 'Choose the character whose palettes you want to work with' });
   if (!defPath) return;
-  return openSffPaletteWorkspace(characterSff(defPath));
+  return openSffPaletteWorkspace(characterSff(defPath), {...options,ownerDef:path.resolve(defPath)});
 }
 
 async function openPlayerPaletteWorkspace(uri) {
@@ -157,7 +158,7 @@ async function openPlayerPaletteWorkspace(uri) {
   if (/\.(?:sff|def|act|png)$/i.test(supplied)) return openCanonicalPaletteWorkspace(uri, { section: 'embedded', compatibilityAlias: 'ikemen.palettePlayer.open' });
   const defPath = await chooseCharacterDef(uri, { title: 'Choose the character whose palettes you want to work with' });
   if (!defPath) return;
-  return openSffPaletteWorkspace(characterSff(defPath));
+  return openSffPaletteWorkspace(characterSff(defPath), {ownerDef:path.resolve(defPath)});
 }
 
 function registerPlayerPaletteWorkspace(context) {

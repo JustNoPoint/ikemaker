@@ -14,7 +14,7 @@ function airSources(sffPath,options={},dependencies={}){
   return{files,assigned:false,unreadableNearby,reason:'Unowned archive: nearby AIR matches are suggestions, not assigned character references.'};
 }
 function resolveAirReference(sffPath,reference,options={}){
-  const match=/^(.*\.air): Action (-?\d+)$/i.exec(String(reference||''));if(!match)return null;
+  const match=/^(.+): Action (-?\d+)$/i.exec(String(reference||''));if(!match)return null;
   const source=airSources(sffPath,options).files.find(item=>item.label===match[1]);if(!source)return null;
   const action=Number(match[2]),present=source.text.split(/\r?\n/).some(line=>{const heading=/^\s*\[\s*begin\s+action\s+(-?\d+)\s*\]/i.exec(line.replace(/;.*/,''));return heading&&Number(heading[1])===action});
   return present?{filename:source.filename,action,ownerDef:source.ownerDef||''}:null;

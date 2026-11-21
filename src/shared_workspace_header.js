@@ -1,5 +1,7 @@
 'use strict';
 const controls=require('./launch_controls');
+const presentation=require('./viewer_presentation');
+const isSharedMessage=message=>presentation.isMessage(message)||SHARED.has(message?.type);
 const SHARED=new Set(['viewerToolbarReady','viewerToolbarAction','viewerToolbarCommand','viewerToolbarCrossSurface','viewerToolbarSave','viewerToolbarActivityReady','viewerToolbarActivitySave','viewerHistory','viewerBackToSource','viewerUsedBy','viewerSelectionChanged','ikemenRelatedWork','ikemenViewer','ikemenModeReady','assetWorkspaceOptions','ikemakerToolbarPreference']);
 function html(surface,model){
  const layout=['stage','screenpack'].includes(surface)?`<style>body:has(>.shared-workspace-header){height:100vh;display:flex;flex-direction:column;overflow:hidden}.shared-workspace-header~.app{height:auto!important;flex:1;min-height:0}</style>`:'';
@@ -27,9 +29,9 @@ function attachProjectRoster(panel){
 async function handle(message,owner,surface){
  if(message?.type==='ikemenBrowserShortcut'&&Object.keys(message).length===1){if(['stage','screenpack','storyboard'].includes(surface)){const service=require('./visual_authoring_browser_service').tryCurrent();if(service&&owner.panel?.active===true)return service.toggle(surface,owner.visualBrowserOwnerKey||owner.filename,owner.panel);return true;}return require('./viewer_browser_shortcut').handle(message,owner.filename||owner.document?.fileName,surface,owner.panel);}
  if(message?.type===require('./universal_toolbar_webview').MESSAGE_TYPE&&message.slotId==='viewer-browser'&&['stage','screenpack','storyboard'].includes(surface)){const service=require('./visual_authoring_browser_service').tryCurrent();if(!service||owner.panel?.active!==true)return true;const ownerKey=owner.visualBrowserOwnerKey||owner.filename;if(surface==='stage'&&!owner.visualBrowserRegistration||surface==='screenpack'&&!owner.visualBrowserRegistration)return false;await service.open(surface,ownerKey);return true;}
- if(!SHARED.has(message?.type))return false;
+ if(!isSharedMessage(message))return false;
  if(owner.disposed)return true;
  if(message?.type==='viewerToolbarReady'){const toolbar=require('./viewer_toolbar');if(toolbar.handleCommand)await toolbar.handleCommand(message,owner.filename||owner.document?.fileName,owner.panel);await toolbar.handle(message,owner.panel);return true;}
  return controls.handleLaunchMessage(message,owner.filename||owner.document?.fileName,surface==='select_def'?'roster':surface,owner.panel);
 }
-module.exports={html,clientScript,handle,attachProjectRoster,attachObserver,isSharedMessage:message=>SHARED.has(message?.type)};
+module.exports={html,clientScript,handle,attachProjectRoster,attachObserver,isSharedMessage};

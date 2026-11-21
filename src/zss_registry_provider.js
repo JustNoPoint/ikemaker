@@ -73,6 +73,7 @@ class ZssRegistryProvider {
       const discovery = await discoverZssUris(api, limit), uris = discovery.uris;
       const all = emptyData(); let skipped = 0;
       for (const uri of uris) {
+        if (revision !== this.revision) break;
         try {
           const document = await api.workspace.openTextDocument(uri);
           const records = this.collector(document.getText(), api.workspace.asRelativePath(uri, false));
@@ -90,13 +91,15 @@ class ZssRegistryProvider {
   }
 
   startScan() {
+    if (this.pending) return;
     void this.scan().then(() => this.changeEmitter.fire(undefined)).catch(() => this.changeEmitter.fire(undefined));
   }
 
   statusText() {
     if (this.status === 'failed') return `Workspace ZSS inventory failed: ${this.failure || 'unknown error'}. Use Refresh to retry.`;
     if (this.status === 'partial') return `Workspace ZSS inventory is partial: ${this.skipped} unreadable file(s) skipped. Use Refresh to retry.`;
-    if (this.status === 'scanning' || this.status === 'idle') return 'Workspace ZSS inventory is scanning…';
+    if (this.status === 'idle') return 'Expand a category to index project code.';
+    if (this.status === 'scanning') return 'Workspace ZSS inventory is scanning…';
     if (this.scope === 'active-project') return `Active-project ZSS inventory · ${this.scopeRoot}`;
     if (this.scope === 'no-project') return 'No workspace folder or active project file is available. Open a project file, then use Refresh.';
     if (this.scope === 'unsupported-fallback') return 'The active project was found, but this editor cannot search outside a workspace folder.';
@@ -114,18 +117,23 @@ class ZssRegistryProvider {
 
   async getChildren(element) {
     if (!element) {
-      const data = this.cache; if (!data) this.startScan();
+      const data = this.cache;
       return GROUPS.map(([key, label, icon]) => {
         const unique = data ? new Set(data[key].map((record) => record.name)).size : null;
         const suffix = this.status === 'failed' ? 'scan failed' : unique === null ? 'scanning…' : this.status === 'partial' ? `${unique}, partial` : unique;
-        const item = new RegistryItem(`${label} (${suffix})`, this.vscode.TreeItemCollapsibleState.Collapsed, { nodeType: 'registryGroup', key, contextValue: 'zssRegistryGroup' });
+        const item = new RegistryItem(this.status === 'idle' ? label : `${label} (${suffix})`, this.vscode.TreeItemCollapsibleState.Collapsed, { nodeType: 'registryGroup', key, contextValue: 'zssRegistryGroup' });
+        item.id = 'ikemen.registry.' + key;
         item.iconPath = new this.vscode.ThemeIcon(icon); item.description = this.statusText(); return item;
       });
     }
     if (element.nodeType !== 'registryGroup') return [];
     const browseMaps = element.key === 'maps' ? this.browseMapsItem() : null;
     const data = this.cache;
-    if (!data) { this.startScan(); return browseMaps ? [browseMaps] : []; }
+    if (!data) {
+      this.startScan();
+      const progress = new RegistryItem('Scanning project code…', this.vscode.TreeItemCollapsibleState.None, { nodeType: 'registryStatus' });
+      return browseMaps ? [browseMaps, progress] : [progress];
+    }
     const grouped = new Map();
     for (const record of data[element.key]) { if (!grouped.has(record.name)) grouped.set(record.name, []); grouped.get(record.name).push(record); }
     const inventory = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b, undefined, { numeric: true })).map(([name, records]) => {

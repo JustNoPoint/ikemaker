@@ -9,7 +9,9 @@ function enabledCapabilityIds(snapshot = {}) {
 
 function entryAvailable(entry, snapshot = {}) {
   const capabilityId = String(entry?.capabilityId || '').trim().toLowerCase();
-  return !capabilityId || enabledCapabilityIds(snapshot).has(capabilityId);
+  if (capabilityId) return enabledCapabilityIds(snapshot).has(capabilityId);
+  if (entry?.availability === 'nightly' && snapshot.target?.channel === 'stable') return false;
+  return true;
 }
 
 function filterEntry(entry, snapshot = {}) {

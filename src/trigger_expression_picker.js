@@ -1,6 +1,6 @@
 'use strict';
 
-const catalog=require('./trigger_catalog_normalization').normalizeTriggerCatalog(require('../data/triggers.json'));
+const catalog=require('./live_coding_catalog').triggers;
 const {triggerFamily}=require('./authoring_browser_model');
 const {entryAvailable}=require('./catalog_capability_filter');
 const {argumentSlots,argumentSummary}=require('./trigger_argument_model');

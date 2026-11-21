@@ -2,7 +2,7 @@
   "name": "ikemen-zss-tools",
   "displayName": "IKEMaker",
   "description": "A cohesive visual creation, project, team, testing, and release workspace for IKEMEN GO.",
-  "version": "0.79.541",
+  "version": "0.79.552",
   "publisher": "justnopoint",
   "license": "MIT",
   "engines": {
@@ -159,6 +159,10 @@
     "onCommand:ikemen.switchToIkeMiner",
     "onCommand:ikemen.switchSuite",
     "onCommand:ikemen.openIKeMeter",
+    "onCommand:ikemen.importIKeMeterTelemetry",
+    "onCommand:ikemen.importIKeMeterWatchLog",
+    "onCommand:ikemen.importIKeMeterFindings",
+    "onCommand:ikemen.reopenIKeMeterFindings",
     "onCommand:ikemen.configureIKeMeter",
     "onCommand:ikemen.closeIKeMeter",
     "onCommand:ikemen.storyDialogue.openPlayer",
@@ -218,6 +222,8 @@
     "onCommand:ikemen.context.indexMetadata",
     "onCommand:ikemen.projectProfile.create",
     "onCommand:ikemen.projectManager.open",
+    "onCommand:ikemen.projectBible.open",
+    "onWebviewPanel:ikemenProjectBible",
     "onCommand:ikemen.engineRegistry.open",
     "onCommand:ikemen.engineMigration.review",
     "onCommand:ikemen.engineMigration.installRetained",
@@ -520,6 +526,11 @@
         "icon": "$(organization)"
       },
       {
+        "command": "ikemen.projectBible.open",
+        "title": "IKEMEN: Open Project & Team Bible…",
+        "icon": "$(book)"
+      },
+      {
         "command": "ikemen.engineRegistry.open",
         "title": "IKEMEN: Manage Engine Targets & Compatibility…",
         "icon": "$(versions)"
@@ -670,6 +681,30 @@
         "command": "ikemen.openIKeMeter",
         "title": "IKEMaker: Open IKeMeter",
         "icon": "$(dashboard)",
+        "enablement": "isWorkspaceTrusted && !virtualWorkspace"
+      },
+      {
+        "command": "ikemen.importIKeMeterTelemetry",
+        "title": "IKEMaker: Import IKeMeter Telemetry",
+        "icon": "$(graph)",
+        "enablement": "isWorkspaceTrusted && !virtualWorkspace"
+      },
+      {
+        "command": "ikemen.importIKeMeterWatchLog",
+        "title": "IKEMaker: Import IKeMeter Watch Log",
+        "icon": "$(list-flat)",
+        "enablement": "isWorkspaceTrusted && !virtualWorkspace"
+      },
+      {
+        "command": "ikemen.importIKeMeterFindings",
+        "title": "IKEMaker: Import IKeMeter Findings",
+        "icon": "$(file-add)",
+        "enablement": "isWorkspaceTrusted && !virtualWorkspace"
+      },
+      {
+        "command": "ikemen.reopenIKeMeterFindings",
+        "title": "IKEMaker: Reopen IKeMeter Findings",
+        "icon": "$(list-selection)",
         "enablement": "isWorkspaceTrusted && !virtualWorkspace"
       },
       {
@@ -1128,6 +1163,10 @@
         "command": "ikemen.workbench.open",
         "title": "Open Character Workbench",
         "icon": "$(window)"
+      },
+      {
+        "command": "ikemen.workbench.openTextOnly",
+        "title": "IKEMaker: Open Character Text Files Only…"
       },
       {
         "command": "ikemen.workbench.openAllCode",
@@ -2594,6 +2633,11 @@
           "group": "inline@1"
         },
         {
+          "command": "ikemen.workbench.openTextOnly",
+          "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode != player",
+          "group": "navigation@1"
+        },
+        {
           "command": "ikemen.workbench.openAllCode",
           "when": "(view == ikemen.characterWorkbenches && viewItem == ikemenWorkbench) && ikemen.interfaceMode == workspace",
           "group": "navigation@1"
@@ -2640,6 +2684,11 @@
         }
       ],
       "editor/context": [
+        {
+          "command": "zssControllers.insert",
+          "when": "!editorReadonly && (editorLangId == ikemen-cns || editorLangId == zss || (ikemen.activeTextKind == cns))",
+          "group": "1_modification@3"
+        },
         {
           "command": "ikemen.cns.renumberSelectedTriggers",
           "when": "!isWeb && editorHasSelection && !editorReadonly && (editorLangId == ikemen-cns || (editorLangId == plaintext && resourceExtname =~ /[.]txt$/i))",
@@ -3189,6 +3238,10 @@
         },
         {
           "command": "ikemen.workbench.open",
+          "when": "ikemen.interfaceMode != player"
+        },
+        {
+          "command": "ikemen.workbench.openTextOnly",
           "when": "ikemen.interfaceMode != player"
         },
         {
