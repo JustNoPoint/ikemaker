@@ -3,6 +3,24 @@
   "productId": "ikemaker",
   "releases": [
     {
+      "version": "0.79.552",
+      "channel": "beta",
+      "publishedAt": "2026-11-21T05:20:42Z",
+      "compatibleEditor": {
+        "min": "1.85.0",
+        "max": ""
+      },
+      "notes": [
+        "Focused entity opening: connected text files with or without the header, or viewers only.",
+        "IKeMeter launch, findings and telemetry integration; compact and named-button controls."
+      ],
+      "package": {
+        "url": "https://github.com/JustNoPoint/ikemaker/releases/download/v0.79.552/ikemen-zss-tools-0.79.552.vsix",
+        "sha256": "44710446eb2e7cc7a29067bef82b743ec9c2c7b4dff73c04c4bda047bc16133d",
+        "bytes": 27107104
+      }
+    },
+    {
       "version": "0.79.541",
       "channel": "beta",
       "publishedAt": "2026-11-15T04:20:12Z",
